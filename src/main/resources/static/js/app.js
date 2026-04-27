@@ -303,22 +303,22 @@ function initStudySetup() {
 }
 
 function initStudyCard() {
-    document.querySelectorAll('.sh-study-card-root').forEach(root => {
-        if (root.dataset.initialized) return;
-        root.dataset.initialized = 'true';
+    document.querySelectorAll('.sh-study-reveal-btn').forEach(btn => {
+        if (btn.dataset.initialized) return;
+        btn.dataset.initialized = 'true';
 
-        const revealBtn = root.querySelector('.sh-study-reveal-btn');
-        const flipCard = root.querySelector('.sh-study-flip-card');
-        const answerControls = root.querySelector('.sh-study-answer-controls');
+        btn.addEventListener('click', () => {
+            const root = btn.closest('.sh-study-card-root');
+            const flipCard = root?.querySelector('.sh-study-flip-card');
+            const answerControls = root?.querySelector('.sh-study-answer-controls');
 
-        if (!revealBtn || !flipCard || !answerControls) {
-            return;
-        }
-
-        revealBtn.addEventListener('click', () => {
-            flipCard.classList.add('flipped');
-            revealBtn.classList.add('d-none');
-            answerControls.classList.remove('d-none');
+            if (flipCard && answerControls) {
+                flipCard.classList.add('flipped');
+                btn.classList.add('d-none');
+                answerControls.classList.remove('d-none');
+            } else {
+                console.warn('Could not find flipCard or answerControls for reveal button', { flipCard, answerControls });
+            }
         });
     });
 }
