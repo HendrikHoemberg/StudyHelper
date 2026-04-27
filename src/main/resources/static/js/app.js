@@ -9,7 +9,19 @@ document.addEventListener('DOMContentLoaded', () => {
     initSearch();
     initDeleteWarnings();
     initStudySession();
+    initCsrf();
 });
+
+// CSRF configuration for HTMX
+function initCsrf() {
+    document.body.addEventListener('htmx:configRequest', (evt) => {
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+        if (csrfToken && csrfHeader) {
+            evt.detail.headers[csrfHeader] = csrfToken;
+        }
+    });
+}
 
 // Re-initialize after HTMX swaps
 document.body.addEventListener('htmx:afterSwap', (e) => {

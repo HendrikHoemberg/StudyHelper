@@ -12,6 +12,7 @@ import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +42,7 @@ public class StudySessionService {
         this.random = random;
     }
 
+    @Transactional(readOnly = true)
     public StudySessionState buildSession(StudySessionConfig rawConfig, User user) {
         StudySessionConfig config = normalizeConfig(rawConfig);
         List<Deck> orderedDecks = deckService.getValidatedDecksInRequestedOrder(config.selectedDeckIds(), user);
