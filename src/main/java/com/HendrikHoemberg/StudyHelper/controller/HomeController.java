@@ -10,9 +10,8 @@ import java.security.Principal;
 public class HomeController {
 
     @GetMapping("/")
-    public String home(Model model, Principal principal) {
-        model.addAttribute("username", principal.getName());
-        return "home";
+    public String home() {
+        return "redirect:/folders";
     }
 
     @GetMapping("/login")

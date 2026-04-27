@@ -41,12 +41,12 @@
 ---
 
 ## 5. File Uploads & Knowledgebase
-- [ ] Users can upload files into any folder to build a topic-specific knowledgebase alongside their flashcard decks.
-- [ ] **Supported file types:** All types (PDF, images, Word docs, plain text, etc.) — no server-side MIME restriction beyond size.
-- [ ] **File size limit:** 100 MB per file.
-- [ ] **Storage:** Files are stored on a local Docker volume (e.g. `/app/uploads`). Path on disk is derived from `stored_filename` (UUID-based to avoid collisions).
-- [ ] **Actions:** Users can view (inline preview where the browser supports it) and download files. No server-side processing or AI generation at this stage.
-- [ ] Files are displayed within the folder they belong to in the file explorer, alongside decks.
+- [x] Users can upload files into any folder to build a topic-specific knowledgebase alongside their flashcard decks.
+- [x] **Supported file types:** All types (PDF, images, Word docs, plain text, etc.) — no server-side MIME restriction beyond size.
+- [x] **File size limit:** 100 MB per file.
+- [x] **Storage:** Files are stored on a local Docker volume (e.g. `/app/uploads`). Path on disk is derived from `stored_filename` (UUID-based to avoid collisions).
+- [x] **Actions:** Users can view (inline preview where the browser supports it) and download files. No server-side processing or AI generation at this stage.
+- [x] Files are displayed within the folder they belong to in the file explorer, alongside decks.
 
 ---
 
