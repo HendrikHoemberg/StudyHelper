@@ -1,0 +1,846 @@
+/* ============================================================
+   StudyHelper — Design System & Global Styles
+   ============================================================ */
+
+/* ---------- Google Fonts ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ---------- CSS Custom Properties ---------- */
+:root {
+    /* Primary palette */
+    --sh-primary: #6366f1;
+    --sh-primary-hover: #4f46e5;
+    --sh-primary-light: #eef2ff;
+    --sh-primary-glow: rgba(99, 102, 241, 0.25);
+
+    /* Accent */
+    --sh-accent: #8b5cf6;
+    --sh-accent-light: #f5f3ff;
+
+    /* Neutrals */
+    --sh-bg: #f8fafc;
+    --sh-surface: #ffffff;
+    --sh-surface-hover: #f1f5f9;
+    --sh-border: #e2e8f0;
+    --sh-border-light: #f1f5f9;
+
+    /* Text */
+    --sh-text: #0f172a;
+    --sh-text-secondary: #64748b;
+    --sh-text-muted: #94a3b8;
+
+    /* Status */
+    --sh-success: #10b981;
+    --sh-warning: #f59e0b;
+    --sh-danger: #ef4444;
+    --sh-danger-hover: #dc2626;
+
+    /* Shadows */
+    --sh-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --sh-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --sh-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --sh-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+    --sh-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+
+    /* Radii */
+    --sh-radius-sm: 6px;
+    --sh-radius: 10px;
+    --sh-radius-lg: 14px;
+    --sh-radius-xl: 20px;
+
+    /* Transitions */
+    --sh-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --sh-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Navbar */
+    --sh-navbar-height: 64px;
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--sh-bg);
+    color: var(--sh-text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--sh-border);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--sh-text-muted);
+}
+
+/* ---------- Navbar ---------- */
+.sh-navbar {
+    background: linear-gradient(135deg, var(--sh-primary), var(--sh-accent));
+    height: var(--sh-navbar-height);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.sh-navbar .navbar-brand {
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    color: #fff !important;
+}
+
+.sh-navbar .nav-user {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.sh-btn-outline-white {
+    color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--sh-radius-sm);
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all var(--sh-transition-fast);
+    background: transparent;
+    cursor: pointer;
+}
+.sh-btn-outline-white:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- Main Content Area ---------- */
+.sh-main {
+    min-height: calc(100vh - var(--sh-navbar-height));
+    padding: 1.5rem 0 3rem;
+}
+
+/* ---------- Cards ---------- */
+.sh-card {
+    background: var(--sh-surface);
+    border: 1px solid var(--sh-border-light);
+    border-radius: var(--sh-radius-lg);
+    box-shadow: var(--sh-shadow);
+    transition: all var(--sh-transition);
+}
+.sh-card:hover {
+    box-shadow: var(--sh-shadow-md);
+}
+
+.sh-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--sh-border-light);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sh-card-body {
+    padding: 1.25rem;
+}
+
+/* ---------- Folder Card ---------- */
+.sh-folder-card {
+    background: var(--sh-surface);
+    border: 1px solid var(--sh-border-light);
+    border-left: 4px solid var(--folder-color, var(--sh-primary));
+    border-radius: var(--sh-radius);
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    transition: all var(--sh-transition);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+.sh-folder-card:hover {
+    box-shadow: var(--sh-shadow-md);
+    border-left-color: var(--folder-color, var(--sh-primary));
+    transform: translateY(-1px);
+    color: inherit;
+    text-decoration: none;
+}
+
+.sh-folder-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+}
+
+.sh-folder-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sh-folder-meta {
+    font-size: 0.75rem;
+    color: var(--sh-text-muted);
+    font-weight: 500;
+}
+
+/* ---------- Explorer Tree ---------- */
+.sh-tree {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sh-tree-item {
+    border: 1px solid var(--sh-border-light);
+    border-radius: var(--sh-radius);
+    margin-bottom: 0.375rem;
+    background: var(--sh-surface);
+    overflow: hidden;
+    transition: all var(--sh-transition-fast);
+}
+
+.sh-tree-item:hover {
+    border-color: var(--sh-border);
+}
+
+.sh-tree-header {
+    display: flex;
+    align-items: center;
+    padding: 0.625rem 0.875rem;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: background var(--sh-transition-fast);
+    user-select: none;
+}
+.sh-tree-header:hover {
+    background: var(--sh-surface-hover);
+}
+
+.sh-tree-toggle {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform var(--sh-transition);
+    color: var(--sh-text-muted);
+    font-size: 0.75rem;
+}
+.sh-tree-toggle.expanded {
+    transform: rotate(90deg);
+}
+
+.sh-tree-children {
+    padding: 0 0 0.375rem 1.5rem;
+    display: none;
+}
+.sh-tree-children.show {
+    display: block;
+}
+
+.sh-tree-deck {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.875rem;
+    gap: 0.5rem;
+    border-radius: var(--sh-radius-sm);
+    margin: 0.125rem 0.5rem;
+    transition: background var(--sh-transition-fast);
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.85rem;
+}
+.sh-tree-deck:hover {
+    background: var(--sh-primary-light);
+    color: var(--sh-primary);
+}
+
+.sh-tree-deck-icon {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sh-text-muted);
+}
+
+/* ---------- Badge ---------- */
+.sh-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1;
+}
+.sh-badge-muted {
+    background: var(--sh-border-light);
+    color: var(--sh-text-muted);
+}
+.sh-badge-primary {
+    background: var(--sh-primary-light);
+    color: var(--sh-primary);
+}
+
+/* ---------- Buttons ---------- */
+.sh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4375rem 0.875rem;
+    border-radius: var(--sh-radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--sh-transition-fast);
+    text-decoration: none;
+    line-height: 1.5;
+}
+
+.sh-btn-primary {
+    background: var(--sh-primary);
+    color: #fff;
+    border-color: var(--sh-primary);
+}
+.sh-btn-primary:hover {
+    background: var(--sh-primary-hover);
+    border-color: var(--sh-primary-hover);
+    color: #fff;
+    box-shadow: 0 0 0 3px var(--sh-primary-glow);
+}
+
+.sh-btn-secondary {
+    background: var(--sh-surface);
+    color: var(--sh-text);
+    border-color: var(--sh-border);
+}
+.sh-btn-secondary:hover {
+    background: var(--sh-surface-hover);
+    border-color: var(--sh-text-muted);
+}
+
+.sh-btn-danger {
+    background: transparent;
+    color: var(--sh-danger);
+    border-color: var(--sh-danger);
+}
+.sh-btn-danger:hover {
+    background: var(--sh-danger);
+    color: #fff;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.sh-btn-ghost {
+    background: transparent;
+    color: var(--sh-text-secondary);
+    border: none;
+    padding: 0.375rem 0.5rem;
+}
+.sh-btn-ghost:hover {
+    background: var(--sh-surface-hover);
+    color: var(--sh-text);
+}
+
+.sh-btn-sm {
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+}
+
+.sh-btn-icon {
+    padding: 0.375rem;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ---------- File Table ---------- */
+.sh-file-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.875rem;
+}
+
+.sh-file-table thead th {
+    padding: 0.625rem 1rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sh-text-muted);
+    border-bottom: 1px solid var(--sh-border-light);
+    cursor: pointer;
+    user-select: none;
+    transition: color var(--sh-transition-fast);
+    white-space: nowrap;
+}
+.sh-file-table thead th:hover {
+    color: var(--sh-text);
+}
+.sh-file-table thead th .sort-indicator {
+    display: inline-block;
+    margin-left: 0.25rem;
+    opacity: 0.4;
+    font-size: 0.625rem;
+}
+.sh-file-table thead th.sorted .sort-indicator {
+    opacity: 1;
+    color: var(--sh-primary);
+}
+
+.sh-file-table tbody tr {
+    transition: background var(--sh-transition-fast);
+}
+.sh-file-table tbody tr:hover {
+    background: var(--sh-surface-hover);
+}
+.sh-file-table tbody td {
+    padding: 0.625rem 1rem;
+    border-bottom: 1px solid var(--sh-border-light);
+    vertical-align: middle;
+}
+
+.sh-file-name {
+    font-weight: 500;
+    color: var(--sh-text);
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.sh-file-meta {
+    color: var(--sh-text-muted);
+    font-size: 0.8125rem;
+}
+
+/* ---------- Breadcrumb ---------- */
+.sh-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+.sh-breadcrumb a {
+    color: var(--sh-text-muted);
+    text-decoration: none;
+    transition: color var(--sh-transition-fast);
+}
+.sh-breadcrumb a:hover {
+    color: var(--sh-primary);
+}
+.sh-breadcrumb-sep {
+    color: var(--sh-border);
+    font-size: 0.75rem;
+}
+.sh-breadcrumb-current {
+    color: var(--sh-text);
+    font-weight: 600;
+}
+
+/* ---------- Section Header ---------- */
+.sh-section-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sh-text-muted);
+    margin-bottom: 0.625rem;
+}
+
+/* ---------- Empty State ---------- */
+.sh-empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+}
+.sh-empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.4;
+}
+.sh-empty-text {
+    color: var(--sh-text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+.sh-empty-hint {
+    color: var(--sh-text-muted);
+    font-size: 0.8125rem;
+    opacity: 0.7;
+}
+
+/* ---------- Form Controls ---------- */
+.sh-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-radius-sm);
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: var(--sh-text);
+    background: var(--sh-surface);
+    transition: border-color var(--sh-transition-fast), box-shadow var(--sh-transition-fast);
+    outline: none;
+}
+.sh-input:focus {
+    border-color: var(--sh-primary);
+    box-shadow: 0 0 0 3px var(--sh-primary-glow);
+}
+.sh-input::placeholder {
+    color: var(--sh-text-muted);
+}
+
+.sh-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--sh-text);
+    margin-bottom: 0.375rem;
+}
+
+.sh-color-input {
+    width: 100%;
+    height: 38px;
+    padding: 2px;
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-radius-sm);
+    cursor: pointer;
+    background: var(--sh-surface);
+}
+.sh-color-input::-webkit-color-swatch-wrapper {
+    padding: 2px;
+}
+.sh-color-input::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+/* ---------- Modal Override ---------- */
+.modal-content {
+    border: none;
+    border-radius: var(--sh-radius-lg);
+    box-shadow: var(--sh-shadow-xl);
+}
+.modal-header {
+    border-bottom: 1px solid var(--sh-border-light);
+    padding: 1rem 1.25rem;
+}
+.modal-header .modal-title {
+    font-weight: 700;
+    font-size: 1rem;
+}
+.modal-body {
+    padding: 1.25rem;
+}
+.modal-footer {
+    border-top: 1px solid var(--sh-border-light);
+    padding: 0.75rem 1.25rem;
+}
+
+/* ---------- Alert Override ---------- */
+.alert {
+    border-radius: var(--sh-radius);
+    font-size: 0.875rem;
+    border: none;
+}
+
+/* ---------- Flashcard Grid ---------- */
+.sh-flashcard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.sh-flashcard {
+    background: var(--sh-surface);
+    border: 1px solid var(--sh-border-light);
+    border-radius: var(--sh-radius);
+    padding: 1rem;
+    transition: all var(--sh-transition);
+    position: relative;
+}
+.sh-flashcard:hover {
+    box-shadow: var(--sh-shadow-md);
+    border-color: var(--sh-border);
+}
+
+.sh-flashcard-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--sh-text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.sh-flashcard-text {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--sh-text);
+    word-break: break-word;
+}
+
+.sh-flashcard-front {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed var(--sh-border);
+}
+
+.sh-flashcard-actions {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity var(--sh-transition-fast);
+}
+.sh-flashcard:hover .sh-flashcard-actions {
+    opacity: 1;
+}
+
+/* ---------- 3D Flip Animation (CSS Preparation for Step 7) ---------- */
+.sh-flip-container {
+    perspective: 1000px;
+}
+
+.sh-flip-card {
+    width: 100%;
+    min-height: 200px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sh-flip-card.flipped {
+    transform: rotateY(180deg);
+}
+
+.sh-flip-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    border-radius: var(--sh-radius-lg);
+    background: var(--sh-surface);
+    border: 1px solid var(--sh-border-light);
+    box-shadow: var(--sh-shadow-md);
+}
+
+.sh-flip-front {
+    z-index: 2;
+}
+
+.sh-flip-back {
+    transform: rotateY(180deg);
+    background: linear-gradient(135deg, var(--sh-primary-light), var(--sh-accent-light));
+}
+
+/* ---------- Search Bar ---------- */
+.sh-search-bar {
+    position: relative;
+}
+.sh-search-bar .sh-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--sh-text-muted);
+    font-size: 0.875rem;
+    pointer-events: none;
+}
+.sh-search-bar .sh-input {
+    padding-left: 2.25rem;
+}
+
+/* ---------- Toolbar ---------- */
+.sh-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.sh-toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--sh-border);
+}
+
+/* ---------- Deck Card in Folder View ---------- */
+.sh-deck-card {
+    background: var(--sh-surface);
+    border: 1px solid var(--sh-border-light);
+    border-radius: var(--sh-radius);
+    padding: 0.875rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all var(--sh-transition);
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+.sh-deck-card:hover {
+    box-shadow: var(--sh-shadow-md);
+    border-color: var(--sh-primary);
+    color: inherit;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.sh-deck-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sh-deck-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--sh-radius-sm);
+    background: var(--sh-primary-light);
+    color: var(--sh-primary);
+    font-size: 0.875rem;
+}
+
+.sh-deck-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* ---------- Delete Warning ---------- */
+.sh-warning-dialog {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--sh-radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+.sh-warning-dialog-title {
+    font-weight: 700;
+    color: var(--sh-danger);
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+}
+.sh-warning-dialog-text {
+    font-size: 0.8125rem;
+    color: #991b1b;
+}
+
+/* ---------- Page Title ---------- */
+.sh-page-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--sh-text);
+    margin: 0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+    .sh-main {
+        padding: 1rem 0 2rem;
+    }
+    .sh-toolbar {
+        gap: 0.375rem;
+    }
+    .sh-flashcard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- Loading / Transition indicators ---------- */
+.htmx-indicator {
+    display: none;
+}
+.htmx-request .htmx-indicator {
+    display: inline-block;
+}
+.htmx-request.htmx-indicator {
+    display: inline-block;
+}
+
+/* Fade-in for HTMX swapped content */
+.sh-fade-in {
+    animation: shFadeIn 0.2s ease-out;
+}
+@keyframes shFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ---------- Login Page ---------- */
+.sh-login-bg {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 50%, #fdf2f8 100%);
+}
+
+.sh-login-card {
+    background: var(--sh-surface);
+    border: 1px solid var(--sh-border-light);
+    border-radius: var(--sh-radius-xl);
+    box-shadow: var(--sh-shadow-xl);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 380px;
+}
+
+.sh-login-brand {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--sh-primary), var(--sh-accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    margin-bottom: 0.25rem;
+}
+
+.sh-login-subtitle {
+    text-align: center;
+    color: var(--sh-text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+}

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<!-- Explorer content fragment — swapped into #main-content -->
+<div th:fragment="explorerContent" class="sh-fade-in">
+
+    <!-- Alert for errors -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="sh-page-title">My Folders</h1>
+        <button class="sh-btn sh-btn-primary" data-bs-toggle="modal" data-bs-target="#newFolderModal">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Folder
+        </button>
+    </div>
+
+    <!-- Toolbar: search and filter -->
+    <div class="sh-toolbar">
+        <div class="sh-search-bar" style="min-width: 240px;">
+            <span class="sh-search-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+            </span>
+            <input type="text" class="sh-input sh-search-input" placeholder="Search folders..."
+                   data-filter-target=".sh-tree-item-root">
+        </div>
+    </div>
+
+    <!-- Empty state -->
+    <div th:if="${#lists.isEmpty(folders)}" class="sh-empty">
+        <div class="sh-empty-icon">📂</div>
+        <p class="sh-empty-text">No folders yet</p>
+        <p class="sh-empty-hint">Create a folder to start organising your study materials.</p>
+    </div>
+
+    <!-- Explorer tree -->
+    <ul th:if="${!#lists.isEmpty(folders)}" class="sh-tree">
+        <li th:each="folder, iterStat : ${folders}" class="sh-tree-item sh-tree-item-root"
+            th:data-name="${folder.name}">
+            <div class="sh-tree-header sh-tree-toggle-btn">
+                <span class="sh-tree-toggle">▶</span>
+                <span class="sh-folder-color-dot"
+                      th:style="'background:' + ${folder.colorHex}"></span>
+                <a th:href="@{/folders/{id}(id=${folder.id})}" class="sh-folder-name flex-grow-1"
+                   style="text-decoration:none; color:inherit;"
+                   hx-get th:hx-get="@{/folders/{id}(id=${folder.id})}"
+                   hx-target="#main-content" hx-push-url="true"
+                   onclick="event.stopPropagation();"
+                   th:text="${folder.name}">Folder</a>
+                <span class="sh-badge sh-badge-muted"
+                      th:text="${cardCounts[iterStat.index][0]} + ' cards'"></span>
+            </div>
+            <!-- Children loaded via HTMX on expand -->
+            <div class="sh-tree-children"
+                 th:hx-get="@{/folders/{id}/children(id=${folder.id})}"
+                 hx-trigger="intersect once"
+                 hx-swap="innerHTML">
+            </div>
+        </li>
+    </ul>
+
+    <!-- New Folder Modal -->
+    <div class="modal fade" id="newFolderModal" tabindex="-1">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Folder</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/folders}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="sh-label">Name</label>
+                            <input type="text" name="name" class="sh-input" required autofocus
+                                   placeholder="e.g. Mathematics">
+                        </div>
+                        <div>
+                            <label class="sh-label">Color</label>
+                            <input type="color" name="colorHex" class="sh-color-input" value="#6366f1">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="sh-btn sh-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="sh-btn sh-btn-primary">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

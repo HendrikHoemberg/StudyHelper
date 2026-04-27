@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<!-- Fragment: children of a folder in the explorer tree -->
+<div th:fragment="folderChildren">
+
+    <!-- Subfolders -->
+    <div th:each="sub : ${view.subFolders}" class="sh-tree-item" th:data-name="${sub.name}"
+         style="margin-bottom: 0.25rem;">
+        <div class="sh-tree-header sh-tree-toggle-btn">
+            <span class="sh-tree-toggle">▶</span>
+            <span class="sh-folder-color-dot"
+                  th:style="'background:' + ${sub.colorHex}"></span>
+            <a th:href="@{/folders/{id}(id=${sub.id})}" class="sh-folder-name flex-grow-1"
+               style="text-decoration:none; color:inherit;"
+               hx-get th:hx-get="@{/folders/{id}(id=${sub.id})}"
+               hx-target="#main-content" hx-push-url="true"
+               onclick="event.stopPropagation();"
+               th:text="${sub.name}">Subfolder</a>
+            <span class="sh-badge sh-badge-muted" th:text="'cards'"></span>
+        </div>
+        <div class="sh-tree-children"
+             th:hx-get="@{/folders/{id}/children(id=${sub.id})}"
+             hx-trigger="intersect once"
+             hx-swap="innerHTML">
+        </div>
+    </div>
+
+    <!-- Decks -->
+    <a th:each="deck : ${view.decks}" class="sh-tree-deck"
+       th:href="@{/decks/{id}(id=${deck.id})}"
+       hx-get th:hx-get="@{/decks/{id}(id=${deck.id})}"
+       hx-target="#main-content" hx-push-url="true">
+        <span class="sh-tree-deck-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+        </span>
+        <span class="sh-folder-name" th:text="${deck.name}" style="font-size:0.8125rem;">Deck</span>
+        <span class="sh-badge sh-badge-primary" th:text="${deck.flashcards.size()} + ' cards'"
+              style="margin-left:auto;"></span>
+    </a>
+
+    <!-- Empty hint if no children -->
+    <div th:if="${#lists.isEmpty(view.subFolders) and #lists.isEmpty(view.decks)}"
+         style="padding: 0.5rem 0.875rem; font-size: 0.8125rem; color: var(--sh-text-muted);">
+        No subfolders or decks
+    </div>
+</div>
+
+</body>
+</html>

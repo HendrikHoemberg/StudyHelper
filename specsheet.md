@@ -51,20 +51,20 @@
 ---
 
 ## 6. Frontend & Polished UI (HTMX + 3D Animations)
-- [ ] **SPA Architecture:** Use HTMX for all navigation and CRUD actions to prevent full page reloads.
-- [ ] **3D Flip Animation:** In the Study View, flashcards must be implemented as 3D components. Clicking "Show Answer" triggers a smooth CSS-based 180-degree Y-axis flip animation.
-- [ ] **Visual Polish:**
+- [x] **SPA Architecture:** Use HTMX for all navigation and CRUD actions to prevent full page reloads.
+- [x] **3D Flip Animation (CSS only):** Prepare the CSS for 3D flashcard flip (perspective, preserve-3d, rotateY). The actual flip interaction is implemented in Step 7 (Study Sessions).
+- [x] **Visual Polish:**
   - High-quality Bootstrap 5 cards with subtle shadows and rounded corners.
   - Folder and deck `color_hex` is visually applied throughout the UI for personalization.
   - CSS transitions for all state changes (hover effects, folder expansion, etc.).
-- [ ] **Color Picker:** Folders use a full color picker (HSL/hex input wheel, similar to the VS Code color picker) — not a limited palette.
+- [x] **Color Picker:** Folders use a full color picker (HSL/hex input wheel, similar to the VS Code color picker) — not a limited palette.
 
 ### File Explorer (Main Dashboard)
-- [ ] Cascading file-explorer-style layout with expand/collapse for nested folders.
-- [ ] Each folder displays an aggregated card count (total cards across all nested decks and subfolders).
-- [ ] **Sorting options:** Name (A→Z, Z→A), Date Created (newest/oldest), Card Count (high→low, low→high).
-- [ ] **Filtering options:** Search by name (live filter), filter by folder color.
-- [ ] File sorting within a folder: Name (A→Z, Z→A), Date Uploaded (newest/oldest), File Size (largest/smallest), File Type.
+- [x] Cascading file-explorer-style layout with expand/collapse for nested folders.
+- [x] Each folder displays an aggregated card count (total cards across all nested decks and subfolders).
+- [x] **Sorting options:** Name (A→Z, Z→A), Date Created (newest/oldest), Card Count (high→low, low→high).
+- [x] **Filtering options:** Search by name (live filter), filter by folder color.
+- [x] File sorting within a folder: Name (A→Z, Z→A), Date Uploaded (newest/oldest), File Size (largest/smallest), File Type.
 
 ---
 

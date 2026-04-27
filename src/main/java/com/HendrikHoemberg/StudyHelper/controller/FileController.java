@@ -36,7 +36,8 @@ public class FileController {
     public String upload(@PathVariable Long folderId,
                          @RequestParam("file") MultipartFile file,
                          Principal principal,
-                         RedirectAttributes redirectAttributes) {
+                         RedirectAttributes redirectAttributes,
+                         @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         try {
             fileEntryService.upload(file, folderId, user);
@@ -72,7 +73,8 @@ public class FileController {
 
     @PostMapping("/files/{id}/delete")
     public String delete(@PathVariable Long id, Principal principal,
-                         RedirectAttributes redirectAttributes) {
+                         RedirectAttributes redirectAttributes,
+                         @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         try {
             Long folderId = fileEntryService.deleteAndGetFolderId(id, user);

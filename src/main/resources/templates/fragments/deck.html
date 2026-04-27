@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<!-- Fragment: deck detail view (swapped into #main-content) -->
+<div th:fragment="deckDetail" class="sh-fade-in">
+
+    <!-- Breadcrumb -->
+    <ul class="sh-breadcrumb">
+        <li>
+            <a href="/folders" hx-get="/folders" hx-target="#main-content" hx-push-url="true">My Folders</a>
+        </li>
+        <li class="sh-breadcrumb-sep">/</li>
+        <li>
+            <a th:href="@{/folders/{id}(id=${deck.folder.id})}"
+               hx-get th:hx-get="@{/folders/{id}(id=${deck.folder.id})}"
+               hx-target="#main-content" hx-push-url="true"
+               th:text="${deck.folder.name}">Parent Folder</a>
+        </li>
+        <li class="sh-breadcrumb-sep">/</li>
+        <li class="sh-breadcrumb-current" th:text="${deck.name}">Deck</li>
+    </ul>
+
+    <!-- Deck header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <div class="sh-deck-icon" style="width:36px;height:36px;font-size:1rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                    <line x1="8" y1="21" x2="16" y2="21"/>
+                    <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+            </div>
+            <h1 class="sh-page-title" th:text="${deck.name}">Deck Name</h1>
+            <span class="sh-badge sh-badge-primary ms-2"
+                  th:text="${deck.flashcards.size()} + ' cards'"></span>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="sh-btn sh-btn-primary sh-btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#newCardModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Card
+            </button>
+            <button class="sh-btn sh-btn-secondary sh-btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#renameDeckModal">Rename</button>
+            <form th:action="@{/decks/{id}/delete(id=${deck.id})}" method="post" class="d-inline">
+                <button type="submit" class="sh-btn sh-btn-danger sh-btn-sm"
+                        data-confirm="Delete this deck and all its flashcards?">Delete Deck</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Flashcard list -->
+    <div th:fragment="flashcardList" id="flashcard-list">
+        <!-- Empty state -->
+        <div th:if="${#lists.isEmpty(flashcards)}" class="sh-card">
+            <div class="sh-card-body">
+                <div class="sh-empty" style="padding:1.5rem;">
+                    <div class="sh-empty-icon">📝</div>
+                    <p class="sh-empty-text">No flashcards yet</p>
+                    <p class="sh-empty-hint">Add your first card to start studying.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flashcard grid -->
+        <div th:if="${!#lists.isEmpty(flashcards)}" class="sh-flashcard-grid">
+            <div th:each="card : ${flashcards}" class="sh-flashcard">
+                <div class="sh-flashcard-actions">
+                    <button class="sh-btn sh-btn-ghost sh-btn-icon sh-btn-sm"
+                            th:data-card-id="${card.id}"
+                            th:data-front="${card.frontText}"
+                            th:data-back="${card.backText}"
+                            onclick="openEditCard(this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
+                    <form th:action="@{/flashcards/{id}/delete(id=${card.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="deckId" th:value="${deck.id}">
+                        <button type="submit" class="sh-btn sh-btn-ghost sh-btn-icon sh-btn-sm"
+                                style="color:var(--sh-danger);"
+                                data-confirm="Delete this flashcard?">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                 stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+                <div class="sh-flashcard-front">
+                    <div class="sh-flashcard-label">Front</div>
+                    <div class="sh-flashcard-text" th:text="${card.frontText}">Question</div>
+                </div>
+                <div>
+                    <div class="sh-flashcard-label">Back</div>
+                    <div class="sh-flashcard-text" th:text="${card.backText}">Answer</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Card Modal -->
+    <div class="modal fade" id="newCardModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Flashcard</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/decks/{id}/flashcards(id=${deck.id})}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="sh-label">Front (Question)</label>
+                            <textarea name="frontText" class="sh-input" rows="3" required
+                                      placeholder="Enter the question or prompt..."></textarea>
+                        </div>
+                        <div>
+                            <label class="sh-label">Back (Answer)</label>
+                            <textarea name="backText" class="sh-input" rows="3" required
+                                      placeholder="Enter the answer..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="sh-btn sh-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="sh-btn sh-btn-primary">Add Card</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Deck Modal -->
+    <div class="modal fade" id="renameDeckModal" tabindex="-1">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rename Deck</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/decks/{id}/rename(id=${deck.id})}" method="post">
+                    <div class="modal-body">
+                        <div>
+                            <label class="sh-label">Deck Name</label>
+                            <input type="text" name="name" class="sh-input" required
+                                   th:value="${deck.name}">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="sh-btn sh-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="sh-btn sh-btn-primary">Rename</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Card Modal -->
+    <div class="modal fade" id="editCardModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Flashcard</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editCardForm" method="post">
+                    <input type="hidden" name="deckId" th:value="${deck.id}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="sh-label">Front (Question)</label>
+                            <textarea name="frontText" id="editFrontText" class="sh-input" rows="3" required></textarea>
+                        </div>
+                        <div>
+                            <label class="sh-label">Back (Answer)</label>
+                            <textarea name="backText" id="editBackText" class="sh-input" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="sh-btn sh-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="sh-btn sh-btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    function openEditCard(btn) {
+        const cardId = btn.dataset.cardId;
+        const front = btn.dataset.front;
+        const back = btn.dataset.back;
+        document.getElementById('editFrontText').value = front;
+        document.getElementById('editBackText').value = back;
+        document.getElementById('editCardForm').action = '/flashcards/' + cardId + '/edit';
+        new bootstrap.Modal(document.getElementById('editCardModal')).show();
+    }
+</script>
+
+</body>
+</html>

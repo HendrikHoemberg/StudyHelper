@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
+import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.FolderView;
@@ -11,6 +12,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.List;
 
 @Controller
 public class FolderController {
@@ -24,44 +26,87 @@ public class FolderController {
     }
 
     @GetMapping("/folders")
-    public String listFolders(Model model, Principal principal) {
+    public String listFolders(Model model, Principal principal,
+                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
-        model.addAttribute("folders", folderService.getRootFolders(user));
+        List<Folder> folders = folderService.getRootFolders(user);
+        List<int[]> cardCounts = folderService.getRootFolderCardCounts(user);
+
+        model.addAttribute("folders", folders);
+        model.addAttribute("cardCounts", cardCounts);
         model.addAttribute("username", principal.getName());
-        return "folders";
+
+        if (hxRequest != null) {
+            return "fragments/explorer :: explorerContent";
+        }
+        return "dashboard";
     }
 
     @PostMapping("/folders")
     public String createRootFolder(@RequestParam String name,
                                    @RequestParam(defaultValue = "#6c757d") String colorHex,
-                                   Principal principal) {
+                                   Principal principal,
+                                   @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         folderService.createFolder(name, colorHex, null, user);
         return "redirect:/folders";
     }
 
     @GetMapping("/folders/{id}")
-    public String viewFolder(@PathVariable Long id, Model model, Principal principal) {
+    public String viewFolder(@PathVariable Long id, Model model, Principal principal,
+                             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         FolderView view = folderService.getFolderView(id, user);
         model.addAttribute("view", view);
         model.addAttribute("username", principal.getName());
-        return "folder";
+
+        if (hxRequest != null) {
+            return "fragments/folder-detail :: folderDetail";
+        }
+        return "folder-page";
+    }
+
+    @GetMapping("/folders/{id}/children")
+    public String folderChildren(@PathVariable Long id, Model model, Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        FolderView view = folderService.getFolderView(id, user);
+        model.addAttribute("view", view);
+        return "fragments/folder-children :: folderChildren";
     }
 
     @PostMapping("/folders/{id}/subfolders")
     public String createSubfolder(@PathVariable Long id,
                                   @RequestParam String name,
                                   @RequestParam(defaultValue = "#6c757d") String colorHex,
-                                  Principal principal) {
+                                  Principal principal,
+                                  @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         folderService.createFolder(name, colorHex, id, user);
+
+        if (hxRequest != null) {
+            return "redirect:/folders/" + id;
+        }
+        return "redirect:/folders/" + id;
+    }
+
+    @PostMapping("/folders/{id}/color")
+    public String updateColor(@PathVariable Long id,
+                              @RequestParam String colorHex,
+                              Principal principal,
+                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        User user = userService.getByUsername(principal.getName());
+        folderService.updateFolderColor(id, colorHex, user);
+
+        if (hxRequest != null) {
+            return "redirect:/folders/" + id;
+        }
         return "redirect:/folders/" + id;
     }
 
     @PostMapping("/folders/{id}/delete")
     public String deleteFolder(@PathVariable Long id, Principal principal,
-                               RedirectAttributes redirectAttributes) {
+                               RedirectAttributes redirectAttributes,
+                               @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         try {
             folderService.deleteFolder(id, user);
