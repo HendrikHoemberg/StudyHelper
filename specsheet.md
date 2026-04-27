@@ -12,19 +12,19 @@
 ---
 
 ## 2. Infrastructure & Deployment (Docker)
-- [ ] Create a `docker-compose.yml` containing two services: `app` (Spring Boot 4) and `db` (MySQL).
-- [ ] Configure named Docker volumes for the `db` service (data persistence) and a separate volume for uploaded user files.
-- [ ] Create a `Dockerfile` for the Spring Boot application (using an Eclipse Temurin JDK 21+ or 25 image, as required for SB4).
-- [ ] Development mode only for now — no HTTPS/reverse proxy configuration yet. Domain and TLS setup deferred.
+- [x] Create a `docker-compose.yml` containing two services: `app` (Spring Boot 4) and `db` (MySQL).
+- [x] Configure named Docker volumes for the `db` service (data persistence) and a separate volume for uploaded user files.
+- [x] Create a `Dockerfile` for the Spring Boot application (using an Eclipse Temurin JDK 21+ or 25 image, as required for SB4).
+- [x] Development mode only for now — no HTTPS/reverse proxy configuration yet. Domain and TLS setup deferred.
 
 ---
 
 ## 3. Database & Entity Design
-- [ ] **User Entity:** `id`, `username`, `password` (BCrypt hashed).
-- [ ] **Folder Entity:** `id`, `name`, `color_hex`, `user_id`, `parent_folder_id` (self-referencing for infinite nesting).
-- [ ] **Deck Entity:** `id`, `name`, `user_id`, `folder_id` (NOT NULL — decks must always belong to a folder).
-- [ ] **Flashcard Entity:** `id`, `front_text` (TEXT), `back_text` (TEXT), `deck_id`.
-- [ ] **File Entity:** `id`, `original_filename`, `stored_filename`, `mime_type`, `file_size_bytes`, `uploaded_at`, `folder_id`, `user_id`.
+- [x] **User Entity:** `id`, `username`, `password` (BCrypt hashed).
+- [x] **Folder Entity:** `id`, `name`, `color_hex`, `user_id`, `parent_folder_id` (self-referencing for infinite nesting).
+- [x] **Deck Entity:** `id`, `name`, `user_id`, `folder_id` (NOT NULL — decks must always belong to a folder).
+- [x] **Flashcard Entity:** `id`, `front_text` (TEXT), `back_text` (TEXT), `deck_id`.
+- [x] **File Entity:** `id`, `original_filename`, `stored_filename`, `mime_type`, `file_size_bytes`, `uploaded_at`, `folder_id`, `user_id`.
 
 ### Deletion Behavior
 - Deleting a folder cascades to all child folders, decks, flashcards, and files recursively.
@@ -33,10 +33,10 @@
 ---
 
 ## 4. Security & Authentication
-- [ ] Integrate `spring-boot-starter-security` (SB4 compatible configuration).
-- [ ] Implement `UserDetailsService` and form-based login.
-- [ ] **Strict Privacy:** Every database query for folders, decks, flashcards, and files must include the `user_id` of the authenticated user to prevent cross-user data access.
-- [ ] **User Seeding:** There is no public registration. Both user accounts are created automatically via a `data.sql` seed file that runs on first startup. No admin UI is required.
+- [x] Integrate `spring-boot-starter-security` (SB4 compatible configuration).
+- [x] Implement `UserDetailsService` and form-based login.
+- [x] **Strict Privacy:** Every database query for folders, decks, flashcards, and files must include the `user_id` of the authenticated user to prevent cross-user data access.
+- [x] **User Seeding:** There is no public registration. Both user accounts are created automatically via a `DataSeeder` CommandLineRunner on first startup. No admin UI is required.
 
 ---
 
