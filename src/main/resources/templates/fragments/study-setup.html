@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="studySetup" id="study-session-content" class="sh-fade-in">
+
+    <div th:if="${studyError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${studyError}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h1 class="sh-page-title mb-1">Start Study Session</h1>
+            <p class="sh-folder-meta mb-0">Choose decks, mode, and card flow.</p>
+        </div>
+        <a href="/folders" class="sh-btn sh-btn-secondary"
+           hx-get="/folders" hx-target="#main-content" hx-push-url="true">Back to Folders</a>
+    </div>
+
+    <form class="sh-card sh-study-setup-card"
+          method="post"
+          hx-post="/study/session"
+          hx-target="#study-session-content"
+          hx-swap="outerHTML">
+        <div class="sh-card-body d-flex flex-column gap-4">
+
+            <section>
+                <div class="sh-section-title">Study Mode</div>
+                <div class="sh-study-mode-grid">
+                    <label class="sh-study-choice">
+                        <input type="radio" name="sessionMode" value="DECK_BY_DECK" checked>
+                        <div>
+                            <div class="sh-study-choice-title">Deck-by-Deck</div>
+                            <div class="sh-study-choice-subtitle">Study one deck at a time.</div>
+                        </div>
+                    </label>
+                    <label class="sh-study-choice">
+                        <input type="radio" name="sessionMode" value="SHUFFLED">
+                        <div>
+                            <div class="sh-study-choice-title">Shuffled</div>
+                            <div class="sh-study-choice-subtitle">Mix all selected decks into one queue.</div>
+                        </div>
+                    </label>
+                </div>
+            </section>
+
+            <section class="sh-study-deck-options">
+                <div class="sh-section-title">Deck Order (Deck-by-Deck)</div>
+                <div class="d-flex gap-3 flex-wrap">
+                    <label class="sh-study-inline-choice">
+                        <input type="radio" name="deckOrderMode" value="SELECTED_ORDER" checked>
+                        Selected order
+                    </label>
+                    <label class="sh-study-inline-choice">
+                        <input type="radio" name="deckOrderMode" value="RANDOMIZED_ORDER">
+                        Randomized deck order
+                    </label>
+                </div>
+            </section>
+
+            <section>
+                <div class="sh-section-title">Select Decks</div>
+                <div th:if="${#lists.isEmpty(deckGroups)}" class="sh-empty" style="padding:1.25rem 1rem;">
+                    <p class="sh-empty-text mb-1">No decks available</p>
+                    <p class="sh-empty-hint mb-0">Create decks and cards before starting a study session.</p>
+                </div>
+
+                <div th:if="${!#lists.isEmpty(deckGroups)}" class="sh-study-deck-picker">
+                    <div th:each="group : ${deckGroups}" class="sh-study-deck-group">
+                        <div class="sh-study-deck-group-title" th:text="${group.folderPath}">Folder Path</div>
+                        <div class="sh-study-deck-list">
+                            <label th:each="deck : ${group.decks}" class="sh-study-deck-option">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input class="form-check-input sh-study-deck-checkbox"
+                                           type="checkbox"
+                                           name="selectedDeckIds"
+                                           th:value="${deck.deckId}"
+                                           th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}">
+                                    <span class="sh-deck-name" th:text="${deck.deckName}">Deck</span>
+                                </div>
+                                <span class="sh-badge sh-badge-primary"
+                                      th:text="${deck.cardCount} + ' cards'">0 cards</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="sh-study-deck-options">
+                <div class="sh-section-title">Manual Deck Order</div>
+                <p class="sh-folder-meta mb-2">Use up/down to define the explicit deck order for deck-by-deck mode.</p>
+                <ul class="sh-study-order-list" id="sh-study-order-list"></ul>
+                <input type="hidden" name="orderedDeckIds" id="study-ordered-deck-ids">
+            </section>
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="sh-btn sh-btn-primary">
+                    Start Session
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

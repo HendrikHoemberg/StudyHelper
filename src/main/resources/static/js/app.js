@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSorting();
     initSearch();
     initDeleteWarnings();
+    initStudySession();
 });
 
 // Re-initialize after HTMX swaps
@@ -16,6 +17,7 @@ document.body.addEventListener('htmx:afterSwap', (e) => {
     initSorting();
     initSearch();
     initDeleteWarnings();
+    initStudySession();
 });
 
 document.body.addEventListener('htmx:afterSettle', (e) => {
@@ -157,6 +159,154 @@ function initDeleteWarnings() {
                 e.preventDefault();
                 e.stopPropagation();
             }
+        });
+    });
+}
+
+/* ---------- Study Session Setup + Card Behavior ---------- */
+function initStudySession() {
+    initStudySetup();
+    initStudyCard();
+}
+
+function initStudySetup() {
+    document.querySelectorAll('.sh-study-setup-card').forEach(form => {
+        if (form.dataset.initialized) return;
+        form.dataset.initialized = 'true';
+
+        const checkboxes = Array.from(form.querySelectorAll('.sh-study-deck-checkbox'));
+        const orderList = form.querySelector('#sh-study-order-list');
+        const orderedField = form.querySelector('#study-ordered-deck-ids');
+        const modeInputs = Array.from(form.querySelectorAll('input[name="sessionMode"]'));
+        const deckByDeckSections = Array.from(form.querySelectorAll('.sh-study-deck-options'));
+
+        const selectedMap = new Map();
+        checkboxes.forEach(input => {
+            selectedMap.set(input.value, {
+                id: input.value,
+                name: input.closest('label')?.querySelector('.sh-deck-name')?.textContent?.trim() || `Deck ${input.value}`
+            });
+        });
+
+        function readCurrentOrder() {
+            return Array.from(orderList.querySelectorAll('li[data-deck-id]'))
+                .map(li => li.dataset.deckId);
+        }
+
+        function checkedDeckIds() {
+            return checkboxes.filter(input => input.checked).map(input => input.value);
+        }
+
+        function renderOrderList(deckIds) {
+            orderList.innerHTML = '';
+
+            if (deckIds.length === 0) {
+                const empty = document.createElement('li');
+                empty.className = 'sh-study-order-empty';
+                empty.textContent = 'Select decks to define manual order.';
+                orderList.appendChild(empty);
+                orderedField.value = '';
+                return;
+            }
+
+            deckIds.forEach((deckId, index) => {
+                const meta = selectedMap.get(deckId);
+                if (!meta) return;
+
+                const li = document.createElement('li');
+                li.className = 'sh-study-order-item';
+                li.dataset.deckId = deckId;
+
+                const name = document.createElement('span');
+                name.className = 'sh-study-order-name';
+                name.textContent = `${index + 1}. ${meta.name}`;
+
+                const controls = document.createElement('div');
+                controls.className = 'sh-study-order-controls';
+
+                const upBtn = document.createElement('button');
+                upBtn.type = 'button';
+                upBtn.className = 'sh-btn sh-btn-ghost sh-btn-sm';
+                upBtn.textContent = 'Up';
+                upBtn.addEventListener('click', () => moveItem(deckId, -1));
+
+                const downBtn = document.createElement('button');
+                downBtn.type = 'button';
+                downBtn.className = 'sh-btn sh-btn-ghost sh-btn-sm';
+                downBtn.textContent = 'Down';
+                downBtn.addEventListener('click', () => moveItem(deckId, 1));
+
+                controls.appendChild(upBtn);
+                controls.appendChild(downBtn);
+                li.appendChild(name);
+                li.appendChild(controls);
+                orderList.appendChild(li);
+            });
+
+            orderedField.value = readCurrentOrder().join(',');
+        }
+
+        function syncOrderWithSelection() {
+            const selected = checkedDeckIds();
+            const existing = readCurrentOrder();
+
+            const next = existing.filter(id => selected.includes(id));
+            selected.forEach(id => {
+                if (!next.includes(id)) {
+                    next.push(id);
+                }
+            });
+
+            renderOrderList(next);
+        }
+
+        function moveItem(deckId, direction) {
+            const order = readCurrentOrder();
+            const index = order.indexOf(deckId);
+            const targetIndex = index + direction;
+
+            if (index < 0 || targetIndex < 0 || targetIndex >= order.length) {
+                return;
+            }
+
+            const [item] = order.splice(index, 1);
+            order.splice(targetIndex, 0, item);
+            renderOrderList(order);
+        }
+
+        function syncModeUi() {
+            const selectedMode = modeInputs.find(input => input.checked)?.value;
+            const showDeckOptions = selectedMode === 'DECK_BY_DECK';
+            deckByDeckSections.forEach(section => {
+                section.style.display = showDeckOptions ? '' : 'none';
+            });
+        }
+
+        checkboxes.forEach(input => input.addEventListener('change', syncOrderWithSelection));
+        modeInputs.forEach(input => input.addEventListener('change', syncModeUi));
+
+        syncOrderWithSelection();
+        syncModeUi();
+    });
+}
+
+function initStudyCard() {
+    document.querySelectorAll('.sh-study-card-root').forEach(root => {
+        if (root.dataset.initialized) return;
+        root.dataset.initialized = 'true';
+
+        const revealBtn = root.querySelector('.sh-study-reveal-btn');
+        const flipCard = root.querySelector('.sh-study-flip-card');
+        const answerControls = root.querySelector('.sh-study-answer-controls');
+
+        if (!revealBtn || !flipCard || !answerControls) {
+            return;
+        }
+
+        revealBtn.addEventListener('click', () => {
+            flipCard.classList.add('flipped');
+            revealBtn.classList.add('d-none');
+            answerControls.classList.remove('d-none');
         });
     });
 }

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Study Session')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="sh-main">
+    <div class="container" id="main-content">
+        <div th:switch="${studyStateView}">
+            <div th:case="'card'" th:replace="~{fragments/study-card :: studyCard}"></div>
+            <div th:case="'complete'" th:replace="~{fragments/study-complete :: studyComplete}"></div>
+            <div th:case="*" th:replace="~{fragments/study-setup :: studySetup}"></div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

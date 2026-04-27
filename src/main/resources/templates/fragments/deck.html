@@ -37,6 +37,12 @@
                   th:text="${deck.flashcards.size()} + ' cards'"></span>
         </div>
         <div class="d-flex gap-2">
+            <a class="sh-btn sh-btn-primary sh-btn-sm"
+               th:href="@{/decks/{id}/study/start(id=${deck.id})}"
+               hx-get th:hx-get="@{/decks/{id}/study/start(id=${deck.id})}"
+               hx-target="#main-content" hx-push-url="true">
+                Start Study
+            </a>
             <button class="sh-btn sh-btn-primary sh-btn-sm" data-bs-toggle="modal"
                     data-bs-target="#newCardModal">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"

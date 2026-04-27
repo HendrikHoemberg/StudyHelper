@@ -8,7 +8,10 @@ import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 @Service
@@ -57,5 +60,41 @@ public class FlashcardService {
         Deck deck = deckRepository.findByIdAndUser(deckId, user)
             .orElseThrow(() -> new NoSuchElementException("Deck not found"));
         return flashcardRepository.findByDeck(deck);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, List<Flashcard>> getFlashcardsGroupedByDeck(List<Deck> orderedDecks) {
+        Map<Long, List<Flashcard>> grouped = new LinkedHashMap<>();
+        if (orderedDecks == null || orderedDecks.isEmpty()) {
+            return grouped;
+        }
+
+        for (Deck deck : orderedDecks) {
+            grouped.put(deck.getId(), new ArrayList<>());
+        }
+
+        List<Flashcard> cards = flashcardRepository.findByDeckIn(orderedDecks);
+        for (Flashcard card : cards) {
+            List<Flashcard> bucket = grouped.get(card.getDeck().getId());
+            if (bucket != null) {
+                bucket.add(card);
+            }
+        }
+
+        return grouped;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Flashcard> getFlashcardsFlattened(List<Deck> orderedDecks) {
+        if (orderedDecks == null || orderedDecks.isEmpty()) {
+            return List.of();
+        }
+        return flashcardRepository.findByDeckIn(orderedDecks);
+    }
+
+    @Transactional(readOnly = true)
+    public Flashcard getFlashcardForUser(Long cardId, User user) {
+        return flashcardRepository.findByIdAndDeckUserUsername(cardId, user.getUsername())
+            .orElseThrow(() -> new NoSuchElementException("Flashcard not found"));
     }
 }

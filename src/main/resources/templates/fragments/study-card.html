@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="studyCard" id="study-session-content" class="sh-fade-in sh-study-card-root">
+
+    <div th:if="${studyError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${studyError}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h1 class="sh-page-title mb-1">Study Session</h1>
+            <p class="sh-folder-meta mb-0"
+               th:text="${currentCardNumber} + ' / ' + ${totalCards} + ' cards'">1 / 10 cards</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="sh-badge sh-badge-muted"
+                  th:if="${isDeckByDeck}"
+                  th:text="'Deck: ' + ${currentCard.deckName}">Deck</span>
+            <span class="sh-badge sh-badge-primary"
+                  th:if="${isDeckByDeck}"
+                  th:text="${currentCard.deckPathLabel}">Path</span>
+        </div>
+    </div>
+
+    <div class="sh-study-card-shell">
+        <div class="sh-flip-container sh-study-flip-container">
+            <div class="sh-flip-card sh-study-flip-card" th:data-card-id="${currentCard.cardId}">
+                <div class="sh-flip-face sh-flip-front">
+                    <div class="sh-study-face-content">
+                        <div class="sh-flashcard-label">Front</div>
+                        <div class="sh-study-face-text" th:text="${currentCard.frontText}">Front text</div>
+                    </div>
+                </div>
+                <div class="sh-flip-face sh-flip-back">
+                    <div class="sh-study-face-content">
+                        <div class="sh-flashcard-label">Back</div>
+                        <div class="sh-study-face-text" th:text="${currentCard.backText}">Back text</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sh-study-actions">
+            <button type="button" class="sh-btn sh-btn-primary sh-study-reveal-btn">Reveal Answer</button>
+
+            <div class="sh-study-answer-controls d-none">
+                <form method="post"
+                      hx-post="/session/answer"
+                      hx-target="#study-session-content"
+                      hx-swap="outerHTML">
+                    <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
+                    <input type="hidden" name="isCorrect" value="true">
+                    <button type="submit" class="sh-btn sh-btn-primary sh-study-answer-btn sh-study-correct-btn">
+                        ✓ Correct
+                    </button>
+                </form>
+
+                <form method="post"
+                      hx-post="/session/answer"
+                      hx-target="#study-session-content"
+                      hx-swap="outerHTML">
+                    <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
+                    <input type="hidden" name="isCorrect" value="false">
+                    <button type="submit" class="sh-btn sh-btn-danger sh-study-answer-btn">
+                        ✕ Incorrect
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
