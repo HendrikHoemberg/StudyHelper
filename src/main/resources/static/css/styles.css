@@ -638,7 +638,7 @@ body {
 }
 
 .sh-flip-card.flipped {
-    transform: rotateY(180deg);
+    transform: rotateX(180deg);
 }
 
 .sh-flip-face {
@@ -660,7 +660,7 @@ body {
 }
 
 .sh-flip-back {
-    transform: rotateY(180deg);
+    transform: rotateX(180deg);
     background: linear-gradient(135deg, var(--sh-primary-light), var(--sh-accent-light));
 }
 
