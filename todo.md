@@ -2,3 +2,5 @@
 - add images to cards
 - Folderview Hero section -> Foldercolor banner
 - Study mode -> ability to select decks AND folders
+- remove folder icon from sidebar folders
+- Rethink sidebar design
