@@ -13,73 +13,143 @@
         </button>
     </div>
 
-    <!-- Page header -->
-    <div class="sh-page-header">
-        <div>
-            <h1 class="sh-page-title">My Folders</h1>
-        </div>
-        <div class="sh-page-actions">
-            <a href="/study/start" class="sh-btn sh-btn-secondary"
-               hx-get="/study/start" hx-target="#main-content" hx-push-url="true">
-                <i data-lucide="book-open"></i>
-                Start Study
-            </a>
-            <button class="sh-btn sh-btn-primary" data-modal-open="newFolderModal">
-                <i data-lucide="plus"></i>
-                New Folder
-            </button>
+    <div class="sh-dashboard-shell">
+        <div class="sh-dashboard-grid">
+            <aside class="sh-dashboard-sidebar">
+                <div class="sh-sidebar-card">
+                    <div class="sh-sidebar-header">
+                        <div class="sh-sidebar-title">My Folders</div>
+                        <button class="sh-btn sh-btn-ghost sh-btn-icon" data-modal-open="newFolderModal" title="New folder">
+                            <i data-lucide="plus"></i>
+                        </button>
+                    </div>
+                    <div th:if="${#lists.isEmpty(folders)}" class="sh-sidebar-empty">
+                        No folders yet
+                    </div>
+                    <ul th:if="${!#lists.isEmpty(folders)}" class="sh-sidebar-list">
+                        <li th:each="folder, iterStat : ${folders}"
+                            class="sh-sidebar-item sh-folder-filter-item"
+                            th:data-name="${folder.name}"
+                            th:style="'--folder-color:' + ${folder.colorHex}">
+                            <a th:href="@{/folders/{id}(id=${folder.id})}"
+                               class="sh-sidebar-link"
+                               hx-get th:hx-get="@{/folders/{id}(id=${folder.id})}"
+                               hx-target="#main-content" hx-push-url="true">
+                                <span class="sh-sidebar-icon">
+                                    <i data-lucide="folder"></i>
+                                </span>
+                                <span class="sh-sidebar-name" th:text="${folder.name}">Folder</span>
+                                <span class="sh-sidebar-badge"
+                                      th:text="${cardCounts[iterStat.index][0]} + ' cards'"></span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <a href="/study/start" class="sh-btn sh-btn-secondary sh-sidebar-cta"
+                   hx-get="/study/start" hx-target="#main-content" hx-push-url="true">
+                    <i data-lucide="book-open"></i>
+                    Study Session
+                </a>
+            </aside>
+
+            <main class="sh-dashboard-main">
+                <div class="sh-page-header">
+                    <div>
+                        <h1 class="sh-page-title">My Folders</h1>
+                        <p class="sh-page-subtitle">Pick a deck, keep your momentum going.</p>
+                    </div>
+                    <div class="sh-page-actions">
+                        <a href="/study/start" class="sh-btn sh-btn-secondary"
+                           hx-get="/study/start" hx-target="#main-content" hx-push-url="true">
+                            <i data-lucide="book-open"></i>
+                            Start Study
+                        </a>
+                        <button class="sh-btn sh-btn-primary" data-modal-open="newFolderModal">
+                            <i data-lucide="plus"></i>
+                            New Folder
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sh-dashboard-search">
+                    <div class="sh-search-bar sh-search-bar-lg">
+                        <span class="sh-search-icon">
+                            <i data-lucide="search"></i>
+                        </span>
+                        <input type="text" class="sh-input sh-search-input" placeholder="Search folders..."
+                               data-filter-target=".sh-folder-filter-item">
+                    </div>
+                </div>
+
+                <div class="sh-section-title">Flashcard Decks</div>
+
+                <div th:if="${#lists.isEmpty(folders)}" class="sh-empty">
+                    <div class="sh-empty-icon">
+                        <i data-lucide="folder-open"></i>
+                    </div>
+                    <p class="sh-empty-text">No folders yet</p>
+                    <p class="sh-empty-hint">Create a folder to start organising your study materials.</p>
+                </div>
+
+                <div th:if="${!#lists.isEmpty(folders)}" class="sh-deck-grid">
+                    <a th:each="folder, iterStat : ${folders}"
+                       th:href="@{/folders/{id}(id=${folder.id})}"
+                       class="sh-deck-tile sh-folder-filter-item"
+                       th:data-name="${folder.name}"
+                       th:style="'--folder-color:' + ${folder.colorHex}"
+                       hx-get th:hx-get="@{/folders/{id}(id=${folder.id})}"
+                       hx-target="#main-content" hx-push-url="true">
+                        <div class="sh-deck-cover">
+                            <span class="sh-deck-cover-icon">
+                                <i data-lucide="layers"></i>
+                            </span>
+                        </div>
+                        <div class="sh-deck-body">
+                            <div class="sh-deck-title" th:text="${folder.name}">Folder</div>
+                            <div class="sh-deck-meta" th:text="${cardCounts[iterStat.index][0]} + ' cards'"></div>
+                        </div>
+                    </a>
+                </div>
+            </main>
+
+            <aside class="sh-dashboard-aside">
+                <div class="sh-side-card">
+                    <div class="sh-side-card-title">Recent Activity</div>
+                    <ul class="sh-activity-list">
+                        <li class="sh-activity-item">
+                            <span class="sh-activity-dot"></span>
+                            <div>
+                                <div class="sh-activity-title">Study Session</div>
+                                <div class="sh-activity-meta">21 cards - 10:50 pm</div>
+                            </div>
+                        </li>
+                        <li class="sh-activity-item">
+                            <span class="sh-activity-dot"></span>
+                            <div>
+                                <div class="sh-activity-title">Study Session</div>
+                                <div class="sh-activity-meta">13 cards - 10:40 pm</div>
+                            </div>
+                        </li>
+                        <li class="sh-activity-item">
+                            <span class="sh-activity-dot"></span>
+                            <div>
+                                <div class="sh-activity-title">Study Session</div>
+                                <div class="sh-activity-meta">21 cards - 10:30 pm</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="sh-side-card">
+                    <div class="sh-side-card-title">Daily Goal</div>
+                    <div class="sh-goal-stat">
+                        <div class="sh-goal-value">4/5</div>
+                        <div class="sh-goal-label">Decks studied today</div>
+                    </div>
+                </div>
+            </aside>
         </div>
     </div>
-
-    <!-- Search toolbar -->
-    <div class="sh-toolbar">
-        <div class="sh-search-bar" style="min-width: 240px;">
-            <span class="sh-search-icon">
-                <i data-lucide="search"></i>
-            </span>
-            <input type="text" class="sh-input sh-search-input" placeholder="Search folders..."
-                   data-filter-target=".sh-tree-item-root">
-        </div>
-    </div>
-
-    <!-- Empty state -->
-    <div th:if="${#lists.isEmpty(folders)}" class="sh-empty">
-        <div class="sh-empty-icon">
-            <i data-lucide="folder-open"></i>
-        </div>
-        <p class="sh-empty-text">No folders yet</p>
-        <p class="sh-empty-hint">Create a folder to start organising your study materials.</p>
-    </div>
-
-    <!-- Explorer tree -->
-    <ul th:if="${!#lists.isEmpty(folders)}" class="sh-tree">
-        <li th:each="folder, iterStat : ${folders}"
-            class="sh-tree-item sh-tree-item-root"
-            th:data-name="${folder.name}"
-            th:style="'--folder-color:' + ${folder.colorHex}">
-            <div class="sh-tree-header sh-tree-toggle-btn">
-                <span class="sh-tree-toggle">
-                    <i data-lucide="chevron-right"></i>
-                </span>
-                <span class="sh-tree-folder-icon">
-                    <i data-lucide="folder"></i>
-                </span>
-                <a th:href="@{/folders/{id}(id=${folder.id})}" class="sh-folder-name flex-1"
-                   hx-get th:hx-get="@{/folders/{id}(id=${folder.id})}"
-                   hx-target="#main-content" hx-push-url="true"
-                   onclick="event.stopPropagation();"
-                   th:text="${folder.name}">Folder</a>
-                <span class="sh-badge sh-badge-muted"
-                      th:text="${cardCounts[iterStat.index][0]} + ' cards'"></span>
-            </div>
-            <!-- Children loaded via HTMX on expand -->
-            <div class="sh-tree-children"
-                 th:hx-get="@{/folders/{id}/children(id=${folder.id})}"
-                 hx-trigger="intersect once"
-                 hx-swap="innerHTML">
-            </div>
-        </li>
-    </ul>
 
     <!-- New Folder Modal -->
     <div class="sh-modal" id="newFolderModal">

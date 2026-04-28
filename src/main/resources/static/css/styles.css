@@ -2,10 +2,12 @@
    StudyHelper — Design System & Global Styles
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 /* ---------- Theme Tokens ---------- */
 :root {
+    --font-body: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+    --font-heading: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
     --bg: #f9fafb;
     --surface: #ffffff;
     --surface-raised: #ffffff;
@@ -81,7 +83,7 @@ html {
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-family: var(--font-body);
     background: var(--bg);
     color: var(--text);
     line-height: 1.6;
@@ -276,6 +278,327 @@ a { color: inherit; text-decoration: none; }
     flex: 1;
     padding: 1.5rem;
     background: var(--bg);
+}
+
+/* ============================================================
+   DASHBOARD LAYOUT
+   ============================================================ */
+
+.sh-dashboard-shell {
+    position: relative;
+    padding: 1rem;
+    border-radius: 24px;
+    background:
+        radial-gradient(1200px circle at 15% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
+        radial-gradient(900px circle at 90% 0%, rgba(59, 130, 246, 0.08), transparent 55%);
+    overflow: hidden;
+}
+
+.sh-dashboard-shell::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        repeating-linear-gradient(135deg, rgba(15, 23, 42, 0.06) 0 1px, transparent 1px 24px);
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+[data-theme="dark"] .sh-dashboard-shell {
+    background:
+        radial-gradient(1200px circle at 10% -20%, rgba(99, 102, 241, 0.22), transparent 60%),
+        radial-gradient(900px circle at 90% 0%, rgba(14, 165, 233, 0.12), transparent 55%);
+}
+
+[data-theme="dark"] .sh-dashboard-shell::before {
+    background-image:
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 28px);
+    opacity: 0.25;
+}
+
+.sh-dashboard-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 280px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.sh-dashboard-sidebar,
+.sh-dashboard-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sh-dashboard-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.sh-sidebar-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.sh-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.sh-sidebar-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: -0.01em;
+}
+
+.sh-sidebar-empty {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    padding: 0.5rem 0.25rem;
+}
+
+.sh-sidebar-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.sh-sidebar-item {
+    border-radius: 12px;
+}
+
+.sh-sidebar-link {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.625rem;
+    border-radius: 12px;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.sh-sidebar-link:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+}
+
+.sh-sidebar-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--folder-color, var(--accent));
+}
+
+.sh-sidebar-icon svg { width: 16px; height: 16px; }
+
+.sh-sidebar-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sh-sidebar-badge {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    background: var(--border-light);
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+}
+
+.sh-sidebar-cta {
+    width: 100%;
+    justify-content: center;
+}
+
+.sh-dashboard-search {
+    margin-top: -0.25rem;
+}
+
+.sh-search-bar-lg .sh-input {
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+    border-radius: 14px;
+    font-size: 0.9rem;
+}
+
+.sh-search-bar-lg .sh-search-icon {
+    left: 0.9rem;
+}
+
+.sh-deck-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 1rem;
+}
+
+.sh-deck-tile {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.sh-deck-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 35%, var(--border));
+}
+
+.sh-deck-cover {
+    height: 120px;
+    border-radius: 16px;
+    background:
+        linear-gradient(135deg,
+            color-mix(in srgb, var(--folder-color, var(--accent)) 28%, #ffffff) 0%,
+            color-mix(in srgb, var(--folder-color, var(--accent)) 8%, #ffffff) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+[data-theme="dark"] .sh-deck-cover {
+    background:
+        linear-gradient(135deg,
+            color-mix(in srgb, var(--folder-color, var(--accent)) 35%, #141826) 0%,
+            color-mix(in srgb, var(--folder-color, var(--accent)) 10%, #141826) 100%);
+}
+
+.sh-deck-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(120px circle at 20% 20%, rgba(255, 255, 255, 0.3), transparent 65%);
+    opacity: 0.7;
+}
+
+.sh-deck-cover-icon {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--folder-color, var(--accent));
+    position: relative;
+    z-index: 1;
+    box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .sh-deck-cover-icon {
+    background: rgba(15, 17, 23, 0.75);
+}
+
+.sh-deck-cover-icon svg { width: 24px; height: 24px; }
+
+.sh-deck-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.sh-deck-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: -0.01em;
+}
+
+.sh-deck-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.sh-side-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.sh-side-card-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+.sh-activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sh-activity-item {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.sh-activity-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    margin-top: 0.35rem;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);
+    flex-shrink: 0;
+}
+
+.sh-activity-title {
+    font-weight: 600;
+    font-size: 0.8125rem;
+}
+
+.sh-activity-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.sh-goal-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-start;
+}
+
+.sh-goal-value {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--text);
+}
+
+.sh-goal-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
 }
 
 /* ============================================================
@@ -556,6 +879,7 @@ textarea.sh-input {
 }
 
 .sh-page-title {
+    font-family: var(--font-heading);
     font-size: 1.5rem;
     font-weight: 800;
     letter-spacing: -0.02em;
@@ -579,6 +903,7 @@ textarea.sh-input {
 }
 
 .sh-section-title {
+    font-family: var(--font-heading);
     font-size: 0.625rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -1637,6 +1962,33 @@ textarea.sh-input {
    RESPONSIVE — Mobile (≤ 768px)
    ============================================================ */
 
+@media (max-width: 1100px) {
+    .sh-dashboard-grid {
+        grid-template-columns: 220px minmax(0, 1fr);
+    }
+
+    .sh-dashboard-aside {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .sh-side-card {
+        flex: 1 1 260px;
+    }
+}
+
+@media (max-width: 900px) {
+    .sh-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sh-dashboard-sidebar,
+    .sh-dashboard-aside {
+        width: 100%;
+    }
+}
+
 @media (max-width: 768px) {
     .topnav-links { display: none; }
     .topnav-right { display: none; }
@@ -1648,6 +2000,18 @@ textarea.sh-input {
 
     .app-main-content {
         padding: 1rem;
+    }
+
+    .sh-dashboard-shell {
+        padding: 0.75rem;
+    }
+
+    .sh-dashboard-search {
+        margin-top: 0;
+    }
+
+    .sh-deck-grid {
+        grid-template-columns: 1fr;
     }
 
     .sh-study-flip-container {
