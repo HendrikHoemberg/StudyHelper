@@ -6,7 +6,7 @@
 
     <div th:if="${studyError}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${studyError}"></div>
-        <button type="button" class="sh-alert-close" data-dismiss-alert>
+        <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
             <i data-lucide="x"></i>
         </button>
     </div>
@@ -36,14 +36,16 @@
                 <div class="sh-section-title">Study Mode</div>
                 <div class="sh-study-mode-grid">
                     <label class="sh-study-choice">
-                        <input type="radio" name="sessionMode" value="DECK_BY_DECK" checked>
+                        <input type="radio" name="sessionMode" value="DECK_BY_DECK" checked
+                               hx-on:change="document.querySelectorAll('.sh-study-deck-options').forEach(s => s.style.display = '')">
                         <div>
                             <div class="sh-study-choice-title">Deck-by-Deck</div>
                             <div class="sh-study-choice-subtitle">Study one deck at a time.</div>
                         </div>
                     </label>
                     <label class="sh-study-choice">
-                        <input type="radio" name="sessionMode" value="SHUFFLED">
+                        <input type="radio" name="sessionMode" value="SHUFFLED"
+                               hx-on:change="document.querySelectorAll('.sh-study-deck-options').forEach(s => s.style.display = 'none')">
                         <div>
                             <div class="sh-study-choice-title">Shuffled</div>
                             <div class="sh-study-choice-subtitle">Mix all selected decks into one queue.</div>
@@ -83,7 +85,10 @@
                                            type="checkbox"
                                            name="selectedDeckIds"
                                            th:value="${deck.deckId}"
-                                           th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}">
+                                           th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}"
+                                           hx-post="/study/setup/order"
+                                           hx-target="#sh-study-order-list"
+                                           hx-include="#study-ordered-deck-ids">
                                     <i data-lucide="layers" style="width:14px;height:14px;color:var(--accent);flex-shrink:0;"></i>
                                     <span class="sh-deck-name" th:text="${deck.deckName}">Deck</span>
                                 </div>
@@ -98,8 +103,28 @@
             <section class="sh-study-deck-options">
                 <div class="sh-section-title">Manual Deck Order</div>
                 <p class="sh-folder-meta mb-2">Use up/down to define the explicit deck order for deck-by-deck mode.</p>
-                <ul class="sh-study-order-list" id="sh-study-order-list"></ul>
-                <input type="hidden" name="orderedDeckIds" id="study-ordered-deck-ids">
+                
+                <ul class="sh-study-order-list" id="sh-study-order-list">
+                    <th:block th:fragment="orderListFragment">
+                        <li th:if="${#lists.isEmpty(orderedDecks)}" class="sh-study-order-empty">
+                            Select decks to define manual order.
+                        </li>
+                        <li th:each="deck, stat : ${orderedDecks}" class="sh-study-order-item">
+                            <span class="sh-study-order-name" th:text="${stat.count} + '. ' + ${deck.deckName}">1. Deck</span>
+                            <div class="sh-study-order-controls">
+                                <button type="button" class="sh-btn sh-btn-ghost sh-btn-sm"
+                                        hx-post="/study/setup/reorder"
+                                        hx-target="#sh-study-order-list"
+                                        th:hx-vals="${'{&quot;deckId&quot;: ' + deck.deckId + ', &quot;direction&quot;: -1, &quot;orderedDeckIds&quot;: &quot;' + orderedDeckIdsString + '&quot;}'}">Up</button>
+                                <button type="button" class="sh-btn sh-btn-ghost sh-btn-sm"
+                                        hx-post="/study/setup/reorder"
+                                        hx-target="#sh-study-order-list"
+                                        th:hx-vals="${'{&quot;deckId&quot;: ' + deck.deckId + ', &quot;direction&quot;: 1, &quot;orderedDeckIds&quot;: &quot;' + orderedDeckIdsString + '&quot;}'}">Down</button>
+                            </div>
+                        </li>
+                        <input type="hidden" name="orderedDeckIds" id="study-ordered-deck-ids" th:value="${orderedDeckIdsString}">
+                    </th:block>
+                </ul>
             </section>
 
             <div class="flex justify-end">

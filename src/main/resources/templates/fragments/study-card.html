@@ -7,7 +7,7 @@
 
     <div th:if="${studyError}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${studyError}"></div>
-        <button type="button" class="sh-alert-close" data-dismiss-alert>
+        <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
             <i data-lucide="x"></i>
         </button>
     </div>
@@ -32,7 +32,7 @@
             <div class="sh-flip-card sh-study-flip-card" th:data-card-id="${currentCard.cardId}">
 
                 <!-- Front face -->
-                <div class="sh-flip-face sh-flip-front">
+                <div class="sh-flip-face sh-flip-front" hx-on:click="this.closest('.sh-flip-card').classList.add('flipped')">
                     <div class="sh-study-face-content">
                         <div class="sh-flashcard-label" style="margin-bottom:0.75rem;">Question</div>
                         <div class="sh-study-face-text" th:text="${currentCard.frontText}">Front text</div>

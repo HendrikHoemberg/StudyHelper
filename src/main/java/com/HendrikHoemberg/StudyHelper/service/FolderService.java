@@ -67,18 +67,41 @@ public class FolderService {
 
     @Transactional(readOnly = true)
     public FolderView getFolderView(Long id, User user) {
+        return getFolderView(id, user, null, "asc");
+    }
+
+    @Transactional(readOnly = true)
+    public FolderView getFolderView(Long id, User user, String sortBy, String direction) {
         Folder folder = folderRepository.findByIdAndUser(id, user)
             .orElseThrow(() -> new NoSuchElementException("Folder not found"));
 
         List<Folder> subFolders = new ArrayList<>(folder.getSubFolders());
         List<Deck> decks = new ArrayList<>(folder.getDecks());
-        // Initialize flashcard collections so they're accessible outside transaction
         decks.forEach(d -> d.getFlashcards().size());
+        
         List<FileEntry> files = new ArrayList<>(folder.getFiles());
+        if (sortBy != null) {
+            sortFiles(files, sortBy, "desc".equalsIgnoreCase(direction));
+        }
+
         List<Folder> breadcrumb = buildBreadcrumb(folder);
         int totalCardCount = getAggregatedCardCount(folder);
 
         return new FolderView(folder, subFolders, decks, files, breadcrumb, totalCardCount);
+    }
+
+    private void sortFiles(List<FileEntry> files, String sortBy, boolean desc) {
+        files.sort((a, b) -> {
+            int cmp = 0;
+            switch (sortBy) {
+                case "name" -> cmp = a.getOriginalFilename().compareToIgnoreCase(b.getOriginalFilename());
+                case "type" -> cmp = a.getMimeType().compareToIgnoreCase(b.getMimeType());
+                case "size" -> cmp = Long.compare(a.getFileSizeBytes(), b.getFileSizeBytes());
+                case "date" -> cmp = a.getUploadedAt().compareTo(b.getUploadedAt());
+                default -> { return 0; }
+            }
+            return desc ? -cmp : cmp;
+        });
     }
 
     @Transactional

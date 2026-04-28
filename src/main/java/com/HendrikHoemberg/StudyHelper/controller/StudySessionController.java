@@ -102,6 +102,44 @@ public class StudySessionController {
         return "study-page";
     }
 
+    @PostMapping("/study/setup/order")
+    public String updateOrderList(@RequestParam(name = "selectedDeckIds", required = false) List<Long> selectedDeckIds,
+                                  @RequestParam(name = "orderedDeckIds", required = false) String orderedDeckIds,
+                                  Model model,
+                                  Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        List<Long> selected = normalizeDeckIds(selectedDeckIds);
+        List<Long> manualOrder = parseDeckOrder(orderedDeckIds);
+        
+        // Filter out unselected, add new selected
+        List<Long> next = new ArrayList<>();
+        manualOrder.stream().filter(selected::contains).forEach(next::add);
+        selected.stream().filter(id -> !next.contains(id)).forEach(next::add);
+
+        prepareOrderModel(model, user, next);
+        return "fragments/study-setup :: orderListFragment";
+    }
+
+    @PostMapping("/study/setup/reorder")
+    public String reorderDecks(@RequestParam Long deckId,
+                               @RequestParam int direction,
+                               @RequestParam String orderedDeckIds,
+                               Model model,
+                               Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        List<Long> order = new ArrayList<>(parseDeckOrder(orderedDeckIds));
+        int index = order.indexOf(deckId);
+        int target = index + direction;
+        
+        if (index >= 0 && target >= 0 && target < order.size()) {
+            Long item = order.remove(index);
+            order.add(target, item);
+        }
+
+        prepareOrderModel(model, user, order);
+        return "fragments/study-setup :: orderListFragment";
+    }
+
     @PostMapping("/study/session")
     public String createSession(@RequestParam(name = "selectedDeckIds", required = false) List<Long> selectedDeckIds,
                                 @RequestParam(name = "sessionMode", defaultValue = "DECK_BY_DECK") SessionMode sessionMode,
@@ -290,6 +328,8 @@ public class StudySessionController {
         model.addAttribute("studyError", error);
         model.addAttribute("sessionModes", SessionMode.values());
         model.addAttribute("deckOrderModes", DeckOrderMode.values());
+        
+        prepareOrderModel(model, user, normalizeDeckIds(preselectedDeckIds));
     }
 
     private void prepareCardModel(Model model, StudySessionState state, String error) {
@@ -300,6 +340,21 @@ public class StudySessionController {
         model.addAttribute("totalCards", state.queue().size());
         model.addAttribute("isDeckByDeck", state.config().sessionMode() == SessionMode.DECK_BY_DECK);
         model.addAttribute("studyError", error);
+    }
+
+    private void prepareOrderModel(Model model, User user, List<Long> orderedIds) {
+        List<StudyDeckOption> options = deckService.getStudyDeckOptions(user);
+        Map<Long, StudyDeckOption> optionMap = new LinkedHashMap<>();
+        options.forEach(o -> optionMap.put(o.deckId(), o));
+        
+        List<StudyDeckOption> orderedOptions = new ArrayList<>();
+        orderedIds.forEach(id -> {
+            StudyDeckOption opt = optionMap.get(id);
+            if (opt != null) orderedOptions.add(opt);
+        });
+        
+        model.addAttribute("orderedDecks", orderedOptions);
+        model.addAttribute("orderedDeckIdsString", String.join(",", orderedIds.stream().map(String::valueOf).toList()));
     }
 
     private void prepareCompletionModel(Model model, StudySessionState state) {

@@ -11,7 +11,7 @@
          th:data-name="${sub.name}"
          th:style="'--folder-color:' + ${sub.colorHex}"
          style="margin-bottom: 0.25rem;">
-        <div class="sh-tree-header sh-tree-toggle-btn">
+        <div class="sh-tree-header" hx-on:click="this.closest('.sh-tree-item').classList.toggle('expanded')">
             <span class="sh-tree-toggle">
                 <i data-lucide="chevron-right"></i>
             </span>
@@ -21,12 +21,12 @@
             <a th:href="@{/folders/{id}(id=${sub.id})}" class="sh-folder-name flex-1"
                hx-get th:hx-get="@{/folders/{id}(id=${sub.id})}"
                hx-target="#explorer-detail" hx-push-url="true"
-               onclick="event.stopPropagation();"
+               hx-on:click="event.stopPropagation();"
                th:text="${sub.name}">Subfolder</a>
         </div>
         <div class="sh-tree-children"
              th:hx-get="@{/folders/{id}/children(id=${sub.id})}"
-             hx-trigger="intersect once"
+             hx-trigger="intersect once, click from:closest .sh-tree-header once"
              hx-swap="innerHTML">
         </div>
     </div>

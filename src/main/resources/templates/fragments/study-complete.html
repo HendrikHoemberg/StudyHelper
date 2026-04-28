@@ -6,7 +6,7 @@
 
     <div th:if="${studyError}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${studyError}"></div>
-        <button type="button" class="sh-alert-close" data-dismiss-alert>
+        <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
             <i data-lucide="x"></i>
         </button>
     </div>

@@ -8,7 +8,7 @@
     <!-- Alert for errors -->
     <div th:if="${error}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${error}"></div>
-        <button type="button" class="sh-alert-close" data-dismiss-alert>
+        <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
             <i data-lucide="x"></i>
         </button>
     </div>
@@ -19,7 +19,7 @@
                 <div class="sh-sidebar-card">
                     <div class="sh-sidebar-header">
                         <div class="sh-sidebar-title">Folder Tree</div>
-                        <button class="sh-btn sh-btn-ghost sh-btn-icon" data-modal-open="newFolderModal" title="New folder">
+                        <button class="sh-btn sh-btn-ghost sh-btn-icon" hx-on:click="document.getElementById('newFolderModal').classList.add('is-open'); document.body.style.overflow='hidden'; document.getElementById('newFolderModal').querySelector('input')?.focus();" title="New folder">
                             <i data-lucide="plus"></i>
                         </button>
                     </div>
@@ -30,7 +30,7 @@
                         <li th:each="folder : ${folders}"
                             class="sh-tree-item"
                             th:style="'--folder-color:' + ${folder.colorHex}">
-                            <div class="sh-tree-header sh-tree-toggle-btn">
+                            <div class="sh-tree-header" hx-on:click="this.closest('.sh-tree-item').classList.toggle('expanded')">
                                 <span class="sh-tree-toggle">
                                     <i data-lucide="chevron-right"></i>
                                 </span>
@@ -40,12 +40,12 @@
                                 <a th:href="@{/folders/{id}(id=${folder.id})}" class="sh-folder-name flex-1"
                                    hx-get th:hx-get="@{/folders/{id}(id=${folder.id})}"
                                    hx-target="#explorer-detail" hx-push-url="true"
-                                   onclick="event.stopPropagation();"
+                                   hx-on:click="event.stopPropagation();"
                                    th:text="${folder.name}">Folder</a>
                             </div>
                             <div class="sh-tree-children"
                                  th:hx-get="@{/folders/{id}/children(id=${folder.id})}"
-                                 hx-trigger="intersect once"
+                                 hx-trigger="intersect once, click from:closest .sh-tree-header once"
                                  hx-swap="innerHTML">
                             </div>
                         </li>
@@ -71,7 +71,7 @@
                                     <i data-lucide="book-open"></i>
                                     Start Study
                                 </a>
-                                <button class="sh-btn sh-btn-primary" data-modal-open="newFolderModal">
+                                <button class="sh-btn sh-btn-primary" hx-on:click="document.getElementById('newFolderModal').classList.add('is-open'); document.body.style.overflow='hidden'; document.getElementById('newFolderModal').querySelector('input')?.focus();">
                                     <i data-lucide="plus"></i>
                                     New Folder
                                 </button>
@@ -83,8 +83,11 @@
                                 <span class="sh-search-icon">
                                     <i data-lucide="search"></i>
                                 </span>
-                                <input type="text" class="sh-input sh-search-input" placeholder="Search decks and files..."
-                                       data-filter-target=".sh-library-filter-item">
+                                <input type="text" name="q" class="sh-input sh-search-input" placeholder="Search decks and files..."
+                                       hx-get="/folders"
+                                       hx-trigger="keyup changed delay:150ms"
+                                       hx-target="#library-grid-container"
+                                       th:value="${query}">
                             </div>
                         </div>
 
@@ -98,44 +101,46 @@
                             <p class="sh-empty-hint">Create a deck or upload a file to see it here.</p>
                         </div>
 
-                        <div th:if="${!#lists.isEmpty(deckOptions)} or ${!#lists.isEmpty(fileSummaries)}" class="sh-deck-grid">
-                            <a th:each="deck : ${deckOptions}"
-                               th:href="@{/decks/{id}(id=${deck.deckId})}"
-                               class="sh-deck-tile sh-library-filter-item"
-                               th:data-name="${deck.deckName + ' ' + deck.folderPath}"
-                                         th:style="'--folder-color:' + ${deck.folderColorHex}"
-                               hx-get th:hx-get="@{/decks/{id}(id=${deck.deckId})}"
-                               hx-target="#explorer-detail" hx-push-url="true">
-                                <div class="sh-deck-cover">
-                                    <span class="sh-deck-cover-icon">
-                                        <i data-lucide="layers"></i>
-                                    </span>
-                                </div>
-                                <div class="sh-deck-body">
-                                    <div class="sh-deck-title" th:text="${deck.deckName}">Deck Name</div>
-                                    <div class="sh-deck-meta" th:text="${deck.folderPath}">Folder</div>
-                                    <div class="sh-deck-meta" th:text="${deck.cardCount} + ' cards'">0 cards</div>
-                                </div>
-                            </a>
-
-                            <a th:each="file : ${fileSummaries}"
-                               th:href="@{/files/{id}/view(id=${file.id})}"
-                               target="_blank"
-                               class="sh-deck-tile sh-library-filter-item"
-                                         th:data-name="${file.originalFilename + ' ' + file.folderPath}"
-                                         th:style="'--folder-color:' + ${file.folderColorHex}">
-                                <div class="sh-deck-cover">
-                                    <span class="sh-deck-cover-icon">
-                                        <i data-lucide="file"></i>
-                                    </span>
-                                </div>
-                                <div class="sh-deck-body">
-                                    <div class="sh-deck-title" th:text="${file.originalFilename}">filename.pdf</div>
-                                    <div class="sh-deck-meta" th:text="${file.folderPath}">Folder</div>
-                                    <div class="sh-deck-meta"
-                                         th:text="${#numbers.formatDecimal(file.fileSizeBytes / 1024.0, 1, 1) + ' KB'}">0 KB</div>
-                                </div>
-                            </a>
+                        <div id="library-grid-container">
+                            <div th:fragment="libraryGrid" th:if="${!#lists.isEmpty(deckOptions)} or ${!#lists.isEmpty(fileSummaries)}" class="sh-deck-grid">
+                                <a th:each="deck : ${deckOptions}"
+                                   th:href="@{/decks/{id}(id=${deck.deckId})}"
+                                   class="sh-deck-tile sh-library-filter-item"
+                                   th:data-name="${deck.deckName + ' ' + deck.folderPath}"
+                                             th:style="'--folder-color:' + ${deck.folderColorHex}"
+                                   hx-get th:hx-get="@{/decks/{id}(id=${deck.deckId})}"
+                                   hx-target="#explorer-detail" hx-push-url="true">
+                                    <div class="sh-deck-cover">
+                                        <span class="sh-deck-cover-icon">
+                                            <i data-lucide="layers"></i>
+                                        </span>
+                                    </div>
+                                    <div class="sh-deck-body">
+                                        <div class="sh-deck-title" th:text="${deck.deckName}">Deck Name</div>
+                                        <div class="sh-deck-meta" th:text="${deck.folderPath}">Folder</div>
+                                        <div class="sh-deck-meta" th:text="${deck.cardCount} + ' cards'">0 cards</div>
+                                    </div>
+                                </a>
+    
+                                <a th:each="file : ${fileSummaries}"
+                                   th:href="@{/files/{id}/view(id=${file.id})}"
+                                   target="_blank"
+                                   class="sh-deck-tile sh-library-filter-item"
+                                             th:data-name="${file.originalFilename + ' ' + file.folderPath}"
+                                             th:style="'--folder-color:' + ${file.folderColorHex}">
+                                    <div class="sh-deck-cover">
+                                        <span class="sh-deck-cover-icon">
+                                            <i data-lucide="file"></i>
+                                        </span>
+                                    </div>
+                                    <div class="sh-deck-body">
+                                        <div class="sh-deck-title" th:text="${file.originalFilename}">filename.pdf</div>
+                                        <div class="sh-deck-meta" th:text="${file.folderPath}">Folder</div>
+                                        <div class="sh-deck-meta"
+                                             th:text="${#numbers.formatDecimal(file.fileSizeBytes / 1024.0, 1, 1) + ' KB'}">0 KB</div>
+                                    </div>
+                                </a>
+                            </div>
                         </div>
                     </main>
 
@@ -182,12 +187,12 @@
 
     <!-- New Folder Modal -->
     <div class="sh-modal" id="newFolderModal">
-        <div class="sh-modal-backdrop"></div>
+        <div class="sh-modal-backdrop" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';"></div>
         <div class="sh-modal-dialog sh-modal-dialog-sm">
             <div class="sh-modal-content">
                 <div class="sh-modal-header">
                     <h5 class="sh-modal-title">New Folder</h5>
-                    <button type="button" class="sh-modal-close" data-modal-close>
+                    <button type="button" class="sh-modal-close" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">
                         <i data-lucide="x"></i>
                     </button>
                 </div>
@@ -204,7 +209,7 @@
                         </div>
                     </div>
                     <div class="sh-modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" data-modal-close>Cancel</button>
+                        <button type="button" class="sh-btn sh-btn-secondary" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">Cancel</button>
                         <button type="submit" class="sh-btn sh-btn-primary">Create</button>
                     </div>
                 </form>

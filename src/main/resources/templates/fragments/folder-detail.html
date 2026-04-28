@@ -8,7 +8,7 @@
     <!-- Alert for errors -->
     <div th:if="${error}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${error}"></div>
-        <button type="button" class="sh-alert-close" data-dismiss-alert>
+        <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
             <i data-lucide="x"></i>
         </button>
     </div>
@@ -44,25 +44,25 @@
             </div>
         </div>
         <div class="sh-page-actions">
-            <button class="sh-btn sh-btn-secondary sh-btn-sm" data-modal-open="newSubfolderModal">
+            <button class="sh-btn sh-btn-secondary sh-btn-sm" hx-on:click="document.getElementById('newSubfolderModal').classList.add('is-open'); document.body.style.overflow='hidden'; document.getElementById('newSubfolderModal').querySelector('input')?.focus();">
                 <i data-lucide="folder-plus"></i>
                 Subfolder
             </button>
-            <button class="sh-btn sh-btn-secondary sh-btn-sm" data-modal-open="newDeckModal">
+            <button class="sh-btn sh-btn-secondary sh-btn-sm" hx-on:click="document.getElementById('newDeckModal').classList.add('is-open'); document.body.style.overflow='hidden'; document.getElementById('newDeckModal').querySelector('input')?.focus();">
                 <i data-lucide="layers"></i>
                 Deck
             </button>
-            <button class="sh-btn sh-btn-secondary sh-btn-sm" data-modal-open="uploadModal">
+            <button class="sh-btn sh-btn-secondary sh-btn-sm" hx-on:click="document.getElementById('uploadModal').classList.add('is-open'); document.body.style.overflow='hidden';">
                 <i data-lucide="upload"></i>
                 Upload
             </button>
-            <form th:action="@{/folders/{id}/delete(id=${view.folder.id})}" method="post" style="display:inline;">
-                <button type="submit" class="sh-btn sh-btn-danger sh-btn-sm"
-                        data-confirm="Delete this folder and all its contents? This action cannot be undone.">
-                    <i data-lucide="trash-2"></i>
-                    Delete
-                </button>
-            </form>
+            <button class="sh-btn sh-btn-danger sh-btn-sm"
+                    th:hx-post="@{/folders/{id}/delete(id=${view.folder.id})}"
+                    hx-confirm="Delete this folder and all its contents? This action cannot be undone."
+                    hx-target="body">
+                <i data-lucide="trash-2"></i>
+                Delete
+            </button>
         </div>
     </div>
 
@@ -112,7 +112,7 @@
     <div class="sh-card">
         <div class="sh-card-header">
             <h6 class="sh-card-header-title">Files</h6>
-            <button class="sh-btn sh-btn-primary sh-btn-sm" data-modal-open="uploadModal">
+            <button class="sh-btn sh-btn-primary sh-btn-sm" hx-on:click="document.getElementById('uploadModal').classList.add('is-open'); document.body.style.overflow='hidden';">
                 <i data-lucide="upload"></i>
                 Upload File
             </button>
@@ -127,13 +127,26 @@
 
         <!-- Files table -->
         <div th:if="${!#lists.isEmpty(view.files)}">
-            <table class="sh-file-table">
+        <div id="files-table-container">
+            <table th:fragment="filesTable" class="sh-file-table">
                 <thead>
                     <tr>
-                        <th data-sort="name">Name <span class="sort-indicator">▲</span></th>
-                        <th data-sort="type">Type <span class="sort-indicator">▲</span></th>
-                        <th data-sort="size">Size <span class="sort-indicator">▲</span></th>
-                        <th data-sort="date">Uploaded <span class="sort-indicator">▲</span></th>
+                        <th hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, sortBy='name', direction=${sortBy == 'name' && direction == 'asc' ? 'desc' : 'asc'})}"
+                            hx-target="#files-table-container" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
+                            Name <span class="sort-indicator" th:text="${sortBy == 'name' ? (direction == 'asc' ? '▲' : '▼') : '▲'}">▲</span>
+                        </th>
+                        <th hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, sortBy='type', direction=${sortBy == 'type' && direction == 'asc' ? 'desc' : 'asc'})}"
+                            hx-target="#files-table-container" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
+                            Type <span class="sort-indicator" th:text="${sortBy == 'type' ? (direction == 'asc' ? '▲' : '▼') : '▲'}">▲</span>
+                        </th>
+                        <th hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, sortBy='size', direction=${sortBy == 'size' && direction == 'asc' ? 'desc' : 'asc'})}"
+                            hx-target="#files-table-container" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
+                            Size <span class="sort-indicator" th:text="${sortBy == 'size' ? (direction == 'asc' ? '▲' : '▼') : '▲'}">▲</span>
+                        </th>
+                        <th hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, sortBy='date', direction=${sortBy == 'date' && direction == 'asc' ? 'desc' : 'asc'})}"
+                            hx-target="#files-table-container" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
+                            Uploaded <span class="sort-indicator" th:text="${sortBy == 'date' ? (direction == 'asc' ? '▲' : '▼') : '▲'}">▲</span>
+                        </th>
                         <th style="text-align:right;">Actions</th>
                     </tr>
                 </thead>
@@ -150,27 +163,27 @@
                                class="sh-btn sh-btn-ghost sh-btn-sm">View</a>
                             <a th:href="@{/files/{id}/download(id=${file.id})}"
                                class="sh-btn sh-btn-ghost sh-btn-sm">Download</a>
-                            <form th:action="@{/files/{id}/delete(id=${file.id})}" method="post"
-                                  style="display:inline;">
-                                <button type="submit" class="sh-btn sh-btn-ghost sh-btn-sm"
+                                <button class="sh-btn sh-btn-ghost sh-btn-sm"
                                         style="color:var(--danger);"
-                                        data-confirm="Delete this file?">Delete</button>
-                            </form>
+                                        th:hx-post="@{/files/{id}/delete(id=${file.id})}"
+                                        hx-confirm="Delete this file?"
+                                        hx-target="body">Delete</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
+        </div>
     </div>
 
     <!-- Upload Modal -->
     <div class="sh-modal" id="uploadModal">
-        <div class="sh-modal-backdrop"></div>
+        <div class="sh-modal-backdrop" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';"></div>
         <div class="sh-modal-dialog">
             <div class="sh-modal-content">
                 <div class="sh-modal-header">
                     <h5 class="sh-modal-title">Upload File</h5>
-                    <button type="button" class="sh-modal-close" data-modal-close>
+                    <button type="button" class="sh-modal-close" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">
                         <i data-lucide="x"></i>
                     </button>
                 </div>
@@ -185,7 +198,7 @@
                             Maximum file size: 100 MB</p>
                     </div>
                     <div class="sh-modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" data-modal-close>Cancel</button>
+                        <button type="button" class="sh-btn sh-btn-secondary" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">Cancel</button>
                         <button type="submit" class="sh-btn sh-btn-primary">Upload</button>
                     </div>
                 </form>
@@ -195,12 +208,12 @@
 
     <!-- New Subfolder Modal -->
     <div class="sh-modal" id="newSubfolderModal">
-        <div class="sh-modal-backdrop"></div>
+        <div class="sh-modal-backdrop" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';"></div>
         <div class="sh-modal-dialog sh-modal-dialog-sm">
             <div class="sh-modal-content">
                 <div class="sh-modal-header">
                     <h5 class="sh-modal-title">New Subfolder</h5>
-                    <button type="button" class="sh-modal-close" data-modal-close>
+                    <button type="button" class="sh-modal-close" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">
                         <i data-lucide="x"></i>
                     </button>
                 </div>
@@ -217,7 +230,7 @@
                         </div>
                     </div>
                     <div class="sh-modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" data-modal-close>Cancel</button>
+                        <button type="button" class="sh-btn sh-btn-secondary" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">Cancel</button>
                         <button type="submit" class="sh-btn sh-btn-primary">Create</button>
                     </div>
                 </form>
@@ -227,12 +240,12 @@
 
     <!-- New Deck Modal -->
     <div class="sh-modal" id="newDeckModal">
-        <div class="sh-modal-backdrop"></div>
+        <div class="sh-modal-backdrop" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';"></div>
         <div class="sh-modal-dialog sh-modal-dialog-sm">
             <div class="sh-modal-content">
                 <div class="sh-modal-header">
                     <h5 class="sh-modal-title">New Deck</h5>
-                    <button type="button" class="sh-modal-close" data-modal-close>
+                    <button type="button" class="sh-modal-close" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">
                         <i data-lucide="x"></i>
                     </button>
                 </div>
@@ -245,7 +258,7 @@
                         </div>
                     </div>
                     <div class="sh-modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" data-modal-close>Cancel</button>
+                        <button type="button" class="sh-btn sh-btn-secondary" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">Cancel</button>
                         <button type="submit" class="sh-btn sh-btn-primary">Create</button>
                     </div>
                 </form>

@@ -38,18 +38,34 @@ public class FolderController {
 
     @GetMapping("/folders")
     public String listFolders(Model model, Principal principal,
-                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+                              @RequestParam(required = false) String q,
+                              @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                              @RequestHeader(value = "HX-Target", required = false) String hxTarget) {
         User user = userService.getByUsername(principal.getName());
         List<Folder> folders = folderService.getRootFolders(user);
         List<StudyDeckOption> deckOptions = deckService.getStudyDeckOptions(user);
         List<FileSummary> fileSummaries = fileEntryService.getFileSummaries(user);
 
+        if (q != null && !q.isBlank()) {
+            String query = q.toLowerCase();
+            deckOptions = deckOptions.stream()
+                .filter(d -> d.deckName().toLowerCase().contains(query) || d.folderPath().toLowerCase().contains(query))
+                .toList();
+            fileSummaries = fileSummaries.stream()
+                .filter(f -> f.originalFilename().toLowerCase().contains(query) || f.folderPath().toLowerCase().contains(query))
+                .toList();
+        }
+
         model.addAttribute("folders", folders);
         model.addAttribute("deckOptions", deckOptions);
         model.addAttribute("fileSummaries", fileSummaries);
         model.addAttribute("username", principal.getName());
+        model.addAttribute("query", q);
 
         if (hxRequest != null) {
+            if ("library-grid-container".equals(hxTarget)) {
+                return "fragments/explorer :: libraryGrid";
+            }
             return "fragments/explorer :: explorerContent";
         }
         return "dashboard";
@@ -66,14 +82,23 @@ public class FolderController {
     }
 
     @GetMapping("/folders/{id}")
-    public String viewFolder(@PathVariable Long id, Model model, Principal principal,
-                             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+    public String viewFolder(@PathVariable Long id, 
+                             @RequestParam(required = false) String sortBy,
+                             @RequestParam(required = false, defaultValue = "asc") String direction,
+                             Model model, Principal principal,
+                             @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                             @RequestHeader(value = "HX-Target", required = false) String hxTarget) {
         User user = userService.getByUsername(principal.getName());
-        FolderView view = folderService.getFolderView(id, user);
+        FolderView view = folderService.getFolderView(id, user, sortBy, direction);
         model.addAttribute("view", view);
         model.addAttribute("username", principal.getName());
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("direction", direction);
 
         if (hxRequest != null) {
+            if ("files-table-container".equals(hxTarget)) {
+                return "fragments/folder-detail :: filesTable";
+            }
             return "fragments/folder-detail :: folderDetail";
         }
         return "folder-page";
