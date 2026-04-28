@@ -6,7 +6,9 @@
 <div class="app-layout">
     <nav th:replace="~{fragments/layout :: topnav}"></nav>
     <div id="main-content" class="app-main-content">
-        <div th:replace="~{fragments/folder-detail :: folderDetail}"></div>
+        <div id="explorer-detail" class="sh-explorer-detail sh-explorer-detail-standalone">
+            <div th:replace="~{fragments/folder-detail :: folderDetail}"></div>
+        </div>
     </div>
 </div>
 

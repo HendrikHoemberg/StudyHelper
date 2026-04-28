@@ -16,15 +16,16 @@
     <!-- Breadcrumb -->
     <ul class="sh-breadcrumb">
         <li>
-            <a href="/folders" hx-get="/folders" hx-target="#main-content" hx-push-url="true">My Folders</a>
+            <a href="/folders" hx-get="/folders" hx-target="#explorer-detail"
+               hx-select=".sh-explorer-detail-content" hx-push-url="true">My Folders</a>
         </li>
         <th:block th:each="crumb, stat : ${view.breadcrumb}">
             <li class="sh-breadcrumb-sep"><i data-lucide="chevron-right"></i></li>
             <li th:if="!${stat.last}">
-                <a th:href="@{/folders/{id}(id=${crumb.id})}"
-                   hx-get th:hx-get="@{/folders/{id}(id=${crumb.id})}"
-                   hx-target="#main-content" hx-push-url="true"
-                   th:text="${crumb.name}">Crumb</a>
+                     <a th:href="@{/folders/{id}(id=${crumb.id})}"
+                         hx-get th:hx-get="@{/folders/{id}(id=${crumb.id})}"
+                         hx-target="#explorer-detail" hx-push-url="true"
+                         th:text="${crumb.name}">Crumb</a>
             </li>
             <li th:if="${stat.last}" class="sh-breadcrumb-current" th:text="${crumb.name}">Current</li>
         </th:block>
@@ -74,7 +75,7 @@
                class="sh-folder-card"
                th:style="'--folder-color:' + ${sub.colorHex}"
                hx-get th:hx-get="@{/folders/{id}(id=${sub.id})}"
-               hx-target="#main-content" hx-push-url="true">
+               hx-target="#explorer-detail" hx-push-url="true">
                 <div class="sh-folder-card-inner">
                     <span class="sh-folder-card-icon">
                         <i data-lucide="folder"></i>
@@ -93,7 +94,7 @@
                th:href="@{/decks/{id}(id=${deck.id})}"
                class="sh-deck-card"
                hx-get th:hx-get="@{/decks/{id}(id=${deck.id})}"
-               hx-target="#main-content" hx-push-url="true">
+               hx-target="#explorer-detail" hx-push-url="true">
                 <div class="sh-deck-info">
                     <div class="sh-deck-icon">
                         <i data-lucide="layers"></i>
