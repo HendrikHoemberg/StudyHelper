@@ -4,3 +4,4 @@
 - Study mode -> ability to select decks AND folders
 - remove folder icon from sidebar folders
 - Rethink sidebar design
+- fix folder collapse animation
