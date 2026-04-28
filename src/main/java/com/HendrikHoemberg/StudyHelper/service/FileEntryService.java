@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.dto.FileSummary;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
@@ -10,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -54,6 +58,27 @@ public class FileEntryService {
         return entry;
     }
 
+    @Transactional(readOnly = true)
+    public List<FileSummary> getFileSummaries(User user) {
+        List<FileEntry> entries = fileEntryRepository.findByUser(user);
+        List<FileSummary> summaries = new ArrayList<>(entries.size());
+        for (FileEntry entry : entries) {
+            Folder folder = entry.getFolder();
+            String folderPath = buildFolderPath(folder);
+            summaries.add(new FileSummary(
+                entry.getId(),
+                entry.getOriginalFilename(),
+                folderPath,
+                folder.getColorHex(),
+                entry.getMimeType(),
+                entry.getFileSizeBytes(),
+                entry.getUploadedAt()
+            ));
+        }
+        summaries.sort(Comparator.comparing(FileSummary::uploadedAt).reversed());
+        return summaries;
+    }
+
     @Transactional
     public Long deleteAndGetFolderId(Long id, User user) throws IOException {
         FileEntry entry = fileEntryRepository.findByIdAndUser(id, user)
@@ -62,5 +87,15 @@ public class FileEntryService {
         fileStorageService.delete(entry.getStoredFilename());
         fileEntryRepository.delete(entry);
         return folderId;
+    }
+
+    private String buildFolderPath(Folder folder) {
+        List<String> segments = new ArrayList<>();
+        Folder current = folder;
+        while (current != null) {
+            segments.add(0, current.getName());
+            current = current.getParentFolder();
+        }
+        return String.join(" / ", segments);
     }
 }

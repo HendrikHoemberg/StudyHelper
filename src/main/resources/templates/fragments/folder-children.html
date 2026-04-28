@@ -20,7 +20,7 @@
             </span>
             <a th:href="@{/folders/{id}(id=${sub.id})}" class="sh-folder-name flex-1"
                hx-get th:hx-get="@{/folders/{id}(id=${sub.id})}"
-               hx-target="#main-content" hx-push-url="true"
+               hx-target="#explorer-detail" hx-push-url="true"
                onclick="event.stopPropagation();"
                th:text="${sub.name}">Subfolder</a>
         </div>
@@ -34,8 +34,8 @@
     <!-- Decks -->
     <a th:each="deck : ${view.decks}" class="sh-tree-deck"
        th:href="@{/decks/{id}(id=${deck.id})}"
-       hx-get th:hx-get="@{/decks/{id}(id=${deck.id})}"
-       hx-target="#main-content" hx-push-url="true">
+    hx-get th:hx-get="@{/decks/{id}(id=${deck.id})}"
+    hx-target="#explorer-detail" hx-push-url="true">
         <span class="sh-tree-deck-icon">
             <i data-lucide="layers"></i>
         </span>

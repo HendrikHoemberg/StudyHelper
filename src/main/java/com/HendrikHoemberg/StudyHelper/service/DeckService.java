@@ -100,6 +100,7 @@ public class DeckService {
                     deck.getId(),
                     deck.getName(),
                     buildFolderPath(deck.getFolder()),
+                    deck.getFolder().getColorHex(),
                     deck.getFlashcards().size()
                 );
             })

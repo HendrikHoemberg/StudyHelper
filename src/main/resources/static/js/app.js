@@ -154,11 +154,66 @@ function initExplorer() {
             const children = item?.querySelector('.sh-tree-children');
 
             if (children) {
-                const isOpen = children.classList.toggle('show');
-                toggle?.classList.toggle('expanded', isOpen);
+                const state = children.dataset.state || (children.classList.contains('show') ? 'open' : 'closed');
+                if (state === 'open' || state === 'opening') {
+                    collapseTree(children);
+                    toggle?.classList.remove('expanded');
+                } else {
+                    expandTree(children);
+                    toggle?.classList.add('expanded');
+                }
             }
         });
     });
+}
+
+function expandTree(children) {
+    const animId = nextTreeAnimId();
+    children.dataset.animId = animId;
+    children.dataset.state = 'opening';
+    children.classList.add('show');
+
+    const startHeight = children.getBoundingClientRect().height;
+    children.style.height = `${startHeight}px`;
+    void children.offsetHeight;
+
+    const targetHeight = children.scrollHeight;
+    children.style.height = `${targetHeight}px`;
+
+    children.addEventListener('transitionend', (event) => {
+        if (event.propertyName !== 'height') return;
+        if (children.dataset.animId !== animId) return;
+        if (children.classList.contains('show')) {
+            children.style.height = 'auto';
+            children.dataset.state = 'open';
+        }
+    }, { once: true });
+}
+
+function collapseTree(children) {
+    const animId = nextTreeAnimId();
+    children.dataset.animId = animId;
+    children.dataset.state = 'closing';
+
+    const startHeight = children.getBoundingClientRect().height;
+    children.style.height = `${startHeight}px`;
+    void children.offsetHeight;
+    children.style.height = '0px';
+
+    children.addEventListener('transitionend', (event) => {
+        if (event.propertyName !== 'height') return;
+        if (children.dataset.animId !== animId) return;
+        children.classList.remove('show');
+        children.style.height = '';
+        children.dataset.state = 'closed';
+    }, { once: true });
+}
+
+let treeAnimCounter = 0;
+
+function nextTreeAnimId() {
+    treeAnimCounter += 1;
+    return String(treeAnimCounter);
 }
 
 /* ---------- Client-Side File Sorting ---------- */

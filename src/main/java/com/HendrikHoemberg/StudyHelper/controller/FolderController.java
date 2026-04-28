@@ -1,7 +1,11 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
+import com.HendrikHoemberg.StudyHelper.dto.FileSummary;
+import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.service.DeckService;
+import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.FolderView;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
@@ -18,10 +22,17 @@ import java.util.List;
 public class FolderController {
 
     private final FolderService folderService;
+    private final DeckService deckService;
+    private final FileEntryService fileEntryService;
     private final UserService userService;
 
-    public FolderController(FolderService folderService, UserService userService) {
+    public FolderController(FolderService folderService,
+                            DeckService deckService,
+                            FileEntryService fileEntryService,
+                            UserService userService) {
         this.folderService = folderService;
+        this.deckService = deckService;
+        this.fileEntryService = fileEntryService;
         this.userService = userService;
     }
 
@@ -30,10 +41,12 @@ public class FolderController {
                               @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         List<Folder> folders = folderService.getRootFolders(user);
-        List<int[]> cardCounts = folderService.getRootFolderCardCounts(user);
+        List<StudyDeckOption> deckOptions = deckService.getStudyDeckOptions(user);
+        List<FileSummary> fileSummaries = fileEntryService.getFileSummaries(user);
 
         model.addAttribute("folders", folders);
-        model.addAttribute("cardCounts", cardCounts);
+        model.addAttribute("deckOptions", deckOptions);
+        model.addAttribute("fileSummaries", fileSummaries);
         model.addAttribute("username", principal.getName());
 
         if (hxRequest != null) {
