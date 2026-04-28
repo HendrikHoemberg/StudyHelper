@@ -4,9 +4,11 @@
 
 <div th:fragment="studyComplete" id="study-session-content" class="sh-fade-in">
 
-    <div th:if="${studyError}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <span th:text="${studyError}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div th:if="${studyError}" class="sh-alert sh-alert-danger">
+        <div class="sh-alert-body" th:text="${studyError}"></div>
+        <button type="button" class="sh-alert-close" data-dismiss-alert>
+            <i data-lucide="x"></i>
+        </button>
     </div>
 
     <div class="sh-card sh-study-complete-card">
@@ -14,39 +16,53 @@
             <h1 class="sh-page-title mb-2">Session Complete</h1>
             <p class="sh-folder-meta mb-4">Great work. Here is your score summary.</p>
 
-            <div class="sh-study-stats-grid mb-4">
+            <div class="sh-study-stats-grid">
                 <div class="sh-study-stat">
+                    <div class="sh-study-stat-icon"><i data-lucide="hash"></i></div>
                     <div class="sh-study-stat-label">Answered</div>
                     <div class="sh-study-stat-value" th:text="${stats.totalAnswered}">0</div>
                 </div>
                 <div class="sh-study-stat">
+                    <div class="sh-study-stat-icon" style="color:var(--success);"><i data-lucide="check-circle"></i></div>
                     <div class="sh-study-stat-label">Correct</div>
                     <div class="sh-study-stat-value" th:text="${stats.correctAnswers}">0</div>
                 </div>
                 <div class="sh-study-stat">
+                    <div class="sh-study-stat-icon" style="color:var(--danger);"><i data-lucide="x-circle"></i></div>
                     <div class="sh-study-stat-label">Incorrect</div>
                     <div class="sh-study-stat-value" th:text="${stats.incorrectAnswers}">0</div>
                 </div>
                 <div class="sh-study-stat">
+                    <div class="sh-study-stat-icon" style="color:var(--accent);"><i data-lucide="percent"></i></div>
                     <div class="sh-study-stat-label">Score</div>
                     <div class="sh-study-stat-value" th:text="${stats.percentage} + '%'">0%</div>
                 </div>
             </div>
 
-            <div class="d-flex gap-2 flex-wrap">
+            <div class="sh-study-complete-actions">
                 <form method="post"
                       hx-post="/session/redo"
                       hx-target="#study-session-content"
                       hx-swap="outerHTML">
-                    <button type="submit" class="sh-btn sh-btn-primary">Redo Session</button>
+                    <button type="submit" class="sh-btn sh-btn-primary">
+                        <i data-lucide="refresh-cw"></i>
+                        Redo Session
+                    </button>
                 </form>
                 <a href="/study/start" class="sh-btn sh-btn-secondary"
-                   hx-get="/study/start" hx-target="#main-content" hx-push-url="true">Reconfigure</a>
+                   hx-get="/study/start" hx-target="#main-content" hx-push-url="true">
+                    <i data-lucide="settings"></i>
+                    Reconfigure
+                </a>
                 <a href="/folders" class="sh-btn sh-btn-secondary"
-                   hx-get="/folders" hx-target="#main-content" hx-push-url="true">Back to Folders</a>
+                   hx-get="/folders" hx-target="#main-content" hx-push-url="true">
+                    <i data-lucide="folder"></i>
+                    Back to Folders
+                </a>
             </div>
         </div>
     </div>
+
 </div>
 
 </body>

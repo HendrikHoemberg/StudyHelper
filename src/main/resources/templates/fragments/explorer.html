@@ -6,37 +6,36 @@
 <div th:fragment="explorerContent" class="sh-fade-in">
 
     <!-- Alert for errors -->
-    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <span th:text="${error}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div th:if="${error}" class="sh-alert sh-alert-danger">
+        <div class="sh-alert-body" th:text="${error}"></div>
+        <button type="button" class="sh-alert-close" data-dismiss-alert>
+            <i data-lucide="x"></i>
+        </button>
     </div>
 
     <!-- Page header -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="sh-page-title">My Folders</h1>
-        <div class="d-flex gap-2">
+    <div class="sh-page-header">
+        <div>
+            <h1 class="sh-page-title">My Folders</h1>
+        </div>
+        <div class="sh-page-actions">
             <a href="/study/start" class="sh-btn sh-btn-secondary"
                hx-get="/study/start" hx-target="#main-content" hx-push-url="true">
-                Start Study Session
+                <i data-lucide="book-open"></i>
+                Start Study
             </a>
-            <button class="sh-btn sh-btn-primary" data-bs-toggle="modal" data-bs-target="#newFolderModal">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
+            <button class="sh-btn sh-btn-primary" data-modal-open="newFolderModal">
+                <i data-lucide="plus"></i>
                 New Folder
             </button>
         </div>
     </div>
 
-    <!-- Toolbar: search and filter -->
+    <!-- Search toolbar -->
     <div class="sh-toolbar">
         <div class="sh-search-bar" style="min-width: 240px;">
             <span class="sh-search-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
+                <i data-lucide="search"></i>
             </span>
             <input type="text" class="sh-input sh-search-input" placeholder="Search folders..."
                    data-filter-target=".sh-tree-item-root">
@@ -45,21 +44,27 @@
 
     <!-- Empty state -->
     <div th:if="${#lists.isEmpty(folders)}" class="sh-empty">
-        <div class="sh-empty-icon">📂</div>
+        <div class="sh-empty-icon">
+            <i data-lucide="folder-open"></i>
+        </div>
         <p class="sh-empty-text">No folders yet</p>
         <p class="sh-empty-hint">Create a folder to start organising your study materials.</p>
     </div>
 
     <!-- Explorer tree -->
     <ul th:if="${!#lists.isEmpty(folders)}" class="sh-tree">
-        <li th:each="folder, iterStat : ${folders}" class="sh-tree-item sh-tree-item-root"
-            th:data-name="${folder.name}">
+        <li th:each="folder, iterStat : ${folders}"
+            class="sh-tree-item sh-tree-item-root"
+            th:data-name="${folder.name}"
+            th:style="'--folder-color:' + ${folder.colorHex}">
             <div class="sh-tree-header sh-tree-toggle-btn">
-                <span class="sh-tree-toggle">▶</span>
-                <span class="sh-folder-color-dot"
-                      th:style="'background:' + ${folder.colorHex}"></span>
-                <a th:href="@{/folders/{id}(id=${folder.id})}" class="sh-folder-name flex-grow-1"
-                   style="text-decoration:none; color:inherit;"
+                <span class="sh-tree-toggle">
+                    <i data-lucide="chevron-right"></i>
+                </span>
+                <span class="sh-tree-folder-icon">
+                    <i data-lucide="folder"></i>
+                </span>
+                <a th:href="@{/folders/{id}(id=${folder.id})}" class="sh-folder-name flex-1"
                    hx-get th:hx-get="@{/folders/{id}(id=${folder.id})}"
                    hx-target="#main-content" hx-push-url="true"
                    onclick="event.stopPropagation();"
@@ -77,16 +82,19 @@
     </ul>
 
     <!-- New Folder Modal -->
-    <div class="modal fade" id="newFolderModal" tabindex="-1">
-        <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">New Folder</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="sh-modal" id="newFolderModal">
+        <div class="sh-modal-backdrop"></div>
+        <div class="sh-modal-dialog sh-modal-dialog-sm">
+            <div class="sh-modal-content">
+                <div class="sh-modal-header">
+                    <h5 class="sh-modal-title">New Folder</h5>
+                    <button type="button" class="sh-modal-close" data-modal-close>
+                        <i data-lucide="x"></i>
+                    </button>
                 </div>
                 <form th:action="@{/folders}" method="post">
-                    <div class="modal-body">
-                        <div class="mb-3">
+                    <div class="sh-modal-body">
+                        <div>
                             <label class="sh-label">Name</label>
                             <input type="text" name="name" class="sh-input" required autofocus
                                    placeholder="e.g. Mathematics">
@@ -96,14 +104,15 @@
                             <input type="color" name="colorHex" class="sh-color-input" value="#6366f1">
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <div class="sh-modal-footer">
+                        <button type="button" class="sh-btn sh-btn-secondary" data-modal-close>Cancel</button>
                         <button type="submit" class="sh-btn sh-btn-primary">Create</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
 </div>
 
 </body>

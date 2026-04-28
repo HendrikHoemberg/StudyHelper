@@ -1,9 +1,12 @@
 /* ============================================================
    StudyHelper — App JavaScript
-   Client-side sorting, search, expand/collapse, HTMX wiring
    ============================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    initLucide();
+    initTopnav();
+    initModals();
     initExplorer();
     initSorting();
     initSearch();
@@ -12,7 +15,27 @@ document.addEventListener('DOMContentLoaded', () => {
     initCsrf();
 });
 
-// CSRF configuration for HTMX
+document.body.addEventListener('htmx:afterSwap', () => {
+    initLucide();
+    initModals();
+    initExplorer();
+    initSorting();
+    initSearch();
+    initDeleteWarnings();
+    initStudySession();
+});
+
+document.body.addEventListener('htmx:afterSettle', (e) => {
+    const target = e.detail.target;
+    if (target) {
+        target.classList.add('sh-fade-in');
+        target.addEventListener('animationend', () => {
+            target.classList.remove('sh-fade-in');
+        }, { once: true });
+    }
+});
+
+/* ---------- CSRF ---------- */
 function initCsrf() {
     document.body.addEventListener('htmx:configRequest', (evt) => {
         const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
@@ -23,23 +46,96 @@ function initCsrf() {
     });
 }
 
-// Re-initialize after HTMX swaps
-document.body.addEventListener('htmx:afterSwap', (e) => {
-    initExplorer();
-    initSorting();
-    initSearch();
-    initDeleteWarnings();
-    initStudySession();
-});
+/* ---------- Theme ---------- */
+function initTheme() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.dataset.theme = saved;
+}
 
-document.body.addEventListener('htmx:afterSettle', (e) => {
-    // Add fade-in animation to swapped content
-    const target = e.detail.target;
-    if (target) {
-        target.classList.add('sh-fade-in');
-        target.addEventListener('animationend', () => {
-            target.classList.remove('sh-fade-in');
-        }, { once: true });
+function toggleTheme() {
+    const current = document.documentElement.dataset.theme || 'light';
+    const next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('theme', next);
+}
+
+/* ---------- Lucide Icons ---------- */
+function initLucide() {
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+}
+
+/* ---------- Top Navigation (mobile) ---------- */
+function initTopnav() {
+    const toggle = document.getElementById('topnav-menu-btn');
+    const menu = document.getElementById('topnav-mobile-menu');
+    if (!toggle || !menu) return;
+
+    toggle.addEventListener('click', () => menu.classList.toggle('open'));
+
+    menu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => menu.classList.remove('open'));
+    });
+}
+
+/* ---------- Custom Modal System ---------- */
+function initModals() {
+    document.querySelectorAll('[data-modal-open]').forEach(btn => {
+        if (btn.dataset.modalInitialized) return;
+        btn.dataset.modalInitialized = 'true';
+        btn.addEventListener('click', () => openModal(btn.dataset.modalOpen));
+    });
+
+    document.querySelectorAll('[data-modal-close]').forEach(btn => {
+        if (btn.dataset.modalInitialized) return;
+        btn.dataset.modalInitialized = 'true';
+        btn.addEventListener('click', () => {
+            const modal = btn.closest('.sh-modal');
+            if (modal) closeModal(modal.id);
+        });
+    });
+
+    document.querySelectorAll('.sh-modal-backdrop').forEach(backdrop => {
+        if (backdrop.dataset.modalInitialized) return;
+        backdrop.dataset.modalInitialized = 'true';
+        backdrop.addEventListener('click', () => {
+            const modal = backdrop.closest('.sh-modal');
+            if (modal) closeModal(modal.id);
+        });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.sh-modal.is-open').forEach(m => closeModal(m.id));
+        }
+    }, { once: false });
+}
+
+function openModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        modal.querySelector('input, textarea')?.focus();
+    }
+}
+
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.remove('is-open');
+        if (!document.querySelector('.sh-modal.is-open')) {
+            document.body.style.overflow = '';
+        }
+    }
+}
+
+/* ---------- Alert Dismiss ---------- */
+document.body.addEventListener('click', (e) => {
+    const closeBtn = e.target.closest('[data-dismiss-alert]');
+    if (closeBtn) {
+        closeBtn.closest('.sh-alert')?.remove();
     }
 });
 
@@ -55,11 +151,11 @@ function initExplorer() {
 
             const item = btn.closest('.sh-tree-item');
             const toggle = btn.querySelector('.sh-tree-toggle');
-            const children = item.querySelector('.sh-tree-children');
+            const children = item?.querySelector('.sh-tree-children');
 
             if (children) {
-                children.classList.toggle('show');
-                toggle.classList.toggle('expanded');
+                const isOpen = children.classList.toggle('show');
+                toggle?.classList.toggle('expanded', isOpen);
             }
         });
     });
@@ -78,11 +174,9 @@ function initSorting() {
             const sortKey = th.dataset.sort;
             const colIndex = Array.from(th.parentNode.children).indexOf(th);
 
-            // Toggle sort direction
             const currentDir = th.dataset.sortDir || 'asc';
             const newDir = currentDir === 'asc' ? 'desc' : 'asc';
 
-            // Clear all sort indicators
             th.parentNode.querySelectorAll('th').forEach(h => {
                 h.classList.remove('sorted');
                 h.dataset.sortDir = '';
@@ -91,11 +185,8 @@ function initSorting() {
             th.classList.add('sorted');
             th.dataset.sortDir = newDir;
 
-            // Update sort indicator arrow
             const indicator = th.querySelector('.sort-indicator');
-            if (indicator) {
-                indicator.textContent = newDir === 'asc' ? '▲' : '▼';
-            }
+            if (indicator) indicator.textContent = newDir === 'asc' ? '▲' : '▼';
 
             rows.sort((a, b) => {
                 let aVal = getCellSortValue(a.cells[colIndex], sortKey);
@@ -106,11 +197,7 @@ function initSorting() {
                     bVal = bVal.toLowerCase();
                 }
 
-                let result;
-                if (aVal < bVal) result = -1;
-                else if (aVal > bVal) result = 1;
-                else result = 0;
-
+                let result = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
                 return newDir === 'asc' ? result : -result;
             });
 
@@ -121,18 +208,10 @@ function initSorting() {
 
 function getCellSortValue(cell, sortKey) {
     if (!cell) return '';
-
     switch (sortKey) {
-        case 'name':
-            return cell.textContent.trim();
-        case 'type':
-            return cell.textContent.trim();
-        case 'size':
-            return parseFloat(cell.dataset.sizeBytes || '0');
-        case 'date':
-            return cell.dataset.timestamp || cell.textContent.trim();
-        default:
-            return cell.textContent.trim();
+        case 'size': return parseFloat(cell.dataset.sizeBytes || '0');
+        case 'date': return cell.dataset.timestamp || cell.textContent.trim();
+        default: return cell.textContent.trim();
     }
 }
 
@@ -149,25 +228,20 @@ function initSearch() {
 
             items.forEach(item => {
                 const name = (item.dataset.name || item.textContent).toLowerCase();
-                if (query === '' || name.includes(query)) {
-                    item.style.display = '';
-                } else {
-                    item.style.display = 'none';
-                }
+                item.style.display = (query === '' || name.includes(query)) ? '' : 'none';
             });
         });
     });
 }
 
-/* ---------- Delete Warning Dialogs ---------- */
+/* ---------- Delete Confirmations ---------- */
 function initDeleteWarnings() {
     document.querySelectorAll('[data-confirm]').forEach(el => {
         if (el.dataset.confirmInitialized) return;
         el.dataset.confirmInitialized = 'true';
 
         el.addEventListener('click', (e) => {
-            const message = el.dataset.confirm;
-            if (!confirm(message)) {
+            if (!confirm(el.dataset.confirm)) {
                 e.preventDefault();
                 e.stopPropagation();
             }
@@ -175,7 +249,7 @@ function initDeleteWarnings() {
     });
 }
 
-/* ---------- Study Session Setup + Card Behavior ---------- */
+/* ---------- Study Session ---------- */
 function initStudySession() {
     initStudySetup();
     initStudyCard();
@@ -201,12 +275,11 @@ function initStudySetup() {
         });
 
         function readCurrentOrder() {
-            return Array.from(orderList.querySelectorAll('li[data-deck-id]'))
-                .map(li => li.dataset.deckId);
+            return Array.from(orderList.querySelectorAll('li[data-deck-id]')).map(li => li.dataset.deckId);
         }
 
         function checkedDeckIds() {
-            return checkboxes.filter(input => input.checked).map(input => input.value);
+            return checkboxes.filter(cb => cb.checked).map(cb => cb.value);
         }
 
         function renderOrderList(deckIds) {
@@ -261,14 +334,8 @@ function initStudySetup() {
         function syncOrderWithSelection() {
             const selected = checkedDeckIds();
             const existing = readCurrentOrder();
-
             const next = existing.filter(id => selected.includes(id));
-            selected.forEach(id => {
-                if (!next.includes(id)) {
-                    next.push(id);
-                }
-            });
-
+            selected.forEach(id => { if (!next.includes(id)) next.push(id); });
             renderOrderList(next);
         }
 
@@ -276,26 +343,22 @@ function initStudySetup() {
             const order = readCurrentOrder();
             const index = order.indexOf(deckId);
             const targetIndex = index + direction;
-
-            if (index < 0 || targetIndex < 0 || targetIndex >= order.length) {
-                return;
-            }
-
+            if (index < 0 || targetIndex < 0 || targetIndex >= order.length) return;
             const [item] = order.splice(index, 1);
             order.splice(targetIndex, 0, item);
             renderOrderList(order);
         }
 
         function syncModeUi() {
-            const selectedMode = modeInputs.find(input => input.checked)?.value;
+            const selectedMode = modeInputs.find(i => i.checked)?.value;
             const showDeckOptions = selectedMode === 'DECK_BY_DECK';
             deckByDeckSections.forEach(section => {
                 section.style.display = showDeckOptions ? '' : 'none';
             });
         }
 
-        checkboxes.forEach(input => input.addEventListener('change', syncOrderWithSelection));
-        modeInputs.forEach(input => input.addEventListener('change', syncModeUi));
+        checkboxes.forEach(cb => cb.addEventListener('change', syncOrderWithSelection));
+        modeInputs.forEach(i => i.addEventListener('change', syncModeUi));
 
         syncOrderWithSelection();
         syncModeUi();
@@ -308,17 +371,8 @@ function initStudyCard() {
         btn.dataset.initialized = 'true';
 
         btn.addEventListener('click', () => {
-            const root = btn.closest('.sh-study-card-root');
-            const flipCard = root?.querySelector('.sh-study-flip-card');
-            const answerControls = root?.querySelector('.sh-study-answer-controls');
-
-            if (flipCard && answerControls) {
-                flipCard.classList.add('flipped');
-                btn.classList.add('d-none');
-                answerControls.classList.remove('d-none');
-            } else {
-                console.warn('Could not find flipCard or answerControls for reveal button', { flipCard, answerControls });
-            }
+            const card = btn.closest('.sh-flip-card') || document.querySelector('.sh-flip-card');
+            card?.classList.add('flipped');
         });
     });
 }
@@ -326,7 +380,5 @@ function initStudyCard() {
 /* ---------- Color Picker Hex Sync ---------- */
 function syncColorHex(input, target) {
     const targetEl = document.getElementById(target);
-    if (targetEl) {
-        targetEl.value = input.value;
-    }
+    if (targetEl) targetEl.value = input.value;
 }

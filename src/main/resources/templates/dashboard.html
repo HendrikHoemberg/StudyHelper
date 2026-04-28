@@ -3,13 +3,12 @@
 <head th:replace="~{fragments/layout :: head('My Folders')}"></head>
 <body>
 
-<nav th:replace="~{fragments/layout :: navbar}"></nav>
-
-<main class="sh-main">
-    <div class="container" id="main-content">
+<div class="app-layout">
+    <nav th:replace="~{fragments/layout :: topnav}"></nav>
+    <div id="main-content" class="app-main-content">
         <div th:replace="~{fragments/explorer :: explorerContent}"></div>
     </div>
-</main>
+</div>
 
 <div th:replace="~{fragments/layout :: scripts}"></div>
 </body>
