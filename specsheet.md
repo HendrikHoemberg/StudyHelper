@@ -70,17 +70,17 @@
 
 ## 7. Learning Logic & Study Sessions
 ### Session Configuration
-- [ ] The user selects one or more decks from anywhere in their folder tree (cross-folder selection is supported).
-- [ ] Two top-level study modes:
+- [x] The user selects one or more decks from anywhere in their folder tree (cross-folder selection is supported).
+- [x] Two top-level study modes:
   - **Deck-by-Deck:** Cards are studied one deck at a time. Sub-option: decks are presented in their selected order OR in a randomized order.
   - **Shuffled:** All cards from all selected decks are combined into one randomized queue.
 
 ### Session Flow
-- [ ] An HTMX endpoint `/session/next` returns the next card fragment, maintaining the 3D flip state.
-- [ ] Each card shows a **checkmark button** (got it right) and an **X button** (got it wrong) after the answer is revealed.
-- [ ] Session ends with a **Session Complete screen** showing:
+- [x] An HTMX endpoint `/session/next` returns the next card fragment, maintaining the 3D flip state.
+- [x] Each card shows a **checkmark button** (got it right) and an **X button** (got it wrong) after the answer is revealed.
+- [x] Session ends with a **Session Complete screen** showing:
   - Total cards answered
   - Number correct / incorrect
   - Percentage score
   - Option to **redo the session** (same deck selection and mode, reshuffled).
-- [ ] No persistent per-card progress tracking or spaced repetition at this stage.
+- [x] No persistent per-card progress tracking or spaced repetition at this stage.
