@@ -74,14 +74,18 @@ function syncColorHex(input, target) {
 
 /* ---------- Folder Icons (Used by Modals) ---------- */
 
-const FOLDER_ICONS = window.lucide ? Object.keys(lucide.icons).sort() : ['folder'];
-
 function renderIconGrid(modal, selectedIcon) {
+    if (!modal) return;
     const grid = modal.querySelector('.sh-icon-grid');
     if (!grid) return;
 
     if (!grid.dataset.rendered) {
-        grid.innerHTML = FOLDER_ICONS.map(name =>
+        // Fallback common icons if lucide.icons is not yet fully populated
+        const fallbackIcons = ['folder', 'layers', 'book', 'bookmark', 'calendar', 'clipboard', 'file', 'image', 'star', 'tag', 'heart', 'flag', 'briefcase', 'home', 'settings', 'user', 'search', 'mail', 'lock', 'bell'];
+        const lucideIcons = (window.lucide && lucide.icons) ? Object.keys(lucide.icons) : [];
+        const icons = lucideIcons.length > 5 ? lucideIcons.sort() : fallbackIcons;
+        
+        grid.innerHTML = icons.map(name =>
             `<button type="button" class="sh-icon-btn" data-icon="${name}" title="${name}" ` +
             `onclick="selectFolderIcon(this,'${name}')"><i data-lucide="${name}"></i></button>`
         ).join('');

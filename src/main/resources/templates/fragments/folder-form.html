@@ -64,7 +64,13 @@
     </div>
     <!-- Script to re-init Lucide and Icon Grid after swap -->
     <script>
-        initLucide();
-        renderIconGrid(document.querySelector('.sh-modal'), document.getElementById('modalFolderIcon')?.value || 'folder');
+        (function() {
+            var modal = document.querySelector('.sh-modal.is-open');
+            if (modal) {
+                initLucide();
+                var iconVal = modal.querySelector('input[name="iconName"]')?.value || 'folder';
+                renderIconGrid(modal, iconVal);
+            }
+        })();
     </script>
 </div>
