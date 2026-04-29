@@ -3,6 +3,3 @@
 - Folderview Hero section -> Foldercolor banner
 - Study mode -> ability to select decks AND folders
 - fix folder collapse animation
-- Folder timeline animation going down instead of jumping
-- New folder creation doesnt contain lucide icons
-- Lucide icon filtering is broken

@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTopnav();
     initCsrf();
     syncSidebarActive();
+    syncFolderCheckboxes();
 });
 
 // Re-run initializations after HTMX swaps
@@ -236,3 +237,61 @@ function updateFolderPreview(modal) {
         root: preview
     });
 }
+
+/* ---------- Study Mode Folder Selection ---------- */
+
+/**
+ * Toggles all deck checkboxes within a folder group
+ * @param {HTMLInputElement} folderCheckbox 
+ */
+function toggleFolderDecks(folderCheckbox) {
+    const group = folderCheckbox.closest('.sh-study-deck-group');
+    if (!group) return;
+
+    const deckCheckboxes = group.querySelectorAll('.sh-study-deck-checkbox');
+    const isChecked = folderCheckbox.checked;
+
+    deckCheckboxes.forEach(cb => {
+        if (cb.checked !== isChecked) {
+            cb.checked = isChecked;
+        }
+    });
+
+    // Trigger HTMX update for the order list by triggering 'change' on the first checkbox
+    // HTMX will include all selectedDeckIds from the form
+    if (deckCheckboxes.length > 0) {
+        htmx.trigger(deckCheckboxes[0], 'change');
+    }
+}
+
+/**
+ * Syncs folder checkboxes based on the state of their deck checkboxes
+ */
+function syncFolderCheckboxes() {
+    document.querySelectorAll('.sh-study-deck-group').forEach(group => {
+        const folderCheckbox = group.querySelector('.sh-study-folder-checkbox');
+        const deckCheckboxes = group.querySelectorAll('.sh-study-deck-checkbox');
+        
+        if (!folderCheckbox || deckCheckboxes.length === 0) return;
+
+        const allChecked = Array.from(deckCheckboxes).every(cb => cb.checked);
+        const someChecked = Array.from(deckCheckboxes).some(cb => cb.checked);
+
+        folderCheckbox.checked = allChecked;
+        folderCheckbox.indeterminate = someChecked && !allChecked;
+    });
+}
+
+// Add event listener for individual deck checkbox changes to keep folder checkboxes in sync
+document.body.addEventListener('change', (e) => {
+    if (e.target.classList.contains('sh-study-deck-checkbox')) {
+        syncFolderCheckboxes();
+    }
+});
+
+// Re-sync after HTMX swaps (e.g. when order list or deck picker updates)
+document.body.addEventListener('htmx:afterSwap', (e) => {
+    if (e.detail.target.id === 'study-session-content' || e.detail.target.closest('.sh-study-deck-picker')) {
+        syncFolderCheckboxes();
+    }
+});

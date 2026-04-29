@@ -1931,6 +1931,20 @@ textarea.sh-input {
     letter-spacing: 0.06em;
     color: var(--text-muted);
     margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    transition: color var(--transition-fast);
+}
+
+.sh-study-deck-group-title:hover {
+    color: var(--text-secondary);
+}
+
+.sh-study-deck-group-title .sh-checkbox {
+    margin: 0;
 }
 
 .sh-study-deck-list {

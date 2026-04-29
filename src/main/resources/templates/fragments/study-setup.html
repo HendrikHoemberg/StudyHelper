@@ -77,7 +77,10 @@
 
                 <div th:if="${!#lists.isEmpty(deckGroups)}" class="sh-study-deck-picker">
                     <div th:each="group : ${deckGroups}" class="sh-study-deck-group">
-                        <div class="sh-study-deck-group-title" th:text="${group.folderPath}">Folder Path</div>
+                        <div class="sh-study-deck-group-title" onclick="if(event.target.type !== 'checkbox') this.querySelector('input').click()">
+                            <input type="checkbox" class="sh-checkbox sh-study-folder-checkbox" onclick="event.stopPropagation(); toggleFolderDecks(this)">
+                            <span th:text="${group.folderPath}">Folder Path</span>
+                        </div>
                         <div class="sh-study-deck-list">
                             <label th:each="deck : ${group.decks}" class="sh-study-deck-option">
                                 <div class="sh-study-deck-option-inner">
