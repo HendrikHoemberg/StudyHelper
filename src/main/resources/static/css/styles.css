@@ -328,7 +328,7 @@ a {
 /* ---------- Main Content ---------- */
 .app-main-content {
     flex: 1;
-    padding: 1.5rem;
+    padding: 0;
     background: var(--bg);
     overflow-y: auto;
     display: flex;
@@ -336,7 +336,7 @@ a {
 }
 
 .app-main-content:has(.sh-dashboard-shell) {
-    padding-bottom: 0.5rem;
+    padding-bottom: 0;
 }
 
 /* ============================================================
@@ -345,8 +345,8 @@ a {
 
 .sh-dashboard-shell {
     position: relative;
-    padding: 1rem;
-    border-radius: 24px;
+    padding: 1.5rem;
+    border-radius: 0;
     background:
         radial-gradient(1200px circle at 15% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
         radial-gradient(900px circle at 90% 0%, rgba(59, 130, 246, 0.08), transparent 55%);
