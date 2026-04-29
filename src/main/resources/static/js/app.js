@@ -100,37 +100,81 @@ function syncColorHex(input, target) {
     if (targetEl) targetEl.value = input.value;
 }
 
-/* ---------- Edit Folder Modal ---------- */
+/* ---------- Folder Modals (Create/Edit) ---------- */
 
 const FOLDER_ICONS = window.lucide ? Object.keys(lucide.icons).sort() : ['folder'];
 
-function openEditFolderModal(btn) {
-    const modal = document.getElementById('editFolderModal');
+/**
+ * Opens a modal for creating a new folder
+ * @param {string} modalId 
+ * @param {string} parentId (Optional)
+ */
+function openCreateFolderModal(modalId, parentId = null) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    // Reset fields
+    const nameInput = modal.querySelector('input[name="name"]');
+    const colorInput = modal.querySelector('input[name="colorHex"]');
+    const iconInput = modal.querySelector('input[name="iconName"]');
+    
+    if (nameInput) nameInput.value = '';
+    if (colorInput) colorInput.value = '#6366f1';
+    if (iconInput) iconInput.value = 'folder';
+
+    updateFolderPreview(modal);
+    renderIconGrid(modal, 'folder');
+
+    // Clear search
+    const search = modal.querySelector('.sh-icon-search');
+    if (search) {
+        search.value = '';
+        filterFolderIcons(search);
+    }
+
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    if (nameInput) nameInput.focus();
+}
+
+/**
+ * Opens a modal for editing an existing folder
+ * @param {HTMLElement} btn 
+ * @param {string} modalId 
+ */
+function openEditFolderModal(btn, modalId = 'editFolderModal') {
+    const modal = document.getElementById(modalId);
     if (!modal) return;
 
     const name  = btn.dataset.folderName;
     const color = btn.dataset.folderColor;
     const icon  = btn.dataset.folderIcon || 'folder';
 
-    modal.querySelector('#editFolderName').value  = name;
-    modal.querySelector('#editFolderColor').value = color;
-    modal.querySelector('#editFolderIcon').value  = icon;
+    const nameInput = modal.querySelector('input[name="name"]');
+    const colorInput = modal.querySelector('input[name="colorHex"]');
+    const iconInput = modal.querySelector('input[name="iconName"]');
 
-    updateEditPreview(modal, color, icon);
+    if (nameInput) nameInput.value = name;
+    if (colorInput) colorInput.value = color;
+    if (iconInput) iconInput.value = icon;
+
+    updateFolderPreview(modal);
     renderIconGrid(modal, icon);
 
     // clear any previous search
-    const search = modal.querySelector('#iconSearch');
-    if (search) search.value = '';
-    modal.querySelectorAll('.sh-icon-btn').forEach(b => { b.hidden = false; });
+    const search = modal.querySelector('.sh-icon-search');
+    if (search) {
+        search.value = '';
+        filterFolderIcons(search);
+    }
 
     modal.classList.add('is-open');
     document.body.style.overflow = 'hidden';
-    modal.querySelector('#editFolderName').focus();
+    if (nameInput) nameInput.focus();
 }
 
 function renderIconGrid(modal, selectedIcon) {
-    const grid = modal.querySelector('#editIconGrid');
+    const grid = modal.querySelector('.sh-icon-grid');
     if (!grid) return;
 
     if (!grid.dataset.rendered) {
@@ -139,7 +183,11 @@ function renderIconGrid(modal, selectedIcon) {
             `onclick="selectFolderIcon(this,'${name}')"><i data-lucide="${name}"></i></button>`
         ).join('');
         grid.dataset.rendered = '1';
-        if (window.lucide) lucide.createIcons();
+        if (window.lucide) lucide.createIcons({
+            attrs: { style: 'width:15px; height:15px;' },
+            nameAttr: 'data-lucide',
+            root: grid
+        });
     }
 
     grid.querySelectorAll('.sh-icon-btn').forEach(b => {
@@ -151,21 +199,36 @@ function selectFolderIcon(btn, iconName) {
     const modal = btn.closest('.sh-modal');
     modal.querySelectorAll('.sh-icon-btn.is-selected').forEach(b => b.classList.remove('is-selected'));
     btn.classList.add('is-selected');
-    modal.querySelector('#editFolderIcon').value = iconName;
-    updateEditPreview(modal, modal.querySelector('#editFolderColor').value, iconName);
+    
+    const iconInput = modal.querySelector('input[name="iconName"]');
+    if (iconInput) iconInput.value = iconName;
+    
+    updateFolderPreview(modal);
 }
 
 function filterFolderIcons(input) {
     const q = input.value.toLowerCase();
-    input.closest('.sh-modal').querySelectorAll('.sh-icon-btn').forEach(btn => {
-        btn.hidden = q.length > 0 && !btn.dataset.icon.includes(q);
+    const modal = input.closest('.sh-modal');
+    const buttons = modal.querySelectorAll('.sh-icon-btn');
+    
+    buttons.forEach(btn => {
+        const matches = q.length === 0 || btn.dataset.icon.includes(q);
+        btn.style.display = matches ? 'flex' : 'none';
     });
 }
 
-function updateEditPreview(modal, color, iconName) {
-    const preview = modal.querySelector('#editFolderPreview');
+function updateFolderPreview(modal) {
+    const preview = modal.querySelector('.sh-edit-preview');
     if (!preview) return;
+    
+    const color = modal.querySelector('input[name="colorHex"]')?.value || '#6366f1';
+    const iconName = modal.querySelector('input[name="iconName"]')?.value || 'folder';
+    
     preview.style.color = color;
     preview.innerHTML = `<i data-lucide="${iconName}" style="width:22px;height:22px;"></i>`;
-    if (window.lucide) lucide.createIcons();
+    if (window.lucide) lucide.createIcons({
+        attrs: { style: 'width:22px; height:22px;' },
+        nameAttr: 'data-lucide',
+        root: preview
+    });
 }

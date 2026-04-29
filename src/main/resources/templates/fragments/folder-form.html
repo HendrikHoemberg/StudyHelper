@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="folderFields(name, colorHex, iconName, prefix)" class="sh-form-group-stack">
+    <!-- Preview & Name Row -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
+        <div class="sh-edit-preview" th:id="${prefix + 'FolderPreview'}" th:style="'color:' + ${colorHex}">
+            <i th:attr="data-lucide=${iconName ?: 'folder'}" style="width:22px;height:22px;"></i>
+        </div>
+        <div style="flex:1;">
+            <label class="sh-label">Name</label>
+            <input type="text" name="name" th:id="${prefix + 'FolderName'}" class="sh-input" required 
+                   th:value="${name}" placeholder="e.g. Mathematics">
+        </div>
+    </div>
+
+    <!-- Color -->
+    <div>
+        <label class="sh-label">Color</label>
+        <input type="color" name="colorHex" th:id="${prefix + 'FolderColor'}" class="sh-color-input"
+               th:value="${colorHex}"
+               oninput="updateFolderPreview(this.closest('.sh-modal'))">
+    </div>
+
+    <!-- Icon Selection -->
+    <div>
+        <label class="sh-label">Icon</label>
+        <div class="sh-search-bar sh-search-bar-sm mb-2">
+            <span class="sh-search-icon"><i data-lucide="search"></i></span>
+            <input type="text" class="sh-input sh-icon-search" placeholder="Search icons…"
+                   oninput="filterFolderIcons(this)">
+        </div>
+        
+        <div class="sh-icon-grid" th:id="${prefix + 'IconGrid'}">
+            <!-- Icons rendered by JS -->
+        </div>
+        
+        <input type="hidden" name="iconName" th:id="${prefix + 'FolderIcon'}"
+               th:value="${iconName ?: 'folder'}">
+    </div>
+</div>
+
+</body>
+</html>

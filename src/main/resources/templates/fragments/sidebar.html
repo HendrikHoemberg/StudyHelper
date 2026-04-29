@@ -6,7 +6,7 @@
     <div class="sh-sidebar-card">
         <div class="sh-sidebar-header">
             <div class="sh-sidebar-title">Folders</div>
-            <button class="sh-btn sh-btn-ghost sh-btn-icon" hx-on:click="document.getElementById('newFolderModal').classList.add('is-open'); document.body.style.overflow='hidden'; document.getElementById('newFolderModal').querySelector('input')?.focus();" title="New folder">
+            <button class="sh-btn sh-btn-ghost sh-btn-icon" hx-on:click="openCreateFolderModal('newFolderModal')" title="New folder">
                 <i data-lucide="plus"></i>
             </button>
         </div>

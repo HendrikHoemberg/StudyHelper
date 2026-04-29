@@ -6,4 +6,3 @@
 - Folder timeline animation going down instead of jumping
 - New folder creation doesnt contain lucide icons
 - Lucide icon filtering is broken
-- put studymode in mainview, complete SPA structure
