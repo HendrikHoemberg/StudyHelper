@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
+import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
@@ -24,6 +25,14 @@ public class FlashcardController {
         this.userService = userService;
     }
 
+    @GetMapping("/decks/{deckId}/flashcards/new")
+    public String newFlashcardModal(@PathVariable Long deckId, Model model) {
+        model.addAttribute("deckId", deckId);
+        model.addAttribute("action", "/decks/" + deckId + "/flashcards");
+        model.addAttribute("title", "New Flashcard");
+        return "fragments/flashcard-form :: flashcardModal";
+    }
+
     @PostMapping("/decks/{deckId}/flashcards")
     public String createFlashcard(@PathVariable Long deckId,
                                   @RequestParam String frontText,
@@ -40,6 +49,17 @@ public class FlashcardController {
             return "fragments/deck :: flashcardList";
         }
         return "redirect:/decks/" + deckId;
+    }
+
+    @GetMapping("/flashcards/{id}/edit")
+    public String editFlashcardModal(@PathVariable Long id, Model model, Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        Flashcard flashcard = flashcardService.getFlashcardForUser(id, user);
+        model.addAttribute("flashcard", flashcard);
+        model.addAttribute("deckId", flashcard.getDeck().getId());
+        model.addAttribute("action", "/flashcards/" + id + "/edit");
+        model.addAttribute("title", "Edit Flashcard");
+        return "fragments/flashcard-form :: flashcardModal";
     }
 
     @PostMapping("/flashcards/{id}/edit")

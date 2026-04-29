@@ -49,11 +49,15 @@
                 <i data-lucide="folder-plus"></i>
                 Subfolder
             </button>
-            <button class="sh-btn sh-btn-secondary sh-btn-sm" hx-on:click="document.getElementById('newDeckModal').classList.add('is-open'); document.body.style.overflow='hidden'; document.getElementById('newDeckModal').querySelector('input')?.focus();">
+            <button class="sh-btn sh-btn-secondary sh-btn-sm" 
+                    th:hx-get="@{/folders/{fid}/decks/new(fid=${view.folder.id})}"
+                    hx-target="#modal-placeholder">
                 <i data-lucide="layers"></i>
                 Deck
             </button>
-            <button class="sh-btn sh-btn-secondary sh-btn-sm" hx-on:click="document.getElementById('uploadModal').classList.add('is-open'); document.body.style.overflow='hidden';">
+            <button class="sh-btn sh-btn-secondary sh-btn-sm"
+                    th:hx-get="@{/folders/{fid}/files/upload(fid=${view.folder.id})}"
+                    hx-target="#modal-placeholder">
                 <i data-lucide="upload"></i>
                 Upload
             </button>
@@ -119,7 +123,9 @@
     <div class="sh-card">
         <div class="sh-card-header">
             <h6 class="sh-card-header-title">Files</h6>
-            <button class="sh-btn sh-btn-primary sh-btn-sm" hx-on:click="document.getElementById('uploadModal').classList.add('is-open'); document.body.style.overflow='hidden';">
+            <button class="sh-btn sh-btn-primary sh-btn-sm"
+                    th:hx-get="@{/folders/{fid}/files/upload(fid=${view.folder.id})}"
+                    hx-target="#modal-placeholder">
                 <i data-lucide="upload"></i>
                 Upload File
             </button>
@@ -180,65 +186,6 @@
                 </tbody>
             </table>
         </div>
-        </div>
-    </div>
-
-    <!-- Upload Modal -->
-    <div class="sh-modal" id="uploadModal">
-        <div class="sh-modal-backdrop" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';"></div>
-        <div class="sh-modal-dialog">
-            <div class="sh-modal-content">
-                <div class="sh-modal-header">
-                    <h5 class="sh-modal-title">Upload File</h5>
-                    <button type="button" class="sh-modal-close" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">
-                        <i data-lucide="x"></i>
-                    </button>
-                </div>
-                <form th:action="@{/folders/{id}/files(id=${view.folder.id})}" method="post"
-                      enctype="multipart/form-data">
-                    <div class="sh-modal-body">
-                        <div>
-                            <label class="sh-label">File</label>
-                            <input type="file" name="file" class="sh-input" required>
-                        </div>
-                        <p style="color:var(--text-muted); font-size:0.8125rem; margin:0;">
-                            Maximum file size: 100 MB</p>
-                    </div>
-                    <div class="sh-modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">Cancel</button>
-                        <button type="submit" class="sh-btn sh-btn-primary">Upload</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- New Deck Modal -->
-    <div class="sh-modal" id="newDeckModal">
-        <div class="sh-modal-backdrop" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';"></div>
-        <div class="sh-modal-dialog sh-modal-dialog-sm">
-            <div class="sh-modal-content">
-                <div class="sh-modal-header">
-                    <h5 class="sh-modal-title">New Deck</h5>
-                    <button type="button" class="sh-modal-close" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">
-                        <i data-lucide="x"></i>
-                    </button>
-                </div>
-                <form th:action="@{/folders/{fid}/decks(fid=${view.folder.id})}" method="post">
-                    <div class="sh-modal-body">
-                        <div>
-                            <label class="sh-label">Deck Name</label>
-                            <input type="text" name="name" class="sh-input" required autofocus
-                                   placeholder="e.g. Vocabulary">
-                        </div>
-                    </div>
-                    <div class="sh-modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">Cancel</button>
-                        <button type="submit" class="sh-btn sh-btn-primary">Create</button>
-                    </div>
-                </form>
-            </div>
         </div>
     </div>
 

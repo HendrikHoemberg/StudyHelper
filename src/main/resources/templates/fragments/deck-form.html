@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="deckModal" class="sh-modal is-open">
+    <div class="sh-modal-backdrop" onclick="this.closest('.sh-modal').remove()"></div>
+    <div class="sh-modal-dialog sh-modal-dialog-sm">
+        <div class="sh-modal-content">
+            <div class="sh-modal-header">
+                <h5 class="sh-modal-title" th:text="${title}">Deck</h5>
+                <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').remove()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form th:action="${action}" method="post">
+                <div class="sh-modal-body">
+                    <div>
+                        <label class="sh-label">Deck Name</label>
+                        <input type="text" name="name" class="sh-input" required 
+                               th:value="${deck?.name}"
+                               placeholder="e.g. Vocabulary">
+                    </div>
+                </div>
+                <div class="sh-modal-footer">
+                    <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()">Cancel</button>
+                    <button type="submit" class="sh-btn sh-btn-primary" th:text="${deck?.id == null ? 'Create' : 'Rename'}">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        (function() {
+            initLucide();
+            var modal = document.querySelector('.sh-modal.is-open');
+            if (modal) {
+                var input = modal.querySelector('input[name="name"]');
+                if (input) input.focus();
+            }
+        })();
+    </script>
+</div>
+
+</body>
+</html>

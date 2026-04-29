@@ -24,6 +24,13 @@ public class DeckController {
         this.userService = userService;
     }
 
+    @GetMapping("/folders/{folderId}/decks/new")
+    public String newDeckModal(@PathVariable Long folderId, Model model) {
+        model.addAttribute("action", "/folders/" + folderId + "/decks");
+        model.addAttribute("title", "New Deck");
+        return "fragments/deck-form :: deckModal";
+    }
+
     @PostMapping("/folders/{folderId}/decks")
     public String createDeck(@PathVariable Long folderId,
                              @RequestParam String name,
@@ -51,6 +58,16 @@ public class DeckController {
             return "fragments/deck :: deckDetail";
         }
         return "deck-page";
+    }
+
+    @GetMapping("/decks/{id}/rename")
+    public String renameDeckModal(@PathVariable Long id, Model model, Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        Deck deck = deckService.getDeck(id, user);
+        model.addAttribute("deck", deck);
+        model.addAttribute("action", "/decks/" + id + "/rename");
+        model.addAttribute("title", "Rename Deck");
+        return "fragments/deck-form :: deckModal";
     }
 
     @PostMapping("/decks/{id}/rename")

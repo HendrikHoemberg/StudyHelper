@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="flashcardModal" class="sh-modal is-open">
+    <div class="sh-modal-backdrop" onclick="this.closest('.sh-modal').remove()"></div>
+    <div class="sh-modal-dialog">
+        <div class="sh-modal-content">
+            <div class="sh-modal-header">
+                <h5 class="sh-modal-title" th:text="${title}">Flashcard</h5>
+                <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').remove()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form th:action="${action}" method="post"
+                  hx-post th:hx-post="${action}"
+                  hx-target="#flashcard-list"
+                  hx-swap="innerHTML"
+                  hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
+                
+                <input th:if="${deckId != null}" type="hidden" name="deckId" th:value="${deckId}">
+                
+                <div class="sh-modal-body">
+                    <div>
+                        <label class="sh-label">Front (Question)</label>
+                        <textarea name="frontText" class="sh-input" rows="3" required
+                                  placeholder="Enter the question or prompt..."
+                                  th:text="${flashcard?.frontText}"></textarea>
+                    </div>
+                    <div>
+                        <label class="sh-label">Back (Answer)</label>
+                        <textarea name="backText" class="sh-input" rows="3" required
+                                  placeholder="Enter the answer..."
+                                  th:text="${flashcard?.backText}"></textarea>
+                    </div>
+                </div>
+                <div class="sh-modal-footer">
+                    <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()">Cancel</button>
+                    <button type="submit" class="sh-btn sh-btn-primary" th:text="${flashcard?.id == null ? 'Add Card' : 'Save'}">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        (function() {
+            initLucide();
+            var modal = document.querySelector('.sh-modal.is-open');
+            if (modal) {
+                var firstInput = modal.querySelector('textarea, input:not([type="hidden"])');
+                if (firstInput) firstInput.focus();
+            }
+        })();
+    </script>
+</div>
+
+</body>
+</html>

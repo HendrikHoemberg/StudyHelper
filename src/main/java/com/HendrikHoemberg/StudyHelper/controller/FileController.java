@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -30,6 +31,12 @@ public class FileController {
         this.fileEntryService = fileEntryService;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
+    }
+
+    @GetMapping("/folders/{folderId}/files/upload")
+    public String uploadModal(@PathVariable Long folderId, Model model) {
+        model.addAttribute("folderId", folderId);
+        return "fragments/file-form :: uploadModal";
     }
 
     @PostMapping("/folders/{folderId}/files")

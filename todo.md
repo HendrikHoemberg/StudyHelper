@@ -2,3 +2,15 @@
 - add images to cards
 - Folderview Hero section -> Foldercolor banner
 - fix folder collapse animation
+- Lucide -> iconify
+- Icon selector less rows, bigger icons
+- Deck creation -> last card "add/+" empty card
+- Make study session creator better designed
+- Start Study Sessions from within folders 
+- Study sessions -> Folder colors and icons
+- "Redo incorrect" option on session endscreen
+- Endscreen -> remove "answered", move result to top (bigger)
+- endscreen maybe konfetti animation?
+- Other checkmark icon in endscreen
+- make navbar bigger
+- maybe remove My library section in dashboard

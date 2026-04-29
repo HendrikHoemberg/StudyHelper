@@ -42,11 +42,15 @@
                 <i data-lucide="play"></i>
                 Start Study
             </a>
-            <button class="sh-btn sh-btn-secondary sh-btn-sm" data-modal-open="newCardModal">
+            <button class="sh-btn sh-btn-secondary sh-btn-sm"
+                    th:hx-get="@{/decks/{id}/flashcards/new(id=${deck.id})}"
+                    hx-target="#modal-placeholder">
                 <i data-lucide="plus"></i>
                 Add Card
             </button>
-            <button class="sh-btn sh-btn-secondary sh-btn-sm" data-modal-open="renameDeckModal">
+            <button class="sh-btn sh-btn-secondary sh-btn-sm"
+                    th:hx-get="@{/decks/{id}/rename(id=${deck.id})}"
+                    hx-target="#modal-placeholder">
                 <i data-lucide="pencil"></i>
                 Rename
             </button>
@@ -80,17 +84,17 @@
             <div th:each="card : ${flashcards}" class="sh-flashcard">
                 <div class="sh-flashcard-actions">
                     <button class="sh-btn sh-btn-ghost sh-btn-icon sh-btn-sm"
-                            th:data-card-id="${card.id}"
-                            th:data-front="${card.frontText}"
-                            th:data-back="${card.backText}"
-                            onclick="openEditCard(this)">
+                            th:hx-get="@{/flashcards/{id}/edit(id=${card.id})}"
+                            hx-target="#modal-placeholder">
                         <i data-lucide="pencil"></i>
                     </button>
-                    <form th:action="@{/flashcards/{id}/delete(id=${card.id})}" method="post" style="display:inline;">
+                    <form th:action="@{/flashcards/{id}/delete(id=${card.id})}" method="post" style="display:inline;"
+                          hx-post th:hx-post="@{/flashcards/{id}/delete(id=${card.id})}"
+                          hx-target="#flashcard-list"
+                          hx-confirm="Delete this flashcard?">
                         <input type="hidden" name="deckId" th:value="${deck.id}">
                         <button type="submit" class="sh-btn sh-btn-ghost sh-btn-icon sh-btn-sm"
-                                style="color:var(--danger);"
-                                data-confirm="Delete this flashcard?">
+                                style="color:var(--danger);">
                             <i data-lucide="trash-2"></i>
                         </button>
                     </form>
@@ -107,112 +111,7 @@
         </div>
     </div>
 
-    <!-- Add Card Modal -->
-    <div class="sh-modal" id="newCardModal">
-        <div class="sh-modal-backdrop"></div>
-        <div class="sh-modal-dialog">
-            <div class="sh-modal-content">
-                <div class="sh-modal-header">
-                    <h5 class="sh-modal-title">New Flashcard</h5>
-                    <button type="button" class="sh-modal-close" data-modal-close>
-                        <i data-lucide="x"></i>
-                    </button>
-                </div>
-                <form th:action="@{/decks/{id}/flashcards(id=${deck.id})}" method="post">
-                    <div class="sh-modal-body">
-                        <div>
-                            <label class="sh-label">Front (Question)</label>
-                            <textarea name="frontText" class="sh-input" rows="3" required
-                                      placeholder="Enter the question or prompt..."></textarea>
-                        </div>
-                        <div>
-                            <label class="sh-label">Back (Answer)</label>
-                            <textarea name="backText" class="sh-input" rows="3" required
-                                      placeholder="Enter the answer..."></textarea>
-                        </div>
-                    </div>
-                    <div class="sh-modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" data-modal-close>Cancel</button>
-                        <button type="submit" class="sh-btn sh-btn-primary">Add Card</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Rename Deck Modal -->
-    <div class="sh-modal" id="renameDeckModal">
-        <div class="sh-modal-backdrop"></div>
-        <div class="sh-modal-dialog sh-modal-dialog-sm">
-            <div class="sh-modal-content">
-                <div class="sh-modal-header">
-                    <h5 class="sh-modal-title">Rename Deck</h5>
-                    <button type="button" class="sh-modal-close" data-modal-close>
-                        <i data-lucide="x"></i>
-                    </button>
-                </div>
-                <form th:action="@{/decks/{id}/rename(id=${deck.id})}" method="post">
-                    <div class="sh-modal-body">
-                        <div>
-                            <label class="sh-label">Deck Name</label>
-                            <input type="text" name="name" class="sh-input" required
-                                   th:value="${deck.name}">
-                        </div>
-                    </div>
-                    <div class="sh-modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" data-modal-close>Cancel</button>
-                        <button type="submit" class="sh-btn sh-btn-primary">Rename</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Card Modal -->
-    <div class="sh-modal" id="editCardModal">
-        <div class="sh-modal-backdrop"></div>
-        <div class="sh-modal-dialog">
-            <div class="sh-modal-content">
-                <div class="sh-modal-header">
-                    <h5 class="sh-modal-title">Edit Flashcard</h5>
-                    <button type="button" class="sh-modal-close" data-modal-close>
-                        <i data-lucide="x"></i>
-                    </button>
-                </div>
-                <form id="editCardForm" method="post">
-                    <input type="hidden" name="deckId" th:value="${deck.id}">
-                    <div class="sh-modal-body">
-                        <div>
-                            <label class="sh-label">Front (Question)</label>
-                            <textarea name="frontText" id="editFrontText" class="sh-input" rows="3" required></textarea>
-                        </div>
-                        <div>
-                            <label class="sh-label">Back (Answer)</label>
-                            <textarea name="backText" id="editBackText" class="sh-input" rows="3" required></textarea>
-                        </div>
-                    </div>
-                    <div class="sh-modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" data-modal-close>Cancel</button>
-                        <button type="submit" class="sh-btn sh-btn-primary">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
 </div>
-
-<script th:inline="javascript">
-    function openEditCard(btn) {
-        const cardId = btn.dataset.cardId;
-        const front = btn.dataset.front;
-        const back = btn.dataset.back;
-        document.getElementById('editFrontText').value = front;
-        document.getElementById('editBackText').value = back;
-        document.getElementById('editCardForm').action = '/flashcards/' + cardId + '/edit';
-        openModal('editCardModal');
-    }
-</script>
 
 </body>
 </html>
