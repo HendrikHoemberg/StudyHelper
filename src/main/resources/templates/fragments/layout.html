@@ -22,8 +22,8 @@
 <!-- Layout fragment: top navigation bar -->
 <nav th:fragment="topnav" class="app-topnav">
     <div class="topnav-inner">
-        <a href="/folders" class="topnav-brand"
-           hx-get="/folders" hx-target="#explorer-detail" hx-push-url="true">
+        <a href="/dashboard" class="topnav-brand"
+           hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
             <span class="topnav-brand-icon">
                 <i data-lucide="book-open"></i>
             </span>
@@ -31,10 +31,10 @@
         </a>
 
         <div class="topnav-links">
-            <a href="/folders" class="topnav-link"
-               hx-get="/folders" hx-target="#explorer-detail" hx-push-url="true">
-                <i data-lucide="folder"></i>
-                My Folders
+            <a href="/dashboard" class="topnav-link"
+               hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
+                <i data-lucide="layout-dashboard"></i>
+                Dashboard
             </a>
             <a href="/study/start" class="topnav-link"
                hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
@@ -66,10 +66,10 @@
     </div>
 
     <div class="topnav-mobile-menu" id="topnav-mobile-menu">
-        <a href="/folders" class="topnav-mobile-link"
-           hx-get="/folders" hx-target="#explorer-detail" hx-push-url="true">
-            <i data-lucide="folder"></i>
-            My Folders
+        <a href="/dashboard" class="topnav-mobile-link"
+           hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
+            <i data-lucide="layout-dashboard"></i>
+            Dashboard
         </a>
         <a href="/study/start" class="topnav-mobile-link"
            hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">

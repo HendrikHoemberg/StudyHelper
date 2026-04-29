@@ -37,7 +37,7 @@ public class FolderController {
         this.userService = userService;
     }
 
-    @GetMapping("/folders")
+    @GetMapping("/dashboard")
     public String listFolders(Model model, Principal principal,
                               @RequestParam(required = false) String q,
                               @RequestHeader(value = "HX-Request", required = false) String hxRequest,
@@ -81,7 +81,7 @@ public class FolderController {
                                    @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         folderService.createFolder(name, colorHex, null, user);
-        return "redirect:/folders";
+        return "redirect:/dashboard";
     }
 
     @GetMapping("/folders/{id}")
@@ -165,6 +165,6 @@ public class FolderController {
         } catch (IOException e) {
             redirectAttributes.addFlashAttribute("error", "Could not delete all files: " + e.getMessage());
         }
-        return "redirect:/folders";
+        return "redirect:/dashboard";
     }
 }

@@ -81,7 +81,7 @@ public class FileController {
             return "redirect:/folders/" + folderId;
         } catch (IOException e) {
             redirectAttributes.addFlashAttribute("error", "Could not delete file from disk.");
-            return "redirect:/folders";
+            return "redirect:/dashboard";
         }
     }
 }

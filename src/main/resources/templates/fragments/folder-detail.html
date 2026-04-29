@@ -16,8 +16,8 @@
     <!-- Breadcrumb -->
     <ul class="sh-breadcrumb">
         <li>
-            <a href="/folders" hx-get="/folders" hx-target="#explorer-detail"
-               hx-select=".sh-explorer-detail-content" hx-push-url="true">My Folders</a>
+            <a href="/dashboard" hx-get="/dashboard" hx-target="#explorer-detail"
+               hx-push-url="true">Dashboard</a>
         </li>
         <th:block th:each="crumb, stat : ${view.breadcrumb}">
             <li class="sh-breadcrumb-sep"><i data-lucide="chevron-right"></i></li>
