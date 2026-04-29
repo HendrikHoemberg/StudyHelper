@@ -1924,6 +1924,12 @@ textarea.sh-input {
     border-top: 1px dashed var(--border);
 }
 
+.sh-study-deck-group.is-nested {
+    margin-top: 0.5rem !important;
+    padding-top: 0 !important;
+    border-top: none !important;
+}
+
 .sh-study-deck-group-title {
     font-size: 0.75rem;
     font-weight: 700;

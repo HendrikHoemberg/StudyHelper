@@ -21,7 +21,7 @@
         </div>
         <div class="sh-study-progress-bar-bg">
             <div class="sh-study-progress-bar"
-                 th:style="'width:' + ${(currentCardNumber * 100.0 / totalCards)} + '%'"></div>
+                 th:style="'width:' + ${(totalCards > 0 ? (currentCardNumber * 100.0 / totalCards) : 0)} + '%'"></div>
         </div>
     </div>
 

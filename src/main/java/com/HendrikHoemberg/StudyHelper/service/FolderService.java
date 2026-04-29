@@ -1,6 +1,8 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
+import com.HendrikHoemberg.StudyHelper.dto.StudyDeckGroup;
+import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
@@ -60,6 +62,54 @@ public class FolderService {
             ));
         }
         return nodes;
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudyDeckGroup> getStudyFolderTree(User user) {
+        List<Folder> roots = folderRepository.findByUserAndParentFolderIsNull(user);
+        return roots.stream()
+            .map(this::toStudyDeckGroup)
+            .filter(g -> !g.decks().isEmpty() || !g.subGroups().isEmpty())
+            .toList();
+    }
+
+    private StudyDeckGroup toStudyDeckGroup(Folder folder) {
+        List<StudyDeckOption> decks = folder.getDecks().stream()
+            .map(deck -> {
+                deck.getFlashcards().size();
+                return new StudyDeckOption(
+                    deck.getId(),
+                    deck.getName(),
+                    folder.getId(),
+                    buildFolderPathString(folder),
+                    folder.getColorHex(),
+                    deck.getFlashcards().size()
+                );
+            })
+            .toList();
+
+        List<StudyDeckGroup> subGroups = folder.getSubFolders().stream()
+            .map(this::toStudyDeckGroup)
+            .filter(g -> !g.decks().isEmpty() || !g.subGroups().isEmpty())
+            .toList();
+
+        return new StudyDeckGroup(
+            folder.getId(),
+            folder.getName(),
+            buildFolderPathString(folder),
+            decks,
+            subGroups
+        );
+    }
+
+    public String buildFolderPathString(Folder folder) {
+        List<String> segments = new ArrayList<>();
+        Folder current = folder;
+        while (current != null) {
+            segments.add(0, current.getName());
+            current = current.getParentFolder();
+        }
+        return String.join(" / ", segments);
     }
 
     @Transactional(readOnly = true)

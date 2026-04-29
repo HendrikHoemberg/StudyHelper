@@ -241,44 +241,78 @@ function updateFolderPreview(modal) {
 /* ---------- Study Mode Folder Selection ---------- */
 
 /**
- * Toggles all deck checkboxes within a folder group
+ * Toggles all deck checkboxes within a folder group (including sub-folders)
  * @param {HTMLInputElement} folderCheckbox 
  */
 function toggleFolderDecks(folderCheckbox) {
     const group = folderCheckbox.closest('.sh-study-deck-group');
     if (!group) return;
 
-    const deckCheckboxes = group.querySelectorAll('.sh-study-deck-checkbox');
     const isChecked = folderCheckbox.checked;
 
+    // Toggle all nested deck checkboxes
+    const deckCheckboxes = group.querySelectorAll('.sh-study-deck-checkbox');
     deckCheckboxes.forEach(cb => {
         if (cb.checked !== isChecked) {
             cb.checked = isChecked;
         }
     });
 
+    // Toggle all nested folder checkboxes
+    const folderCheckboxes = group.querySelectorAll('.sh-study-folder-checkbox');
+    folderCheckboxes.forEach(cb => {
+        cb.checked = isChecked;
+        cb.indeterminate = false;
+    });
+
     // Trigger HTMX update for the order list by triggering 'change' on the first checkbox
-    // HTMX will include all selectedDeckIds from the form
     if (deckCheckboxes.length > 0) {
         htmx.trigger(deckCheckboxes[0], 'change');
+    } else {
+        // If no decks in this group, find any deck checkbox in the picker to trigger update
+        const anyDeck = document.querySelector('.sh-study-deck-checkbox');
+        if (anyDeck) htmx.trigger(anyDeck, 'change');
     }
 }
 
 /**
- * Syncs folder checkboxes based on the state of their deck checkboxes
+ * Syncs folder checkboxes based on the state of their deck checkboxes (recursively)
  */
 function syncFolderCheckboxes() {
-    document.querySelectorAll('.sh-study-deck-group').forEach(group => {
-        const folderCheckbox = group.querySelector('.sh-study-folder-checkbox');
-        const deckCheckboxes = group.querySelectorAll('.sh-study-deck-checkbox');
+    const groups = Array.from(document.querySelectorAll('.sh-study-deck-group'));
+    if (groups.length === 0) return;
+
+    // Process groups from deepest to shallowest to ensure correct bubbling
+    groups.sort((a, b) => {
+        const depthA = parseInt(a.style.getPropertyValue('--depth') || '0');
+        const depthB = parseInt(b.style.getPropertyValue('--depth') || '0');
+        return depthB - depthA;
+    });
+
+    groups.forEach(group => {
+        const folderCheckbox = group.querySelector(':scope > .sh-study-deck-group-title > .sh-study-folder-checkbox');
+        if (!folderCheckbox) return;
+
+        // Collect direct children state
+        const directDecks = Array.from(group.querySelectorAll(':scope > .sh-study-deck-list > .sh-study-deck-option > .sh-study-deck-option-inner > .sh-study-deck-checkbox'));
+        const directSubFolders = Array.from(group.querySelectorAll(':scope > .sh-study-deck-group > .sh-study-deck-group-title > .sh-study-folder-checkbox'));
         
-        if (!folderCheckbox || deckCheckboxes.length === 0) return;
+        const children = [...directDecks, ...directSubFolders];
+        if (children.length === 0) return;
 
-        const allChecked = Array.from(deckCheckboxes).every(cb => cb.checked);
-        const someChecked = Array.from(deckCheckboxes).some(cb => cb.checked);
+        const allChecked = children.every(cb => cb.checked && !cb.indeterminate);
+        const someChecked = children.some(cb => cb.checked || cb.indeterminate);
 
-        folderCheckbox.checked = allChecked;
-        folderCheckbox.indeterminate = someChecked && !allChecked;
+        if (allChecked) {
+            folderCheckbox.checked = true;
+            folderCheckbox.indeterminate = false;
+        } else if (!someChecked) {
+            folderCheckbox.checked = false;
+            folderCheckbox.indeterminate = false;
+        } else {
+            folderCheckbox.checked = false;
+            folderCheckbox.indeterminate = true;
+        }
     });
 }
 

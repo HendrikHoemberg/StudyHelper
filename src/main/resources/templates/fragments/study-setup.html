@@ -76,13 +76,26 @@
                 </div>
 
                 <div th:if="${!#lists.isEmpty(deckGroups)}" class="sh-study-deck-picker">
-                    <div th:each="group : ${deckGroups}" class="sh-study-deck-group">
-                        <div class="sh-study-deck-group-title" onclick="if(event.target.type !== 'checkbox') this.querySelector('input').click()">
-                            <input type="checkbox" class="sh-checkbox sh-study-folder-checkbox" onclick="event.stopPropagation(); toggleFolderDecks(this)">
-                            <span th:text="${group.folderPath}">Folder Path</span>
+                    <th:block th:each="group : ${deckGroups}">
+                        <th:block th:insert="~{::renderGroup(${group}, 0)}"></th:block>
+                    </th:block>
+                </div>
+
+                <!-- Recursive fragment for nested folders -->
+                <th:block th:fragment="renderGroup(group, depth)">
+                    <div th:if="${group != null}" class="sh-study-deck-group" th:classappend="${(depth ?: 0) > 0 ? 'is-nested' : ''}" th:style="'--depth: ' + ${depth ?: 0}">
+                        <div class="sh-study-deck-group-title"
+                             th:style="'padding-left:' + (${depth ?: 0} * 1.25) + 'rem'"
+                             onclick="if(event.target.type !== 'checkbox') this.querySelector('input').click()">
+                            <input type="checkbox" class="sh-checkbox sh-study-folder-checkbox"
+                                   th:data-folder-id="${group.folderId}"
+                                   onclick="event.stopPropagation(); toggleFolderDecks(this)">
+                            <span th:text="${group.folderName}">Folder Name</span>
                         </div>
-                        <div class="sh-study-deck-list">
-                            <label th:each="deck : ${group.decks}" class="sh-study-deck-option">
+                        
+                        <div class="sh-study-deck-list" th:if="${!#lists.isEmpty(group.decks)}">
+                            <label th:each="deck : ${group.decks}" class="sh-study-deck-option"
+                                   th:style="'margin-left:' + (${depth ?: 0} * 1.25) + 'rem'">
                                 <div class="sh-study-deck-option-inner">
                                     <input class="sh-checkbox sh-study-deck-checkbox"
                                            type="checkbox"
@@ -99,8 +112,12 @@
                                       th:text="${deck.cardCount} + ' cards'">0 cards</span>
                             </label>
                         </div>
+                        
+                        <th:block th:each="sub : ${group.subGroups}">
+                            <th:block th:insert="~{::renderGroup(${sub}, ${(depth ?: 0) + 1})}"></th:block>
+                        </th:block>
                     </div>
-                </div>
+                </th:block>
             </section>
 
             <section class="sh-study-deck-options">

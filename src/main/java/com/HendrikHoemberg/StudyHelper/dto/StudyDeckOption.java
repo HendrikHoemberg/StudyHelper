@@ -5,6 +5,7 @@ import java.io.Serializable;
 public record StudyDeckOption(
     Long deckId,
     String deckName,
+    Long folderId,
     String folderPath,
     String folderColorHex,
     int cardCount

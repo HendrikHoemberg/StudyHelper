@@ -11,6 +11,7 @@ import com.HendrikHoemberg.StudyHelper.dto.StudySessionStats;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
+import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.StudySessionService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -44,15 +45,18 @@ public class StudySessionController {
     private final DeckService deckService;
     private final FlashcardService flashcardService;
     private final UserService userService;
+    private final FolderService folderService;
 
     public StudySessionController(StudySessionService studySessionService,
                                   DeckService deckService,
                                   FlashcardService flashcardService,
-                                  UserService userService) {
+                                  UserService userService,
+                                  FolderService folderService) {
         this.studySessionService = studySessionService;
         this.deckService = deckService;
         this.flashcardService = flashcardService;
         this.userService = userService;
+        this.folderService = folderService;
     }
 
     @GetMapping("/study/start")
@@ -322,8 +326,7 @@ public class StudySessionController {
                                    User user,
                                    List<Long> preselectedDeckIds,
                                    String error) {
-        List<StudyDeckOption> options = deckService.getStudyDeckOptions(user);
-        model.addAttribute("deckGroups", groupDecksByFolderPath(options));
+        model.addAttribute("deckGroups", folderService.getStudyFolderTree(user));
         model.addAttribute("preselectedDeckIds", normalizeDeckIds(preselectedDeckIds));
         model.addAttribute("studyError", error);
         model.addAttribute("sessionModes", SessionMode.values());
@@ -372,18 +375,6 @@ public class StudySessionController {
         return null;
     }
 
-    private List<StudyDeckGroup> groupDecksByFolderPath(List<StudyDeckOption> options) {
-        Map<String, List<StudyDeckOption>> grouped = new LinkedHashMap<>();
-        for (StudyDeckOption option : options) {
-            grouped.computeIfAbsent(option.folderPath(), key -> new ArrayList<>()).add(option);
-        }
-
-        List<StudyDeckGroup> result = new ArrayList<>();
-        for (Map.Entry<String, List<StudyDeckOption>> entry : grouped.entrySet()) {
-            result.add(new StudyDeckGroup(entry.getKey(), List.copyOf(entry.getValue())));
-        }
-        return result;
-    }
 
     private List<Long> resolveOrderedSelection(List<Long> selectedDeckIds,
                                                String orderedDeckIds,

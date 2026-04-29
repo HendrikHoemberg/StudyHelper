@@ -99,6 +99,7 @@ public class DeckService {
                 return new StudyDeckOption(
                     deck.getId(),
                     deck.getName(),
+                    deck.getFolder().getId(),
                     buildFolderPath(deck.getFolder()),
                     deck.getFolder().getColorHex(),
                     deck.getFlashcards().size()
