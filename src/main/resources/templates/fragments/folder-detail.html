@@ -80,16 +80,17 @@
         <div class="sh-card-grid">
             <a th:each="sub : ${view.subFolders}"
                th:href="@{/folders/{id}(id=${sub.id})}"
-               class="sh-folder-card"
+               class="sh-d-pill"
                th:style="'--folder-color:' + ${sub.colorHex}"
                hx-get th:hx-get="@{/folders/{id}(id=${sub.id})}"
                hx-target="#explorer-detail" hx-push-url="true">
-                <div class="sh-folder-card-inner">
-                    <span class="sh-folder-card-icon">
-                        <i th:attr="data-lucide=${sub.iconName ?: 'folder'}"></i>
-                    </span>
-                    <span class="sh-folder-name" th:text="${sub.name}">Subfolder</span>
-                </div>
+                <span class="sh-d-pill-cap sh-d-pill-cap-static">
+                    <i th:attr="data-lucide=${sub.iconName ?: 'folder'}"></i>
+                </span>
+                <span class="sh-d-pill-name">
+                    <span class="sh-d-pill-text" th:text="${sub.name}">Subfolder</span>
+                    <span class="sh-d-pill-count" th:text="${sub.decks.size()}">0</span>
+                </span>
             </a>
         </div>
     </div>
