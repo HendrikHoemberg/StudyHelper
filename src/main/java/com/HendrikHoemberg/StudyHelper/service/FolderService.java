@@ -50,13 +50,13 @@ public class FolderService {
                 subDeckTotal += subDecks;
                 childNodes.add(new SidebarFolderNode(
                     sub.getId(), sub.getName(), sub.getColorHex(),
-                    subDecks, List.of()
+                    iconOf(sub), subDecks, List.of()
                 ));
             }
             int rootTotal = root.getDecks().size() + subDeckTotal;
             nodes.add(new SidebarFolderNode(
                 root.getId(), root.getName(), root.getColorHex(),
-                rootTotal, childNodes
+                iconOf(root), rootTotal, childNodes
             ));
         }
         return nodes;
@@ -91,6 +91,21 @@ public class FolderService {
             .orElseThrow(() -> new NoSuchElementException("Folder not found"));
         folder.setColorHex(colorHex);
         return folderRepository.save(folder);
+    }
+
+    @Transactional
+    public Folder updateFolder(Long id, String name, String colorHex, String iconName, User user) {
+        Folder folder = folderRepository.findByIdAndUser(id, user)
+            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+        if (name != null && !name.isBlank()) folder.setName(name);
+        if (colorHex != null && !colorHex.isBlank()) folder.setColorHex(colorHex);
+        folder.setIconName(iconName != null && !iconName.isBlank() ? iconName : "folder");
+        return folderRepository.save(folder);
+    }
+
+    private String iconOf(Folder folder) {
+        return folder.getIconName() != null && !folder.getIconName().isBlank()
+            ? folder.getIconName() : "folder";
     }
 
     @Transactional(readOnly = true)

@@ -1051,9 +1051,6 @@ textarea.sh-input {
     transform: rotate(90deg);
 }
 
-.sh-tree-children.show {
-    /* Keep for compatibility if needed, but .expanded handles it now */
-}
 
 .sh-tree-deck {
     display: flex;
@@ -1993,6 +1990,65 @@ textarea.sh-input {
     padding: 0.875rem 1.25rem;
     border-top: 1px solid var(--border-light);
 }
+
+/* ============================================================
+   ICON PICKER
+   ============================================================ */
+
+.sh-icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+    gap: 3px;
+    max-height: 192px;
+    overflow-y: auto;
+    padding: 4px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background: var(--surface-hover);
+}
+
+.sh-icon-btn {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: border-color 0.1s, color 0.1s, background 0.1s;
+    padding: 0;
+}
+
+.sh-icon-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light, color-mix(in srgb, var(--accent) 12%, var(--surface)));
+}
+
+.sh-icon-btn.is-selected {
+    border-color: var(--accent);
+    background: var(--accent-light, color-mix(in srgb, var(--accent) 12%, var(--surface)));
+    color: var(--accent);
+}
+
+.sh-icon-btn svg { width: 15px; height: 15px; }
+
+.sh-edit-preview {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius);
+    background: color-mix(in srgb, currentColor 12%, var(--surface));
+    flex-shrink: 0;
+    transition: color 0.15s;
+}
+
+.sh-edit-preview svg { width: 22px; height: 22px; }
 
 /* ============================================================
    ALERTS

@@ -99,3 +99,73 @@ function syncColorHex(input, target) {
     const targetEl = document.getElementById(target);
     if (targetEl) targetEl.value = input.value;
 }
+
+/* ---------- Edit Folder Modal ---------- */
+
+const FOLDER_ICONS = window.lucide ? Object.keys(lucide.icons).sort() : ['folder'];
+
+function openEditFolderModal(btn) {
+    const modal = document.getElementById('editFolderModal');
+    if (!modal) return;
+
+    const name  = btn.dataset.folderName;
+    const color = btn.dataset.folderColor;
+    const icon  = btn.dataset.folderIcon || 'folder';
+
+    modal.querySelector('#editFolderName').value  = name;
+    modal.querySelector('#editFolderColor').value = color;
+    modal.querySelector('#editFolderIcon').value  = icon;
+
+    updateEditPreview(modal, color, icon);
+    renderIconGrid(modal, icon);
+
+    // clear any previous search
+    const search = modal.querySelector('#iconSearch');
+    if (search) search.value = '';
+    modal.querySelectorAll('.sh-icon-btn').forEach(b => { b.hidden = false; });
+
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    modal.querySelector('#editFolderName').focus();
+}
+
+function renderIconGrid(modal, selectedIcon) {
+    const grid = modal.querySelector('#editIconGrid');
+    if (!grid) return;
+
+    if (!grid.dataset.rendered) {
+        grid.innerHTML = FOLDER_ICONS.map(name =>
+            `<button type="button" class="sh-icon-btn" data-icon="${name}" title="${name}" ` +
+            `onclick="selectFolderIcon(this,'${name}')"><i data-lucide="${name}"></i></button>`
+        ).join('');
+        grid.dataset.rendered = '1';
+        if (window.lucide) lucide.createIcons();
+    }
+
+    grid.querySelectorAll('.sh-icon-btn').forEach(b => {
+        b.classList.toggle('is-selected', b.dataset.icon === selectedIcon);
+    });
+}
+
+function selectFolderIcon(btn, iconName) {
+    const modal = btn.closest('.sh-modal');
+    modal.querySelectorAll('.sh-icon-btn.is-selected').forEach(b => b.classList.remove('is-selected'));
+    btn.classList.add('is-selected');
+    modal.querySelector('#editFolderIcon').value = iconName;
+    updateEditPreview(modal, modal.querySelector('#editFolderColor').value, iconName);
+}
+
+function filterFolderIcons(input) {
+    const q = input.value.toLowerCase();
+    input.closest('.sh-modal').querySelectorAll('.sh-icon-btn').forEach(btn => {
+        btn.hidden = q.length > 0 && !btn.dataset.icon.includes(q);
+    });
+}
+
+function updateEditPreview(modal, color, iconName) {
+    const preview = modal.querySelector('#editFolderPreview');
+    if (!preview) return;
+    preview.style.color = color;
+    preview.innerHTML = `<i data-lucide="${iconName}" style="width:22px;height:22px;"></i>`;
+    if (window.lucide) lucide.createIcons();
+}

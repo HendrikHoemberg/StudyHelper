@@ -6,6 +6,7 @@ public record SidebarFolderNode(
     Long id,
     String name,
     String colorHex,
+    String iconName,
     int deckCount,
     List<SidebarFolderNode> children
 ) {}

@@ -37,11 +37,11 @@
                                         th:if="${!#lists.isEmpty(folder.children)}"
                                         hx-on:click="this.closest('.sh-d-folder').classList.toggle('is-open')"
                                         title="Expand / collapse">
-                                    <i data-lucide="folder" class="sh-d-cap-icon-closed"></i>
-                                    <i data-lucide="folder-open" class="sh-d-cap-icon-open"></i>
+                                    <i th:attr="data-lucide=${folder.iconName ?: 'folder'}" class="sh-d-cap-icon-closed"></i>
+                                    <i th:attr="data-lucide=${folder.iconName ?: 'folder'}" class="sh-d-cap-icon-open"></i>
                                 </button>
                                 <span th:if="${#lists.isEmpty(folder.children)}" class="sh-d-pill-cap sh-d-pill-cap-static">
-                                    <i data-lucide="folder"></i>
+                                    <i th:attr="data-lucide=${folder.iconName ?: 'folder'}"></i>
                                 </span>
                                 <a th:href="@{/folders/{id}(id=${folder.id})}"
                                    class="sh-d-pill-name"

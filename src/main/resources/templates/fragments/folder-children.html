@@ -16,7 +16,7 @@
                 <i data-lucide="chevron-right"></i>
             </span>
             <span class="sh-tree-folder-icon">
-                <i data-lucide="folder"></i>
+                <i th:attr="data-lucide=${sub.iconName ?: 'folder'}"></i>
             </span>
             <a th:href="@{/folders/{id}(id=${sub.id})}" class="sh-folder-name flex-1"
                hx-get th:hx-get="@{/folders/{id}(id=${sub.id})}"

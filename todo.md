@@ -6,4 +6,6 @@
 - Rethink sidebar design
 - fix folder collapse animation
 - Folder customizable icons lucide
--Folder timeline animation going down instead of jumping
+- Folder timeline animation going down instead of jumping
+- New folder creation doesnt contain lucide icons
+- Lucide icon filtering is broken

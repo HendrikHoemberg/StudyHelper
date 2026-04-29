@@ -130,6 +130,17 @@ public class FolderController {
         return "redirect:/folders/" + id;
     }
 
+    @PostMapping("/folders/{id}/edit")
+    public String editFolder(@PathVariable Long id,
+                             @RequestParam String name,
+                             @RequestParam(defaultValue = "#6c757d") String colorHex,
+                             @RequestParam(defaultValue = "folder") String iconName,
+                             Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        folderService.updateFolder(id, name, colorHex, iconName, user);
+        return "redirect:/folders/" + id;
+    }
+
     @PostMapping("/folders/{id}/color")
     public String updateColor(@PathVariable Long id,
                               @RequestParam String colorHex,

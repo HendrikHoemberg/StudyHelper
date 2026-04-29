@@ -35,7 +35,7 @@
     <div class="sh-page-header">
         <div class="flex items-center gap-3">
             <div class="sh-folder-card-icon" th:style="'color:' + ${view.folder.colorHex}">
-                <i data-lucide="folder" style="width:28px;height:28px;"></i>
+                <i th:attr="data-lucide=${view.folder.iconName ?: 'folder'}" style="width:28px;height:28px;"></i>
             </div>
             <div>
                 <h1 class="sh-page-title" th:text="${view.folder.name}">Folder Name</h1>
@@ -55,6 +55,14 @@
             <button class="sh-btn sh-btn-secondary sh-btn-sm" hx-on:click="document.getElementById('uploadModal').classList.add('is-open'); document.body.style.overflow='hidden';">
                 <i data-lucide="upload"></i>
                 Upload
+            </button>
+            <button class="sh-btn sh-btn-secondary sh-btn-sm"
+                    th:data-folder-name="${view.folder.name}"
+                    th:data-folder-color="${view.folder.colorHex}"
+                    th:data-folder-icon="${view.folder.iconName ?: 'folder'}"
+                    onclick="openEditFolderModal(this)">
+                <i data-lucide="pencil"></i>
+                Edit
             </button>
             <button class="sh-btn sh-btn-danger sh-btn-sm"
                     th:hx-post="@{/folders/{id}/delete(id=${view.folder.id})}"
@@ -78,7 +86,7 @@
                hx-target="#explorer-detail" hx-push-url="true">
                 <div class="sh-folder-card-inner">
                     <span class="sh-folder-card-icon">
-                        <i data-lucide="folder"></i>
+                        <i th:attr="data-lucide=${sub.iconName ?: 'folder'}"></i>
                     </span>
                     <span class="sh-folder-name" th:text="${sub.name}">Subfolder</span>
                 </div>
@@ -232,6 +240,54 @@
                     <div class="sh-modal-footer">
                         <button type="button" class="sh-btn sh-btn-secondary" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">Cancel</button>
                         <button type="submit" class="sh-btn sh-btn-primary">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Folder Modal -->
+    <div class="sh-modal" id="editFolderModal">
+        <div class="sh-modal-backdrop" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';"></div>
+        <div class="sh-modal-dialog">
+            <div class="sh-modal-content">
+                <div class="sh-modal-header">
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        <div class="sh-edit-preview" id="editFolderPreview">
+                            <i th:attr="data-lucide=${view.folder.iconName ?: 'folder'}" style="width:22px;height:22px;"></i>
+                        </div>
+                        <h5 class="sh-modal-title">Edit Folder</h5>
+                    </div>
+                    <button type="button" class="sh-modal-close" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <form th:action="@{/folders/{id}/edit(id=${view.folder.id})}" method="post">
+                    <div class="sh-modal-body">
+                        <div>
+                            <label class="sh-label">Name</label>
+                            <input type="text" name="name" id="editFolderName" class="sh-input" required
+                                   th:value="${view.folder.name}">
+                        </div>
+                        <div>
+                            <label class="sh-label">Color</label>
+                            <input type="color" name="colorHex" id="editFolderColor" class="sh-color-input"
+                                   th:value="${view.folder.colorHex}"
+                                   oninput="updateEditPreview(this.closest('.sh-modal'), this.value, document.getElementById('editFolderIcon').value)">
+                        </div>
+                        <div>
+                            <label class="sh-label">Icon</label>
+                            <input type="text" id="iconSearch" class="sh-input" placeholder="Search icons…"
+                                   style="font-size:0.8125rem; margin-bottom:0.5rem;"
+                                   oninput="filterFolderIcons(this)">
+                            <div class="sh-icon-grid" id="editIconGrid"></div>
+                            <input type="hidden" name="iconName" id="editFolderIcon"
+                                   th:value="${view.folder.iconName ?: 'folder'}">
+                        </div>
+                    </div>
+                    <div class="sh-modal-footer">
+                        <button type="button" class="sh-btn sh-btn-secondary" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">Cancel</button>
+                        <button type="submit" class="sh-btn sh-btn-primary">Save</button>
                     </div>
                 </form>
             </div>
