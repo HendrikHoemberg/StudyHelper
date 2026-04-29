@@ -1014,12 +1014,23 @@ textarea.sh-input {
 
 .sh-page-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
     flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow);
+    transition: box-shadow var(--transition);
 }
+
+.sh-page-header:hover {
+    box-shadow: var(--shadow-md);
+}
+
 
 .sh-page-title {
     font-family: var(--font-heading);
