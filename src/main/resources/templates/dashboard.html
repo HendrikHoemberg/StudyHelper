@@ -6,7 +6,16 @@
 <div class="app-layout">
     <nav th:replace="~{fragments/layout :: topnav}"></nav>
     <div id="main-content" class="app-main-content">
-        <div th:replace="~{fragments/explorer :: explorerContent}"></div>
+        <div class="sh-fade-in">
+            <div class="sh-dashboard-shell">
+                <div class="sh-explorer-shell">
+                    <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+                    <div id="explorer-detail" class="sh-explorer-detail sh-explorer-detail-content">
+                        <div th:replace="~{fragments/explorer :: dashboardContent}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

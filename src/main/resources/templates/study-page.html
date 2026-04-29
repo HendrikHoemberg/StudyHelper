@@ -6,10 +6,19 @@
 <div class="app-layout">
     <nav th:replace="~{fragments/layout :: topnav}"></nav>
     <div id="main-content" class="app-main-content">
-        <div th:switch="${studyStateView}">
-            <div th:case="'card'" th:replace="~{fragments/study-card :: studyCard}"></div>
-            <div th:case="'complete'" th:replace="~{fragments/study-complete :: studyComplete}"></div>
-            <div th:case="*" th:replace="~{fragments/study-setup :: studySetup}"></div>
+        <div class="sh-fade-in">
+            <div class="sh-dashboard-shell">
+                <div class="sh-explorer-shell">
+                    <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+                    <div id="explorer-detail" class="sh-explorer-detail sh-explorer-detail-content">
+                        <div th:switch="${studyStateView}">
+                            <div th:case="'card'" th:replace="~{fragments/study-card :: studyCard}"></div>
+                            <div th:case="'complete'" th:replace="~{fragments/study-complete :: studyComplete}"></div>
+                            <div th:case="*" th:replace="~{fragments/study-setup :: studySetup}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

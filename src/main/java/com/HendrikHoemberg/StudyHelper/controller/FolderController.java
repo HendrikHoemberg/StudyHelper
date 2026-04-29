@@ -44,7 +44,7 @@ public class FolderController {
                               @RequestHeader(value = "HX-Target", required = false) String hxTarget) {
         User user = userService.getByUsername(principal.getName());
         List<Folder> folders = folderService.getRootFolders(user);
-        List<SidebarFolderNode> sidebarTree = folderService.getSidebarTree(user);
+
         List<StudyDeckOption> deckOptions = deckService.getStudyDeckOptions(user);
         List<FileSummary> fileSummaries = fileEntryService.getFileSummaries(user);
 
@@ -59,7 +59,7 @@ public class FolderController {
         }
 
         model.addAttribute("folders", folders);
-        model.addAttribute("sidebarTree", sidebarTree);
+
         model.addAttribute("deckOptions", deckOptions);
         model.addAttribute("fileSummaries", fileSummaries);
         model.addAttribute("username", principal.getName());
@@ -69,7 +69,7 @@ public class FolderController {
             if ("library-grid-container".equals(hxTarget)) {
                 return "fragments/explorer :: libraryGrid";
             }
-            return "fragments/explorer :: explorerContent";
+            return "fragments/explorer :: dashboardContent";
         }
         return "dashboard";
     }

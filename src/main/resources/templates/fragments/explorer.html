@@ -2,207 +2,137 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <body>
 
-<!-- Explorer content fragment — swapped into #main-content -->
-<div th:fragment="explorerContent" class="sh-fade-in">
-
+<!-- Dashboard main content fragment — swapped into #explorer-detail -->
+<div th:fragment="dashboardContent" class="sh-dashboard-content sh-fade-in">
     <!-- Alert for errors -->
-    <div th:if="${error}" class="sh-alert sh-alert-danger">
+    <div th:if="${error}" class="sh-alert sh-alert-danger" style="grid-column: 1 / -1; margin-bottom: 1rem;">
         <div class="sh-alert-body" th:text="${error}"></div>
         <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
             <i data-lucide="x"></i>
         </button>
     </div>
 
-    <div class="sh-dashboard-shell">
-        <div class="sh-explorer-shell">
-            <aside class="sh-dashboard-sidebar">
-                <div class="sh-sidebar-card">
-                    <div class="sh-sidebar-header">
-                        <div class="sh-sidebar-title">Folders</div>
-                        <button class="sh-btn sh-btn-ghost sh-btn-icon" hx-on:click="document.getElementById('newFolderModal').classList.add('is-open'); document.body.style.overflow='hidden'; document.getElementById('newFolderModal').querySelector('input')?.focus();" title="New folder">
-                            <i data-lucide="plus"></i>
-                        </button>
-                    </div>
-                    <div th:if="${#lists.isEmpty(sidebarTree)}" class="sh-sidebar-empty">
-                        No folders yet
-                    </div>
-                    <ul th:if="${!#lists.isEmpty(sidebarTree)}" class="sh-d-folders">
-                        <li th:each="folder : ${sidebarTree}"
-                            class="sh-d-folder"
-                            th:classappend="${!#lists.isEmpty(folder.children)} ? ' has-children' : ''"
-                            th:data-folder-id="${folder.id}"
-                            th:style="'--folder-color:' + ${folder.colorHex}">
-                            <div class="sh-d-pill">
-                                <button type="button" class="sh-d-pill-cap"
-                                        th:if="${!#lists.isEmpty(folder.children)}"
-                                        hx-on:click="this.closest('.sh-d-folder').classList.toggle('is-open')"
-                                        title="Expand / collapse">
-                                    <i th:attr="data-lucide=${folder.iconName ?: 'folder'}" class="sh-d-cap-icon-closed"></i>
-                                    <i th:attr="data-lucide=${folder.iconName ?: 'folder'}" class="sh-d-cap-icon-open"></i>
-                                </button>
-                                <span th:if="${#lists.isEmpty(folder.children)}" class="sh-d-pill-cap sh-d-pill-cap-static">
-                                    <i th:attr="data-lucide=${folder.iconName ?: 'folder'}"></i>
-                                </span>
-                                <a th:href="@{/folders/{id}(id=${folder.id})}"
-                                   class="sh-d-pill-name"
-                                   hx-get th:hx-get="@{/folders/{id}(id=${folder.id})}"
-                                   hx-target="#explorer-detail" hx-push-url="true"
-                                   hx-on:click="document.querySelectorAll('.sh-d-folder.is-active, .sh-d-row.is-active').forEach(el => el.classList.remove('is-active')); this.closest('.sh-d-folder').classList.add('is-active');">
-                                    <span class="sh-d-pill-text" th:text="${folder.name}">Folder</span>
-                                    <span class="sh-d-pill-count" th:text="${folder.deckCount}">0</span>
-                                </a>
-                            </div>
-                            <div th:if="${!#lists.isEmpty(folder.children)}" class="sh-d-children">
-                                <span class="sh-d-rail"></span>
-                                <a th:each="child : ${folder.children}"
-                                   th:href="@{/folders/{id}(id=${child.id})}"
-                                   class="sh-d-row"
-                                   th:data-folder-id="${child.id}"
-                                   th:style="'--folder-color:' + ${child.colorHex}"
-                                   hx-get th:hx-get="@{/folders/{id}(id=${child.id})}"
-                                   hx-target="#explorer-detail" hx-push-url="true"
-                                   hx-on:click="document.querySelectorAll('.sh-d-folder.is-active, .sh-d-row.is-active').forEach(el => el.classList.remove('is-active')); this.classList.add('is-active');">
-                                    <span class="sh-d-row-dot"></span>
-                                    <span class="sh-d-row-name" th:text="${child.name}">Subfolder</span>
-                                    <span class="sh-d-row-count" th:text="${child.deckCount}">0</span>
-                                </a>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-                <a href="/study/start" class="sh-btn sh-btn-secondary sh-sidebar-cta"
-                   hx-get="/study/start" hx-target="#main-content" hx-push-url="true">
+    <main class="sh-dashboard-main">
+        <div class="sh-page-header">
+            <div>
+                <h1 class="sh-page-title">My Library</h1>
+                <p class="sh-page-subtitle">All decks and files at a glance.</p>
+            </div>
+            <div class="sh-page-actions">
+                <a href="/study/start" class="sh-btn sh-btn-secondary"
+                   hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
                     <i data-lucide="book-open"></i>
-                    Study Session
+                    Start Study
                 </a>
-            </aside>
-            <div id="explorer-detail" class="sh-explorer-detail sh-explorer-detail-content">
-                <div class="sh-dashboard-content">
-                    <main class="sh-dashboard-main">
-                        <div class="sh-page-header">
-                            <div>
-                                <h1 class="sh-page-title">My Library</h1>
-                                <p class="sh-page-subtitle">All decks and files at a glance.</p>
-                            </div>
-                            <div class="sh-page-actions">
-                                <a href="/study/start" class="sh-btn sh-btn-secondary"
-                                   hx-get="/study/start" hx-target="#main-content" hx-push-url="true">
-                                    <i data-lucide="book-open"></i>
-                                    Start Study
-                                </a>
-                                <button class="sh-btn sh-btn-primary" hx-on:click="document.getElementById('newFolderModal').classList.add('is-open'); document.body.style.overflow='hidden'; document.getElementById('newFolderModal').querySelector('input')?.focus();">
-                                    <i data-lucide="plus"></i>
-                                    New Folder
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="sh-dashboard-search">
-                            <div class="sh-search-bar sh-search-bar-lg">
-                                <span class="sh-search-icon">
-                                    <i data-lucide="search"></i>
-                                </span>
-                                <input type="text" name="q" class="sh-input sh-search-input" placeholder="Search decks and files..."
-                                       hx-get="/folders"
-                                       hx-trigger="keyup changed delay:150ms"
-                                       hx-target="#library-grid-container"
-                                       th:value="${query}">
-                            </div>
-                        </div>
-
-                        <div class="sh-section-title">Library Items</div>
-
-                        <div th:if="${#lists.isEmpty(deckOptions)} and ${#lists.isEmpty(fileSummaries)}" class="sh-empty">
-                            <div class="sh-empty-icon">
-                                <i data-lucide="layers"></i>
-                            </div>
-                            <p class="sh-empty-text">No decks or files yet</p>
-                            <p class="sh-empty-hint">Create a deck or upload a file to see it here.</p>
-                        </div>
-
-                        <div id="library-grid-container">
-                            <div th:fragment="libraryGrid" th:if="${!#lists.isEmpty(deckOptions)} or ${!#lists.isEmpty(fileSummaries)}" class="sh-deck-grid">
-                                <a th:each="deck : ${deckOptions}"
-                                   th:href="@{/decks/{id}(id=${deck.deckId})}"
-                                   class="sh-deck-tile sh-library-filter-item"
-                                   th:data-name="${deck.deckName + ' ' + deck.folderPath}"
-                                             th:style="'--folder-color:' + ${deck.folderColorHex}"
-                                   hx-get th:hx-get="@{/decks/{id}(id=${deck.deckId})}"
-                                   hx-target="#explorer-detail" hx-push-url="true">
-                                    <div class="sh-deck-cover">
-                                        <span class="sh-deck-cover-icon">
-                                            <i data-lucide="layers"></i>
-                                        </span>
-                                    </div>
-                                    <div class="sh-deck-body">
-                                        <div class="sh-deck-title" th:text="${deck.deckName}">Deck Name</div>
-                                        <div class="sh-deck-meta" th:text="${deck.folderPath}">Folder</div>
-                                        <div class="sh-deck-meta" th:text="${deck.cardCount} + ' cards'">0 cards</div>
-                                    </div>
-                                </a>
-    
-                                <a th:each="file : ${fileSummaries}"
-                                   th:href="@{/files/{id}/view(id=${file.id})}"
-                                   target="_blank"
-                                   class="sh-deck-tile sh-library-filter-item"
-                                             th:data-name="${file.originalFilename + ' ' + file.folderPath}"
-                                             th:style="'--folder-color:' + ${file.folderColorHex}">
-                                    <div class="sh-deck-cover">
-                                        <span class="sh-deck-cover-icon">
-                                            <i data-lucide="file"></i>
-                                        </span>
-                                    </div>
-                                    <div class="sh-deck-body">
-                                        <div class="sh-deck-title" th:text="${file.originalFilename}">filename.pdf</div>
-                                        <div class="sh-deck-meta" th:text="${file.folderPath}">Folder</div>
-                                        <div class="sh-deck-meta"
-                                             th:text="${#numbers.formatDecimal(file.fileSizeBytes / 1024.0, 1, 1) + ' KB'}">0 KB</div>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
-                    </main>
-
-                    <aside class="sh-dashboard-aside">
-                        <div class="sh-side-card">
-                            <div class="sh-side-card-title">Recent Activity</div>
-                            <ul class="sh-activity-list">
-                                <li class="sh-activity-item">
-                                    <span class="sh-activity-dot"></span>
-                                    <div>
-                                        <div class="sh-activity-title">Study Session</div>
-                                        <div class="sh-activity-meta">21 cards - 10:50 pm</div>
-                                    </div>
-                                </li>
-                                <li class="sh-activity-item">
-                                    <span class="sh-activity-dot"></span>
-                                    <div>
-                                        <div class="sh-activity-title">Study Session</div>
-                                        <div class="sh-activity-meta">13 cards - 10:40 pm</div>
-                                    </div>
-                                </li>
-                                <li class="sh-activity-item">
-                                    <span class="sh-activity-dot"></span>
-                                    <div>
-                                        <div class="sh-activity-title">Study Session</div>
-                                        <div class="sh-activity-meta">21 cards - 10:30 pm</div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="sh-side-card">
-                            <div class="sh-side-card-title">Daily Goal</div>
-                            <div class="sh-goal-stat">
-                                <div class="sh-goal-value">4/5</div>
-                                <div class="sh-goal-label">Decks studied today</div>
-                            </div>
-                        </div>
-                    </aside>
-                </div>
+                <button class="sh-btn sh-btn-primary" hx-on:click="document.getElementById('newFolderModal').classList.add('is-open'); document.body.style.overflow='hidden'; document.getElementById('newFolderModal').querySelector('input')?.focus();">
+                    <i data-lucide="plus"></i>
+                    New Folder
+                </button>
             </div>
         </div>
-    </div>
+
+        <div class="sh-dashboard-search">
+            <div class="sh-search-bar sh-search-bar-lg">
+                <span class="sh-search-icon">
+                    <i data-lucide="search"></i>
+                </span>
+                <input type="text" name="q" class="sh-input sh-search-input" placeholder="Search decks and files..."
+                       hx-get="/folders"
+                       hx-trigger="keyup changed delay:150ms"
+                       hx-target="#library-grid-container"
+                       th:value="${query}">
+            </div>
+        </div>
+
+        <div class="sh-section-title">Library Items</div>
+
+        <div th:if="${#lists.isEmpty(deckOptions)} and ${#lists.isEmpty(fileSummaries)}" class="sh-empty">
+            <div class="sh-empty-icon">
+                <i data-lucide="layers"></i>
+            </div>
+            <p class="sh-empty-text">No decks or files yet</p>
+            <p class="sh-empty-hint">Create a deck or upload a file to see it here.</p>
+        </div>
+
+        <div id="library-grid-container">
+            <div th:fragment="libraryGrid" th:if="${!#lists.isEmpty(deckOptions)} or ${!#lists.isEmpty(fileSummaries)}" class="sh-deck-grid">
+                <a th:each="deck : ${deckOptions}"
+                   th:href="@{/decks/{id}(id=${deck.deckId})}"
+                   class="sh-deck-tile sh-library-filter-item"
+                   th:data-name="${deck.deckName + ' ' + deck.folderPath}"
+                             th:style="'--folder-color:' + ${deck.folderColorHex}"
+                   hx-get th:hx-get="@{/decks/{id}(id=${deck.deckId})}"
+                   hx-target="#explorer-detail" hx-push-url="true">
+                    <div class="sh-deck-cover">
+                        <span class="sh-deck-cover-icon">
+                            <i data-lucide="layers"></i>
+                        </span>
+                    </div>
+                    <div class="sh-deck-body">
+                        <div class="sh-deck-title" th:text="${deck.deckName}">Deck Name</div>
+                        <div class="sh-deck-meta" th:text="${deck.folderPath}">Folder</div>
+                        <div class="sh-deck-meta" th:text="${deck.cardCount} + ' cards'">0 cards</div>
+                    </div>
+                </a>
+
+                <a th:each="file : ${fileSummaries}"
+                   th:href="@{/files/{id}/view(id=${file.id})}"
+                   target="_blank"
+                   class="sh-deck-tile sh-library-filter-item"
+                             th:data-name="${file.originalFilename + ' ' + file.folderPath}"
+                             th:style="'--folder-color:' + ${file.folderColorHex}">
+                    <div class="sh-deck-cover">
+                        <span class="sh-deck-cover-icon">
+                            <i data-lucide="file"></i>
+                        </span>
+                    </div>
+                    <div class="sh-deck-body">
+                        <div class="sh-deck-title" th:text="${file.originalFilename}">filename.pdf</div>
+                        <div class="sh-deck-meta" th:text="${file.folderPath}">Folder</div>
+                        <div class="sh-deck-meta"
+                             th:text="${#numbers.formatDecimal(file.fileSizeBytes / 1024.0, 1, 1) + ' KB'}">0 KB</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <aside class="sh-dashboard-aside">
+        <div class="sh-side-card">
+            <div class="sh-side-card-title">Recent Activity</div>
+            <ul class="sh-activity-list">
+                <li class="sh-activity-item">
+                    <span class="sh-activity-dot"></span>
+                    <div>
+                        <div class="sh-activity-title">Study Session</div>
+                        <div class="sh-activity-meta">21 cards - 10:50 pm</div>
+                    </div>
+                </li>
+                <li class="sh-activity-item">
+                    <span class="sh-activity-dot"></span>
+                    <div>
+                        <div class="sh-activity-title">Study Session</div>
+                        <div class="sh-activity-meta">13 cards - 10:40 pm</div>
+                    </div>
+                </li>
+                <li class="sh-activity-item">
+                    <span class="sh-activity-dot"></span>
+                    <div>
+                        <div class="sh-activity-title">Study Session</div>
+                        <div class="sh-activity-meta">21 cards - 10:30 pm</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="sh-side-card">
+            <div class="sh-side-card-title">Daily Goal</div>
+            <div class="sh-goal-stat">
+                <div class="sh-goal-value">4/5</div>
+                <div class="sh-goal-label">Decks studied today</div>
+            </div>
+        </div>
+    </aside>
 
     <!-- New Folder Modal -->
     <div class="sh-modal" id="newFolderModal">
@@ -235,7 +165,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 </body>
