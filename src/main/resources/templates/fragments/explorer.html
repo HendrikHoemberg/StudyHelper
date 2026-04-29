@@ -24,7 +24,7 @@
                     <i data-lucide="book-open"></i>
                     Start Study
                 </a>
-                <button class="sh-btn sh-btn-primary" hx-on:click="openCreateFolderModal('newFolderModal')">
+                <button class="sh-btn sh-btn-primary" hx-get="/folders/new" hx-target="#modal-placeholder">
                     <i data-lucide="plus"></i>
                     New Folder
                 </button>
@@ -134,29 +134,6 @@
         </div>
     </aside>
 
-    <!-- New Folder Modal -->
-    <div class="sh-modal" id="newFolderModal">
-        <div class="sh-modal-backdrop" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';"></div>
-        <div class="sh-modal-dialog">
-            <div class="sh-modal-content">
-                <div class="sh-modal-header">
-                    <h5 class="sh-modal-title">New Folder</h5>
-                    <button type="button" class="sh-modal-close" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">
-                        <i data-lucide="x"></i>
-                    </button>
-                </div>
-                <form th:action="@{/folders}" method="post">
-                    <div class="sh-modal-body">
-                        <div th:replace="~{fragments/folder-form :: folderFields('', '#6366f1', 'folder', 'new')}"></div>
-                    </div>
-                    <div class="sh-modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">Cancel</button>
-                        <button type="submit" class="sh-btn sh-btn-primary">Create</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 </div>
 
 </body>

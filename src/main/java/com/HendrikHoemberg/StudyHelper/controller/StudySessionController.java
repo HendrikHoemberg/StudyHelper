@@ -106,28 +106,46 @@ public class StudySessionController {
         return "study-page";
     }
 
-    @PostMapping("/study/setup/order")
-    public String updateOrderList(@RequestParam(name = "selectedDeckIds", required = false) List<Long> selectedDeckIds,
-                                  @RequestParam(name = "orderedDeckIds", required = false) String orderedDeckIds,
-                                  Model model,
-                                  Principal principal) {
+    @PostMapping("/study/setup/update")
+    public String updateSetup(@RequestParam(name = "selectedDeckIds", required = false) List<Long> selectedDeckIds,
+                              @RequestParam(name = "orderedDeckIds", required = false) String orderedDeckIds,
+                              @RequestParam(name = "toggledFolderId", required = false) Long toggledFolderId,
+                              Model model,
+                              Principal principal) {
         User user = userService.getByUsername(principal.getName());
-        List<Long> selected = normalizeDeckIds(selectedDeckIds);
-        List<Long> manualOrder = parseDeckOrder(orderedDeckIds);
+        List<Long> selected = new ArrayList<>(normalizeDeckIds(selectedDeckIds));
         
-        // Filter out unselected, add new selected
-        List<Long> next = new ArrayList<>();
-        manualOrder.stream().filter(selected::contains).forEach(next::add);
-        selected.stream().filter(id -> !next.contains(id)).forEach(next::add);
+        if (toggledFolderId != null) {
+            // Bulk toggle logic
+            List<StudyDeckOption> allDecksInFolder = folderService.getAllDecksInFolder(toggledFolderId, user);
+            List<Long> deckIdsInFolder = allDecksInFolder.stream().map(StudyDeckOption::deckId).toList();
+            
+            boolean allInFolderSelected = new HashSet<>(selected).containsAll(deckIdsInFolder);
+            if (allInFolderSelected) {
+                selected.removeAll(deckIdsInFolder);
+            } else {
+                for (Long id : deckIdsInFolder) {
+                    if (!selected.contains(id)) selected.add(id);
+                }
+            }
+        }
 
-        prepareOrderModel(model, user, next);
-        return "fragments/study-setup :: orderListFragment";
+        List<Long> manualOrder = parseDeckOrder(orderedDeckIds);
+        List<Long> nextOrder = new ArrayList<>();
+        manualOrder.stream().filter(selected::contains).forEach(nextOrder::add);
+        selected.stream().filter(id -> !nextOrder.contains(id)).forEach(nextOrder::add);
+
+        prepareSetupModel(model, user, selected, null);
+        prepareOrderModel(model, user, nextOrder);
+        
+        return "fragments/study-setup :: setupPickerAndOrder";
     }
 
     @PostMapping("/study/setup/reorder")
     public String reorderDecks(@RequestParam Long deckId,
                                @RequestParam int direction,
                                @RequestParam String orderedDeckIds,
+                               @RequestParam(name = "selectedDeckIds", required = false) List<Long> selectedDeckIds,
                                Model model,
                                Principal principal) {
         User user = userService.getByUsername(principal.getName());
@@ -140,8 +158,9 @@ public class StudySessionController {
             order.add(target, item);
         }
 
+        prepareSetupModel(model, user, normalizeDeckIds(selectedDeckIds), null);
         prepareOrderModel(model, user, order);
-        return "fragments/study-setup :: orderListFragment";
+        return "fragments/study-setup :: setupPickerAndOrder";
     }
 
     @PostMapping("/study/session")
@@ -326,8 +345,9 @@ public class StudySessionController {
                                    User user,
                                    List<Long> preselectedDeckIds,
                                    String error) {
-        model.addAttribute("deckGroups", folderService.getStudyFolderTree(user));
-        model.addAttribute("preselectedDeckIds", normalizeDeckIds(preselectedDeckIds));
+        List<Long> normalized = normalizeDeckIds(preselectedDeckIds);
+        model.addAttribute("deckGroups", folderService.getStudyFolderTree(user, normalized));
+        model.addAttribute("preselectedDeckIds", normalized);
         model.addAttribute("studyError", error);
         model.addAttribute("sessionModes", SessionMode.values());
         model.addAttribute("deckOrderModes", DeckOrderMode.values());

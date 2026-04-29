@@ -8,5 +8,7 @@ public record SidebarFolderNode(
     String colorHex,
     String iconName,
     int deckCount,
-    List<SidebarFolderNode> children
+    List<SidebarFolderNode> children,
+    boolean isActive,
+    boolean isOpen
 ) {}

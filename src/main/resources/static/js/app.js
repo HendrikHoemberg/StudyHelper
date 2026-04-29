@@ -7,21 +7,18 @@ document.addEventListener('DOMContentLoaded', () => {
     initLucide();
     initTopnav();
     initCsrf();
-    syncSidebarActive();
-    syncFolderCheckboxes();
 });
 
 // Re-run initializations after HTMX swaps
 document.body.addEventListener('htmx:afterSwap', () => {
     initLucide();
-    syncSidebarActive();
 });
 
 // Optional fade-in animation after settle
 document.body.addEventListener('htmx:afterSettle', (e) => {
     const target = e.detail.target;
     if (target && target.classList.contains('sh-fade-in')) {
-        target.classList.add('animate-fade-in'); // Example CSS class
+        target.classList.add('animate-fade-in');
     }
 });
 
@@ -69,114 +66,15 @@ function initTopnav() {
     });
 }
 
-/* ---------- Sidebar (Variant D) active sync ---------- */
-function syncSidebarActive() {
-    const folders = document.querySelectorAll('.sh-d-folder');
-    if (!folders.length) return;
-
-    const match = window.location.pathname.match(/\/folders\/(\d+)/);
-    const activeId = match ? match[1] : null;
-
-    document.querySelectorAll('.sh-d-folder.is-active, .sh-d-row.is-active')
-        .forEach(el => el.classList.remove('is-active'));
-
-    if (!activeId) return;
-
-    folders.forEach(folder => {
-        if (folder.dataset.folderId === activeId) {
-            folder.classList.add('is-active');
-            return;
-        }
-        const row = folder.querySelector(`.sh-d-row[data-folder-id="${activeId}"]`);
-        if (row) {
-            row.classList.add('is-active');
-            folder.classList.add('is-open');
-        }
-    });
-}
-
 /* ---------- Color Picker Hex Sync ---------- */
 function syncColorHex(input, target) {
     const targetEl = document.getElementById(target);
     if (targetEl) targetEl.value = input.value;
 }
 
-/* ---------- Folder Modals (Create/Edit) ---------- */
+/* ---------- Folder Icons (Used by Modals) ---------- */
 
 const FOLDER_ICONS = window.lucide ? Object.keys(lucide.icons).sort() : ['folder'];
-
-/**
- * Opens a modal for creating a new folder
- * @param {string} modalId 
- * @param {string} parentId (Optional)
- */
-function openCreateFolderModal(modalId, parentId = null) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-
-    // Reset fields
-    const nameInput = modal.querySelector('input[name="name"]');
-    const colorInput = modal.querySelector('input[name="colorHex"]');
-    const iconInput = modal.querySelector('input[name="iconName"]');
-    
-    if (nameInput) nameInput.value = '';
-    if (colorInput) colorInput.value = '#6366f1';
-    if (iconInput) iconInput.value = 'folder';
-
-    updateFolderPreview(modal);
-    renderIconGrid(modal, 'folder');
-
-    // Clear search
-    const search = modal.querySelector('.sh-icon-search');
-    if (search) {
-        search.value = '';
-        modal.querySelectorAll('.sh-icon-btn').forEach(btn => {
-            btn.style.display = 'flex';
-        });
-    }
-
-    modal.classList.add('is-open');
-    document.body.style.overflow = 'hidden';
-    if (nameInput) nameInput.focus();
-}
-
-/**
- * Opens a modal for editing an existing folder
- * @param {HTMLElement} btn 
- * @param {string} modalId 
- */
-function openEditFolderModal(btn, modalId = 'editFolderModal') {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-
-    const name  = btn.dataset.folderName;
-    const color = btn.dataset.folderColor;
-    const icon  = btn.dataset.folderIcon || 'folder';
-
-    const nameInput = modal.querySelector('input[name="name"]');
-    const colorInput = modal.querySelector('input[name="colorHex"]');
-    const iconInput = modal.querySelector('input[name="iconName"]');
-
-    if (nameInput) nameInput.value = name;
-    if (colorInput) colorInput.value = color;
-    if (iconInput) iconInput.value = icon;
-
-    updateFolderPreview(modal);
-    renderIconGrid(modal, icon);
-
-    // clear any previous search
-    const search = modal.querySelector('.sh-icon-search');
-    if (search) {
-        search.value = '';
-        modal.querySelectorAll('.sh-icon-btn').forEach(btn => {
-            btn.style.display = 'flex';
-        });
-    }
-
-    modal.classList.add('is-open');
-    document.body.style.overflow = 'hidden';
-    if (nameInput) nameInput.focus();
-}
 
 function renderIconGrid(modal, selectedIcon) {
     const grid = modal.querySelector('.sh-icon-grid');
@@ -237,95 +135,3 @@ function updateFolderPreview(modal) {
         root: preview
     });
 }
-
-/* ---------- Study Mode Folder Selection ---------- */
-
-/**
- * Toggles all deck checkboxes within a folder group (including sub-folders)
- * @param {HTMLInputElement} folderCheckbox 
- */
-function toggleFolderDecks(folderCheckbox) {
-    const group = folderCheckbox.closest('.sh-study-deck-group');
-    if (!group) return;
-
-    const isChecked = folderCheckbox.checked;
-
-    // Toggle all nested deck checkboxes
-    const deckCheckboxes = group.querySelectorAll('.sh-study-deck-checkbox');
-    deckCheckboxes.forEach(cb => {
-        if (cb.checked !== isChecked) {
-            cb.checked = isChecked;
-        }
-    });
-
-    // Toggle all nested folder checkboxes
-    const folderCheckboxes = group.querySelectorAll('.sh-study-folder-checkbox');
-    folderCheckboxes.forEach(cb => {
-        cb.checked = isChecked;
-        cb.indeterminate = false;
-    });
-
-    // Trigger HTMX update for the order list by triggering 'change' on the first checkbox
-    if (deckCheckboxes.length > 0) {
-        htmx.trigger(deckCheckboxes[0], 'change');
-    } else {
-        // If no decks in this group, find any deck checkbox in the picker to trigger update
-        const anyDeck = document.querySelector('.sh-study-deck-checkbox');
-        if (anyDeck) htmx.trigger(anyDeck, 'change');
-    }
-}
-
-/**
- * Syncs folder checkboxes based on the state of their deck checkboxes (recursively)
- */
-function syncFolderCheckboxes() {
-    const groups = Array.from(document.querySelectorAll('.sh-study-deck-group'));
-    if (groups.length === 0) return;
-
-    // Process groups from deepest to shallowest to ensure correct bubbling
-    groups.sort((a, b) => {
-        const depthA = parseInt(a.style.getPropertyValue('--depth') || '0');
-        const depthB = parseInt(b.style.getPropertyValue('--depth') || '0');
-        return depthB - depthA;
-    });
-
-    groups.forEach(group => {
-        const folderCheckbox = group.querySelector(':scope > .sh-study-deck-group-title > .sh-study-folder-checkbox');
-        if (!folderCheckbox) return;
-
-        // Collect direct children state
-        const directDecks = Array.from(group.querySelectorAll(':scope > .sh-study-deck-list > .sh-study-deck-option > .sh-study-deck-option-inner > .sh-study-deck-checkbox'));
-        const directSubFolders = Array.from(group.querySelectorAll(':scope > .sh-study-deck-group > .sh-study-deck-group-title > .sh-study-folder-checkbox'));
-        
-        const children = [...directDecks, ...directSubFolders];
-        if (children.length === 0) return;
-
-        const allChecked = children.every(cb => cb.checked && !cb.indeterminate);
-        const someChecked = children.some(cb => cb.checked || cb.indeterminate);
-
-        if (allChecked) {
-            folderCheckbox.checked = true;
-            folderCheckbox.indeterminate = false;
-        } else if (!someChecked) {
-            folderCheckbox.checked = false;
-            folderCheckbox.indeterminate = false;
-        } else {
-            folderCheckbox.checked = false;
-            folderCheckbox.indeterminate = true;
-        }
-    });
-}
-
-// Add event listener for individual deck checkbox changes to keep folder checkboxes in sync
-document.body.addEventListener('change', (e) => {
-    if (e.target.classList.contains('sh-study-deck-checkbox')) {
-        syncFolderCheckboxes();
-    }
-});
-
-// Re-sync after HTMX swaps (e.g. when order list or deck picker updates)
-document.body.addEventListener('htmx:afterSwap', (e) => {
-    if (e.detail.target.id === 'study-session-content' || e.detail.target.closest('.sh-study-deck-picker')) {
-        syncFolderCheckboxes();
-    }
-});

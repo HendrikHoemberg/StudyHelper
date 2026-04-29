@@ -44,7 +44,8 @@
             </div>
         </div>
         <div class="sh-page-actions">
-            <button th:if="${view.folder.parentFolder == null}" class="sh-btn sh-btn-secondary sh-btn-sm" hx-on:click="openCreateFolderModal('newSubfolderModal')">
+            <button th:if="${view.folder.parentFolder == null}" class="sh-btn sh-btn-secondary sh-btn-sm" 
+                    th:hx-get="@{/folders/new(parentId=${view.folder.id})}" hx-target="#modal-placeholder">
                 <i data-lucide="folder-plus"></i>
                 Subfolder
             </button>
@@ -57,10 +58,7 @@
                 Upload
             </button>
             <button class="sh-btn sh-btn-secondary sh-btn-sm"
-                    th:data-folder-name="${view.folder.name}"
-                    th:data-folder-color="${view.folder.colorHex}"
-                    th:data-folder-icon="${view.folder.iconName ?: 'folder'}"
-                    onclick="openEditFolderModal(this, 'editFolderModal')">
+                    th:hx-get="@{/folders/{id}/edit(id=${view.folder.id})}" hx-target="#modal-placeholder">
                 <i data-lucide="pencil"></i>
                 Edit
             </button>
@@ -215,53 +213,6 @@
         </div>
     </div>
 
-    <!-- New Subfolder Modal -->
-    <div class="sh-modal" id="newSubfolderModal">
-        <div class="sh-modal-backdrop" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';"></div>
-        <div class="sh-modal-dialog">
-            <div class="sh-modal-content">
-                <div class="sh-modal-header">
-                    <h5 class="sh-modal-title">New Subfolder</h5>
-                    <button type="button" class="sh-modal-close" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">
-                        <i data-lucide="x"></i>
-                    </button>
-                </div>
-                <form th:action="@{/folders/{id}/subfolders(id=${view.folder.id})}" method="post">
-                    <div class="sh-modal-body">
-                        <div th:replace="~{fragments/folder-form :: folderFields('', '#6366f1', 'folder', 'sub')}"></div>
-                    </div>
-                    <div class="sh-modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">Cancel</button>
-                        <button type="submit" class="sh-btn sh-btn-primary">Create</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Folder Modal -->
-    <div class="sh-modal" id="editFolderModal">
-        <div class="sh-modal-backdrop" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';"></div>
-        <div class="sh-modal-dialog">
-            <div class="sh-modal-content">
-                <div class="sh-modal-header">
-                    <h5 class="sh-modal-title">Edit Folder</h5>
-                    <button type="button" class="sh-modal-close" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">
-                        <i data-lucide="x"></i>
-                    </button>
-                </div>
-                <form th:action="@{/folders/{id}/edit(id=${view.folder.id})}" method="post">
-                    <div class="sh-modal-body">
-                        <div th:replace="~{fragments/folder-form :: folderFields(${view.folder.name}, ${view.folder.colorHex}, ${view.folder.iconName}, 'edit')}"></div>
-                    </div>
-                    <div class="sh-modal-footer">
-                        <button type="button" class="sh-btn sh-btn-secondary" hx-on:click="this.closest('.sh-modal').classList.remove('is-open'); document.body.style.overflow='';">Cancel</button>
-                        <button type="submit" class="sh-btn sh-btn-primary">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <!-- New Deck Modal -->
     <div class="sh-modal" id="newDeckModal">

@@ -41,39 +41,77 @@ public class FolderService {
     }
 
     @Transactional(readOnly = true)
-    public List<SidebarFolderNode> getSidebarTree(User user) {
+    public List<SidebarFolderNode> getSidebarTree(User user, Long activeFolderId) {
         List<Folder> roots = folderRepository.findByUserAndParentFolderIsNull(user);
         List<SidebarFolderNode> nodes = new ArrayList<>(roots.size());
         for (Folder root : roots) {
             List<SidebarFolderNode> childNodes = new ArrayList<>();
             int subDeckTotal = 0;
+            boolean rootIsActive = root.getId().equals(activeFolderId);
+            boolean rootIsOpen = rootIsActive;
+
             for (Folder sub : root.getSubFolders()) {
                 int subDecks = sub.getDecks().size();
                 subDeckTotal += subDecks;
+                boolean subIsActive = sub.getId().equals(activeFolderId);
+                if (subIsActive) {
+                    rootIsOpen = true;
+                }
                 childNodes.add(new SidebarFolderNode(
                     sub.getId(), sub.getName(), sub.getColorHex(),
-                    iconOf(sub), subDecks, List.of()
+                    iconOf(sub), subDecks, List.of(), subIsActive, false
                 ));
             }
             int rootTotal = root.getDecks().size() + subDeckTotal;
             nodes.add(new SidebarFolderNode(
                 root.getId(), root.getName(), root.getColorHex(),
-                iconOf(root), rootTotal, childNodes
+                iconOf(root), rootTotal, childNodes, rootIsActive, rootIsOpen
             ));
         }
         return nodes;
     }
 
     @Transactional(readOnly = true)
-    public List<StudyDeckGroup> getStudyFolderTree(User user) {
+    public List<SidebarFolderNode> getSidebarTree(User user) {
+        return getSidebarTree(user, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudyDeckGroup> getStudyFolderTree(User user, List<Long> selectedDeckIds) {
         List<Folder> roots = folderRepository.findByUserAndParentFolderIsNull(user);
         return roots.stream()
-            .map(this::toStudyDeckGroup)
+            .map(f -> toStudyDeckGroup(f, selectedDeckIds))
             .filter(g -> !g.decks().isEmpty() || !g.subGroups().isEmpty())
             .toList();
     }
 
-    private StudyDeckGroup toStudyDeckGroup(Folder folder) {
+    @Transactional(readOnly = true)
+    public List<StudyDeckGroup> getStudyFolderTree(User user) {
+        return getStudyFolderTree(user, List.of());
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudyDeckOption> getAllDecksInFolder(Long folderId, User user) {
+        Folder folder = folderRepository.findByIdAndUser(folderId, user)
+            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+        List<StudyDeckOption> options = new ArrayList<>();
+        collectDecksRecursively(folder, options);
+        return options;
+    }
+
+    private void collectDecksRecursively(Folder folder, List<StudyDeckOption> options) {
+        String path = buildFolderPathString(folder);
+        for (Deck deck : folder.getDecks()) {
+            options.add(new StudyDeckOption(
+                deck.getId(), deck.getName(), folder.getId(), path, folder.getColorHex(), deck.getFlashcards().size()
+            ));
+        }
+        for (Folder sub : folder.getSubFolders()) {
+            collectDecksRecursively(sub, options);
+        }
+    }
+
+    private StudyDeckGroup toStudyDeckGroup(Folder folder, List<Long> selectedDeckIds) {
         List<StudyDeckOption> decks = folder.getDecks().stream()
             .map(deck -> {
                 deck.getFlashcards().size();
@@ -89,16 +127,47 @@ public class FolderService {
             .toList();
 
         List<StudyDeckGroup> subGroups = folder.getSubFolders().stream()
-            .map(this::toStudyDeckGroup)
+            .map(f -> toStudyDeckGroup(f, selectedDeckIds))
             .filter(g -> !g.decks().isEmpty() || !g.subGroups().isEmpty())
             .toList();
+
+        boolean allSelected = true;
+        boolean someSelected = false;
+
+        for (StudyDeckOption deck : decks) {
+            if (selectedDeckIds.contains(deck.deckId())) {
+                someSelected = true;
+            } else {
+                allSelected = false;
+            }
+        }
+
+        for (StudyDeckGroup sub : subGroups) {
+            if (sub.isSelected()) {
+                someSelected = true;
+            } else if (sub.isIndeterminate()) {
+                someSelected = true;
+                allSelected = false;
+            } else {
+                allSelected = false;
+            }
+        }
+
+        if (decks.isEmpty() && subGroups.isEmpty()) {
+            allSelected = false;
+        }
+
+        boolean isSelected = allSelected && someSelected;
+        boolean isIndeterminate = !allSelected && someSelected;
 
         return new StudyDeckGroup(
             folder.getId(),
             folder.getName(),
             buildFolderPathString(folder),
             decks,
-            subGroups
+            subGroups,
+            isSelected,
+            isIndeterminate
         );
     }
 
@@ -119,10 +188,11 @@ public class FolderService {
     }
 
     @Transactional
-    public Folder createFolder(String name, String colorHex, Long parentId, User user) {
+    public Folder createFolder(String name, String colorHex, String iconName, Long parentId, User user) {
         Folder folder = new Folder();
         folder.setName(name);
-        folder.setColorHex(colorHex != null && !colorHex.isBlank() ? colorHex : "#6c757d");
+        folder.setColorHex(colorHex != null && !colorHex.isBlank() ? colorHex : "#6366f1");
+        folder.setIconName(iconName != null && !iconName.isBlank() ? iconName : "folder");
         folder.setUser(user);
         if (parentId != null) {
             Folder parent = folderRepository.findByIdAndUser(parentId, user)

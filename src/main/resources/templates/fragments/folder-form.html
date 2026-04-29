@@ -41,5 +41,30 @@
     </div>
 </div>
 
-</body>
-</html>
+<div th:fragment="folderModal" class="sh-modal is-open">
+    <div class="sh-modal-backdrop" onclick="this.closest('.sh-modal').remove()"></div>
+    <div class="sh-modal-dialog">
+        <div class="sh-modal-content">
+            <div class="sh-modal-header">
+                <h5 class="sh-modal-title" th:text="${title}">Folder</h5>
+                <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').remove()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form th:action="${action}" method="post">
+                <div class="sh-modal-body">
+                    <div th:replace="~{fragments/folder-form :: folderFields(${folder.name}, ${folder.colorHex ?: '#6366f1'}, ${folder.iconName ?: 'folder'}, 'modal')}"></div>
+                </div>
+                <div class="sh-modal-footer">
+                    <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()">Cancel</button>
+                    <button type="submit" class="sh-btn sh-btn-primary" th:text="${folder.id == null ? 'Create' : 'Save'}">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Script to re-init Lucide and Icon Grid after swap -->
+    <script>
+        initLucide();
+        renderIconGrid(document.querySelector('.sh-modal'), document.getElementById('modalFolderIcon')?.value || 'folder');
+    </script>
+</div>

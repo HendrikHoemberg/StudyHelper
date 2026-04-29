@@ -76,12 +76,32 @@ public class FolderController {
 
     @PostMapping("/folders")
     public String createRootFolder(@RequestParam String name,
-                                   @RequestParam(defaultValue = "#6c757d") String colorHex,
+                                   @RequestParam(defaultValue = "#6366f1") String colorHex,
+                                   @RequestParam(defaultValue = "folder") String iconName,
                                    Principal principal,
                                    @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
-        folderService.createFolder(name, colorHex, null, user);
+        folderService.createFolder(name, colorHex, iconName, null, user);
         return "redirect:/dashboard";
+    }
+
+    @GetMapping("/folders/new")
+    public String newFolderModal(@RequestParam(required = false) Long parentId, Model model) {
+        model.addAttribute("parentId", parentId);
+        model.addAttribute("folder", new Folder()); // Empty folder for defaults
+        model.addAttribute("action", parentId != null ? "/folders/" + parentId + "/subfolders" : "/folders");
+        model.addAttribute("title", parentId != null ? "New Subfolder" : "New Folder");
+        return "fragments/folder-form :: folderModal";
+    }
+
+    @GetMapping("/folders/{id}/edit")
+    public String editFolderModal(@PathVariable Long id, Model model, Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        Folder folder = folderService.getFolder(id, user);
+        model.addAttribute("folder", folder);
+        model.addAttribute("action", "/folders/" + id + "/edit");
+        model.addAttribute("title", "Edit Folder");
+        return "fragments/folder-form :: folderModal";
     }
 
     @GetMapping("/folders/{id}")
@@ -117,12 +137,13 @@ public class FolderController {
 
     @PostMapping("/folders/{id}/subfolders")
     public String createSubfolder(@PathVariable Long id,
-                                  @RequestParam String name,
-                                  @RequestParam(defaultValue = "#6c757d") String colorHex,
-                                  Principal principal,
-                                  @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+                                   @RequestParam String name,
+                                   @RequestParam(defaultValue = "#6366f1") String colorHex,
+                                   @RequestParam(defaultValue = "folder") String iconName,
+                                   Principal principal,
+                                   @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
-        folderService.createFolder(name, colorHex, id, user);
+        folderService.createFolder(name, colorHex, iconName, id, user);
 
         if (hxRequest != null) {
             return "redirect:/folders/" + id;

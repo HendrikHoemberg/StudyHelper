@@ -68,64 +68,68 @@
                 </div>
             </section>
 
-            <section>
-                <div class="sh-section-title">Select Decks</div>
-                <div th:if="${#lists.isEmpty(deckGroups)}" class="sh-empty" style="padding:1.25rem 1rem;">
-                    <p class="sh-empty-text mb-1">No decks available</p>
-                    <p class="sh-empty-hint mb-0">Create decks and cards before starting a study session.</p>
-                </div>
+            <div th:fragment="setupPickerAndOrder" id="setup-picker-and-order">
+                <section>
+                    <div class="sh-section-title">Select Decks</div>
+                    <div th:if="${#lists.isEmpty(deckGroups)}" class="sh-empty" style="padding:1.25rem 1rem;">
+                        <p class="sh-empty-text mb-1">No decks available</p>
+                        <p class="sh-empty-hint mb-0">Create decks and cards before starting a study session.</p>
+                    </div>
 
-                <div th:if="${!#lists.isEmpty(deckGroups)}" class="sh-study-deck-picker">
-                    <th:block th:each="group : ${deckGroups}">
-                        <th:block th:insert="~{::renderGroup(${group}, 0)}"></th:block>
-                    </th:block>
-                </div>
-
-                <!-- Recursive fragment for nested folders -->
-                <th:block th:fragment="renderGroup(group, depth)">
-                    <div th:if="${group != null}" class="sh-study-deck-group" th:classappend="${(depth ?: 0) > 0 ? 'is-nested' : ''}" th:style="'--depth: ' + ${depth ?: 0}">
-                        <div class="sh-study-deck-group-title"
-                             th:style="'padding-left:' + (${depth ?: 0} * 1.25) + 'rem'"
-                             onclick="if(event.target.type !== 'checkbox') this.querySelector('input').click()">
-                            <input type="checkbox" class="sh-checkbox sh-study-folder-checkbox"
-                                   th:data-folder-id="${group.folderId}"
-                                   onclick="event.stopPropagation(); toggleFolderDecks(this)">
-                            <span th:text="${group.folderName}">Folder Name</span>
-                        </div>
-                        
-                        <div class="sh-study-deck-list" th:if="${!#lists.isEmpty(group.decks)}">
-                            <label th:each="deck : ${group.decks}" class="sh-study-deck-option"
-                                   th:style="'margin-left:' + (${depth ?: 0} * 1.25) + 'rem'">
-                                <div class="sh-study-deck-option-inner">
-                                    <input class="sh-checkbox sh-study-deck-checkbox"
-                                           type="checkbox"
-                                           name="selectedDeckIds"
-                                           th:value="${deck.deckId}"
-                                           th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}"
-                                           hx-post="/study/setup/order"
-                                           hx-target="#sh-study-order-list"
-                                           hx-include="#study-ordered-deck-ids">
-                                    <i data-lucide="layers" style="width:14px;height:14px;color:var(--accent);flex-shrink:0;"></i>
-                                    <span class="sh-deck-name" th:text="${deck.deckName}">Deck</span>
-                                </div>
-                                <span class="sh-badge sh-badge-primary"
-                                      th:text="${deck.cardCount} + ' cards'">0 cards</span>
-                            </label>
-                        </div>
-                        
-                        <th:block th:each="sub : ${group.subGroups}">
-                            <th:block th:insert="~{::renderGroup(${sub}, ${(depth ?: 0) + 1})}"></th:block>
+                    <div th:if="${!#lists.isEmpty(deckGroups)}" class="sh-study-deck-picker">
+                        <th:block th:each="group : ${deckGroups}">
+                            <th:block th:insert="~{::renderGroup(${group}, 0)}"></th:block>
                         </th:block>
                     </div>
-                </th:block>
-            </section>
 
-            <section class="sh-study-deck-options">
-                <div class="sh-section-title">Manual Deck Order</div>
-                <p class="sh-folder-meta mb-2">Use up/down to define the explicit deck order for deck-by-deck mode.</p>
-                
-                <ul class="sh-study-order-list" id="sh-study-order-list">
-                    <th:block th:fragment="orderListFragment">
+                    <!-- Recursive fragment for nested folders -->
+                    <th:block th:fragment="renderGroup(group, depth)">
+                        <div th:if="${group != null}" class="sh-study-deck-group" th:classappend="${(depth ?: 0) > 0 ? 'is-nested' : ''}" th:style="'--depth: ' + ${depth ?: 0}">
+                            <div class="sh-study-deck-group-title"
+                                 th:style="'padding-left:' + (${depth ?: 0} * 1.25) + 'rem'">
+                                <input type="checkbox" class="sh-checkbox sh-study-folder-checkbox"
+                                       th:data-folder-id="${group.folderId}"
+                                       th:checked="${group.isSelected}"
+                                       th:attr="data-indeterminate=${group.isIndeterminate}"
+                                       hx-post="/study/setup/update"
+                                       th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + group.folderId + '}'}"
+                                       hx-target="#setup-picker-and-order"
+                                       hx-include="[name='selectedDeckIds'], #study-ordered-deck-ids">
+                                <span th:text="${group.folderName}">Folder Name</span>
+                            </div>
+                            
+                            <div class="sh-study-deck-list" th:if="${!#lists.isEmpty(group.decks)}">
+                                <label th:each="deck : ${group.decks}" class="sh-study-deck-option"
+                                       th:style="'margin-left:' + (${depth ?: 0} * 1.25) + 'rem'">
+                                    <div class="sh-study-deck-option-inner">
+                                        <input class="sh-checkbox sh-study-deck-checkbox"
+                                               type="checkbox"
+                                               name="selectedDeckIds"
+                                               th:value="${deck.deckId}"
+                                               th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}"
+                                               hx-post="/study/setup/update"
+                                               hx-target="#setup-picker-and-order"
+                                               hx-include="[name='selectedDeckIds'], #study-ordered-deck-ids">
+                                        <i data-lucide="layers" style="width:14px;height:14px;color:var(--accent);flex-shrink:0;"></i>
+                                        <span class="sh-deck-name" th:text="${deck.deckName}">Deck</span>
+                                    </div>
+                                    <span class="sh-badge sh-badge-primary"
+                                          th:text="${deck.cardCount} + ' cards'">0 cards</span>
+                                </label>
+                            </div>
+                            
+                            <th:block th:each="sub : ${group.subGroups}">
+                                <th:block th:insert="~{::renderGroup(${sub}, ${(depth ?: 0) + 1})}"></th:block>
+                            </th:block>
+                        </div>
+                    </th:block>
+                </section>
+
+                <section class="sh-study-deck-options">
+                    <div class="sh-section-title">Manual Deck Order</div>
+                    <p class="sh-folder-meta mb-2">Use up/down to define the explicit deck order for deck-by-deck mode.</p>
+                    
+                    <ul class="sh-study-order-list" id="sh-study-order-list">
                         <li th:if="${#lists.isEmpty(orderedDecks)}" class="sh-study-order-empty">
                             Select decks to define manual order.
                         </li>
@@ -134,18 +138,29 @@
                             <div class="sh-study-order-controls">
                                 <button type="button" class="sh-btn sh-btn-ghost sh-btn-sm"
                                         hx-post="/study/setup/reorder"
-                                        hx-target="#sh-study-order-list"
+                                        hx-target="#setup-picker-and-order"
+                                        hx-include="[name='selectedDeckIds']"
                                         th:hx-vals="${'{&quot;deckId&quot;: ' + deck.deckId + ', &quot;direction&quot;: -1, &quot;orderedDeckIds&quot;: &quot;' + orderedDeckIdsString + '&quot;}'}">Up</button>
                                 <button type="button" class="sh-btn sh-btn-ghost sh-btn-sm"
                                         hx-post="/study/setup/reorder"
-                                        hx-target="#sh-study-order-list"
+                                        hx-target="#setup-picker-and-order"
+                                        hx-include="[name='selectedDeckIds']"
                                         th:hx-vals="${'{&quot;deckId&quot;: ' + deck.deckId + ', &quot;direction&quot;: 1, &quot;orderedDeckIds&quot;: &quot;' + orderedDeckIdsString + '&quot;}'}">Down</button>
                             </div>
                         </li>
                         <input type="hidden" name="orderedDeckIds" id="study-ordered-deck-ids" th:value="${orderedDeckIdsString}">
-                    </th:block>
-                </ul>
-            </section>
+                    </ul>
+                </section>
+            </div>
+            
+            <script>
+                // Sync indeterminate state from data attribute
+                document.querySelectorAll('.sh-study-folder-checkbox').forEach(cb => {
+                    cb.indeterminate = cb.dataset.indeterminate === 'true';
+                });
+                // Re-init icons
+                initLucide();
+            </script>
 
             <div class="flex justify-end">
                 <button type="submit" class="sh-btn sh-btn-primary">

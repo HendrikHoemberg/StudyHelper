@@ -8,6 +8,8 @@ public record StudyDeckGroup(
     String folderName,
     String folderPath,
     List<StudyDeckOption> decks,
-    List<StudyDeckGroup> subGroups
+    List<StudyDeckGroup> subGroups,
+    boolean isSelected,
+    boolean isIndeterminate
 ) implements Serializable {
 }
