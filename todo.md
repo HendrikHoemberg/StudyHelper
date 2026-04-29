@@ -2,10 +2,8 @@
 - add images to cards
 - Folderview Hero section -> Foldercolor banner
 - Study mode -> ability to select decks AND folders
-- remove folder icon from sidebar folders
-- Rethink sidebar design
 - fix folder collapse animation
-- Folder customizable icons lucide
 - Folder timeline animation going down instead of jumping
 - New folder creation doesnt contain lucide icons
 - Lucide icon filtering is broken
+- put studymode in mainview, complete SPA structure
