@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <body>
 
-<div th:fragment="studyCard" id="study-session-content" class="sh-fade-in sh-study-card-root">
+<div th:fragment="studyCard" id="study-session-content" class="sh-fade-in sh-study-card-root sh-study-session-active">
 
     <div th:if="${studyError}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${studyError}"></div>
