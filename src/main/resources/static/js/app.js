@@ -129,7 +129,9 @@ function openCreateFolderModal(modalId, parentId = null) {
     const search = modal.querySelector('.sh-icon-search');
     if (search) {
         search.value = '';
-        filterFolderIcons(search);
+        modal.querySelectorAll('.sh-icon-btn').forEach(btn => {
+            btn.style.display = 'flex';
+        });
     }
 
     modal.classList.add('is-open');
@@ -165,7 +167,9 @@ function openEditFolderModal(btn, modalId = 'editFolderModal') {
     const search = modal.querySelector('.sh-icon-search');
     if (search) {
         search.value = '';
-        filterFolderIcons(search);
+        modal.querySelectorAll('.sh-icon-btn').forEach(btn => {
+            btn.style.display = 'flex';
+        });
     }
 
     modal.classList.add('is-open');
@@ -212,7 +216,7 @@ function filterFolderIcons(input) {
     const buttons = modal.querySelectorAll('.sh-icon-btn');
     
     buttons.forEach(btn => {
-        const matches = q.length === 0 || btn.dataset.icon.includes(q);
+        const matches = q.length === 0 || btn.dataset.icon.toLowerCase().includes(q);
         btn.style.display = matches ? 'flex' : 'none';
     });
 }
