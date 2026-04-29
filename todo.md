@@ -5,3 +5,5 @@
 - remove folder icon from sidebar folders
 - Rethink sidebar design
 - fix folder collapse animation
+- Folder customizable icons lucide
+-Folder timeline animation going down instead of jumping

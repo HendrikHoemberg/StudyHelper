@@ -44,7 +44,7 @@
             </div>
         </div>
         <div class="sh-page-actions">
-            <button class="sh-btn sh-btn-secondary sh-btn-sm" hx-on:click="document.getElementById('newSubfolderModal').classList.add('is-open'); document.body.style.overflow='hidden'; document.getElementById('newSubfolderModal').querySelector('input')?.focus();">
+            <button th:if="${view.folder.parentFolder == null}" class="sh-btn sh-btn-secondary sh-btn-sm" hx-on:click="document.getElementById('newSubfolderModal').classList.add('is-open'); document.body.style.overflow='hidden'; document.getElementById('newSubfolderModal').querySelector('input')?.focus();">
                 <i data-lucide="folder-plus"></i>
                 Subfolder
             </button>

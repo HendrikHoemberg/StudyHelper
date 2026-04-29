@@ -7,11 +7,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initLucide();
     initTopnav();
     initCsrf();
+    syncSidebarActive();
 });
 
 // Re-run initializations after HTMX swaps
 document.body.addEventListener('htmx:afterSwap', () => {
     initLucide();
+    syncSidebarActive();
 });
 
 // Optional fade-in animation after settle
@@ -63,6 +65,32 @@ function initTopnav() {
 
     menu.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', () => menu.classList.remove('open'));
+    });
+}
+
+/* ---------- Sidebar (Variant D) active sync ---------- */
+function syncSidebarActive() {
+    const folders = document.querySelectorAll('.sh-d-folder');
+    if (!folders.length) return;
+
+    const match = window.location.pathname.match(/\/folders\/(\d+)/);
+    const activeId = match ? match[1] : null;
+
+    document.querySelectorAll('.sh-d-folder.is-active, .sh-d-row.is-active')
+        .forEach(el => el.classList.remove('is-active'));
+
+    if (!activeId) return;
+
+    folders.forEach(folder => {
+        if (folder.dataset.folderId === activeId) {
+            folder.classList.add('is-active');
+            return;
+        }
+        const row = folder.querySelector(`.sh-d-row[data-folder-id="${activeId}"]`);
+        if (row) {
+            row.classList.add('is-active');
+            folder.classList.add('is-open');
+        }
     });
 }
 

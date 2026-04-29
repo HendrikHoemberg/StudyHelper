@@ -1086,6 +1086,214 @@ textarea.sh-input {
 .sh-tree-deck-icon svg { width: 14px; height: 14px; }
 
 /* ============================================================
+   SIDEBAR — Variant D (Pill with Colored Cap)
+   ============================================================ */
+
+.sh-d-folders {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 4px;
+}
+
+.sh-d-folder {
+    --folder-tint: color-mix(in srgb, var(--folder-color, var(--accent)) 12%, var(--surface));
+    --folder-tint-strong: color-mix(in srgb, var(--folder-color, var(--accent)) 28%, var(--surface));
+    --folder-ink: color-mix(in srgb, var(--folder-color, var(--accent)) 70%, var(--text));
+    margin-bottom: 0;
+}
+
+/* ---- Pill ---- */
+.sh-d-pill {
+    position: relative;
+    display: flex;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.sh-d-folder.is-active .sh-d-pill {
+    border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 35%, transparent);
+    box-shadow:
+        0 1px 0 color-mix(in srgb, var(--folder-color, var(--accent)) 14%, transparent),
+        0 4px 12px color-mix(in srgb, var(--folder-color, var(--accent)) 12%, transparent);
+}
+
+.sh-d-pill-cap {
+    width: 48px;
+    height: 100%;
+    border: none;
+    padding: 0;
+    margin: 0;
+    flex-shrink: 0;
+    background: var(--folder-color, var(--accent));
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: filter var(--transition-fast);
+}
+
+.sh-d-pill-cap:hover { filter: brightness(1.08); }
+.sh-d-pill-cap-static { cursor: default; }
+.sh-d-pill-cap svg { width: 18px; height: 18px; }
+
+/* Toggle which cap icon shows based on open state */
+.sh-d-cap-icon-open { display: none; }
+.sh-d-folder.is-open .sh-d-cap-icon-open { display: block; }
+.sh-d-folder.is-open .sh-d-cap-icon-closed { display: none; }
+
+.sh-d-pill-name {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0 0.875rem;
+    cursor: pointer;
+    background: var(--surface);
+    transition: background var(--transition-fast);
+    text-decoration: none;
+    color: var(--text);
+}
+
+.sh-d-pill-name:hover { background: var(--surface-hover); }
+
+.sh-d-folder.is-active .sh-d-pill-name {
+    background: var(--folder-tint);
+    color: var(--folder-ink);
+}
+
+.sh-d-pill-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.sh-d-folder.is-active .sh-d-pill-text { font-weight: 600; }
+
+.sh-d-pill-count {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    background: var(--surface-hover);
+    color: var(--text-muted);
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+}
+
+.sh-d-folder.is-active .sh-d-pill-count {
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--folder-ink);
+}
+
+[data-theme="dark"] .sh-d-folder.is-active .sh-d-pill-count {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- Children (rail + rows) ---- */
+.sh-d-children {
+    position: relative;
+    margin-top: 4px;
+    padding-bottom: 4px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sh-d-folder.is-open .sh-d-children {
+    max-height: 1500px;
+}
+
+.sh-d-rail {
+    position: absolute;
+    left: 24px;
+    top: 0;
+    bottom: 4px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--folder-tint-strong);
+}
+
+.sh-d-row {
+    --folder-tint: color-mix(in srgb, var(--folder-color, var(--accent)) 12%, var(--surface));
+    --folder-ink: color-mix(in srgb, var(--folder-color, var(--accent)) 70%, var(--text));
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 36px;
+    margin-left: 30px;
+    padding: 0 0.625rem;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.8125rem;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.sh-d-row:hover {
+    background: var(--folder-tint);
+    color: var(--folder-ink);
+}
+
+.sh-d-row.is-active {
+    background: var(--folder-tint);
+    color: var(--folder-ink);
+    font-weight: 600;
+}
+
+.sh-d-row.is-active::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    width: 6px;
+    height: 2px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    background: var(--folder-color, var(--accent));
+}
+
+.sh-d-row-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--folder-color, var(--accent));
+    flex-shrink: 0;
+}
+
+.sh-d-row-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sh-d-row-count {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.sh-d-row.is-active .sh-d-row-count { color: var(--folder-ink); opacity: 0.8; }
+
+/* ============================================================
    FOLDER CARDS (in folder detail page)
    ============================================================ */
 

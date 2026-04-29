@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.FileSummary;
+import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
@@ -43,6 +44,7 @@ public class FolderController {
                               @RequestHeader(value = "HX-Target", required = false) String hxTarget) {
         User user = userService.getByUsername(principal.getName());
         List<Folder> folders = folderService.getRootFolders(user);
+        List<SidebarFolderNode> sidebarTree = folderService.getSidebarTree(user);
         List<StudyDeckOption> deckOptions = deckService.getStudyDeckOptions(user);
         List<FileSummary> fileSummaries = fileEntryService.getFileSummaries(user);
 
@@ -57,6 +59,7 @@ public class FolderController {
         }
 
         model.addAttribute("folders", folders);
+        model.addAttribute("sidebarTree", sidebarTree);
         model.addAttribute("deckOptions", deckOptions);
         model.addAttribute("fileSummaries", fileSummaries);
         model.addAttribute("username", principal.getName());

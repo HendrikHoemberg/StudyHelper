@@ -18,35 +18,54 @@
             <aside class="sh-dashboard-sidebar">
                 <div class="sh-sidebar-card">
                     <div class="sh-sidebar-header">
-                        <div class="sh-sidebar-title">Folder Tree</div>
+                        <div class="sh-sidebar-title">Folders</div>
                         <button class="sh-btn sh-btn-ghost sh-btn-icon" hx-on:click="document.getElementById('newFolderModal').classList.add('is-open'); document.body.style.overflow='hidden'; document.getElementById('newFolderModal').querySelector('input')?.focus();" title="New folder">
                             <i data-lucide="plus"></i>
                         </button>
                     </div>
-                    <div th:if="${#lists.isEmpty(folders)}" class="sh-sidebar-empty">
+                    <div th:if="${#lists.isEmpty(sidebarTree)}" class="sh-sidebar-empty">
                         No folders yet
                     </div>
-                    <ul th:if="${!#lists.isEmpty(folders)}" class="sh-tree">
-                        <li th:each="folder : ${folders}"
-                            class="sh-tree-item"
+                    <ul th:if="${!#lists.isEmpty(sidebarTree)}" class="sh-d-folders">
+                        <li th:each="folder : ${sidebarTree}"
+                            class="sh-d-folder"
+                            th:classappend="${!#lists.isEmpty(folder.children)} ? ' has-children' : ''"
+                            th:data-folder-id="${folder.id}"
                             th:style="'--folder-color:' + ${folder.colorHex}">
-                            <div class="sh-tree-header" hx-on:click="this.closest('.sh-tree-item').classList.toggle('expanded')">
-                                <span class="sh-tree-toggle">
-                                    <i data-lucide="chevron-right"></i>
-                                </span>
-                                <span class="sh-tree-folder-icon">
+                            <div class="sh-d-pill">
+                                <button type="button" class="sh-d-pill-cap"
+                                        th:if="${!#lists.isEmpty(folder.children)}"
+                                        hx-on:click="this.closest('.sh-d-folder').classList.toggle('is-open')"
+                                        title="Expand / collapse">
+                                    <i data-lucide="folder" class="sh-d-cap-icon-closed"></i>
+                                    <i data-lucide="folder-open" class="sh-d-cap-icon-open"></i>
+                                </button>
+                                <span th:if="${#lists.isEmpty(folder.children)}" class="sh-d-pill-cap sh-d-pill-cap-static">
                                     <i data-lucide="folder"></i>
                                 </span>
-                                <a th:href="@{/folders/{id}(id=${folder.id})}" class="sh-folder-name flex-1"
+                                <a th:href="@{/folders/{id}(id=${folder.id})}"
+                                   class="sh-d-pill-name"
                                    hx-get th:hx-get="@{/folders/{id}(id=${folder.id})}"
                                    hx-target="#explorer-detail" hx-push-url="true"
-                                   hx-on:click="event.stopPropagation();"
-                                   th:text="${folder.name}">Folder</a>
+                                   hx-on:click="document.querySelectorAll('.sh-d-folder.is-active, .sh-d-row.is-active').forEach(el => el.classList.remove('is-active')); this.closest('.sh-d-folder').classList.add('is-active');">
+                                    <span class="sh-d-pill-text" th:text="${folder.name}">Folder</span>
+                                    <span class="sh-d-pill-count" th:text="${folder.deckCount}">0</span>
+                                </a>
                             </div>
-                            <div class="sh-tree-children"
-                                 th:hx-get="@{/folders/{id}/children(id=${folder.id})}"
-                                 hx-trigger="intersect once, click from:closest .sh-tree-header once"
-                                 hx-swap="innerHTML">
+                            <div th:if="${!#lists.isEmpty(folder.children)}" class="sh-d-children">
+                                <span class="sh-d-rail"></span>
+                                <a th:each="child : ${folder.children}"
+                                   th:href="@{/folders/{id}(id=${child.id})}"
+                                   class="sh-d-row"
+                                   th:data-folder-id="${child.id}"
+                                   th:style="'--folder-color:' + ${child.colorHex}"
+                                   hx-get th:hx-get="@{/folders/{id}(id=${child.id})}"
+                                   hx-target="#explorer-detail" hx-push-url="true"
+                                   hx-on:click="document.querySelectorAll('.sh-d-folder.is-active, .sh-d-row.is-active').forEach(el => el.classList.remove('is-active')); this.classList.add('is-active');">
+                                    <span class="sh-d-row-dot"></span>
+                                    <span class="sh-d-row-name" th:text="${child.name}">Subfolder</span>
+                                    <span class="sh-d-row-count" th:text="${child.deckCount}">0</span>
+                                </a>
                             </div>
                         </li>
                     </ul>

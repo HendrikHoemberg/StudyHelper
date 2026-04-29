@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
@@ -38,6 +39,30 @@ public class FolderService {
     }
 
     @Transactional(readOnly = true)
+    public List<SidebarFolderNode> getSidebarTree(User user) {
+        List<Folder> roots = folderRepository.findByUserAndParentFolderIsNull(user);
+        List<SidebarFolderNode> nodes = new ArrayList<>(roots.size());
+        for (Folder root : roots) {
+            List<SidebarFolderNode> childNodes = new ArrayList<>();
+            int subDeckTotal = 0;
+            for (Folder sub : root.getSubFolders()) {
+                int subDecks = sub.getDecks().size();
+                subDeckTotal += subDecks;
+                childNodes.add(new SidebarFolderNode(
+                    sub.getId(), sub.getName(), sub.getColorHex(),
+                    subDecks, List.of()
+                ));
+            }
+            int rootTotal = root.getDecks().size() + subDeckTotal;
+            nodes.add(new SidebarFolderNode(
+                root.getId(), root.getName(), root.getColorHex(),
+                rootTotal, childNodes
+            ));
+        }
+        return nodes;
+    }
+
+    @Transactional(readOnly = true)
     public Folder getFolder(Long id, User user) {
         return folderRepository.findByIdAndUser(id, user)
             .orElseThrow(() -> new NoSuchElementException("Folder not found"));
@@ -52,6 +77,9 @@ public class FolderService {
         if (parentId != null) {
             Folder parent = folderRepository.findByIdAndUser(parentId, user)
                 .orElseThrow(() -> new NoSuchElementException("Parent folder not found"));
+            if (parent.getParentFolder() != null) {
+                throw new IllegalArgumentException("Subfolders cannot contain further subfolders");
+            }
             folder.setParentFolder(parent);
         }
         return folderRepository.save(folder);
