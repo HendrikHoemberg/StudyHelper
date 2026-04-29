@@ -2,8 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <body>
 
-<div th:fragment="studyCard" id="study-session-content" class="sh-fade-in sh-study-card-root"
-     style="padding: 2rem 1.5rem; max-width: 720px; margin: 0 auto;">
+<div th:fragment="studyCard" id="study-session-content" class="sh-fade-in sh-study-card-root">
 
     <div th:if="${studyError}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${studyError}"></div>
@@ -57,9 +56,9 @@
                     </div>
                     <div class="sh-study-answer-controls">
                         <form method="post"
-                              hx-post="/session/answer"
-                              hx-target="#study-session-content"
-                              hx-swap="outerHTML">
+                               hx-post="/session/answer"
+                               hx-target="#study-session-content"
+                               hx-swap="outerHTML">
                             <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
                             <input type="hidden" name="isCorrect" value="true">
                             <button type="submit" class="sh-study-btn-answer sh-study-btn-correct"
@@ -69,9 +68,9 @@
                         </form>
 
                         <form method="post"
-                              hx-post="/session/answer"
-                              hx-target="#study-session-content"
-                              hx-swap="outerHTML">
+                               hx-post="/session/answer"
+                               hx-target="#study-session-content"
+                               hx-swap="outerHTML">
                             <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
                             <input type="hidden" name="isCorrect" value="false">
                             <button type="submit" class="sh-study-btn-answer sh-study-btn-incorrect"
