@@ -1457,15 +1457,21 @@ textarea.sh-input {
 /* (sh-folder-card and sh-folder-card-inner removed, replaced by sh-d-pill) */
 
 .sh-folder-card-icon {
-    color: var(--folder-color, var(--accent));
+    width: 48px;
+    height: 48px;
+    background: var(--folder-color, var(--accent));
+    color: #fff;
     display: flex;
     align-items: center;
+    justify-content: center;
+    border-radius: 12px;
     flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
 }
 
 .sh-folder-card-icon svg {
-    width: 18px;
-    height: 18px;
+    width: 24px;
+    height: 24px;
 }
 
 .sh-folder-name {

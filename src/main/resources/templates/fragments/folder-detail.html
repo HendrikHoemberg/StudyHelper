@@ -34,8 +34,8 @@
     <!-- Folder header -->
     <div class="sh-page-header">
         <div class="flex items-center gap-3">
-            <div class="sh-folder-card-icon" th:style="'color:' + ${view.folder.colorHex}">
-                <i th:attr="data-lucide=${view.folder.iconName ?: 'folder'}" style="width:28px;height:28px;"></i>
+            <div class="sh-folder-card-icon" th:style="'--folder-color:' + ${view.folder.colorHex}">
+                <i th:attr="data-lucide=${view.folder.iconName ?: 'folder'}"></i>
             </div>
             <div>
                 <h1 class="sh-page-title" th:text="${view.folder.name}">Folder Name</h1>
