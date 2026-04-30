@@ -11,14 +11,14 @@
             <a href="/dashboard" hx-get="/dashboard" hx-target="#explorer-detail"
                hx-push-url="true">Dashboard</a>
         </li>
-        <li class="sh-breadcrumb-sep"><i data-lucide="chevron-right"></i></li>
+        <li class="sh-breadcrumb-sep">/</li>
         <li>
                 <a th:href="@{/folders/{id}(id=${deck.folder.id})}"
                     hx-get th:hx-get="@{/folders/{id}(id=${deck.folder.id})}"
                     hx-target="#explorer-detail" hx-push-url="true"
                     th:text="${deck.folder.name}">Parent Folder</a>
         </li>
-        <li class="sh-breadcrumb-sep"><i data-lucide="chevron-right"></i></li>
+        <li class="sh-breadcrumb-sep">/</li>
         <li class="sh-breadcrumb-current" th:text="${deck.name}">Deck</li>
     </ul>
 

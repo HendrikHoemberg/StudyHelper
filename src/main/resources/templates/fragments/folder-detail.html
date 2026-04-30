@@ -20,7 +20,7 @@
                hx-push-url="true">Dashboard</a>
         </li>
         <th:block th:each="crumb, stat : ${view.breadcrumb}">
-            <li class="sh-breadcrumb-sep"><i data-lucide="chevron-right"></i></li>
+            <li class="sh-breadcrumb-sep">/</li>
             <li th:if="!${stat.last}">
                      <a th:href="@{/folders/{id}(id=${crumb.id})}"
                          hx-get th:hx-get="@{/folders/{id}(id=${crumb.id})}"

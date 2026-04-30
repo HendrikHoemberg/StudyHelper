@@ -2,7 +2,6 @@
 - add images to cards
 - fix folder collapse animation
 - Lucide -> iconify
-- Icon selector less rows, bigger icons
 - Deck creation -> last card "add/+" empty card
 - Make study session creator better designed
 - Start Study Sessions from within folders 
