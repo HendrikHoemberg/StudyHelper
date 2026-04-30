@@ -2194,19 +2194,19 @@ textarea.sh-input {
 
 .sh-icon-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
-    gap: 3px;
-    max-height: 192px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    max-height: 260px;
     overflow-y: auto;
-    padding: 4px;
+    padding: 8px;
     border: 1px solid var(--border-light);
     border-radius: var(--radius);
     background: var(--surface-hover);
 }
 
 .sh-icon-btn {
-    width: 34px;
-    height: 34px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2232,8 +2232,8 @@ textarea.sh-input {
 }
 
 .sh-icon-btn svg {
-    width: 15px;
-    height: 15px;
+    width: 22px;
+    height: 22px;
 }
 
 .sh-edit-preview {

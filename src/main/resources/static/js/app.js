@@ -91,7 +91,7 @@ function renderIconGrid(modal, selectedIcon) {
         ).join('');
         grid.dataset.rendered = '1';
         if (window.lucide) lucide.createIcons({
-            attrs: { style: 'width:15px; height:15px;' },
+            attrs: { style: 'width:22px; height:22px;' },
             nameAttr: 'data-lucide',
             root: grid
         });
