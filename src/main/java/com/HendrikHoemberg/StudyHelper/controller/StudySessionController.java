@@ -121,13 +121,16 @@ public class StudySessionController {
             selected.remove(removeId);
         } else if (toggledFolderId != null) {
             List<StudyDeckOption> allDecksInFolder = folderService.getAllDecksInFolder(toggledFolderId, user);
-            List<Long> deckIdsInFolder = allDecksInFolder.stream().map(StudyDeckOption::deckId).toList();
+            List<Long> selectableDeckIds = allDecksInFolder.stream()
+                .filter(d -> d.cardCount() > 0)
+                .map(StudyDeckOption::deckId)
+                .toList();
 
-            boolean allInFolderSelected = new HashSet<>(selected).containsAll(deckIdsInFolder);
+            boolean allInFolderSelected = !selectableDeckIds.isEmpty() && new HashSet<>(selected).containsAll(selectableDeckIds);
             if (allInFolderSelected) {
-                selected.removeAll(deckIdsInFolder);
+                selected.removeAll(selectableDeckIds);
             } else {
-                for (Long id : deckIdsInFolder) {
+                for (Long id : selectableDeckIds) {
                     if (!selected.contains(id)) selected.add(id);
                 }
             }
@@ -366,19 +369,7 @@ public class StudySessionController {
         model.addAttribute("sessionModes", SessionMode.values());
         model.addAttribute("deckOrderModes", DeckOrderMode.values());
 
-        List<StudyDeckOption> allDecks = new ArrayList<>();
-        for (StudyDeckGroup g : deckGroups) {
-            allDecks.addAll(g.decks());
-            for (StudyDeckGroup sub : g.subGroups()) {
-                allDecks.addAll(sub.decks());
-            }
-        }
-        List<StudyDeckOption> selectedDecks = allDecks.stream()
-            .filter(d -> normalized.contains(d.deckId()))
-            .toList();
-        model.addAttribute("selectedDecks", selectedDecks);
-        model.addAttribute("selectedTotalCards", selectedDecks.stream().mapToInt(StudyDeckOption::cardCount).sum());
-        model.addAttribute("selectedFolderCount", selectedDecks.stream().map(StudyDeckOption::folderId).distinct().count());
+
     }
 
     private void prepareCardModel(Model model, StudySessionState state, String error) {

@@ -122,6 +122,7 @@
                                        th:data-folder-id="${group.folderId}"
                                        th:checked="${group.isSelected}"
                                        th:attr="data-indeterminate=${group.isIndeterminate}"
+                                       th:disabled="${group.selectableDeckCount == 0}"
                                        hx-post="/study/setup/update"
                                        th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + group.folderId + '}'}"
                                        hx-target="#setup-picker"
@@ -174,12 +175,13 @@
                                                th:data-folder-id="${sub.folderId}"
                                                th:checked="${sub.isSelected}"
                                                th:attr="data-indeterminate=${sub.isIndeterminate}"
+                                               th:disabled="${sub.selectableDeckCount == 0}"
                                                hx-post="/study/setup/update"
                                                th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + sub.folderId + '}'}"
                                                hx-target="#setup-picker"
                                                hx-include="[name='selectedDeckIds']">
                                         <span class="vb-subgroup-cap">
-                                            <i data-lucide="folder"></i>
+                                            <i th:attr="data-lucide=${sub.folderIcon}"></i>
                                         </span>
                                         <span class="vb-subgroup-name" th:text="${sub.folderName}">Subfolder</span>
                                         <span class="vb-subgroup-meta"
@@ -225,64 +227,13 @@
                     </div>
                     <!-- end vb-list -->
 
-                    <!-- Selection summary bar -->
-                    <div class="sh-selection-bar" th:classappend="${selectedDecks.empty ? ' is-empty' : ''}">
-                        <div class="sh-selection-stats">
-                            <span>
-                                <span class="sh-selection-num" th:text="${selectedDecks.size()}">0</span>
-                                <span th:text="${selectedDecks.size() == 1 ? ' deck' : ' decks'}"> decks</span>
-                            </span>
-                            <span class="sh-selection-divider"></span>
-                            <span>
-                                <span class="sh-selection-num" th:text="${selectedTotalCards}">0</span>
-                                <span th:text="${selectedTotalCards == 1 ? ' card' : ' cards'}"> cards</span>
-                            </span>
-                            <span class="sh-selection-divider"></span>
-                            <span>
-                                <span class="sh-selection-num" th:text="${selectedFolderCount}">0</span>
-                                <span th:text="${selectedFolderCount == 1 ? ' folder' : ' folders'}"> folders</span>
-                            </span>
-                        </div>
-                        <div th:if="${!selectedDecks.empty}" class="sh-selection-chips">
-                            <span th:each="deck, iter : ${selectedDecks}"
-                                  th:if="${iter.index < 4}"
-                                  class="sh-selection-chip"
-                                  th:style="'--folder-color: ' + ${deck.folderColorHex}">
-                                <span class="sh-selection-chip-dot"></span>
-                                <span th:text="${deck.deckName}">Deck</span>
-                                <button type="button"
-                                        class="sh-selection-chip-x"
-                                        hx-post="/study/setup/update"
-                                        hx-target="#setup-picker"
-                                        hx-include="[name='selectedDeckIds']"
-                                        th:hx-vals="${'{&quot;removeId&quot;: ' + deck.deckId + '}'}">
-                                    <i data-lucide="x"></i>
-                                </button>
-                            </span>
-                            <span th:if="${selectedDecks.size() > 4}"
-                                  class="sh-selection-chip-more"
-                                  th:text="${'+' + (selectedDecks.size() - 4) + ' more'}">+0 more</span>
-                        </div>
-                        <button th:if="${!selectedDecks.empty}"
-                                type="button"
-                                class="sh-selection-clear"
-                                hx-post="/study/setup/update"
-                                hx-target="#setup-picker"
-                                hx-vals='{"clearAll": true}'>
-                            Clear all
-                        </button>
-                        <span th:if="${selectedDecks.empty}"
-                              style="margin-left:auto;font-size:0.8rem;color:var(--text-muted)">
-                            Pick at least one deck to continue
-                        </span>
-                    </div>
+
 
                     <!-- Inline script: runs after every HTMX swap of this fragment -->
                     <script>
                         document.querySelectorAll('.sh-study-folder-checkbox').forEach(cb => {
                             cb.indeterminate = cb.dataset.indeterminate === 'true';
                         });
-                        if (typeof updateCardCount === 'function') updateCardCount();
                         if (typeof reapplySearch === 'function') reapplySearch();
                         if (typeof initLucide === 'function') initLucide();
                         if (typeof updateSelectAllButton === 'function') updateSelectAllButton();
@@ -538,16 +489,7 @@
           .forEach(el => el.classList.remove('drag-over'));
       }
 
-      // ── Live Card Count ───────────────────────────────────────────────────────
-      window.updateCardCount = function () {
-        const checked = document.querySelectorAll('.sh-study-deck-checkbox:checked');
-        let total = 0;
-        checked.forEach(cb => {
-          total += parseInt(cb.dataset.cardCount || '0', 10);
-        });
-        const el = document.getElementById('sh-card-count');
-        if (el) el.textContent = total;
-      };
+
 
       // ── Select-all button state ───────────────────────────────────────────────
       window.updateSelectAllButton = function () {
@@ -649,7 +591,6 @@
       // ── Init ──────────────────────────────────────────────────────────────────
       updateStepIndicator();
       updateNavButtons();
-      updateCardCount();
       if (typeof initLucide === 'function') initLucide();
 
     })();
