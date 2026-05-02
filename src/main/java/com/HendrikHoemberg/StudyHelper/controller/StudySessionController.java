@@ -108,16 +108,21 @@ public class StudySessionController {
     public String updateSetup(@RequestParam(name = "selectedDeckIds", required = false) List<Long> selectedDeckIds,
                               @RequestParam(name = "orderedDeckIds", required = false) String orderedDeckIds,
                               @RequestParam(name = "toggledFolderId", required = false) Long toggledFolderId,
+                              @RequestParam(name = "removeId", required = false) Long removeId,
+                              @RequestParam(name = "clearAll", required = false, defaultValue = "false") boolean clearAll,
                               Model model,
                               Principal principal) {
         User user = userService.getByUsername(principal.getName());
         List<Long> selected = new ArrayList<>(normalizeDeckIds(selectedDeckIds));
-        
-        if (toggledFolderId != null) {
-            // Bulk toggle logic
+
+        if (clearAll) {
+            selected.clear();
+        } else if (removeId != null) {
+            selected.remove(removeId);
+        } else if (toggledFolderId != null) {
             List<StudyDeckOption> allDecksInFolder = folderService.getAllDecksInFolder(toggledFolderId, user);
             List<Long> deckIdsInFolder = allDecksInFolder.stream().map(StudyDeckOption::deckId).toList();
-            
+
             boolean allInFolderSelected = new HashSet<>(selected).containsAll(deckIdsInFolder);
             if (allInFolderSelected) {
                 selected.removeAll(deckIdsInFolder);
@@ -354,11 +359,26 @@ public class StudySessionController {
                                    List<Long> preselectedDeckIds,
                                    String error) {
         List<Long> normalized = normalizeDeckIds(preselectedDeckIds);
-        model.addAttribute("deckGroups", folderService.getStudyFolderTree(user, normalized));
+        List<StudyDeckGroup> deckGroups = folderService.getStudyFolderTree(user, normalized);
+        model.addAttribute("deckGroups", deckGroups);
         model.addAttribute("preselectedDeckIds", normalized);
         model.addAttribute("studyError", error);
         model.addAttribute("sessionModes", SessionMode.values());
         model.addAttribute("deckOrderModes", DeckOrderMode.values());
+
+        List<StudyDeckOption> allDecks = new ArrayList<>();
+        for (StudyDeckGroup g : deckGroups) {
+            allDecks.addAll(g.decks());
+            for (StudyDeckGroup sub : g.subGroups()) {
+                allDecks.addAll(sub.decks());
+            }
+        }
+        List<StudyDeckOption> selectedDecks = allDecks.stream()
+            .filter(d -> normalized.contains(d.deckId()))
+            .toList();
+        model.addAttribute("selectedDecks", selectedDecks);
+        model.addAttribute("selectedTotalCards", selectedDecks.stream().mapToInt(StudyDeckOption::cardCount).sum());
+        model.addAttribute("selectedFolderCount", selectedDecks.stream().map(StudyDeckOption::folderId).distinct().count());
     }
 
     private void prepareCardModel(Model model, StudySessionState state, String error) {

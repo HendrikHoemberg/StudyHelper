@@ -131,6 +131,12 @@ public class FolderService {
             .filter(g -> !g.decks().isEmpty() || !g.subGroups().isEmpty())
             .toList();
 
+        int totalDeckCount = decks.size() + subGroups.stream().mapToInt(StudyDeckGroup::totalDeckCount).sum();
+        int selectableDeckCount = (int) decks.stream().filter(d -> d.cardCount() > 0).count()
+            + subGroups.stream().mapToInt(StudyDeckGroup::selectableDeckCount).sum();
+        int totalCardCount = decks.stream().mapToInt(StudyDeckOption::cardCount).sum()
+            + subGroups.stream().mapToInt(StudyDeckGroup::totalCardCount).sum();
+
         boolean allSelected = true;
         boolean someSelected = false;
 
@@ -160,10 +166,18 @@ public class FolderService {
         boolean isSelected = allSelected && someSelected;
         boolean isIndeterminate = !allSelected && someSelected;
 
+        String color = folder.getColorHex() != null && !folder.getColorHex().isBlank()
+            ? folder.getColorHex() : "#6366f1";
+
         return new StudyDeckGroup(
             folder.getId(),
             folder.getName(),
             buildFolderPathString(folder),
+            color,
+            iconOf(folder),
+            totalDeckCount,
+            selectableDeckCount,
+            totalCardCount,
             decks,
             subGroups,
             isSelected,

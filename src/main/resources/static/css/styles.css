@@ -2073,6 +2073,322 @@ textarea.sh-input {
     font-style: italic;
 }
 
+/* ============================================================
+   Option B — Color-coded inline deck tree (Step 2 redesign)
+   ============================================================ */
+
+.vb-picker-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    gap: 0.75rem;
+}
+
+.vb-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: var(--font-body);
+    background: var(--surface);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.vb-select-all svg { width: 13px; height: 13px; }
+.vb-select-all:hover { background: var(--accent-light); }
+.vb-select-all.is-on {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 4px 14px var(--accent-glow);
+}
+.vb-select-all:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.vb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+/* ---- Folder group ---- */
+.vb-group {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+    position: relative;
+}
+.vb-group::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--folder-color, var(--accent));
+    z-index: 1;
+}
+
+.vb-group-head {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.7rem 1rem 0.7rem 1.1rem;
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 6%, var(--surface));
+    border-bottom: 1px solid color-mix(in srgb, var(--folder-color, var(--accent)) 14%, var(--border-light));
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+.vb-group-head:hover {
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 10%, var(--surface));
+}
+
+.vb-group-cap {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: var(--folder-color, var(--accent));
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.vb-group-cap svg { width: 14px; height: 14px; }
+
+.vb-group-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+}
+.vb-group-meta {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.vb-group-body {
+    padding: 0.5rem 0.75rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+/* ---- Subfolder ---- */
+.vb-subgroup {
+    display: flex;
+    flex-direction: column;
+    padding: 0.25rem 0;
+}
+
+.vb-subgroup-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    margin-left: 18px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 4%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--folder-color, var(--accent)) 28%, transparent);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+.vb-subgroup-head:hover {
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 8%, transparent);
+}
+
+.vb-subgroup-cap {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 18%, transparent);
+    color: var(--folder-color, var(--accent));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.vb-subgroup-cap svg { width: 12px; height: 12px; }
+
+.vb-subgroup-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.vb-subgroup-meta {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-left: auto;
+    white-space: nowrap;
+}
+.vb-subgroup-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.35rem;
+    margin-left: 18px;
+}
+
+/* ---- Deck row ---- */
+.vb-deck {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: var(--surface);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+.vb-deck:hover { border-color: var(--border); }
+.vb-deck.is-selected {
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 7%, var(--surface));
+    border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 40%, transparent);
+}
+.vb-deck.is-empty { opacity: 0.55; cursor: not-allowed; }
+
+.vb-deck-icon {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 14%, transparent);
+    color: var(--folder-color, var(--accent));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.vb-deck-icon svg { width: 12px; height: 12px; }
+
+.vb-deck-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---- Selection summary bar ---- */
+.sh-selection-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, var(--accent-light), var(--surface));
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+.sh-selection-bar.is-empty {
+    background: var(--surface);
+}
+
+.sh-selection-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    font-size: 0.875rem;
+}
+.sh-selection-num {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1.05rem;
+}
+.sh-selection-bar.is-empty .sh-selection-num { color: var(--text-muted); }
+
+.sh-selection-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+}
+
+.sh-selection-chips {
+    display: flex;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+    margin-left: auto;
+    max-width: 60%;
+    justify-content: flex-end;
+}
+.sh-selection-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+.sh-selection-chip-dot {
+    width: 8px; height: 8px;
+    border-radius: 999px;
+    background: var(--folder-color, var(--accent));
+    flex-shrink: 0;
+}
+.sh-selection-chip-x {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px; height: 14px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 0;
+}
+.sh-selection-chip-x:hover { background: var(--border-light); color: var(--text); }
+.sh-selection-chip-x svg { width: 10px; height: 10px; }
+
+.sh-selection-chip-more {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    padding: 0.25rem 0.4rem;
+}
+
+.sh-selection-clear {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: var(--font-body);
+}
+.sh-selection-clear:hover { color: var(--danger); background: var(--surface); }
+
+/* ---- Empty deck label ---- */
+.sh-mini-tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    background: var(--border-light);
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
 /* Complete page */
 .sh-study-complete-card {
     max-width: 640px;
