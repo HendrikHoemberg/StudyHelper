@@ -13,33 +13,38 @@
 
     <div class="sh-card sh-study-complete-card">
         <div class="sh-card-body">
-            <h1 class="sh-page-title mb-2">Session Complete</h1>
-            <p class="sh-folder-meta mb-4">Great work. Here is your score summary.</p>
+            <h1 class="sh-page-title text-center mb-2">Session Complete</h1>
+            <div class="sh-study-score-hero"
+                 th:classappend="${stats.percentage >= 80 ? 'sh-study-score--good' : (stats.percentage >= 60 ? 'sh-study-score--warn' : 'sh-study-score--bad')}">
+                <div class="sh-study-stat-label">Your Score</div>
+                <div class="sh-study-stat-value" th:text="${stats.percentage} + '%'">0%</div>
+            </div>
 
             <div class="sh-study-stats-grid">
-                <div class="sh-study-stat">
-                    <div class="sh-study-stat-icon"><i data-lucide="hash"></i></div>
-                    <div class="sh-study-stat-label">Answered</div>
-                    <div class="sh-study-stat-value" th:text="${stats.totalAnswered}">0</div>
-                </div>
-                <div class="sh-study-stat">
-                    <div class="sh-study-stat-icon" style="color:var(--success);"><i data-lucide="check-circle"></i></div>
+                <div class="sh-study-stat sh-study-stat--correct">
+                    <div class="sh-study-stat-icon"><i data-lucide="check"></i></div>
                     <div class="sh-study-stat-label">Correct</div>
                     <div class="sh-study-stat-value" th:text="${stats.correctAnswers}">0</div>
                 </div>
-                <div class="sh-study-stat">
-                    <div class="sh-study-stat-icon" style="color:var(--danger);"><i data-lucide="x-circle"></i></div>
+                <div class="sh-study-stat sh-study-stat--incorrect">
+                    <div class="sh-study-stat-icon"><i data-lucide="x"></i></div>
                     <div class="sh-study-stat-label">Incorrect</div>
                     <div class="sh-study-stat-value" th:text="${stats.incorrectAnswers}">0</div>
                 </div>
-                <div class="sh-study-stat">
-                    <div class="sh-study-stat-icon" style="color:var(--accent);"><i data-lucide="percent"></i></div>
-                    <div class="sh-study-stat-label">Score</div>
-                    <div class="sh-study-stat-value" th:text="${stats.percentage} + '%'">0%</div>
-                </div>
             </div>
 
+
             <div class="sh-study-complete-actions">
+                <form th:if="${incorrectCardCount > 0}"
+                      method="post"
+                      hx-post="/session/redo-incorrect"
+                      hx-target="#study-session-content"
+                      hx-swap="outerHTML">
+                    <button type="submit" class="sh-btn sh-btn-secondary">
+                        <i data-lucide="x-circle"></i>
+                        Redo Incorrect (<span th:text="${incorrectCardCount}">0</span>)
+                    </button>
+                </form>
                 <form method="post"
                       hx-post="/session/redo"
                       hx-target="#study-session-content"

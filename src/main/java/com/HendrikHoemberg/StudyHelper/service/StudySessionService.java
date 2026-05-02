@@ -63,7 +63,8 @@ public class StudySessionService {
             0,
             0,
             0,
-            0
+            0,
+            List.of()
         );
     }
 
@@ -90,6 +91,10 @@ public class StudySessionService {
         int nextCorrect = state.correctAnswers() + (isCorrect ? 1 : 0);
         int nextIncorrect = state.incorrectAnswers() + (isCorrect ? 0 : 1);
 
+        List<Long> newIncorrectIds = isCorrect
+            ? state.incorrectCardIds()
+            : appendId(state.incorrectCardIds(), cardId);
+
         return new StudySessionState(
             state.config(),
             state.cardsByDeck(),
@@ -97,7 +102,8 @@ public class StudySessionService {
             state.currentIndex() + 1,
             state.totalAnswered() + 1,
             nextCorrect,
-            nextIncorrect
+            nextIncorrect,
+            newIncorrectIds
         );
     }
 
@@ -140,8 +146,36 @@ public class StudySessionService {
             0,
             0,
             0,
-            0
+            0,
+            List.of()
         );
+    }
+
+    public StudySessionState redoIncorrect(StudySessionState state) {
+        if (state == null) {
+            throw new IllegalArgumentException("No active study session.");
+        }
+        List<Long> incorrectIds = state.incorrectCardIds();
+        if (incorrectIds.isEmpty()) {
+            throw new IllegalArgumentException("No incorrect cards to redo.");
+        }
+
+        Set<Long> incorrectSet = new HashSet<>(incorrectIds);
+        List<StudyCardView> queue = state.queue().stream()
+            .filter(card -> incorrectSet.contains(card.cardId()))
+            .toList();
+
+        return new StudySessionState(
+            state.config(), state.cardsByDeck(), List.copyOf(queue),
+            0, 0, 0, 0,
+            List.of()
+        );
+    }
+
+    private List<Long> appendId(List<Long> list, Long id) {
+        List<Long> next = new ArrayList<>(list);
+        next.add(id);
+        return List.copyOf(next);
     }
 
     private StudySessionConfig normalizeConfig(StudySessionConfig rawConfig) {

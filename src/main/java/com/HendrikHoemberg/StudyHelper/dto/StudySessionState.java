@@ -11,6 +11,7 @@ public record StudySessionState(
     int currentIndex,
     int totalAnswered,
     int correctAnswers,
-    int incorrectAnswers
+    int incorrectAnswers,
+    List<Long> incorrectCardIds
 ) implements Serializable {
 }

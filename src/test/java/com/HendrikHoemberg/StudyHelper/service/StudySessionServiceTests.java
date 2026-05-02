@@ -132,7 +132,8 @@ class StudySessionServiceTests {
             2,
             2,
             1,
-            1
+            1,
+            List.of()
         );
 
         StudySessionStats stats = studySessionService.buildStats(state);

@@ -27,9 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -136,31 +134,7 @@ public class StudySessionController {
         selected.stream().filter(id -> !nextOrder.contains(id)).forEach(nextOrder::add);
 
         prepareSetupModel(model, user, selected, null);
-        prepareOrderModel(model, user, nextOrder);
-        
-        return "fragments/study-setup :: setupPickerAndOrder";
-    }
-
-    @PostMapping("/study/setup/reorder")
-    public String reorderDecks(@RequestParam Long deckId,
-                               @RequestParam int direction,
-                               @RequestParam String orderedDeckIds,
-                               @RequestParam(name = "selectedDeckIds", required = false) List<Long> selectedDeckIds,
-                               Model model,
-                               Principal principal) {
-        User user = userService.getByUsername(principal.getName());
-        List<Long> order = new ArrayList<>(parseDeckOrder(orderedDeckIds));
-        int index = order.indexOf(deckId);
-        int target = index + direction;
-        
-        if (index >= 0 && target >= 0 && target < order.size()) {
-            Long item = order.remove(index);
-            order.add(target, item);
-        }
-
-        prepareSetupModel(model, user, normalizeDeckIds(selectedDeckIds), null);
-        prepareOrderModel(model, user, order);
-        return "fragments/study-setup :: setupPickerAndOrder";
+        return "fragments/study-setup :: setupPicker";
     }
 
     @PostMapping("/study/session")
@@ -320,6 +294,40 @@ public class StudySessionController {
         }
     }
 
+    @PostMapping("/session/redo-incorrect")
+    public String redoIncorrect(Model model,
+                                Principal principal,
+                                HttpSession httpSession,
+                                HttpServletResponse response,
+                                @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        if (principal == null) return "redirect:/login";
+
+        User user = userService.getByUsername(principal.getName());
+        model.addAttribute("username", user.getUsername());
+        StudySessionState state = getState(httpSession);
+
+        if (state == null) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            prepareSetupModel(model, user, List.of(), "Session expired. Start a new study session.");
+            if (hxRequest != null) return "fragments/study-setup :: studySetup";
+            model.addAttribute("studyStateView", VIEW_SETUP);
+            return "study-page";
+        }
+
+        try {
+            StudySessionState rebuilt = studySessionService.redoIncorrect(state);
+            httpSession.setAttribute(SESSION_KEY, rebuilt);
+            return renderCurrentState(model, user, rebuilt, hxRequest);
+        } catch (IllegalArgumentException | NoSuchElementException ex) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            prepareCompletionModel(model, state);
+            model.addAttribute("studyError", ex.getMessage());
+            if (hxRequest != null) return "fragments/study-complete :: studyComplete";
+            model.addAttribute("studyStateView", VIEW_COMPLETE);
+            return "study-page";
+        }
+    }
+
     private String renderCurrentState(Model model, User user, StudySessionState state, String hxRequest) {
         if (studySessionService.isComplete(state)) {
             prepareCompletionModel(model, state);
@@ -351,8 +359,6 @@ public class StudySessionController {
         model.addAttribute("studyError", error);
         model.addAttribute("sessionModes", SessionMode.values());
         model.addAttribute("deckOrderModes", DeckOrderMode.values());
-        
-        prepareOrderModel(model, user, normalizeDeckIds(preselectedDeckIds));
     }
 
     private void prepareCardModel(Model model, StudySessionState state, String error) {
@@ -365,26 +371,12 @@ public class StudySessionController {
         model.addAttribute("studyError", error);
     }
 
-    private void prepareOrderModel(Model model, User user, List<Long> orderedIds) {
-        List<StudyDeckOption> options = deckService.getStudyDeckOptions(user);
-        Map<Long, StudyDeckOption> optionMap = new LinkedHashMap<>();
-        options.forEach(o -> optionMap.put(o.deckId(), o));
-        
-        List<StudyDeckOption> orderedOptions = new ArrayList<>();
-        orderedIds.forEach(id -> {
-            StudyDeckOption opt = optionMap.get(id);
-            if (opt != null) orderedOptions.add(opt);
-        });
-        
-        model.addAttribute("orderedDecks", orderedOptions);
-        model.addAttribute("orderedDeckIdsString", String.join(",", orderedIds.stream().map(String::valueOf).toList()));
-    }
-
     private void prepareCompletionModel(Model model, StudySessionState state) {
         StudySessionStats stats = studySessionService.buildStats(state);
         model.addAttribute("state", state);
         model.addAttribute("stats", stats);
         model.addAttribute("studyError", null);
+        model.addAttribute("incorrectCardCount", state.incorrectCardIds().size());
     }
 
     private StudySessionState getState(HttpSession httpSession) {

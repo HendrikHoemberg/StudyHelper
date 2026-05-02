@@ -119,7 +119,8 @@ class StudySessionControllerTests {
             1,
             1,
             1,
-            0
+            0,
+            List.of()
         );
 
         MockHttpSession session = new MockHttpSession();
@@ -150,7 +151,8 @@ class StudySessionControllerTests {
             0,
             0,
             0,
-            0
+            0,
+            List.of()
         );
     }
 }

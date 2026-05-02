@@ -14,7 +14,7 @@
     <div class="sh-page-header">
         <div>
             <h1 class="sh-page-title">Start Study Session</h1>
-            <p class="sh-page-subtitle">Choose decks, mode, and card flow.</p>
+            <p class="sh-page-subtitle">Set up your session in a few steps.</p>
         </div>
         <div class="sh-page-actions">
             <a href="/dashboard" class="sh-btn sh-btn-secondary"
@@ -25,52 +25,76 @@
         </div>
     </div>
 
+    <!-- Step indicator -->
+    <div class="sh-wizard-steps" id="sh-wizard-steps">
+        <div class="sh-wizard-step is-active" data-step="1">
+            <div class="sh-wizard-step-dot">1</div>
+            <div class="sh-wizard-step-label">Mode</div>
+        </div>
+        <div class="sh-wizard-step-connector"></div>
+        <div class="sh-wizard-step" data-step="2">
+            <div class="sh-wizard-step-dot">2</div>
+            <div class="sh-wizard-step-label">Decks</div>
+        </div>
+        <div class="sh-wizard-step-connector sh-wizard-connector-3"></div>
+        <div class="sh-wizard-step" data-step="3">
+            <div class="sh-wizard-step-dot">3</div>
+            <div class="sh-wizard-step-label">Order</div>
+        </div>
+    </div>
+
+    <!-- Single form wrapping all panels -->
     <form class="sh-card sh-study-setup-card"
           method="post"
           hx-post="/study/session"
           hx-target="#study-session-content"
           hx-swap="outerHTML">
-        <div class="sh-card-body" style="display:flex;flex-direction:column;gap:1.5rem;">
 
-            <section>
-                <div class="sh-section-title">Study Mode</div>
+        <div class="sh-card-body sh-wizard-body">
+
+            <!-- Panel 1: Mode -->
+            <div class="sh-wizard-panel is-active" id="wizard-panel-1">
+                <div class="sh-section-title">How do you want to study?</div>
                 <div class="sh-study-mode-grid">
                     <label class="sh-study-choice">
-                        <input type="radio" name="sessionMode" value="DECK_BY_DECK" checked
-                               hx-on:change="document.querySelectorAll('.sh-study-deck-options').forEach(s => s.style.display = '')">
+                        <input type="radio" name="sessionMode" value="DECK_BY_DECK" checked>
                         <div>
                             <div class="sh-study-choice-title">Deck-by-Deck</div>
-                            <div class="sh-study-choice-subtitle">Study one deck at a time.</div>
+                            <div class="sh-study-choice-subtitle">
+                                Study one deck at a time. Define the order yourself or let it randomize.
+                            </div>
                         </div>
                     </label>
                     <label class="sh-study-choice">
-                        <input type="radio" name="sessionMode" value="SHUFFLED"
-                               hx-on:change="document.querySelectorAll('.sh-study-deck-options').forEach(s => s.style.display = 'none')">
+                        <input type="radio" name="sessionMode" value="SHUFFLED">
                         <div>
                             <div class="sh-study-choice-title">Shuffled</div>
-                            <div class="sh-study-choice-subtitle">Mix all selected decks into one queue.</div>
+                            <div class="sh-study-choice-subtitle">
+                                Mix cards from all selected decks into one randomized queue.
+                            </div>
                         </div>
                     </label>
                 </div>
-            </section>
+            </div>
 
-            <section class="sh-study-deck-options">
-                <div class="sh-section-title">Deck Order (Deck-by-Deck)</div>
-                <div class="flex gap-3 flex-wrap">
-                    <label class="sh-study-inline-choice">
-                        <input type="radio" name="deckOrderMode" value="SELECTED_ORDER" checked>
-                        Selected order
-                    </label>
-                    <label class="sh-study-inline-choice">
-                        <input type="radio" name="deckOrderMode" value="RANDOMIZED_ORDER">
-                        Randomized deck order
-                    </label>
+            <!-- Panel 2: Deck Picker -->
+            <div class="sh-wizard-panel" id="wizard-panel-2">
+
+                <div class="sh-section-title">Which decks?</div>
+
+                <!-- Search: outside #setup-picker so it survives HTMX swaps -->
+                <div class="sh-study-search-wrap">
+                    <i data-lucide="search" class="sh-study-search-icon"></i>
+                    <input type="text"
+                           id="sh-deck-search"
+                           class="sh-study-search-input"
+                           placeholder="Search decks..."
+                           autocomplete="off">
                 </div>
-            </section>
 
-            <div th:fragment="setupPickerAndOrder" id="setup-picker-and-order">
-                <section>
-                    <div class="sh-section-title">Select Decks</div>
+                <!-- HTMX-swapped region: only the deck tree -->
+                <div th:fragment="setupPicker" id="setup-picker">
+
                     <div th:if="${#lists.isEmpty(deckGroups)}" class="sh-empty" style="padding:1.25rem 1rem;">
                         <p class="sh-empty-text mb-1">No decks available</p>
                         <p class="sh-empty-hint mb-0">Create decks and cards before starting a study session.</p>
@@ -82,24 +106,30 @@
                         </th:block>
                     </div>
 
-                    <!-- Recursive fragment for nested folders -->
+                    <!-- Recursive group renderer -->
                     <th:block th:fragment="renderGroup(group, depth)">
-                        <div th:if="${group != null}" class="sh-study-deck-group" th:classappend="${(depth ?: 0) > 0 ? 'is-nested' : ''}" th:style="'--depth: ' + ${depth ?: 0}">
+                        <div th:if="${group != null}"
+                             class="sh-study-deck-group"
+                             th:classappend="${(depth ?: 0) > 0 ? 'is-nested' : ''}"
+                             th:style="'--depth: ' + ${depth ?: 0}">
+
                             <div class="sh-study-deck-group-title"
                                  th:style="'padding-left:' + (${depth ?: 0} * 1.25) + 'rem'">
-                                <input type="checkbox" class="sh-checkbox sh-study-folder-checkbox"
+                                <input type="checkbox"
+                                       class="sh-checkbox sh-study-folder-checkbox"
                                        th:data-folder-id="${group.folderId}"
                                        th:checked="${group.isSelected}"
                                        th:attr="data-indeterminate=${group.isIndeterminate}"
                                        hx-post="/study/setup/update"
                                        th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + group.folderId + '}'}"
-                                       hx-target="#setup-picker-and-order"
-                                       hx-include="[name='selectedDeckIds'], #study-ordered-deck-ids">
+                                       hx-target="#setup-picker"
+                                       hx-include="[name='selectedDeckIds']">
                                 <span th:text="${group.folderName}">Folder Name</span>
                             </div>
-                            
+
                             <div class="sh-study-deck-list" th:if="${!#lists.isEmpty(group.decks)}">
-                                <label th:each="deck : ${group.decks}" class="sh-study-deck-option"
+                                <label th:each="deck : ${group.decks}"
+                                       class="sh-study-deck-option"
                                        th:style="'margin-left:' + (${depth ?: 0} * 1.25) + 'rem'">
                                     <div class="sh-study-deck-option-inner">
                                         <input class="sh-checkbox sh-study-deck-checkbox"
@@ -107,9 +137,10 @@
                                                name="selectedDeckIds"
                                                th:value="${deck.deckId}"
                                                th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}"
+                                               th:attr="data-card-count=${deck.cardCount}"
                                                hx-post="/study/setup/update"
-                                               hx-target="#setup-picker-and-order"
-                                               hx-include="[name='selectedDeckIds'], #study-ordered-deck-ids">
+                                               hx-target="#setup-picker"
+                                               hx-include="[name='selectedDeckIds']">
                                         <i data-lucide="layers" style="width:14px;height:14px;color:var(--accent);flex-shrink:0;"></i>
                                         <span class="sh-deck-name" th:text="${deck.deckName}">Deck</span>
                                     </div>
@@ -117,59 +148,329 @@
                                           th:text="${deck.cardCount} + ' cards'">0 cards</span>
                                 </label>
                             </div>
-                            
+
                             <th:block th:each="sub : ${group.subGroups}">
                                 <th:block th:insert="~{::renderGroup(${sub}, ${(depth ?: 0) + 1})}"></th:block>
                             </th:block>
                         </div>
                     </th:block>
-                </section>
 
-                <section class="sh-study-deck-options">
-                    <div class="sh-section-title">Manual Deck Order</div>
-                    <p class="sh-folder-meta mb-2">Use up/down to define the explicit deck order for deck-by-deck mode.</p>
-                    
-                    <ul class="sh-study-order-list" id="sh-study-order-list">
-                        <li th:if="${#lists.isEmpty(orderedDecks)}" class="sh-study-order-empty">
-                            Select decks to define manual order.
-                        </li>
-                        <li th:each="deck, stat : ${orderedDecks}" class="sh-study-order-item">
-                            <span class="sh-study-order-name" th:text="${stat.count} + '. ' + ${deck.deckName}">1. Deck</span>
-                            <div class="sh-study-order-controls">
-                                <button type="button" class="sh-btn sh-btn-ghost sh-btn-sm"
-                                        hx-post="/study/setup/reorder"
-                                        hx-target="#setup-picker-and-order"
-                                        hx-include="[name='selectedDeckIds']"
-                                        th:hx-vals="${'{&quot;deckId&quot;: ' + deck.deckId + ', &quot;direction&quot;: -1, &quot;orderedDeckIds&quot;: &quot;' + orderedDeckIdsString + '&quot;}'}">Up</button>
-                                <button type="button" class="sh-btn sh-btn-ghost sh-btn-sm"
-                                        hx-post="/study/setup/reorder"
-                                        hx-target="#setup-picker-and-order"
-                                        hx-include="[name='selectedDeckIds']"
-                                        th:hx-vals="${'{&quot;deckId&quot;: ' + deck.deckId + ', &quot;direction&quot;: 1, &quot;orderedDeckIds&quot;: &quot;' + orderedDeckIdsString + '&quot;}'}">Down</button>
-                            </div>
-                        </li>
-                        <input type="hidden" name="orderedDeckIds" id="study-ordered-deck-ids" th:value="${orderedDeckIdsString}">
-                    </ul>
-                </section>
+                    <!-- Live card count -->
+                    <div class="sh-wizard-card-count">
+                        <span id="sh-card-count">0</span> cards selected
+                    </div>
+
+                    <!-- Inline script: runs after every HTMX swap of this fragment -->
+                    <script>
+                        document.querySelectorAll('.sh-study-folder-checkbox').forEach(cb => {
+                            cb.indeterminate = cb.dataset.indeterminate === 'true';
+                        });
+                        if (typeof updateCardCount === 'function') updateCardCount();
+                        if (typeof reapplySearch === 'function') reapplySearch();
+                        if (typeof initLucide === 'function') initLucide();
+                    </script>
+
+                </div>
+                <!-- end #setup-picker -->
+
             </div>
-            
-            <script>
-                // Sync indeterminate state from data attribute
-                document.querySelectorAll('.sh-study-folder-checkbox').forEach(cb => {
-                    cb.indeterminate = cb.dataset.indeterminate === 'true';
-                });
-                // Re-init icons
-                initLucide();
-            </script>
+            <!-- end panel 2 -->
 
-            <div class="flex justify-end">
-                <button type="submit" class="sh-btn sh-btn-primary">
-                    <i data-lucide="play"></i>
-                    Start Session
+            <!-- Panel 3: Deck Order -->
+            <div class="sh-wizard-panel" id="wizard-panel-3">
+
+                <div class="sh-section-title">Deck Order</div>
+                <p class="sh-folder-meta mb-3">
+                    Define the order in which decks are studied. Drag items to rearrange.
+                </p>
+
+                <!-- Deck order mode radios -->
+                <div class="flex gap-3 flex-wrap mb-4">
+                    <label class="sh-study-inline-choice">
+                        <input type="radio" name="deckOrderMode" value="SELECTED_ORDER" checked
+                               onchange="document.getElementById('sh-study-order-list').style.display = ''">
+                        My order (drag to rearrange)
+                    </label>
+                    <label class="sh-study-inline-choice">
+                        <input type="radio" name="deckOrderMode" value="RANDOMIZED_ORDER"
+                               onchange="document.getElementById('sh-study-order-list').style.display = 'none'">
+                        Randomize deck order
+                    </label>
+                </div>
+
+                <!-- Drag-and-drop order list (populated by JS) -->
+                <ul class="sh-study-order-list" id="sh-study-order-list">
+                    <li class="sh-study-order-empty" id="sh-order-empty-msg">
+                        Select decks in step 2 to arrange them here.
+                    </li>
+                    <!-- JS inserts <li class="sh-study-drag-item" draggable="true" data-deck-id="…"> here -->
+                </ul>
+
+                <!-- Hidden input submitted with form -->
+                <input type="hidden" name="orderedDeckIds" id="study-ordered-deck-ids" value="">
+
+            </div>
+            <!-- end panel 3 -->
+
+            <!-- Sticky footer -->
+            <div class="sh-wizard-footer">
+                <button type="button" class="sh-btn sh-btn-secondary"
+                        id="wizard-btn-back" style="display:none;">
+                    <i data-lucide="arrow-left"></i> Back
                 </button>
+                <div style="display:flex;gap:0.75rem;margin-left:auto;">
+                    <button type="button" class="sh-btn sh-btn-primary" id="wizard-btn-next">
+                        Next <i data-lucide="arrow-right"></i>
+                    </button>
+                    <button type="submit" class="sh-btn sh-btn-primary" id="wizard-btn-submit" style="display:none;">
+                        <i data-lucide="play"></i> Start Session
+                    </button>
+                </div>
             </div>
+
         </div>
     </form>
+
+    <!-- Wizard JavaScript -->
+    <script>
+    (function () {
+      // ── State ─────────────────────────────────────────────────────────────────
+      let currentStep = 1;
+
+      function getMode() {
+        const checked = document.querySelector('input[name="sessionMode"]:checked');
+        return checked ? checked.value : 'DECK_BY_DECK';
+      }
+
+      function maxSteps() {
+        return getMode() === 'DECK_BY_DECK' ? 3 : 2;
+      }
+
+      // ── Navigation ────────────────────────────────────────────────────────────
+      function wizardNext() {
+        if (currentStep === 2) {
+          const checked = document.querySelectorAll('.sh-study-deck-checkbox:checked');
+          if (checked.length === 0) {
+            showValidationError('Please select at least one deck.');
+            return;
+          }
+          clearValidationError();
+
+          if (getMode() === 'SHUFFLED') {
+            const form = document.querySelector('.sh-study-setup-card');
+            htmx.trigger(form, 'submit');
+            return;
+          }
+
+          populateOrderList();
+        }
+
+        goToStep(currentStep + 1);
+      }
+
+      function wizardBack() {
+        goToStep(currentStep - 1);
+      }
+
+      function goToStep(step) {
+        currentStep = step;
+
+        document.querySelectorAll('.sh-wizard-panel').forEach((panel, i) => {
+          panel.classList.toggle('is-active', (i + 1) === step);
+        });
+
+        updateStepIndicator();
+        updateNavButtons();
+      }
+
+      function updateStepIndicator() {
+        const max = maxSteps();
+        const steps = document.querySelectorAll('.sh-wizard-step');
+        steps.forEach((el) => {
+          const n = parseInt(el.dataset.step, 10);
+          el.classList.toggle('is-active', n === currentStep);
+          el.classList.toggle('is-done', n < currentStep);
+          if (n === 3) el.style.display = max < 3 ? 'none' : '';
+        });
+        const connector3 = document.querySelector('.sh-wizard-connector-3');
+        if (connector3) connector3.style.display = max < 3 ? 'none' : '';
+      }
+
+      function updateNavButtons() {
+        const max = maxSteps();
+        const isLast = currentStep === max;
+
+        document.getElementById('wizard-btn-back').style.display = currentStep > 1 ? '' : 'none';
+        document.getElementById('wizard-btn-next').style.display = isLast ? 'none' : '';
+        document.getElementById('wizard-btn-submit').style.display = isLast ? '' : 'none';
+      }
+
+      // ── Validation ────────────────────────────────────────────────────────────
+      function showValidationError(msg) {
+        let el = document.getElementById('sh-wizard-validation-msg');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'sh-wizard-validation-msg';
+          el.className = 'sh-wizard-validation-msg';
+          const panel2 = document.getElementById('wizard-panel-2');
+          panel2.insertBefore(el, panel2.firstChild);
+        }
+        el.textContent = msg;
+        el.style.display = '';
+      }
+
+      function clearValidationError() {
+        const el = document.getElementById('sh-wizard-validation-msg');
+        if (el) el.style.display = 'none';
+      }
+
+      // ── Deck Order List (Step 3) ──────────────────────────────────────────────
+      function populateOrderList() {
+        const list = document.getElementById('sh-study-order-list');
+        const emptyMsg = document.getElementById('sh-order-empty-msg');
+        const checked = document.querySelectorAll('.sh-study-deck-checkbox:checked');
+
+        list.querySelectorAll('.sh-study-drag-item').forEach(el => el.remove());
+
+        if (checked.length === 0) {
+          emptyMsg.style.display = '';
+          document.getElementById('study-ordered-deck-ids').value = '';
+          return;
+        }
+
+        emptyMsg.style.display = 'none';
+
+        checked.forEach(cb => {
+          const deckId = cb.value;
+          const label = cb.closest('label.sh-study-deck-option');
+          const deckName = label
+            ? label.querySelector('.sh-deck-name').textContent.trim()
+            : 'Unknown Deck';
+
+          const li = createDragItem(deckId, deckName);
+          list.appendChild(li);
+        });
+
+        updateOrderInput();
+        if (typeof initLucide === 'function') initLucide();
+      }
+
+      function createDragItem(deckId, deckName) {
+        const li = document.createElement('li');
+        li.className = 'sh-study-drag-item';
+        li.draggable = true;
+        li.dataset.deckId = deckId;
+        li.innerHTML =
+          '<i data-lucide="grip-vertical" class="sh-study-drag-handle"></i>' +
+          '<span class="sh-study-order-name">' + deckName + '</span>';
+
+        li.addEventListener('dragstart', onDragStart);
+        li.addEventListener('dragover', onDragOver);
+        li.addEventListener('dragleave', onDragLeave);
+        li.addEventListener('drop', onDrop);
+        li.addEventListener('dragend', onDragEnd);
+        return li;
+      }
+
+      function updateOrderInput() {
+        const ids = [...document.querySelectorAll('.sh-study-drag-item')]
+          .map(el => el.dataset.deckId);
+        document.getElementById('study-ordered-deck-ids').value = ids.join(',');
+      }
+
+      // ── Drag-and-Drop ─────────────────────────────────────────────────────────
+      let draggedItem = null;
+
+      function onDragStart(e) {
+        draggedItem = this;
+        this.classList.add('is-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      }
+
+      function onDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (this !== draggedItem) this.classList.add('drag-over');
+      }
+
+      function onDragLeave() {
+        this.classList.remove('drag-over');
+      }
+
+      function onDrop(e) {
+        e.preventDefault();
+        if (this !== draggedItem) {
+          const list = this.parentNode;
+          const items = [...list.querySelectorAll('.sh-study-drag-item')];
+          const fromIdx = items.indexOf(draggedItem);
+          const toIdx = items.indexOf(this);
+          if (fromIdx < toIdx) {
+            list.insertBefore(draggedItem, this.nextSibling);
+          } else {
+            list.insertBefore(draggedItem, this);
+          }
+          updateOrderInput();
+        }
+        this.classList.remove('drag-over');
+      }
+
+      function onDragEnd() {
+        this.classList.remove('is-dragging');
+        document.querySelectorAll('.sh-study-drag-item')
+          .forEach(el => el.classList.remove('drag-over'));
+      }
+
+      // ── Live Card Count ───────────────────────────────────────────────────────
+      window.updateCardCount = function () {
+        const checked = document.querySelectorAll('.sh-study-deck-checkbox:checked');
+        let total = 0;
+        checked.forEach(cb => {
+          total += parseInt(cb.dataset.cardCount || '0', 10);
+        });
+        const el = document.getElementById('sh-card-count');
+        if (el) el.textContent = total;
+      };
+
+      // ── Deck Search ───────────────────────────────────────────────────────────
+      window.reapplySearch = function () {
+        const input = document.getElementById('sh-deck-search');
+        if (!input || !input.value) return;
+        filterDecks(input.value.toLowerCase());
+      };
+
+      function filterDecks(query) {
+        document.querySelectorAll('.sh-study-deck-option').forEach(label => {
+          const name = label.querySelector('.sh-deck-name');
+          const matches = !query || (name && name.textContent.toLowerCase().includes(query));
+          label.style.display = matches ? '' : 'none';
+        });
+      }
+
+      const searchInput = document.getElementById('sh-deck-search');
+      if (searchInput) {
+        searchInput.addEventListener('input', function () {
+          filterDecks(this.value.toLowerCase());
+        });
+      }
+
+      // ── Button Event Wiring ───────────────────────────────────────────────────
+      document.getElementById('wizard-btn-next').addEventListener('click', wizardNext);
+      document.getElementById('wizard-btn-back').addEventListener('click', wizardBack);
+
+      document.querySelectorAll('input[name="sessionMode"]').forEach(radio => {
+        radio.addEventListener('change', function () {
+          updateStepIndicator();
+          updateNavButtons();
+        });
+      });
+
+      // ── Init ──────────────────────────────────────────────────────────────────
+      updateStepIndicator();
+      updateNavButtons();
+      updateCardCount();
+
+    })();
+    </script>
 
 </div>
 
