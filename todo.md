@@ -8,3 +8,4 @@
 - endscreen maybe konfetti animation?
 - make navbar bigger
 - maybe remove My library section in dashboard
+- make folders in session creation collapsed by default
