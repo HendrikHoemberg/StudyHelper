@@ -338,17 +338,14 @@
         });
 
         setTimeout(() => {
-          element.classList.add('is-final-fade');
+          wizardNext();
+          // Reset animation classes for if the user comes back
           setTimeout(() => {
-            wizardNext();
-            // Reset animation classes for if the user comes back
-            setTimeout(() => {
-                allCards.forEach(c => {
-                    c.classList.remove('is-selected-animating', 'is-unselected', 'is-final-fade');
-                    c.style.removeProperty('--slide-x');
-                });
-            }, 800);
-          }, 600);
+              allCards.forEach(c => {
+                  c.classList.remove('is-selected-animating', 'is-unselected');
+                  c.style.removeProperty('--slide-x');
+              });
+          }, 800);
         }, 900);
       };
 

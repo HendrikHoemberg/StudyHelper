@@ -1918,11 +1918,7 @@ textarea.sh-input {
     box-shadow: var(--shadow-xl), 0 0 40px var(--accent-glow) !important;
 }
 
-.sh-study-choice.is-final-fade {
-    opacity: 0 !important;
-    transform: translateX(var(--slide-x, 0)) scale(1.2) !important;
-    filter: blur(20px);
-}
+
 
 .sh-study-choice input[type="radio"] {
     position: absolute;
