@@ -3,12 +3,8 @@
 - fix folder collapse animation
 - Lucide -> iconify
 - Deck creation -> last card "add/+" empty card
-- Make study session creator better designed
 - Start Study Sessions from within folders 
-- Study sessions -> Folder colors and icons
-- "Redo incorrect" option on session endscreen
-- Endscreen -> remove "answered", move result to top (bigger)
+- redesign step 3 of session creation
 - endscreen maybe konfetti animation?
-- Other checkmark icon in endscreen
 - make navbar bigger
 - maybe remove My library section in dashboard
