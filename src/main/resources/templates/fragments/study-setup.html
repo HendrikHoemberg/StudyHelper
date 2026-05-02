@@ -56,8 +56,8 @@
             <div class="sh-wizard-panel is-active" id="wizard-panel-1">
                 <div class="sh-section-title">How do you want to study?</div>
                 <div class="sh-study-mode-grid">
-                    <label class="sh-study-choice">
-                        <input type="radio" name="sessionMode" value="DECK_BY_DECK" checked>
+                    <label class="sh-study-choice" onclick="selectStudyMode(this)">
+                        <input type="radio" name="sessionMode" value="DECK_BY_DECK">
                         <div class="sh-study-choice-icon">
                             <i data-lucide="layers"></i>
                         </div>
@@ -66,7 +66,7 @@
                             Study one deck at a time. Define the order yourself or let it randomize.
                         </div>
                     </label>
-                    <label class="sh-study-choice">
+                    <label class="sh-study-choice" onclick="selectStudyMode(this)">
                         <input type="radio" name="sessionMode" value="SHUFFLED">
                         <div class="sh-study-choice-icon">
                             <i data-lucide="shuffle"></i>
@@ -311,6 +311,47 @@
         return checked ? checked.value : 'DECK_BY_DECK';
       }
 
+      window.selectStudyMode = function(element) {
+        if (element.classList.contains('is-selected-animating')) return;
+
+        const radio = element.querySelector('input[type="radio"]');
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change'));
+
+        const container = element.closest('.sh-study-mode-grid');
+        const allCards = container.querySelectorAll('.sh-study-choice');
+        
+        // Calculate slide offset to middle
+        const rect = element.getBoundingClientRect();
+        const parentRect = container.getBoundingClientRect();
+        const elementCenter = rect.left + rect.width / 2;
+        const parentCenter = parentRect.left + parentRect.width / 2;
+        const slideX = parentCenter - elementCenter;
+
+        allCards.forEach(card => {
+          if (card === element) {
+            card.style.setProperty('--slide-x', `${slideX}px`);
+            card.classList.add('is-selected-animating');
+          } else {
+            card.classList.add('is-unselected');
+          }
+        });
+
+        setTimeout(() => {
+          element.classList.add('is-final-fade');
+          setTimeout(() => {
+            wizardNext();
+            // Reset animation classes for if the user comes back
+            setTimeout(() => {
+                allCards.forEach(c => {
+                    c.classList.remove('is-selected-animating', 'is-unselected', 'is-final-fade');
+                    c.style.removeProperty('--slide-x');
+                });
+            }, 800);
+          }, 600);
+        }, 900);
+      };
+
       function maxSteps() {
         return getMode() === 'DECK_BY_DECK' ? 3 : 2;
       }
@@ -370,8 +411,11 @@
         const isLast = currentStep === max;
 
         document.getElementById('wizard-btn-back').style.display = currentStep > 1 ? '' : 'none';
-        document.getElementById('wizard-btn-next').style.display = isLast ? 'none' : '';
+        document.getElementById('wizard-btn-next').style.display = (isLast || currentStep === 1) ? 'none' : '';
         document.getElementById('wizard-btn-submit').style.display = isLast ? '' : 'none';
+        
+        const footer = document.querySelector('.sh-wizard-footer');
+        if (footer) footer.style.display = currentStep === 1 ? 'none' : '';
       }
 
       // ── Validation ────────────────────────────────────────────────────────────
