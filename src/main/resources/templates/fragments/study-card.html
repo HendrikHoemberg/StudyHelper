@@ -52,7 +52,7 @@
                         <form method="post"
                                hx-post="/session/answer"
                                hx-target="#study-session-content"
-                               hx-swap="outerHTML">
+                               hx-swap="outerHTML swap:500ms">
                             <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
                             <input type="hidden" name="isCorrect" value="true">
                             <button type="submit" class="sh-study-btn-answer sh-study-btn-correct"
@@ -64,7 +64,7 @@
                         <form method="post"
                                hx-post="/session/answer"
                                hx-target="#study-session-content"
-                               hx-swap="outerHTML">
+                               hx-swap="outerHTML swap:500ms">
                             <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
                             <input type="hidden" name="isCorrect" value="false">
                             <button type="submit" class="sh-study-btn-answer sh-study-btn-incorrect"

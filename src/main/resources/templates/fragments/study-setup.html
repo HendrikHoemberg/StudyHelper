@@ -48,7 +48,7 @@
           method="post"
           hx-post="/study/session"
           hx-target="#study-session-content"
-          hx-swap="outerHTML">
+          hx-swap="outerHTML swap:500ms">
 
         <div class="sh-card-body sh-wizard-body">
 
@@ -125,7 +125,7 @@
                                        th:disabled="${group.selectableDeckCount == 0}"
                                        hx-post="/study/setup/update"
                                        th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + group.folderId + '}'}"
-                                       hx-target="#setup-picker"
+                                       hx-target="#setup-picker" hx-swap="outerHTML"
                                        hx-include="[name='selectedDeckIds']">
                                 <span class="vb-group-cap">
                                     <i th:attr="data-lucide=${group.folderIcon}"></i>
@@ -153,7 +153,7 @@
                                            th:disabled="${deck.cardCount == 0}"
                                            th:attr="data-card-count=${deck.cardCount}"
                                            hx-post="/study/setup/update"
-                                           hx-target="#setup-picker"
+                                           hx-target="#setup-picker" hx-swap="outerHTML"
                                            hx-include="[name='selectedDeckIds']">
                                     <span class="vb-deck-icon">
                                         <i data-lucide="layers"></i>
@@ -178,7 +178,7 @@
                                                th:disabled="${sub.selectableDeckCount == 0}"
                                                hx-post="/study/setup/update"
                                                th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + sub.folderId + '}'}"
-                                               hx-target="#setup-picker"
+                                               hx-target="#setup-picker" hx-swap="outerHTML"
                                                hx-include="[name='selectedDeckIds']">
                                         <span class="vb-subgroup-cap">
                                             <i th:attr="data-lucide=${sub.folderIcon}"></i>
@@ -203,7 +203,7 @@
                                                    th:disabled="${deck.cardCount == 0}"
                                                    th:attr="data-card-count=${deck.cardCount}"
                                                    hx-post="/study/setup/update"
-                                                   hx-target="#setup-picker"
+                                                   hx-target="#setup-picker" hx-swap="outerHTML"
                                                    hx-include="[name='selectedDeckIds']">
                                             <span class="vb-deck-icon">
                                                 <i data-lucide="layers"></i>
@@ -383,6 +383,23 @@
       }
 
       function goToStep(step) {
+        if (currentStep === step) return;
+        
+        const activePanel = document.querySelector('.sh-wizard-panel.is-active');
+        if (activePanel) {
+          activePanel.classList.add('is-fading-out');
+          activePanel.classList.remove('is-active');
+          
+          setTimeout(() => {
+            activePanel.classList.remove('is-fading-out');
+            switchContent(step);
+          }, 500);
+        } else {
+          switchContent(step);
+        }
+      }
+
+      function switchContent(step) {
         currentStep = step;
 
         document.querySelectorAll('.sh-wizard-panel').forEach((panel, i) => {
@@ -391,6 +408,7 @@
 
         updateStepIndicator();
         updateNavButtons();
+        if (typeof initLucide === 'function') initLucide();
       }
 
       function updateStepIndicator() {

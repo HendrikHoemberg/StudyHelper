@@ -2545,10 +2545,19 @@ textarea.sh-input {
     padding: 1.5rem;
     flex-direction: column;
     gap: 1.25rem;
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sh-wizard-panel.is-active {
     display: flex;
+    opacity: 1;
+}
+
+.sh-wizard-panel.is-fading-out {
+    display: flex;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .sh-wizard-footer {
@@ -3047,7 +3056,22 @@ textarea.sh-input {
    ============================================================ */
 
 .sh-fade-in {
-    animation: shFadeIn 0.22s ease-out;
+    animation: shFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* HTMX Swap Animations (restricted to main container) */
+#study-session-content.htmx-swapping {
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+}
+
+#study-session-content.htmx-added {
+    opacity: 0;
+}
+
+#study-session-content.htmx-added.sh-fade-in,
+#study-session-content.htmx-added {
+    animation: shFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .app-main-content>.sh-fade-in {
@@ -3060,12 +3084,10 @@ textarea.sh-input {
 @keyframes shFadeIn {
     from {
         opacity: 0;
-        transform: translateY(6px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
     }
 }
 
