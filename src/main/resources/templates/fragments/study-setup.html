@@ -53,7 +53,7 @@
         <div class="sh-card-body sh-wizard-body">
 
             <!-- Panel 1: Mode -->
-            <div class="sh-wizard-panel is-active" id="wizard-panel-1">
+            <div class="sh-wizard-panel is-active is-active-fade" id="wizard-panel-1">
                 <div class="sh-section-title">How do you want to study?</div>
                 <div class="sh-study-mode-grid">
                     <label class="sh-study-choice" onclick="selectStudyMode(this)">
@@ -387,6 +387,7 @@
         
         const activePanel = document.querySelector('.sh-wizard-panel.is-active');
         if (activePanel) {
+          activePanel.classList.remove('is-active-fade');
           activePanel.classList.add('is-fading-out');
           activePanel.classList.remove('is-active');
           
@@ -403,7 +404,16 @@
         currentStep = step;
 
         document.querySelectorAll('.sh-wizard-panel').forEach((panel, i) => {
-          panel.classList.toggle('is-active', (i + 1) === step);
+          const isTarget = (i + 1) === step;
+          panel.classList.toggle('is-active', isTarget);
+          
+          if (isTarget) {
+            // Force reflow to ensure transition runs after display: flex
+            panel.offsetHeight;
+            panel.classList.add('is-active-fade');
+          } else {
+            panel.classList.remove('is-active-fade');
+          }
         });
 
         updateStepIndicator();

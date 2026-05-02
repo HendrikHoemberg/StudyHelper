@@ -2551,6 +2551,9 @@ textarea.sh-input {
 
 .sh-wizard-panel.is-active {
     display: flex;
+}
+
+.sh-wizard-panel.is-active-fade {
     opacity: 1;
 }
 
