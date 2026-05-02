@@ -58,20 +58,22 @@
                 <div class="sh-study-mode-grid">
                     <label class="sh-study-choice">
                         <input type="radio" name="sessionMode" value="DECK_BY_DECK" checked>
-                        <div>
-                            <div class="sh-study-choice-title">Deck-by-Deck</div>
-                            <div class="sh-study-choice-subtitle">
-                                Study one deck at a time. Define the order yourself or let it randomize.
-                            </div>
+                        <div class="sh-study-choice-icon">
+                            <i data-lucide="layers"></i>
+                        </div>
+                        <div class="sh-study-choice-title">Deck-by-Deck</div>
+                        <div class="sh-study-choice-subtitle">
+                            Study one deck at a time. Define the order yourself or let it randomize.
                         </div>
                     </label>
                     <label class="sh-study-choice">
                         <input type="radio" name="sessionMode" value="SHUFFLED">
-                        <div>
-                            <div class="sh-study-choice-title">Shuffled</div>
-                            <div class="sh-study-choice-subtitle">
-                                Mix cards from all selected decks into one randomized queue.
-                            </div>
+                        <div class="sh-study-choice-icon">
+                            <i data-lucide="shuffle"></i>
+                        </div>
+                        <div class="sh-study-choice-title">Shuffled</div>
+                        <div class="sh-study-choice-subtitle">
+                            Mix cards from all selected decks into one randomized queue.
                         </div>
                     </label>
                 </div>
@@ -468,6 +470,7 @@
       updateStepIndicator();
       updateNavButtons();
       updateCardCount();
+      if (typeof initLucide === 'function') initLucide();
 
     })();
     </script>
