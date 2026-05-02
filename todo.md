@@ -9,3 +9,4 @@
 - make navbar bigger
 - maybe remove My library section in dashboard
 - make folders in session creation collapsed by default
+- Let users customize colors and background images in settings
