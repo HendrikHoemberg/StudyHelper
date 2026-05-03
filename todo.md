@@ -2,7 +2,6 @@
 - fix folder collapse animation
 - Lucide -> iconify
 - Deck creation -> last card "add/+" empty card
-- [x] Start Study Sessions from within folders 
 - redesign step 3 of session creation
 - endscreen maybe konfetti animation?
 - make navbar bigger

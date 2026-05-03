@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
 
 @Controller
@@ -36,14 +37,15 @@ public class DeckController {
                              @RequestParam String name,
                              Principal principal,
                              @RequestHeader(value = "HX-Request", required = false) String hxRequest,
-                             @RequestHeader(value = "HX-Current-URL", required = false) String currentUrl) {
+                             HttpServletResponse response) {
         User user = userService.getByUsername(principal.getName());
-        deckService.createDeck(name, folderId, user);
+        Deck deck = deckService.createDeck(name, folderId, user);
 
-        if (hxRequest != null && currentUrl != null) {
-            return "redirect:" + currentUrl;
+        if (hxRequest != null) {
+            response.setHeader("HX-Push-Url", "/decks/" + deck.getId());
+            return "redirect:/decks/" + deck.getId();
         }
-        return "redirect:/folders/" + folderId;
+        return "redirect:/decks/" + deck.getId();
     }
 
     @GetMapping("/decks/{id}")

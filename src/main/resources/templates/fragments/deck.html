@@ -68,21 +68,8 @@
 
     <!-- Flashcard list -->
     <div th:fragment="flashcardList" id="flashcard-list">
-        <!-- Empty state -->
-        <div th:if="${#lists.isEmpty(flashcards)}" class="sh-card">
-            <div class="sh-card-body">
-                <div class="sh-empty" style="padding:1.5rem;">
-                    <div class="sh-empty-icon">
-                        <i data-lucide="file-text"></i>
-                    </div>
-                    <p class="sh-empty-text">No flashcards yet</p>
-                    <p class="sh-empty-hint">Add your first card to start studying.</p>
-                </div>
-            </div>
-        </div>
-
         <!-- Flashcard grid -->
-        <div th:if="${!#lists.isEmpty(flashcards)}" class="sh-flashcard-grid">
+        <div class="sh-flashcard-grid">
             <div th:each="card : ${flashcards}" class="sh-flashcard">
                 <div class="sh-flashcard-actions">
                     <button class="sh-btn sh-btn-ghost sh-btn-icon sh-btn-sm"
@@ -117,6 +104,14 @@
                     </div>
                     <div class="sh-flashcard-text" th:text="${card.backText}">Answer</div>
                 </div>
+            </div>
+
+            <!-- Add Card Placeholder -->
+            <div class="sh-flashcard sh-flashcard-add"
+                 th:hx-get="@{/decks/{id}/flashcards/new(id=${deck.id})}"
+                 hx-target="#modal-placeholder">
+                <i data-lucide="plus"></i>
+                <span class="sh-flashcard-label">Add Card</span>
             </div>
         </div>
     </div>

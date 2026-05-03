@@ -1653,11 +1653,47 @@ textarea.sh-input {
     transition: all var(--transition);
     position: relative;
 }
-
 .sh-flashcard:hover {
     box-shadow: var(--shadow-md);
     border-color: var(--border);
     transform: translateY(-1px);
+}
+
+.sh-flashcard-add {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed color-mix(in srgb, var(--accent) 35%, var(--border));
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    cursor: pointer;
+    color: color-mix(in srgb, var(--accent) 65%, var(--text-secondary));
+    min-height: 160px;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    transition: all var(--transition);
+    border-radius: var(--radius);
+}
+
+.sh-flashcard-add:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.sh-flashcard-add i {
+    width: 40px;
+    height: 40px;
+    stroke-width: 2.2;
+}
+
+.sh-flashcard-add .sh-flashcard-label {
+    margin-bottom: 0;
+    color: inherit;
+    font-size: 0.75rem;
+    font-weight: 800;
 }
 
 .sh-flashcard-label {
