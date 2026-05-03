@@ -479,8 +479,10 @@
         btn.disabled = on;
         var icon = btn.querySelector('[data-lucide]');
         if (icon) {
-            icon.setAttribute('data-lucide', on ? 'loader-2' : 'save');
-            icon.className = on ? 'sh-ie-spin' : '';
+            var newIcon = document.createElement('i');
+            newIcon.setAttribute('data-lucide', on ? 'loader-2' : 'save');
+            if (on) newIcon.className = 'sh-ie-spin';
+            icon.parentNode.replaceChild(newIcon, icon);
             if (typeof initLucide === 'function') initLucide();
         }
         if (label) label.textContent = on ? 'Saving…' : 'Save';
