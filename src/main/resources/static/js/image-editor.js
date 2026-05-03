@@ -314,7 +314,8 @@
             if (newZoom === _zoom) return;
 
             // Zoom toward the pointer position
-            var rect  = wrap.getBoundingClientRect();
+            var container = _fc.wrapperEl || _fc.getElement().parentNode;
+            var rect  = container.getBoundingClientRect();
             var point = new fabric.Point(
                 e.clientX - rect.left,
                 e.clientY - rect.top
@@ -402,11 +403,16 @@
                 var canvasH = _fc.height;
                 var scale   = Math.min(canvasW / img.width, canvasH / img.height, 1);
 
+                var newW = img.width * scale;
+                var newH = img.height * scale;
+                
+                _fc.setDimensions({ width: newW, height: newH });
+
                 img.set({
                     scaleX:        scale,
                     scaleY:        scale,
-                    left:          (canvasW - img.width  * scale) / 2,
-                    top:           (canvasH - img.height * scale) / 2,
+                    left:          0,
+                    top:           0,
                     selectable:    false,
                     evented:       false,
                     hasControls:   false,
@@ -511,13 +517,21 @@
     // ── Save ─────────────────────────────────────────────────────────
     function _handleSave(choice) {
         if (!_opts || !_opts.onSave) { close(); return; }
+
+        var customName;
+        if (choice === 'new') {
+            customName = prompt('Enter a name for the new file:', _opts.filename || 'image.png');
+            if (customName === null) return; // user cancelled
+            if (customName.trim() === '') customName = 'image.png';
+        }
+
         _showFooterError('');
         _setSaveSpinner(true);
 
         var blob = _exportPNG();
         var result;
         try {
-            result = _opts.onSave(blob, choice || 'overwrite');
+            result = _opts.onSave(blob, choice || 'overwrite', customName);
         } catch (err) {
             _showFooterError(err.message || 'Save failed.');
             _setSaveSpinner(false);
@@ -894,8 +908,9 @@
                 source:   url,
                 filename: filename,
                 mode:     'file-existing',
-                onSave:   function(blob, choice) {
-                    return _saveFileEdit(blob, choice, fileId, folderId, filename);
+                onSave:   function(blob, choice, customName) {
+                    var saveFilename = customName || filename;
+                    return _saveFileEdit(blob, choice, fileId, folderId, saveFilename);
                 },
             });
         });
