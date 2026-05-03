@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initLucide();
     initTopnav();
     initCsrf();
+    initLightbox();
 });
 
 // Re-run initializations after HTMX swaps
@@ -21,6 +22,33 @@ document.body.addEventListener('htmx:afterSettle', (e) => {
         target.classList.add('animate-fade-in');
     }
 });
+
+/* ---------- Global Lightbox ---------- */
+function initLightbox() {
+    const lb = document.getElementById('sh-lightbox');
+    if (!lb) return;
+
+    const lbImg = document.getElementById('sh-lightbox-img');
+
+    document.body.addEventListener('click', (e) => {
+        const trigger = e.target.closest('.sh-lightbox-trigger');
+        if (trigger) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Try to get image source from src, data-src, or href
+            const src = trigger.src || trigger.dataset.src || trigger.href;
+            if (src) {
+                lbImg.src = src;
+                lb.style.display = 'flex';
+            }
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') lb.style.display = 'none';
+    });
+}
 
 /* ---------- CSRF ---------- */
 function initCsrf() {

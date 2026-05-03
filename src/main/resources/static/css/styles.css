@@ -3474,12 +3474,14 @@ textarea.sh-input {
 .sh-lightbox {
     position: fixed;
     inset: 0;
-    z-index: 1000;
-    background: rgba(0, 0, 0, 0.82);
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: sh-fade-in-fast 0.15s ease;
+    animation: sh-fade-in-fast 0.2s ease;
 }
 
 .sh-lightbox-img {

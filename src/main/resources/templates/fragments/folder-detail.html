@@ -188,6 +188,7 @@
                                 Edit
                             </button>
                             <a th:href="@{/files/{id}/view(id=${file.id})}" target="_blank"
+                               th:classappend="${#strings.startsWith(file.mimeType, 'image/')} ? 'sh-lightbox-trigger' : ''"
                                class="sh-btn sh-btn-ghost sh-btn-sm">View</a>
                             <a th:href="@{/files/{id}/download(id=${file.id})}"
                                class="sh-btn sh-btn-ghost sh-btn-sm">Download</a>

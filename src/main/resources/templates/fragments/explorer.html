@@ -86,6 +86,7 @@
                      th:style="'--folder-color:' + ${file.folderColorHex}">
                     <a th:href="@{/files/{id}/view(id=${file.id})}"
                        target="_blank"
+                       th:classappend="${#strings.startsWith(file.mimeType, 'image/')} ? 'sh-lightbox-trigger' : ''"
                        class="sh-deck-cover">
                         <img th:if="${#strings.startsWith(file.mimeType, 'image/')}"
                              th:src="@{/files/{id}/view(id=${file.id})}"

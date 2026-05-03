@@ -33,7 +33,7 @@
                         <div class="sh-img-zone" id="front-img-zone">
                             <div th:if="${frontImageUrl}" class="sh-img-preview-wrap" id="front-preview-wrap"
                                  th:attr="data-existing-url=${frontImageUrl}">
-                                <img th:src="${frontImageUrl}" class="sh-img-preview" alt="Front image">
+                                <img th:src="${frontImageUrl}" class="sh-img-preview sh-lightbox-trigger" alt="Front image">
                                 <button type="button" class="sh-img-edit-btn" data-side="front" aria-label="Edit image">
                                     <i data-lucide="pencil"></i>
                                 </button>
@@ -62,7 +62,7 @@
                         <div class="sh-img-zone" id="back-img-zone">
                             <div th:if="${backImageUrl}" class="sh-img-preview-wrap" id="back-preview-wrap"
                                  th:attr="data-existing-url=${backImageUrl}">
-                                <img th:src="${backImageUrl}" class="sh-img-preview" alt="Back image">
+                                <img th:src="${backImageUrl}" class="sh-img-preview sh-lightbox-trigger" alt="Back image">
                                 <button type="button" class="sh-img-edit-btn" data-side="back" aria-label="Edit image">
                                     <i data-lucide="pencil"></i>
                                 </button>
@@ -89,15 +89,7 @@
             </form>
         </div>
     </div>
-    <!-- Image lightbox (above modal layer) -->
-    <div id="sh-form-lightbox" class="sh-lightbox" style="display:none;z-index:1100;"
-         onclick="this.style.display='none'">
-        <button class="sh-lightbox-close"
-                onclick="document.getElementById('sh-form-lightbox').style.display='none'">
-            <i data-lucide="x"></i>
-        </button>
-        <img id="sh-form-lightbox-img" class="sh-lightbox-img" src="" alt="Full size image">
-    </div>
+
 
     <script>
         (function() {
@@ -108,30 +100,15 @@
                 if (firstInput) firstInput.focus();
             }
 
-            function openLightbox(src) {
-                var lb = document.getElementById('sh-form-lightbox');
-                document.getElementById('sh-form-lightbox-img').src = src;
-                lb.style.display = 'flex';
-            }
-
+            // Removed local lightbox handling (now global)
             function bindLightbox(img) {
-                img.style.cursor = 'zoom-in';
-                img.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    openLightbox(img.src);
-                });
+                img.classList.add('sh-lightbox-trigger');
             }
 
             document.querySelectorAll('.sh-img-preview').forEach(bindLightbox);
 
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    var lb = document.getElementById('sh-form-lightbox');
-                    if (lb && lb.style.display !== 'none') {
-                        e.stopImmediatePropagation();
-                        lb.style.display = 'none';
-                    }
-                }
+                // Global Escape handler in app.js takes care of lightbox
             });
 
             function setupZone(zoneId, inputId, dropLabelId, removeInputId, removeBtnId, side) {

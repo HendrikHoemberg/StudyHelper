@@ -6,6 +6,4 @@
 - maybe remove My library section in dashboard
 - make folders in session creation collapsed by default
 - Let users customize colors and background images in settings
-- Delete action into file-edit-modal and rename-deck-modal
-- viewing an image currently opens up a new page. it should open up in the current page 
 - zooming into picture edit kinda broken

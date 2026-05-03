@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="lightbox" id="sh-lightbox" class="sh-lightbox" style="display:none;" onclick="this.style.display='none'">
+    <button class="sh-lightbox-close" onclick="document.getElementById('sh-lightbox').style.display='none'">
+        <i data-lucide="x"></i>
+    </button>
+    <div class="sh-lightbox-content" onclick="event.stopPropagation()">
+        <img id="sh-lightbox-img" class="sh-lightbox-img" src="" alt="Full size image">
+    </div>
+</div>
+
+</body>
+</html>
