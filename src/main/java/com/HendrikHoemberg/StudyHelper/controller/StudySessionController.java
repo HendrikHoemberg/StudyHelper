@@ -104,6 +104,38 @@ public class StudySessionController {
         return "study-page";
     }
 
+    @GetMapping("/folders/{id}/study/start")
+    public String startFromFolder(@PathVariable Long id,
+                                  Model model,
+                                  Principal principal,
+                                  @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                                  HttpServletResponse response) {
+        if (principal == null) {
+            return "redirect:/login";
+        }
+        User user = userService.getByUsername(principal.getName());
+        model.addAttribute("username", user.getUsername());
+
+        try {
+            List<StudyDeckOption> decks = folderService.getAllDecksInFolder(id, user);
+            List<Long> ids = decks.stream()
+                    .filter(d -> d.cardCount() > 0)
+                    .map(StudyDeckOption::deckId)
+                    .toList();
+            prepareSetupModel(model, user, ids, null);
+        } catch (NoSuchElementException ex) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            prepareSetupModel(model, user, List.of(), "Folder does not belong to the current user.");
+        }
+
+        if (hxRequest != null) {
+            return "fragments/study-setup :: studySetup";
+        }
+
+        model.addAttribute("studyStateView", VIEW_SETUP);
+        return "study-page";
+    }
+
     @PostMapping("/study/setup/update")
     public String updateSetup(@RequestParam(name = "selectedDeckIds", required = false) List<Long> selectedDeckIds,
                               @RequestParam(name = "orderedDeckIds", required = false) String orderedDeckIds,

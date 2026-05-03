@@ -44,6 +44,14 @@
             </div>
         </div>
         <div class="sh-page-actions">
+            <a th:if="${view.totalCardCount > 0}"
+               class="sh-btn sh-btn-primary sh-btn-sm"
+               th:href="@{/folders/{id}/study/start(id=${view.folder.id})}"
+               hx-get th:hx-get="@{/folders/{id}/study/start(id=${view.folder.id})}"
+               hx-target="#explorer-detail" hx-push-url="true">
+                <i data-lucide="play"></i>
+                Study
+            </a>
             <button th:if="${view.folder.parentFolder == null}" class="sh-btn sh-btn-secondary sh-btn-sm" 
                     th:hx-get="@{/folders/new(parentId=${view.folder.id})}" hx-target="#modal-placeholder">
                 <i data-lucide="folder-plus"></i>
