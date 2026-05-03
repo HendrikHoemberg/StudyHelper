@@ -18,7 +18,8 @@
                   hx-encoding="multipart/form-data"
                   hx-target="#flashcard-list"
                   hx-swap="innerHTML"
-                  hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
+                  hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()"
+                  th:attr="data-flashcard-id=${flashcard?.id}">
 
                 <input th:if="${deckId != null}" type="hidden" name="deckId" th:value="${deckId}">
 
@@ -30,8 +31,12 @@
                                   placeholder="Enter the question or prompt..."
                                   th:text="${flashcard?.frontText}"></textarea>
                         <div class="sh-img-zone" id="front-img-zone">
-                            <div th:if="${frontImageUrl}" class="sh-img-preview-wrap" id="front-preview-wrap">
+                            <div th:if="${frontImageUrl}" class="sh-img-preview-wrap" id="front-preview-wrap"
+                                 th:attr="data-existing-url=${frontImageUrl}">
                                 <img th:src="${frontImageUrl}" class="sh-img-preview" alt="Front image">
+                                <button type="button" class="sh-img-edit-btn" data-side="front" aria-label="Edit image">
+                                    <i data-lucide="pencil"></i>
+                                </button>
                                 <button type="button" class="sh-img-remove-btn" id="front-remove-btn">
                                     <i data-lucide="x"></i>
                                 </button>
@@ -55,8 +60,12 @@
                                   placeholder="Enter the answer..."
                                   th:text="${flashcard?.backText}"></textarea>
                         <div class="sh-img-zone" id="back-img-zone">
-                            <div th:if="${backImageUrl}" class="sh-img-preview-wrap" id="back-preview-wrap">
+                            <div th:if="${backImageUrl}" class="sh-img-preview-wrap" id="back-preview-wrap"
+                                 th:attr="data-existing-url=${backImageUrl}">
                                 <img th:src="${backImageUrl}" class="sh-img-preview" alt="Back image">
+                                <button type="button" class="sh-img-edit-btn" data-side="back" aria-label="Edit image">
+                                    <i data-lucide="pencil"></i>
+                                </button>
                                 <button type="button" class="sh-img-remove-btn" id="back-remove-btn">
                                     <i data-lucide="x"></i>
                                 </button>
@@ -125,7 +134,7 @@
                 }
             });
 
-            function setupZone(zoneId, inputId, dropLabelId, removeInputId, removeBtnId) {
+            function setupZone(zoneId, inputId, dropLabelId, removeInputId, removeBtnId, side) {
                 var zone = document.getElementById(zoneId);
                 var input = document.getElementById(inputId);
                 var dropLabel = document.getElementById(dropLabelId);
@@ -173,6 +182,14 @@
                     img.alt = 'Preview';
                     bindLightbox(img);
 
+                    var editBtn = document.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'sh-img-edit-btn';
+                    editBtn.setAttribute('data-side', side);
+                    editBtn.setAttribute('aria-label', 'Edit image');
+                    editBtn.innerHTML = '<i data-lucide="pencil"></i>';
+                    editBtn.addEventListener('click', function() { openEditor(side); });
+
                     var btn = document.createElement('button');
                     btn.type = 'button';
                     btn.className = 'sh-img-remove-btn';
@@ -180,6 +197,7 @@
                     btn.addEventListener('click', clearPreview);
 
                     wrap.appendChild(img);
+                    wrap.appendChild(editBtn);
                     wrap.appendChild(btn);
                     zone.insertBefore(wrap, dropLabel);
 
@@ -200,8 +218,64 @@
                 }
             }
 
-            setupZone('front-img-zone', 'frontImageInput', 'front-drop-label', 'removeFrontImage', 'front-remove-btn');
-            setupZone('back-img-zone',  'backImageInput',  'back-drop-label',  'removeBackImage',  'back-remove-btn');
+            setupZone('front-img-zone', 'frontImageInput', 'front-drop-label', 'removeFrontImage', 'front-remove-btn', 'front');
+            setupZone('back-img-zone',  'backImageInput',  'back-drop-label',  'removeBackImage',  'back-remove-btn',  'back');
+
+            function csrfHeaders() {
+                var tokenEl  = document.querySelector('meta[name="_csrf"]');
+                var headerEl = document.querySelector('meta[name="_csrf_header"]');
+                var h = {};
+                if (tokenEl && headerEl) h[headerEl.content] = tokenEl.content;
+                return h;
+            }
+
+            var flashcardForm = document.querySelector('.sh-modal form[data-flashcard-id]');
+            var flashcardId   = flashcardForm ? flashcardForm.dataset.flashcardId : null;
+
+            function openEditor(side) {
+                var input = document.getElementById(side + 'ImageInput');
+                var wrap  = document.getElementById(side + '-preview-wrap');
+                var existingUrl = wrap ? wrap.dataset.existingUrl : null;
+
+                if (input && input.files && input.files[0]) {
+                    var origFile = input.files[0];
+                    ImageEditor.open({
+                        source:   origFile,
+                        filename: origFile.name,
+                        mode:     'flashcard-new',
+                        onSave: function(blob) {
+                            var newName = origFile.name.replace(/\.[^.]+$/, '') + '.png';
+                            var file = new File([blob], newName, { type: 'image/png' });
+                            var dt = new DataTransfer();
+                            dt.items.add(file);
+                            input.files = dt.files;
+                            input.dispatchEvent(new Event('change', { bubbles: true }));
+                        },
+                    });
+                } else if (existingUrl) {
+                    ImageEditor.open({
+                        source:   existingUrl,
+                        filename: side + '.png',
+                        mode:     'flashcard-existing',
+                        onSave: function(blob) {
+                            var fd = new FormData();
+                            fd.append('image', blob, side + '.png');
+                            return fetch('/flashcards/' + flashcardId + '/images/' + side,
+                                         { method: 'POST', body: fd, headers: csrfHeaders() })
+                                .then(function(resp) {
+                                    if (!resp.ok) throw new Error('Save failed');
+                                    var imgEl = document.getElementById(side + '-preview-wrap');
+                                    imgEl = imgEl ? imgEl.querySelector('img') : null;
+                                    if (imgEl) imgEl.src = existingUrl + '?v=' + Date.now();
+                                });
+                        },
+                    });
+                }
+            }
+
+            document.querySelectorAll('.sh-img-edit-btn[data-side]').forEach(function(btn) {
+                btn.addEventListener('click', function() { openEditor(btn.dataset.side); });
+            });
         })();
     </script>
 </div>

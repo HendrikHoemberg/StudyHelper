@@ -4,7 +4,9 @@ import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
 import com.HendrikHoemberg.StudyHelper.service.FileStorageService;
+import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
+import com.HendrikHoemberg.StudyHelper.service.FolderView;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -24,13 +26,16 @@ public class FileController {
     private final FileEntryService fileEntryService;
     private final FileStorageService fileStorageService;
     private final UserService userService;
+    private final FolderService folderService;
 
     public FileController(FileEntryService fileEntryService,
                           FileStorageService fileStorageService,
-                          UserService userService) {
+                          UserService userService,
+                          FolderService folderService) {
         this.fileEntryService = fileEntryService;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
+        this.folderService = folderService;
     }
 
     @GetMapping("/folders/{folderId}/files/upload")
@@ -76,6 +81,20 @@ public class FileController {
             .header(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + entry.getOriginalFilename() + "\"")
             .body(resource);
+    }
+
+    @PostMapping(value = "/files/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String editOverwrite(@PathVariable Long id,
+                                @RequestParam("image") MultipartFile image,
+                                Principal principal,
+                                Model model) throws IOException {
+        User user = userService.getByUsername(principal.getName());
+        Long folderId = fileEntryService.replaceContents(id, image, user);
+        FolderView view = folderService.getFolderView(folderId, user, null, "asc");
+        model.addAttribute("view", view);
+        model.addAttribute("sortBy", null);
+        model.addAttribute("direction", "asc");
+        return "fragments/folder-detail :: filesTable";
     }
 
     @PostMapping("/files/{id}/delete")

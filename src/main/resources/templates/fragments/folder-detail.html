@@ -172,6 +172,15 @@
                         <td class="sh-file-meta" th:data-timestamp="${file.uploadedAt}"
                             th:text="${#temporals.format(file.uploadedAt, 'dd MMM yyyy HH:mm')}">01 Jan 2025</td>
                         <td style="text-align:right; white-space:nowrap;">
+                            <button th:if="${#strings.startsWith(file.mimeType, 'image/')}"
+                                    class="sh-btn sh-btn-ghost sh-btn-sm"
+                                    th:attr="data-edit-image=${file.id},
+                                             data-edit-url=@{/files/{id}/view(id=${file.id})},
+                                             data-edit-folder=${view.folder.id},
+                                             data-edit-filename=${file.originalFilename}">
+                                <i data-lucide="pencil"></i>
+                                Edit
+                            </button>
                             <a th:href="@{/files/{id}/view(id=${file.id})}" target="_blank"
                                class="sh-btn sh-btn-ghost sh-btn-sm">View</a>
                             <a th:href="@{/files/{id}/download(id=${file.id})}"

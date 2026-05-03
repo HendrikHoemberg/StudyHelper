@@ -119,6 +119,19 @@ public class FlashcardController {
         return "redirect:/decks/" + deckId;
     }
 
+    @PostMapping(value = "/flashcards/{id}/images/{side}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> replaceImage(@PathVariable Long id,
+                                             @PathVariable String side,
+                                             @RequestParam("image") MultipartFile image,
+                                             Principal principal) {
+        if (!"front".equals(side) && !"back".equals(side)) {
+            return ResponseEntity.badRequest().build();
+        }
+        User user = userService.getByUsername(principal.getName());
+        flashcardService.replaceImage(id, side, image, user);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/flashcards/{id}/images/{side}")
     public ResponseEntity<Resource> serveImage(@PathVariable Long id,
                                                @PathVariable String side,

@@ -41,6 +41,10 @@ public class FileStorageService {
         }
     }
 
+    public void replaceContents(String storedFilename, MultipartFile file) throws IOException {
+        Files.copy(file.getInputStream(), uploadDir.resolve(storedFilename), StandardCopyOption.REPLACE_EXISTING);
+    }
+
     public void delete(String storedFilename) throws IOException {
         Files.deleteIfExists(uploadDir.resolve(storedFilename));
     }

@@ -123,6 +123,23 @@ public class FlashcardService {
             .orElseThrow(() -> new NoSuchElementException("Flashcard not found"));
     }
 
+    @Transactional
+    public void replaceImage(Long id, String side, MultipartFile image, User user) {
+        Flashcard card = flashcardRepository.findByIdAndDeckUserUsername(id, user.getUsername())
+            .orElseThrow(() -> new NoSuchElementException("Flashcard not found"));
+
+        String oldFilename = "front".equals(side) ? card.getFrontImageFilename() : card.getBackImageFilename();
+        String newFilename = storeImage(image);
+        deleteImageFile(oldFilename);
+
+        if ("front".equals(side)) {
+            card.setFrontImageFilename(newFilename);
+        } else {
+            card.setBackImageFilename(newFilename);
+        }
+        flashcardRepository.save(card);
+    }
+
     private String storeImage(MultipartFile file) {
         if (file == null || file.isEmpty()) return null;
         String mime = file.getContentType();

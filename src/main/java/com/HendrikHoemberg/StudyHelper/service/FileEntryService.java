@@ -80,6 +80,19 @@ public class FileEntryService {
     }
 
     @Transactional
+    public Long replaceContents(Long id, MultipartFile image, User user) throws IOException {
+        FileEntry entry = fileEntryRepository.findByIdAndUser(id, user)
+            .orElseThrow(() -> new NoSuchElementException("File not found"));
+
+        fileStorageService.replaceContents(entry.getStoredFilename(), image);
+        entry.setMimeType(image.getContentType() != null ? image.getContentType() : "application/octet-stream");
+        entry.setFileSizeBytes(image.getSize());
+
+        fileEntryRepository.save(entry);
+        return entry.getFolder().getId();
+    }
+
+    @Transactional
     public Long deleteAndGetFolderId(Long id, User user) throws IOException {
         FileEntry entry = fileEntryRepository.findByIdAndUser(id, user)
             .orElseThrow(() -> new NoSuchElementException("File not found"));
