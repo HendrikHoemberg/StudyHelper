@@ -80,6 +80,16 @@
             </form>
         </div>
     </div>
+    <!-- Image lightbox (above modal layer) -->
+    <div id="sh-form-lightbox" class="sh-lightbox" style="display:none;z-index:1100;"
+         onclick="this.style.display='none'">
+        <button class="sh-lightbox-close"
+                onclick="document.getElementById('sh-form-lightbox').style.display='none'">
+            <i data-lucide="x"></i>
+        </button>
+        <img id="sh-form-lightbox-img" class="sh-lightbox-img" src="" alt="Full size image">
+    </div>
+
     <script>
         (function() {
             initLucide();
@@ -88,6 +98,32 @@
                 var firstInput = modal.querySelector('textarea, input:not([type="hidden"]):not([type="file"])');
                 if (firstInput) firstInput.focus();
             }
+
+            function openLightbox(src) {
+                var lb = document.getElementById('sh-form-lightbox');
+                document.getElementById('sh-form-lightbox-img').src = src;
+                lb.style.display = 'flex';
+            }
+
+            function bindLightbox(img) {
+                img.style.cursor = 'zoom-in';
+                img.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openLightbox(img.src);
+                });
+            }
+
+            document.querySelectorAll('.sh-img-preview').forEach(bindLightbox);
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    var lb = document.getElementById('sh-form-lightbox');
+                    if (lb && lb.style.display !== 'none') {
+                        e.stopImmediatePropagation();
+                        lb.style.display = 'none';
+                    }
+                }
+            });
 
             function setupZone(zoneId, inputId, dropLabelId, removeInputId, removeBtnId) {
                 var zone = document.getElementById(zoneId);
@@ -135,6 +171,7 @@
                     img.src = URL.createObjectURL(file);
                     img.className = 'sh-img-preview';
                     img.alt = 'Preview';
+                    bindLightbox(img);
 
                     var btn = document.createElement('button');
                     btn.type = 'button';
@@ -153,6 +190,7 @@
                 }
 
                 function clearPreview() {
+                    if (!confirm('Remove this image from the flashcard?')) return;
                     var wrap = zone.querySelector('.sh-img-preview-wrap');
                     if (wrap) wrap.remove();
                     var lbl = document.getElementById(dropLabelId);

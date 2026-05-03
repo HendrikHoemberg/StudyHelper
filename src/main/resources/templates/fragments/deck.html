@@ -54,9 +54,11 @@
                 <i data-lucide="pencil"></i>
                 Rename
             </button>
-            <form th:action="@{/decks/{id}/delete(id=${deck.id})}" method="post" style="display:inline;">
-                <button type="submit" class="sh-btn sh-btn-danger sh-btn-sm"
-                        data-confirm="Delete this deck and all its flashcards?">
+            <form th:action="@{/decks/{id}/delete(id=${deck.id})}" method="post" style="display:inline;"
+                  hx-post th:hx-post="@{/decks/{id}/delete(id=${deck.id})}"
+                  hx-target="#explorer-detail"
+                  hx-confirm="Delete this deck and all its flashcards? This action cannot be undone.">
+                <button type="submit" class="sh-btn sh-btn-danger sh-btn-sm">
                     <i data-lucide="trash-2"></i>
                     Delete
                 </button>
