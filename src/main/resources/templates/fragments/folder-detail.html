@@ -69,7 +69,8 @@
             <button class="sh-btn sh-btn-danger sh-btn-sm"
                     th:hx-post="@{/folders/{id}/delete(id=${view.folder.id})}"
                     hx-confirm="Delete this folder and all its contents? This action cannot be undone."
-                    hx-target="body">
+                    hx-target="#explorer-detail"
+                    hx-push-url="true">
                 <i data-lucide="trash-2"></i>
                 Delete
             </button>
@@ -189,7 +190,7 @@
                                         style="color:var(--danger);"
                                         th:hx-post="@{/files/{id}/delete(id=${file.id})}"
                                         hx-confirm="Delete this file?"
-                                        hx-target="body">Delete</button>
+                                        hx-target="#explorer-detail">Delete</button>
                         </td>
                     </tr>
                 </tbody>
