@@ -23,7 +23,7 @@
                       hx-post th:hx-post="@{/files/{id}/rename(id=${file.id})}"
                       hx-target="#explorer-detail"
                       hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label class="sh-label">File Name</label>
                         <div class="flex items-stretch shadow-sm rounded-lg overflow-hidden border border-[var(--border-light)] focus-within:ring-2 focus-within:ring-[var(--accent-primary)] focus-within:border-[var(--accent-primary)] transition-all">
                             <input type="text" id="filename-base-input" 
@@ -39,8 +39,8 @@
                         </div>
                         <input type="hidden" name="name" id="filename-full-input" th:value="${file.originalFilename}">
                     </div>
-                    <div class="flex justify-end">
-                        <button type="submit" class="sh-btn sh-btn-primary">
+                    <div class="mt-1">
+                        <button type="submit" class="sh-btn sh-btn-primary w-full justify-center">
                             <i data-lucide="check"></i>
                             Save Name
                         </button>
@@ -48,7 +48,7 @@
                 </form>
 
                 <hr th:if="${#strings.startsWith(file.mimeType, 'image/')}" 
-                    style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-light);">
+                    style="margin: 0.75rem 0; border: none; border-top: 1px solid var(--border-light);">
 
                 <!-- Image Editor Section -->
                 <div th:if="${#strings.startsWith(file.mimeType, 'image/')}">
@@ -65,7 +65,15 @@
                 </div>
             </div>
             
-            <div class="sh-modal-footer">
+            <div class="sh-modal-footer flex justify-between items-center">
+                <button type="button" class="sh-btn sh-btn-danger"
+                        hx-post th:hx-post="@{/files/{id}/delete(id=${file.id})}"
+                        hx-target="#explorer-detail"
+                        hx-confirm="Are you sure you want to delete this file?"
+                        hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
+                    <i data-lucide="trash-2"></i>
+                    Delete
+                </button>
                 <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()">Close</button>
             </div>
         </div>
