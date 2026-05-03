@@ -2,7 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="editOptionsModal" class="sh-modal is-open" id="file-options-modal">
+<div th:fragment="editOptionsModal" class="sh-modal is-open" id="file-options-modal"
+     th:with="lastDot=${file.originalFilename.lastIndexOf('.')}, 
+              hasDot=${lastDot > 0},
+              baseName=${hasDot ? file.originalFilename.substring(0, lastDot) : file.originalFilename}, 
+              extension=${hasDot ? file.originalFilename.substring(lastDot) : ''}">
     <div class="sh-modal-backdrop" onclick="this.closest('.sh-modal').remove()"></div>
     <div class="sh-modal-dialog sh-modal-dialog-sm">
         <div class="sh-modal-content">
@@ -21,9 +25,19 @@
                       hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
                     <div class="mb-4">
                         <label class="sh-label">File Name</label>
-                        <input type="text" name="name" class="sh-input" required 
-                               th:value="${file.originalFilename}"
-                               placeholder="e.g. lesson-plan.pdf">
+                        <div class="flex items-stretch shadow-sm rounded-lg overflow-hidden border border-[var(--border-light)] focus-within:ring-2 focus-within:ring-[var(--accent-primary)] focus-within:border-[var(--accent-primary)] transition-all">
+                            <input type="text" id="filename-base-input" 
+                                   class="sh-input border-none shadow-none flex-grow focus:ring-0" 
+                                   required 
+                                   th:value="${baseName}"
+                                   placeholder="Filename">
+                            <div th:if="${hasDot}" 
+                                 class="flex items-center px-4 bg-[var(--bg-light)] text-[var(--text-muted)] font-medium border-l border-[var(--border-light)] select-none" 
+                                 th:text="${extension}">
+                                .pdf
+                            </div>
+                        </div>
+                        <input type="hidden" name="name" id="filename-full-input" th:value="${file.originalFilename}">
                     </div>
                     <div class="flex justify-end">
                         <button type="submit" class="sh-btn sh-btn-primary">
@@ -56,22 +70,20 @@
             </div>
         </div>
     </div>
-    <script>
+    <script th:inline="javascript">
         (function() {
             initLucide();
-            var modal = document.getElementById('file-options-modal');
-            if (modal) {
-                var input = modal.querySelector('input[name="name"]');
-                if (input) {
-                    input.focus();
-                    // Select filename without extension
-                    var lastDot = input.value.lastIndexOf('.');
-                    if (lastDot > 0) {
-                        input.setSelectionRange(0, lastDot);
-                    } else {
-                        input.select();
-                    }
-                }
+            var baseInput = document.getElementById('filename-base-input');
+            var fullInput = document.getElementById('filename-full-input');
+            var extension = /*[[${extension}]]*/ '';
+            
+            if (baseInput && fullInput) {
+                baseInput.focus();
+                baseInput.select();
+                
+                baseInput.addEventListener('input', function() {
+                    fullInput.value = baseInput.value + extension;
+                });
             }
         })();
     </script>
