@@ -100,11 +100,19 @@
                     </form>
                 </div>
                 <div class="sh-flashcard-front">
-                    <div class="sh-flashcard-label">Front</div>
+                    <div class="sh-flashcard-label">
+                        Front
+                        <i th:if="${card.frontImageFilename != null}" data-lucide="image"
+                           class="sh-flashcard-img-badge" title="Has image"></i>
+                    </div>
                     <div class="sh-flashcard-text" th:text="${card.frontText}">Question</div>
                 </div>
                 <div>
-                    <div class="sh-flashcard-label">Back</div>
+                    <div class="sh-flashcard-label">
+                        Back
+                        <i th:if="${card.backImageFilename != null}" data-lucide="image"
+                           class="sh-flashcard-img-badge" title="Has image"></i>
+                    </div>
                     <div class="sh-flashcard-text" th:text="${card.backText}">Answer</div>
                 </div>
             </div>

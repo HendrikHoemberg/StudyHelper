@@ -1646,6 +1646,16 @@ textarea.sh-input {
     letter-spacing: 0.1em;
     color: var(--text-muted);
     margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.sh-flashcard-img-badge {
+    width: 11px;
+    height: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
 }
 
 .sh-flashcard-text {
@@ -3362,8 +3372,66 @@ textarea.sh-input {
     margin-bottom: 0.75rem;
 }
 
+.sh-lightbox-trigger {
+    cursor: zoom-in;
+}
+
 @media (max-width: 600px) {
     .sh-study-card-image {
         max-height: 140px;
     }
+}
+
+/* ============================================================
+   IMAGE LIGHTBOX
+   ============================================================ */
+
+.sh-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.82);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: sh-fade-in-fast 0.15s ease;
+}
+
+.sh-lightbox-img {
+    max-width: min(90vw, 900px);
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 8px 48px rgba(0,0,0,0.6);
+}
+
+.sh-lightbox-close {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.sh-lightbox-close:hover {
+    background: rgba(255,255,255,0.22);
+}
+
+.sh-lightbox-close i {
+    width: 16px;
+    height: 16px;
+}
+
+@keyframes sh-fade-in-fast {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }

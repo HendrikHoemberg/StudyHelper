@@ -31,16 +31,17 @@
             <div class="sh-flip-card sh-study-flip-card" th:data-card-id="${currentCard.cardId}">
 
                 <!-- Front face -->
-                <div class="sh-flip-face sh-flip-front" hx-on:click="this.closest('.sh-flip-card').classList.add('flipped')">
+                <div class="sh-flip-face sh-flip-front">
                     <div class="sh-study-face-content">
                         <div class="sh-flashcard-label" style="margin-bottom:0.75rem;">Question</div>
                         <img th:if="${currentCard.frontImageUrl}" th:src="${currentCard.frontImageUrl}"
-                             class="sh-study-card-image" alt="Card image">
+                             class="sh-study-card-image sh-lightbox-trigger" alt="Card image">
                         <div th:if="${currentCard.frontText != null and !#strings.isEmpty(currentCard.frontText)}"
                              class="sh-study-face-text" th:text="${currentCard.frontText}">Front text</div>
                     </div>
                     <button type="button" class="sh-btn sh-btn-primary sh-study-reveal-btn"
-                            style="min-width:160px;justify-content:center;">
+                            style="min-width:160px;justify-content:center;"
+                            onclick="this.closest('.sh-flip-card').classList.add('flipped')">
                         Reveal Answer
                     </button>
                 </div>
@@ -50,7 +51,7 @@
                     <div class="sh-study-face-content">
                         <div class="sh-flashcard-label" style="margin-bottom:0.75rem;">Answer</div>
                         <img th:if="${currentCard.backImageUrl}" th:src="${currentCard.backImageUrl}"
-                             class="sh-study-card-image" alt="Card image">
+                             class="sh-study-card-image sh-lightbox-trigger" alt="Card image">
                         <div th:if="${currentCard.backText != null and !#strings.isEmpty(currentCard.backText)}"
                              class="sh-study-face-text" th:text="${currentCard.backText}">Back text</div>
                     </div>
@@ -84,6 +85,30 @@
             </div>
         </div>
     </div>
+
+    <!-- Image lightbox -->
+    <div id="sh-lightbox" class="sh-lightbox" style="display:none;" onclick="this.style.display='none'">
+        <button class="sh-lightbox-close" onclick="document.getElementById('sh-lightbox').style.display='none'">
+            <i data-lucide="x"></i>
+        </button>
+        <img id="sh-lightbox-img" class="sh-lightbox-img" src="" alt="Full size image">
+    </div>
+
+    <script>
+        (function() {
+            document.querySelectorAll('.sh-lightbox-trigger').forEach(function(img) {
+                img.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var lb = document.getElementById('sh-lightbox');
+                    document.getElementById('sh-lightbox-img').src = img.src;
+                    lb.style.display = 'flex';
+                });
+            });
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') document.getElementById('sh-lightbox').style.display = 'none';
+            });
+        })();
+    </script>
 
 </div>
 
