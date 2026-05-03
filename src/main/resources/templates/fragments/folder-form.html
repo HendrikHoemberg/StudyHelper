@@ -18,9 +18,13 @@
     <!-- Color -->
     <div>
         <label class="sh-label">Color</label>
-        <input type="color" name="colorHex" th:id="${prefix + 'FolderColor'}" class="sh-color-input"
-               th:value="${colorHex}"
-               oninput="updateFolderPreview(this.closest('.sh-modal'))">
+        <button type="button" class="sh-color-trigger" data-color-picker
+                th:attr="data-target=${prefix + 'FolderColor'}" data-palette-key="folder">
+            <span class="sh-color-swatch" th:style="'background:' + ${colorHex ?: '#6366f1'}"></span>
+            <span class="sh-color-hex" th:text="${colorHex != null ? #strings.toUpperCase(colorHex) : '#6366F1'}"></span>
+        </button>
+        <input type="hidden" name="colorHex"
+               th:id="${prefix + 'FolderColor'}" th:value="${colorHex ?: '#6366f1'}">
     </div>
 
     <!-- Icon Selection -->

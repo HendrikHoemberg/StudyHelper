@@ -1,0 +1,289 @@
+/* ============================================================
+   StudyHelper — Color Picker Component
+   Scoped to .sh-cp-* and .sh-color-trigger
+   ============================================================ */
+
+/* ── Popover container ──────────────────────────────────────── */
+.sh-cp-popover {
+    position: fixed;
+    z-index: 9999;
+    width: 400px;
+    padding: 12px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ── Gradient area (SV plane + hue slider) ──────────────────── */
+.sh-cp-gradient-area {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.sh-cp-sv-wrap,
+.sh-cp-hue-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.sh-cp-sv-canvas {
+    display: block;
+    width: 352px;
+    height: 160px;
+    border-radius: var(--radius-sm);
+    cursor: crosshair;
+}
+
+.sh-cp-hue-canvas {
+    display: block;
+    width: 16px;
+    height: 160px;
+    border-radius: 999px;
+    cursor: ns-resize;
+}
+
+/* ── Draggable cursors ──────────────────────────────────────── */
+.sh-cp-sv-cursor {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    top: 0;
+    left: 0;
+}
+
+.sh-cp-hue-cursor {
+    position: absolute;
+    left: -3px;
+    width: calc(100% + 6px);
+    height: 6px;
+    border-radius: 3px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+    transform: translateY(-50%);
+    pointer-events: none;
+    top: 0;
+}
+
+/* ── Mode tabs ──────────────────────────────────────────────── */
+.sh-cp-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.sh-cp-tab {
+    flex: 1;
+    padding: 4px 6px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+    font-family: var(--font-body);
+}
+
+.sh-cp-tab:hover {
+    color: var(--text);
+    background: var(--surface-hover);
+}
+
+.sh-cp-tab.is-active {
+    color: var(--accent);
+    background: var(--accent-light);
+    border-color: var(--accent);
+}
+
+/* ── Input section ──────────────────────────────────────────── */
+.sh-cp-inputs {
+    margin-bottom: 10px;
+}
+
+.sh-cp-input-row {
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+}
+
+/* HEX row */
+.sh-cp-hex-row .sh-input {
+    flex: 1;
+    font-size: 0.8125rem;
+    padding: 5px 8px;
+    height: 30px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-variant-numeric: tabular-nums;
+}
+
+/* RGB / HSB channel labels + inputs */
+.sh-cp-channel {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+}
+
+.sh-cp-channel .sh-input {
+    width: 100%;
+    text-align: center;
+    padding: 4px 2px;
+    height: 30px;
+    font-size: 0.8125rem;
+}
+
+/* Eyedropper */
+.sh-cp-eyedropper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+    padding: 0;
+}
+
+.sh-cp-eyedropper:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+.sh-cp-eyedropper svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* ── Swatches section ───────────────────────────────────────── */
+.sh-cp-swatches {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-light);
+}
+
+.sh-cp-swatch-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sh-cp-swatch-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    width: 42px;
+    font-family: var(--font-body);
+}
+
+.sh-cp-recent-swatches,
+.sh-cp-palette-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.sh-cp-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    padding: 0;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    flex-shrink: 0;
+}
+
+[data-theme="dark"] .sh-cp-swatch {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.sh-cp-swatch:hover {
+    transform: scale(1.25);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(0, 0, 0, 0.3);
+    z-index: 1;
+    position: relative;
+}
+
+/* ── Trigger button ─────────────────────────────────────────── */
+.sh-color-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 38px;
+    padding: 4px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: var(--text);
+    text-align: left;
+}
+
+.sh-color-trigger:hover {
+    border-color: var(--accent);
+    background: var(--surface-hover);
+}
+
+.sh-color-trigger.sh-cp-is-open {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    outline: none;
+}
+
+.sh-color-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+[data-theme="dark"] .sh-color-swatch {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.sh-color-hex {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+}

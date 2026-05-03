@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<!-- Singleton color-picker popover — included once in layout, reused by all triggers -->
+<div th:fragment="popover"
+     id="sh-cp-root"
+     class="sh-cp-popover"
+     style="display:none;"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Color picker">
+
+    <!-- SV plane + hue slider -->
+    <div class="sh-cp-gradient-area">
+        <div class="sh-cp-sv-wrap">
+            <canvas class="sh-cp-sv-canvas" width="352" height="160"></canvas>
+            <div class="sh-cp-sv-cursor"></div>
+        </div>
+        <div class="sh-cp-hue-wrap">
+            <canvas class="sh-cp-hue-canvas" width="16" height="160"></canvas>
+            <div class="sh-cp-hue-cursor"></div>
+        </div>
+    </div>
+
+    <!-- Mode tabs -->
+    <div class="sh-cp-tabs" role="tablist">
+        <button type="button" class="sh-cp-tab is-active" data-mode="hex" role="tab">HEX</button>
+        <button type="button" class="sh-cp-tab" data-mode="rgb" role="tab">RGB</button>
+        <button type="button" class="sh-cp-tab" data-mode="hsb" role="tab">HSB</button>
+    </div>
+
+    <!-- Inputs (one row per mode, toggled by JS) -->
+    <div class="sh-cp-inputs">
+        <!-- HEX -->
+        <div class="sh-cp-input-row sh-cp-hex-row">
+            <input type="text" class="sh-input" maxlength="7" spellcheck="false"
+                   placeholder="#6366f1" aria-label="Hex color value">
+            <button type="button" class="sh-cp-eyedropper" title="Pick color from screen" aria-label="Eyedropper">
+                <i data-lucide="pipette"></i>
+            </button>
+        </div>
+        <!-- RGB -->
+        <div class="sh-cp-input-row sh-cp-rgb-row" style="display:none">
+            <label class="sh-cp-channel">R
+                <input type="number" class="sh-input" min="0" max="255" data-channel="r" aria-label="Red">
+            </label>
+            <label class="sh-cp-channel">G
+                <input type="number" class="sh-input" min="0" max="255" data-channel="g" aria-label="Green">
+            </label>
+            <label class="sh-cp-channel">B
+                <input type="number" class="sh-input" min="0" max="255" data-channel="b" aria-label="Blue">
+            </label>
+        </div>
+        <!-- HSB -->
+        <div class="sh-cp-input-row sh-cp-hsb-row" style="display:none">
+            <label class="sh-cp-channel">H
+                <input type="number" class="sh-input" min="0" max="360" data-channel="h" aria-label="Hue">
+            </label>
+            <label class="sh-cp-channel">S
+                <input type="number" class="sh-input" min="0" max="100" data-channel="s" aria-label="Saturation">
+            </label>
+            <label class="sh-cp-channel">B
+                <input type="number" class="sh-input" min="0" max="100" data-channel="v" aria-label="Brightness">
+            </label>
+        </div>
+    </div>
+
+    <!-- Swatches: recent + app palette -->
+    <div class="sh-cp-swatches">
+        <div class="sh-cp-swatch-row">
+            <span class="sh-cp-swatch-label">Recent</span>
+            <div class="sh-cp-recent-swatches"></div>
+        </div>
+        <div class="sh-cp-swatch-row">
+            <span class="sh-cp-swatch-label">Palette</span>
+            <div class="sh-cp-palette-swatches"></div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
