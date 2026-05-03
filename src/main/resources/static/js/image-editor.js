@@ -434,7 +434,27 @@
 
     // ── Export ────────────────────────────────────────────────────────
     function _exportPNG() {
-        var dataURL = _fc.toDataURL({ format: 'png', multiplier: 1 });
+        if (!_baseImg) {
+            var fullData = _fc.toDataURL({ format: 'png', multiplier: 1 });
+            return _dataURLToBlob(fullData);
+        }
+
+        // Temporarily reset viewport transform to ensure accurate crop
+        var vpt = _fc.viewportTransform;
+        _fc.setViewportTransform([1, 0, 0, 1, 0, 0]);
+
+        var dataURL = _fc.toDataURL({
+            format: 'png',
+            left: _baseImg.left,
+            top: _baseImg.top,
+            width: _baseImg.width * _baseImg.scaleX,
+            height: _baseImg.height * _baseImg.scaleY,
+            multiplier: 1 / _baseImg.scaleX
+        });
+
+        // Restore viewport transform
+        _fc.setViewportTransform(vpt);
+
         return _dataURLToBlob(dataURL);
     }
 
