@@ -515,16 +515,70 @@
     }
 
     // ── Save ─────────────────────────────────────────────────────────
+    function _promptFilename(defaultName, onConfirm, onCancel) {
+        var promptEl = $id('sh-ie-prompt');
+        var inputEl  = $id('sh-ie-prompt-input');
+        if (!promptEl || !inputEl) {
+            var name = prompt('Enter a name for the new file:', defaultName);
+            if (name !== null) onConfirm(name);
+            else if (onCancel) onCancel();
+            return;
+        }
+
+        inputEl.value = defaultName;
+        promptEl.style.display = 'flex';
+        inputEl.focus();
+        inputEl.select();
+
+        var btnOk     = $id('sh-ie-prompt-ok');
+        var btnCancel = $id('sh-ie-prompt-cancel');
+
+        function cleanup() {
+            promptEl.style.display = 'none';
+            btnOk.removeEventListener('click', handleOk);
+            btnCancel.removeEventListener('click', handleCancel);
+            inputEl.removeEventListener('keydown', handleKey);
+        }
+
+        function handleOk() {
+            cleanup();
+            onConfirm(inputEl.value);
+        }
+
+        function handleCancel() {
+            cleanup();
+            if (onCancel) onCancel();
+        }
+
+        function handleKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleOk();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                handleCancel();
+            }
+        }
+
+        btnOk.addEventListener('click', handleOk);
+        btnCancel.addEventListener('click', handleCancel);
+        inputEl.addEventListener('keydown', handleKey);
+    }
+
     function _handleSave(choice) {
         if (!_opts || !_opts.onSave) { close(); return; }
 
-        var customName;
         if (choice === 'new') {
-            customName = prompt('Enter a name for the new file:', _opts.filename || 'image.png');
-            if (customName === null) return; // user cancelled
-            if (customName.trim() === '') customName = 'image.png';
+            _promptFilename(_opts.filename || 'image.png', function(customName) {
+                if (customName.trim() === '') customName = 'image.png';
+                _executeSave(choice, customName);
+            });
+        } else {
+            _executeSave(choice);
         }
+    }
 
+    function _executeSave(choice, customName) {
         _showFooterError('');
         _setSaveSpinner(true);
 
@@ -561,6 +615,9 @@
     function _keydown(e) {
         var modal = $id('sh-ie-modal');
         if (!modal || modal.style.display === 'none') return;
+
+        var promptEl = $id('sh-ie-prompt');
+        if (promptEl && promptEl.style.display !== 'none') return; // let prompt handle shortcuts
 
         if (e.key === 'Escape') {
             e.preventDefault();
