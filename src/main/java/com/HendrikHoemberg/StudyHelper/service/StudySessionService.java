@@ -225,7 +225,9 @@ public class StudySessionService {
                     card.getBackText(),
                     deck.getId(),
                     deck.getName(),
-                    buildFolderPath(deck.getFolder())
+                    buildFolderPath(deck.getFolder()),
+                    card.getFrontImageFilename() != null ? "/flashcards/" + card.getId() + "/images/front" : null,
+                    card.getBackImageFilename() != null ? "/flashcards/" + card.getId() + "/images/back" : null
                 ))
                 .toList();
             byDeck.put(deck.getId(), List.copyOf(views));

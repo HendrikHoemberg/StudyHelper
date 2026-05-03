@@ -13,25 +13,64 @@
                 </button>
             </div>
             <form th:action="${action}" method="post"
+                  enctype="multipart/form-data"
                   hx-post th:hx-post="${action}"
+                  hx-encoding="multipart/form-data"
                   hx-target="#flashcard-list"
                   hx-swap="innerHTML"
                   hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
-                
+
                 <input th:if="${deckId != null}" type="hidden" name="deckId" th:value="${deckId}">
-                
+
                 <div class="sh-modal-body">
+                    <!-- Front side -->
                     <div>
                         <label class="sh-label">Front (Question)</label>
-                        <textarea name="frontText" class="sh-input" rows="3" required
+                        <textarea name="frontText" class="sh-input" rows="3"
                                   placeholder="Enter the question or prompt..."
                                   th:text="${flashcard?.frontText}"></textarea>
+                        <div class="sh-img-zone" id="front-img-zone">
+                            <div th:if="${frontImageUrl}" class="sh-img-preview-wrap" id="front-preview-wrap">
+                                <img th:src="${frontImageUrl}" class="sh-img-preview" alt="Front image">
+                                <button type="button" class="sh-img-remove-btn" id="front-remove-btn">
+                                    <i data-lucide="x"></i>
+                                </button>
+                            </div>
+                            <label th:class="${frontImageUrl != null} ? 'sh-img-drop-label is-hidden' : 'sh-img-drop-label'"
+                                   id="front-drop-label" for="frontImageInput">
+                                <i data-lucide="image-plus"></i>
+                                <span>Add image</span>
+                            </label>
+                            <input type="file" id="frontImageInput" name="frontImage"
+                                   accept="image/jpeg,image/png,image/webp,image/gif"
+                                   class="sh-img-file-input">
+                            <input type="hidden" name="removeFrontImage" id="removeFrontImage" value="false">
+                        </div>
                     </div>
+
+                    <!-- Back side -->
                     <div>
                         <label class="sh-label">Back (Answer)</label>
-                        <textarea name="backText" class="sh-input" rows="3" required
+                        <textarea name="backText" class="sh-input" rows="3"
                                   placeholder="Enter the answer..."
                                   th:text="${flashcard?.backText}"></textarea>
+                        <div class="sh-img-zone" id="back-img-zone">
+                            <div th:if="${backImageUrl}" class="sh-img-preview-wrap" id="back-preview-wrap">
+                                <img th:src="${backImageUrl}" class="sh-img-preview" alt="Back image">
+                                <button type="button" class="sh-img-remove-btn" id="back-remove-btn">
+                                    <i data-lucide="x"></i>
+                                </button>
+                            </div>
+                            <label th:class="${backImageUrl != null} ? 'sh-img-drop-label is-hidden' : 'sh-img-drop-label'"
+                                   id="back-drop-label" for="backImageInput">
+                                <i data-lucide="image-plus"></i>
+                                <span>Add image</span>
+                            </label>
+                            <input type="file" id="backImageInput" name="backImage"
+                                   accept="image/jpeg,image/png,image/webp,image/gif"
+                                   class="sh-img-file-input">
+                            <input type="hidden" name="removeBackImage" id="removeBackImage" value="false">
+                        </div>
                     </div>
                 </div>
                 <div class="sh-modal-footer">
@@ -46,9 +85,85 @@
             initLucide();
             var modal = document.querySelector('.sh-modal.is-open');
             if (modal) {
-                var firstInput = modal.querySelector('textarea, input:not([type="hidden"])');
+                var firstInput = modal.querySelector('textarea, input:not([type="hidden"]):not([type="file"])');
                 if (firstInput) firstInput.focus();
             }
+
+            function setupZone(zoneId, inputId, dropLabelId, removeInputId, removeBtnId) {
+                var zone = document.getElementById(zoneId);
+                var input = document.getElementById(inputId);
+                var dropLabel = document.getElementById(dropLabelId);
+                var removeInput = document.getElementById(removeInputId);
+                var removeBtn = document.getElementById(removeBtnId);
+                if (!zone || !input) return;
+
+                input.addEventListener('change', function() {
+                    if (this.files[0]) showPreview(this.files[0]);
+                });
+
+                zone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    zone.classList.add('is-dragover');
+                });
+                zone.addEventListener('dragleave', function() {
+                    zone.classList.remove('is-dragover');
+                });
+                zone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    zone.classList.remove('is-dragover');
+                    var file = e.dataTransfer.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        var dt = new DataTransfer();
+                        dt.items.add(file);
+                        input.files = dt.files;
+                        showPreview(file);
+                    }
+                });
+
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', clearPreview);
+                }
+
+                function showPreview(file) {
+                    var existing = zone.querySelector('.sh-img-preview-wrap');
+                    if (existing) existing.remove();
+
+                    var wrap = document.createElement('div');
+                    wrap.className = 'sh-img-preview-wrap';
+
+                    var img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.className = 'sh-img-preview';
+                    img.alt = 'Preview';
+
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'sh-img-remove-btn';
+                    btn.innerHTML = '<i data-lucide="x"></i>';
+                    btn.addEventListener('click', clearPreview);
+
+                    wrap.appendChild(img);
+                    wrap.appendChild(btn);
+                    zone.insertBefore(wrap, dropLabel);
+
+                    dropLabel = document.getElementById(dropLabelId);
+                    if (dropLabel) dropLabel.classList.add('is-hidden');
+                    if (removeInput) removeInput.value = 'false';
+                    initLucide();
+                }
+
+                function clearPreview() {
+                    var wrap = zone.querySelector('.sh-img-preview-wrap');
+                    if (wrap) wrap.remove();
+                    var lbl = document.getElementById(dropLabelId);
+                    if (lbl) lbl.classList.remove('is-hidden');
+                    input.value = '';
+                    if (removeInput) removeInput.value = 'true';
+                }
+            }
+
+            setupZone('front-img-zone', 'frontImageInput', 'front-drop-label', 'removeFrontImage', 'front-remove-btn');
+            setupZone('back-img-zone',  'backImageInput',  'back-drop-label',  'removeBackImage',  'back-remove-btn');
         })();
     </script>
 </div>

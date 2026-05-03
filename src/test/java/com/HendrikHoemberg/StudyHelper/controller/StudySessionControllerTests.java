@@ -143,7 +143,7 @@ class StudySessionControllerTests {
     }
 
     private StudySessionState activeState() {
-        StudyCardView card = new StudyCardView(10L, "Q", "A", 1L, "Deck", "Root");
+        StudyCardView card = new StudyCardView(10L, "Q", "A", 1L, "Deck", "Root", null, null);
         return new StudySessionState(
             new StudySessionConfig(List.of(1L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER),
             Map.of(1L, List.of(card)),

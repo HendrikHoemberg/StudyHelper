@@ -34,7 +34,10 @@
                 <div class="sh-flip-face sh-flip-front" hx-on:click="this.closest('.sh-flip-card').classList.add('flipped')">
                     <div class="sh-study-face-content">
                         <div class="sh-flashcard-label" style="margin-bottom:0.75rem;">Question</div>
-                        <div class="sh-study-face-text" th:text="${currentCard.frontText}">Front text</div>
+                        <img th:if="${currentCard.frontImageUrl}" th:src="${currentCard.frontImageUrl}"
+                             class="sh-study-card-image" alt="Card image">
+                        <div th:if="${currentCard.frontText != null and !#strings.isEmpty(currentCard.frontText)}"
+                             class="sh-study-face-text" th:text="${currentCard.frontText}">Front text</div>
                     </div>
                     <button type="button" class="sh-btn sh-btn-primary sh-study-reveal-btn"
                             style="min-width:160px;justify-content:center;">
@@ -46,7 +49,10 @@
                 <div class="sh-flip-face sh-flip-back">
                     <div class="sh-study-face-content">
                         <div class="sh-flashcard-label" style="margin-bottom:0.75rem;">Answer</div>
-                        <div class="sh-study-face-text" th:text="${currentCard.backText}">Back text</div>
+                        <img th:if="${currentCard.backImageUrl}" th:src="${currentCard.backImageUrl}"
+                             class="sh-study-card-image" alt="Card image">
+                        <div th:if="${currentCard.backText != null and !#strings.isEmpty(currentCard.backText)}"
+                             class="sh-study-face-text" th:text="${currentCard.backText}">Back text</div>
                     </div>
                     <div class="sh-study-answer-controls">
                         <form method="post"

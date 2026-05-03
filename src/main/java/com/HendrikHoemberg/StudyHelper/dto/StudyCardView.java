@@ -8,6 +8,8 @@ public record StudyCardView(
     String backText,
     Long deckId,
     String deckName,
-    String deckPathLabel
+    String deckPathLabel,
+    String frontImageUrl,
+    String backImageUrl
 ) implements Serializable {
 }

@@ -22,6 +22,12 @@ public class Flashcard {
     @Column(name = "back_text", columnDefinition = "TEXT", nullable = false)
     private String backText;
 
+    @Column(name = "front_image_filename")
+    private String frontImageFilename;
+
+    @Column(name = "back_image_filename")
+    private String backImageFilename;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deck_id", nullable = false)
     private Deck deck;
