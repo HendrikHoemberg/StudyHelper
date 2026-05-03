@@ -131,7 +131,7 @@ function updateFolderPreview(modal) {
     const color = modal.querySelector('input[name="colorHex"]')?.value || '#6366f1';
     const iconName = modal.querySelector('input[name="iconName"]')?.value || 'folder';
     
-    preview.style.color = color;
+    preview.style.setProperty('--preview-color', color);
     preview.innerHTML = `<i data-lucide="${iconName}" style="width:22px;height:22px;"></i>`;
     if (window.lucide) lucide.createIcons({
         attrs: { style: 'width:22px; height:22px;' },

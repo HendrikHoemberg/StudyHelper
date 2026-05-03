@@ -5,7 +5,7 @@
 <div th:fragment="folderFields(name, colorHex, iconName, prefix)" class="sh-form-group-stack">
     <!-- Preview & Name Row -->
     <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
-        <div class="sh-edit-preview" th:id="${prefix + 'FolderPreview'}" th:style="'color:' + ${colorHex}">
+        <div class="sh-edit-preview" th:id="${prefix + 'FolderPreview'}" th:style="'--preview-color:' + ${colorHex}">
             <i th:attr="data-lucide=${iconName ?: 'folder'}" style="width:22px;height:22px;"></i>
         </div>
         <div style="flex:1;">

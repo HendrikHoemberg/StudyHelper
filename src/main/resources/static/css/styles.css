@@ -2803,9 +2803,10 @@ textarea.sh-input {
     align-items: center;
     justify-content: center;
     border-radius: var(--radius);
-    background: color-mix(in srgb, currentColor 12%, var(--surface));
+    background: var(--preview-color, var(--accent));
+    color: #fff;
     flex-shrink: 0;
-    transition: color 0.15s;
+    transition: all 0.15s;
 }
 
 .sh-edit-preview svg {

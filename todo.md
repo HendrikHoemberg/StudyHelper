@@ -1,5 +1,4 @@
 - cards marked as wrongly answered should be stored and be added to a deck with only wrongly answered cards
-- add images to cards
 - fix folder collapse animation
 - Lucide -> iconify
 - Deck creation -> last card "add/+" empty card
