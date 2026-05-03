@@ -1,7 +1,5 @@
 - cards marked as wrongly answered should be stored and be added to a deck with only wrongly answered cards
 - fix folder collapse animation
-- Lucide -> iconify
-- Deck creation -> last card "add/+" empty card
 - redesign step 3 of session creation
 - endscreen maybe konfetti animation?
 - make navbar bigger
@@ -9,3 +7,4 @@
 - make folders in session creation collapsed by default
 - Let users customize colors and background images in settings
 - Delete action into file-edit-modal and rename-deck-modal
+- viewing an image currently opens up a new page. it should open up in the current page 
