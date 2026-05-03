@@ -44,6 +44,14 @@ public class FileController {
         return "fragments/file-form :: uploadModal";
     }
 
+    @GetMapping("/files/{id}/edit-options")
+    public String editOptionsModal(@PathVariable Long id, Principal principal, Model model) {
+        User user = userService.getByUsername(principal.getName());
+        FileEntry entry = fileEntryService.getFile(id, user);
+        model.addAttribute("file", entry);
+        return "fragments/file-edit-modal :: editOptionsModal";
+    }
+
     @PostMapping("/folders/{folderId}/files")
     public String upload(@PathVariable Long folderId,
                          @RequestParam("file") MultipartFile file,
@@ -95,6 +103,24 @@ public class FileController {
         model.addAttribute("sortBy", null);
         model.addAttribute("direction", "asc");
         return "fragments/folder-detail :: filesTable";
+    }
+
+    @PostMapping("/files/{id}/rename")
+    public String renameFile(@PathVariable Long id,
+                             @RequestParam String name,
+                             Principal principal,
+                             @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                             @RequestHeader(value = "HX-Current-URL", required = false) String currentUrl) {
+        User user = userService.getByUsername(principal.getName());
+        FileEntry entry = fileEntryService.renameFile(id, name, user);
+        
+        if (hxRequest != null && currentUrl != null) {
+            return "redirect:" + currentUrl;
+        }
+        if (hxRequest != null) {
+            return "redirect:/folders/" + entry.getFolder().getId();
+        }
+        return "redirect:/dashboard";
     }
 
     @PostMapping("/files/{id}/delete")

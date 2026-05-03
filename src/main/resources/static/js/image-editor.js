@@ -895,18 +895,22 @@
         return h;
     }
 
-    // ── Reload files table via GET with HTMX-style headers ───────────
-    function _reloadFilesTable(folderId) {
-        return fetch('/folders/' + folderId, {
+    // ── Reload library/files UI via GET with HTMX-style headers ────────
+    function _reloadLibraryContainer(folderId) {
+        var isDashboard = !!$id('library-grid-container');
+        var url      = isDashboard ? '/dashboard' : ('/folders/' + folderId);
+        var targetId = isDashboard ? 'library-grid-container' : 'files-table-container';
+
+        return fetch(url, {
             headers: {
                 'HX-Request': 'true',
-                'HX-Target':  'files-table-container',
+                'HX-Target':  targetId,
             },
         }).then(function(resp) {
             if (!resp.ok) throw new Error('Reload failed');
             return resp.text();
         }).then(function(html) {
-            var container = $id('files-table-container');
+            var container = $id(targetId);
             if (!container) return;
             container.innerHTML = html;
             if (typeof initLucide === 'function') initLucide();
@@ -928,7 +932,7 @@
                 headers: csrfH,
             }).then(function(resp) {
                 if (!resp.ok) throw new Error('Upload failed');
-                return _reloadFilesTable(folderId);
+                return _reloadLibraryContainer(folderId);
             });
         } else {
             fd.append('image', blob, pngName);
@@ -938,13 +942,9 @@
                 headers: csrfH,
             }).then(function(resp) {
                 if (!resp.ok) throw new Error('Save failed');
-                return resp.text();
-            }).then(function(html) {
-                var container = $id('files-table-container');
-                if (!container) return;
-                container.innerHTML = html;
-                if (typeof initLucide === 'function') initLucide();
-                if (window.htmx) htmx.process(container);
+                // Even on overwrite, we reload the whole container to ensure
+                // that thumbnails in the dashboard or table rows are updated
+                return _reloadLibraryContainer(folderId);
             });
         }
     }

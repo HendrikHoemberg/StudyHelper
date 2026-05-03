@@ -12,7 +12,10 @@
                     <i data-lucide="x"></i>
                 </button>
             </div>
-            <form th:action="${action}" method="post">
+            <form th:action="${action}" method="post"
+                  hx-post th:hx-post="${action}"
+                  hx-target="#explorer-detail"
+                  hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
                 <div class="sh-modal-body">
                     <div>
                         <label class="sh-label">Deck Name</label>

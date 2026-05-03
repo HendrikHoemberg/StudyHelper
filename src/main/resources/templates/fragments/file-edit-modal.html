@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="editOptionsModal" class="sh-modal is-open" id="file-options-modal">
+    <div class="sh-modal-backdrop" onclick="this.closest('.sh-modal').remove()"></div>
+    <div class="sh-modal-dialog sh-modal-dialog-sm">
+        <div class="sh-modal-content">
+            <div class="sh-modal-header">
+                <h5 class="sh-modal-title">Edit File</h5>
+                <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').remove()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <div class="sh-modal-body">
+                <!-- Rename Section -->
+                <form th:action="@{/files/{id}/rename(id=${file.id})}" method="post" 
+                      hx-post th:hx-post="@{/files/{id}/rename(id=${file.id})}"
+                      hx-target="#explorer-detail"
+                      hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
+                    <div class="mb-4">
+                        <label class="sh-label">File Name</label>
+                        <input type="text" name="name" class="sh-input" required 
+                               th:value="${file.originalFilename}"
+                               placeholder="e.g. lesson-plan.pdf">
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="sh-btn sh-btn-primary">
+                            <i data-lucide="check"></i>
+                            Save Name
+                        </button>
+                    </div>
+                </form>
+
+                <hr th:if="${#strings.startsWith(file.mimeType, 'image/')}" 
+                    style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-light);">
+
+                <!-- Image Editor Section -->
+                <div th:if="${#strings.startsWith(file.mimeType, 'image/')}">
+                    <label class="sh-label mb-2">Image Content</label>
+                    <button class="sh-btn sh-btn-secondary w-full justify-center"
+                            th:attr="data-edit-image=${file.id},
+                                     data-edit-url=@{/files/{id}/view(id=${file.id})},
+                                     data-edit-folder=${file.folder.id},
+                                     data-edit-filename=${file.originalFilename}"
+                            onclick="this.closest('.sh-modal').remove()">
+                        <i data-lucide="image"></i>
+                        Open Image Editor
+                    </button>
+                </div>
+            </div>
+            
+            <div class="sh-modal-footer">
+                <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()">Close</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            initLucide();
+            var modal = document.getElementById('file-options-modal');
+            if (modal) {
+                var input = modal.querySelector('input[name="name"]');
+                if (input) {
+                    input.focus();
+                    // Select filename without extension
+                    var lastDot = input.value.lastIndexOf('.');
+                    if (lastDot > 0) {
+                        input.setSelectionRange(0, lastDot);
+                    } else {
+                        input.select();
+                    }
+                }
+            }
+        })();
+    </script>
+</div>
+
+</body>
+</html>

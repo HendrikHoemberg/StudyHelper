@@ -35,12 +35,13 @@ public class DeckController {
     public String createDeck(@PathVariable Long folderId,
                              @RequestParam String name,
                              Principal principal,
-                             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+                             @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                             @RequestHeader(value = "HX-Current-URL", required = false) String currentUrl) {
         User user = userService.getByUsername(principal.getName());
         deckService.createDeck(name, folderId, user);
 
-        if (hxRequest != null) {
-            return "redirect:/folders/" + folderId;
+        if (hxRequest != null && currentUrl != null) {
+            return "redirect:" + currentUrl;
         }
         return "redirect:/folders/" + folderId;
     }
@@ -74,10 +75,14 @@ public class DeckController {
     public String renameDeck(@PathVariable Long id,
                              @RequestParam String name,
                              Principal principal,
-                             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+                             @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                             @RequestHeader(value = "HX-Current-URL", required = false) String currentUrl) {
         User user = userService.getByUsername(principal.getName());
         Deck deck = deckService.renameDeck(id, name, user);
 
+        if (hxRequest != null && currentUrl != null) {
+            return "redirect:" + currentUrl;
+        }
         if (hxRequest != null) {
             return "redirect:/decks/" + id;
         }

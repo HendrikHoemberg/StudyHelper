@@ -56,43 +56,56 @@
 
         <div id="library-grid-container">
             <div th:fragment="libraryGrid" th:if="${!#lists.isEmpty(deckOptions)} or ${!#lists.isEmpty(fileSummaries)}" class="sh-deck-grid">
-                <a th:each="deck : ${deckOptions}"
-                   th:href="@{/decks/{id}(id=${deck.deckId})}"
-                   class="sh-deck-tile sh-library-filter-item"
-                   th:data-name="${deck.deckName + ' ' + deck.folderPath}"
-                             th:style="'--folder-color:' + ${deck.folderColorHex}"
-                   hx-get th:hx-get="@{/decks/{id}(id=${deck.deckId})}"
-                   hx-target="#explorer-detail" hx-push-url="true">
-                    <div class="sh-deck-cover">
+                <div th:each="deck : ${deckOptions}"
+                     class="sh-deck-tile sh-library-filter-item"
+                     th:data-name="${deck.deckName + ' ' + deck.folderPath}"
+                     th:style="'--folder-color:' + ${deck.folderColorHex}">
+                    <a th:href="@{/decks/{id}(id=${deck.deckId})}"
+                       class="sh-deck-cover"
+                       hx-get th:hx-get="@{/decks/{id}(id=${deck.deckId})}"
+                       hx-target="#explorer-detail" hx-push-url="true">
                         <span class="sh-deck-cover-icon">
                             <i data-lucide="layers"></i>
                         </span>
-                    </div>
+                    </a>
                     <div class="sh-deck-body">
                         <div class="sh-deck-title" th:text="${deck.deckName}">Deck Name</div>
                         <div class="sh-deck-meta" th:text="${deck.folderPath}">Folder</div>
                         <div class="sh-deck-meta" th:text="${deck.cardCount} + ' cards'">0 cards</div>
                     </div>
-                </a>
+                    <button class="sh-deck-edit-btn" title="Edit Deck"
+                            th:hx-get="@{/decks/{id}/rename(id=${deck.deckId})}"
+                            hx-target="#modal-placeholder">
+                        <i data-lucide="pencil"></i>
+                    </button>
+                </div>
 
-                <a th:each="file : ${fileSummaries}"
-                   th:href="@{/files/{id}/view(id=${file.id})}"
-                   target="_blank"
-                   class="sh-deck-tile sh-library-filter-item"
-                             th:data-name="${file.originalFilename + ' ' + file.folderPath}"
-                             th:style="'--folder-color:' + ${file.folderColorHex}">
-                    <div class="sh-deck-cover">
-                        <span class="sh-deck-cover-icon">
+                <div th:each="file : ${fileSummaries}"
+                     class="sh-deck-tile sh-library-filter-item"
+                     th:data-name="${file.originalFilename + ' ' + file.folderPath}"
+                     th:style="'--folder-color:' + ${file.folderColorHex}">
+                    <a th:href="@{/files/{id}/view(id=${file.id})}"
+                       target="_blank"
+                       class="sh-deck-cover">
+                        <img th:if="${#strings.startsWith(file.mimeType, 'image/')}"
+                             th:src="@{/files/{id}/view(id=${file.id})}"
+                             class="sh-deck-cover-img" alt="Preview">
+                        <span th:unless="${#strings.startsWith(file.mimeType, 'image/')}" class="sh-deck-cover-icon">
                             <i data-lucide="file"></i>
                         </span>
-                    </div>
+                    </a>
                     <div class="sh-deck-body">
                         <div class="sh-deck-title" th:text="${file.originalFilename}">filename.pdf</div>
                         <div class="sh-deck-meta" th:text="${file.folderPath}">Folder</div>
                         <div class="sh-deck-meta"
                              th:text="${#numbers.formatDecimal(file.fileSizeBytes / 1024.0, 1, 1) + ' KB'}">0 KB</div>
                     </div>
-                </a>
+                    <button class="sh-deck-edit-btn" title="Edit Options"
+                            th:hx-get="@{/files/{id}/edit-options(id=${file.id})}"
+                            hx-target="#modal-placeholder">
+                        <i data-lucide="pencil"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </main>

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 public record FileSummary(
     Long id,
     String originalFilename,
+    Long folderId,
     String folderPath,
     String folderColorHex,
     String mimeType,

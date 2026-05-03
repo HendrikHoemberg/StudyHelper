@@ -68,6 +68,7 @@ public class FileEntryService {
             summaries.add(new FileSummary(
                 entry.getId(),
                 entry.getOriginalFilename(),
+                folder.getId(),
                 folderPath,
                 folder.getColorHex(),
                 entry.getMimeType(),
@@ -100,6 +101,14 @@ public class FileEntryService {
         fileStorageService.delete(entry.getStoredFilename());
         fileEntryRepository.delete(entry);
         return folderId;
+    }
+
+    @Transactional
+    public FileEntry renameFile(Long id, String newName, User user) {
+        FileEntry entry = fileEntryRepository.findByIdAndUser(id, user)
+            .orElseThrow(() -> new NoSuchElementException("File not found"));
+        entry.setOriginalFilename(newName);
+        return fileEntryRepository.save(entry);
     }
 
     private String buildFolderPath(Folder folder) {
