@@ -14,7 +14,7 @@
     <div class="sh-page-header">
         <div>
             <h1 class="sh-page-title">Test Mode</h1>
-            <p class="sh-page-subtitle">Select decks and let AI generate a multiple-choice test.</p>
+            <p class="sh-page-subtitle">Select sources and let AI generate a test from your content.</p>
         </div>
         <div class="sh-page-actions">
             <a href="/dashboard" class="sh-btn sh-btn-secondary"
@@ -29,11 +29,16 @@
     <div class="sh-wizard-steps">
         <div class="sh-wizard-step is-active" data-step="1">
             <div class="sh-wizard-step-dot">1</div>
-            <div class="sh-wizard-step-label">Decks</div>
+            <div class="sh-wizard-step-label">Mode</div>
         </div>
         <div class="sh-wizard-step-connector"></div>
         <div class="sh-wizard-step" data-step="2">
             <div class="sh-wizard-step-dot">2</div>
+            <div class="sh-wizard-step-label">Sources</div>
+        </div>
+        <div class="sh-wizard-step-connector"></div>
+        <div class="sh-wizard-step" data-step="3">
+            <div class="sh-wizard-step-dot">3</div>
             <div class="sh-wizard-step-label">Questions</div>
         </div>
     </div>
@@ -41,7 +46,8 @@
     <!-- Loading indicator (shown during AI generation) -->
     <div id="test-generating-indicator" class="htmx-indicator sh-test-loading">
         <div class="sh-test-loading-spinner"></div>
-        <div class="sh-test-loading-text">Generating your test with AI…<br>
+        <div class="sh-test-loading-text">
+            <span id="test-progress-msg">Generating your test with AI…</span><br>
             <span style="font-size:0.8125rem;opacity:0.7;">This may take a few seconds.</span>
         </div>
     </div>
@@ -56,14 +62,76 @@
 
         <div class="sh-card-body sh-wizard-body">
 
-            <!-- Panel 1: Deck Picker -->
+            <!-- Panel 1: Mode & Difficulty -->
             <div class="sh-wizard-panel is-active is-active-fade" id="test-wizard-panel-1">
 
+                <div class="sh-section-title">How do you want to test?</div>
+                <div class="sh-study-mode-grid">
+                    <label class="sh-study-choice">
+                        <input type="radio" name="questionMode" value="MCQ_ONLY" checked>
+                        <div class="sh-study-choice-icon">
+                            <i data-lucide="list"></i>
+                        </div>
+                        <div class="sh-study-choice-title">Multiple Choice</div>
+                        <div class="sh-study-choice-subtitle">4 options, one correct.</div>
+                    </label>
+                    <label class="sh-study-choice">
+                        <input type="radio" name="questionMode" value="TF_ONLY">
+                        <div class="sh-study-choice-icon">
+                            <i data-lucide="check-circle"></i>
+                        </div>
+                        <div class="sh-study-choice-title">True / False</div>
+                        <div class="sh-study-choice-subtitle">Quick verification.</div>
+                    </label>
+                    <label class="sh-study-choice">
+                        <input type="radio" name="questionMode" value="MIXED">
+                        <div class="sh-study-choice-icon">
+                            <i data-lucide="shuffle"></i>
+                        </div>
+                        <div class="sh-study-choice-title">Mixed (50/50)</div>
+                        <div class="sh-study-choice-subtitle">Half multiple choice, half true/false.</div>
+                    </label>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-top:0.5rem;">
+                    <span style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);">Difficulty</span>
+                    <div class="sh-segmented-control">
+                        <label class="sh-segmented-option">
+                            <input type="radio" name="difficulty" value="EASY">
+                            Easy
+                        </label>
+                        <label class="sh-segmented-option">
+                            <input type="radio" name="difficulty" value="MEDIUM" checked>
+                            Medium
+                        </label>
+                        <label class="sh-segmented-option">
+                            <input type="radio" name="difficulty" value="HARD">
+                            Hard
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+            <!-- end panel 1 -->
+
+            <!-- Panel 2: Sources (decks + files) -->
+            <div class="sh-wizard-panel" id="test-wizard-panel-2">
+
+                <!-- Warning banners -->
+                <div th:if="${selectionExceedsCap}" class="sh-test-error-banner">
+                    <i data-lucide="x-circle"></i>
+                    <span>Selection too large. Deselect some sources to continue.</span>
+                </div>
+                <div th:if="${selectionWarn and !selectionExceedsCap}" class="sh-test-warn-banner">
+                    <i data-lucide="alert-triangle"></i>
+                    <span>Large selection — generation may be slow.</span>
+                </div>
+
                 <div class="vb-picker-head">
-                    <div class="sh-section-title" style="margin:0">Which decks?</div>
+                    <div class="sh-section-title" style="margin:0">Which sources?</div>
                     <button type="button" id="test-vb-select-all-btn" class="vb-select-all">
                         <i data-lucide="list-checks"></i>
-                        <span class="vb-select-all-text">Select all decks</span>
+                        <span class="vb-select-all-text">Select all sources</span>
                     </button>
                 </div>
 
@@ -72,21 +140,21 @@
                     <input type="text"
                            id="test-deck-search"
                            class="sh-study-search-input"
-                           placeholder="Search folders &amp; decks…"
+                           placeholder="Search decks &amp; files…"
                            autocomplete="off">
                 </div>
 
                 <!-- HTMX-swapped region -->
                 <div th:fragment="testSetupPicker" id="test-setup-picker">
 
-                    <div th:if="${#lists.isEmpty(deckGroups)}" class="sh-empty" style="padding:1.25rem 1rem;">
-                        <p class="sh-empty-text mb-1">No decks available</p>
-                        <p class="sh-empty-hint mb-0">Create decks and flashcards before starting a test.</p>
+                    <div th:if="${#lists.isEmpty(sourceGroups)}" class="sh-empty" style="padding:1.25rem 1rem;">
+                        <p class="sh-empty-text mb-1">No sources available</p>
+                        <p class="sh-empty-hint mb-0">Create decks with flashcards or upload supported documents before starting a test.</p>
                     </div>
 
-                    <div th:unless="${#lists.isEmpty(deckGroups)}" class="vb-list">
+                    <div th:unless="${#lists.isEmpty(sourceGroups)}" class="vb-list">
 
-                        <div th:each="group : ${deckGroups}"
+                        <div th:each="group : ${sourceGroups}"
                              class="vb-group"
                              th:style="'--folder-color: ' + ${group.folderColor}">
 
@@ -96,45 +164,79 @@
                                        th:data-folder-id="${group.folderId}"
                                        th:checked="${group.isSelected}"
                                        th:attr="data-indeterminate=${group.isIndeterminate}"
-                                       th:disabled="${group.selectableDeckCount == 0}"
+                                       th:disabled="${group.selectableSourceCount == 0}"
                                        hx-post="/test/setup/update"
                                        th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + group.folderId + '}'}"
                                        hx-target="#test-setup-picker" hx-swap="outerHTML"
-                                       hx-include="[name='selectedDeckIds']">
+                                       hx-include="[name='selectedDeckIds'], [name='selectedFileIds']">
                                 <span class="vb-group-cap">
                                     <i th:attr="data-lucide=${group.folderIcon}"></i>
                                 </span>
                                 <div class="vb-group-title" th:text="${group.folderName}">Folder</div>
                                 <div class="vb-group-meta"
-                                     th:text="${group.selectableDeckCount + '/' + group.totalDeckCount + ' usable · ' + group.totalCardCount + ' cards'}">
+                                     th:text="${group.selectableSourceCount + '/' + group.totalSourceCount + ' usable'}">
                                 </div>
                             </label>
 
                             <div class="vb-group-body">
 
+                                <!-- Decks -->
                                 <label th:each="deck : ${group.decks}"
                                        class="vb-deck"
-                                       th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}"
-                                       th:style="'--folder-color: ' + ${group.folderColor}">
+                                       th:classappend="${(deck.usableCardCount == 0 and deck.cardCount > 0) ? ' is-empty' : (deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : ''))}"
+                                       th:style="'--folder-color: ' + ${group.folderColor}"
+                                       th:attr="${(deck.usableCardCount == 0 and deck.cardCount > 0) ? 'title=All cards in this deck are image-only and can\\'t be used for AI tests.' : ''}">
                                     <input class="sh-checkbox sh-test-deck-checkbox"
                                            type="checkbox"
                                            name="selectedDeckIds"
                                            th:value="${deck.deckId}"
                                            th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}"
-                                           th:disabled="${deck.cardCount == 0}"
-                                           th:attr="data-card-count=${deck.cardCount}"
+                                           th:disabled="${deck.usableCardCount == 0}"
+                                           th:attr="${(deck.cardCount > 0) ? 'data-card-count=' + deck.cardCount : ''}"
                                            hx-post="/test/setup/update"
                                            hx-target="#test-setup-picker" hx-swap="outerHTML"
-                                           hx-include="[name='selectedDeckIds']">
+                                           hx-include="[name='selectedDeckIds'], [name='selectedFileIds']">
                                     <span class="vb-deck-icon">
                                         <i data-lucide="layers"></i>
                                     </span>
                                     <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
-                                    <span th:if="${deck.cardCount == 0}" class="sh-mini-tag">empty</span>
-                                    <span th:if="${deck.cardCount > 0}" class="sh-badge sh-badge-primary"
-                                          th:text="${deck.cardCount} + ' cards'"></span>
+                                    <span th:if="${deck.usableCardCount == 0 and deck.cardCount > 0}" class="sh-mini-tag">image-only</span>
+                                    <span th:if="${deck.usableCardCount == 0 and deck.cardCount == 0}" class="sh-mini-tag">empty</span>
+                                    <span th:if="${deck.usableCardCount > 0 and deck.usableCardCount < deck.cardCount}"
+                                          class="sh-badge sh-badge-primary"
+                                          th:text="${deck.usableCardCount + ' usable / ' + deck.cardCount + ' cards'}"></span>
+                                    <span th:if="${deck.usableCardCount > 0 and deck.usableCardCount == deck.cardCount}"
+                                          class="sh-badge sh-badge-primary"
+                                          th:text="${deck.cardCount + ' cards'}"></span>
                                 </label>
 
+                                <!-- Files (after decks in the same group body) -->
+                                <label th:each="file : ${group.files}"
+                                       class="vb-file"
+                                       th:classappend="${!file.isSupported ? ' is-disabled' : (#lists.contains(preselectedFileIds, file.fileId) ? ' is-selected' : '')}"
+                                       th:style="'--folder-color: ' + ${group.folderColor}"
+                                       th:attr="${!file.isSupported ? 'title=File too large for AI test (max 5 MB).' : ''}">
+                                    <input class="sh-checkbox sh-test-file-checkbox"
+                                           type="checkbox"
+                                           name="selectedFileIds"
+                                           th:value="${file.fileId}"
+                                           th:checked="${#lists.contains(preselectedFileIds, file.fileId)}"
+                                           th:disabled="${!file.isSupported}"
+                                           hx-post="/test/setup/update"
+                                           hx-target="#test-setup-picker" hx-swap="outerHTML"
+                                           hx-include="[name='selectedDeckIds'], [name='selectedFileIds']">
+                                    <span class="vb-file-icon">
+                                        <i data-lucide="file-text"></i>
+                                    </span>
+                                    <span class="vb-file-name" th:text="${file.filename}">file.pdf</span>
+                                    <span class="sh-badge" th:text="${file.extension.toUpperCase()}">PDF</span>
+                                    <span class="sh-mini-tag"
+                                          th:text="${#numbers.formatDecimal(file.sizeBytes / 1024.0, 0, 0) + ' KB'}">42 KB</span>
+                                    <span th:if="${!file.isSupported}" class="sh-mini-tag sh-mini-tag-warning"
+                                          title="File too large for AI test (max 5 MB).">too large</span>
+                                </label>
+
+                                <!-- Subgroups -->
                                 <div th:each="sub : ${group.subGroups}"
                                      class="vb-subgroup"
                                      th:style="'--folder-color: ' + ${group.folderColor}">
@@ -145,42 +247,74 @@
                                                th:data-folder-id="${sub.folderId}"
                                                th:checked="${sub.isSelected}"
                                                th:attr="data-indeterminate=${sub.isIndeterminate}"
-                                               th:disabled="${sub.selectableDeckCount == 0}"
+                                               th:disabled="${sub.selectableSourceCount == 0}"
                                                hx-post="/test/setup/update"
                                                th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + sub.folderId + '}'}"
                                                hx-target="#test-setup-picker" hx-swap="outerHTML"
-                                               hx-include="[name='selectedDeckIds']">
+                                               hx-include="[name='selectedDeckIds'], [name='selectedFileIds']">
                                         <span class="vb-subgroup-cap">
                                             <i th:attr="data-lucide=${sub.folderIcon}"></i>
                                         </span>
                                         <span class="vb-subgroup-name" th:text="${sub.folderName}">Subfolder</span>
                                         <span class="vb-subgroup-meta"
-                                              th:text="${sub.selectableDeckCount + '/' + sub.totalDeckCount + ' · ' + sub.totalCardCount + ' cards'}">
+                                              th:text="${sub.selectableSourceCount + '/' + sub.totalSourceCount + ' usable'}">
                                         </span>
                                     </label>
 
                                     <div class="vb-subgroup-body">
                                         <label th:each="deck : ${sub.decks}"
                                                class="vb-deck"
-                                               th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}"
-                                               th:style="'--folder-color: ' + ${group.folderColor}">
+                                               th:classappend="${(deck.usableCardCount == 0 and deck.cardCount > 0) ? ' is-empty' : (deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : ''))}"
+                                               th:style="'--folder-color: ' + ${group.folderColor}"
+                                               th:attr="${(deck.usableCardCount == 0 and deck.cardCount > 0) ? 'title=All cards in this deck are image-only and can\\'t be used for AI tests.' : ''}">
                                             <input class="sh-checkbox sh-test-deck-checkbox"
                                                    type="checkbox"
                                                    name="selectedDeckIds"
                                                    th:value="${deck.deckId}"
                                                    th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}"
-                                                   th:disabled="${deck.cardCount == 0}"
-                                                   th:attr="data-card-count=${deck.cardCount}"
+                                                   th:disabled="${deck.usableCardCount == 0}"
+                                                   th:attr="${(deck.cardCount > 0) ? 'data-card-count=' + deck.cardCount : ''}"
                                                    hx-post="/test/setup/update"
                                                    hx-target="#test-setup-picker" hx-swap="outerHTML"
-                                                   hx-include="[name='selectedDeckIds']">
+                                                   hx-include="[name='selectedDeckIds'], [name='selectedFileIds']">
                                             <span class="vb-deck-icon">
                                                 <i data-lucide="layers"></i>
                                             </span>
                                             <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
-                                            <span th:if="${deck.cardCount == 0}" class="sh-mini-tag">empty</span>
-                                            <span th:if="${deck.cardCount > 0}" class="sh-badge sh-badge-primary"
-                                                  th:text="${deck.cardCount} + ' cards'"></span>
+                                            <span th:if="${deck.usableCardCount == 0 and deck.cardCount > 0}" class="sh-mini-tag">image-only</span>
+                                            <span th:if="${deck.usableCardCount == 0 and deck.cardCount == 0}" class="sh-mini-tag">empty</span>
+                                            <span th:if="${deck.usableCardCount > 0 and deck.usableCardCount < deck.cardCount}"
+                                                  class="sh-badge sh-badge-primary"
+                                                  th:text="${deck.usableCardCount + ' usable / ' + deck.cardCount + ' cards'}"></span>
+                                            <span th:if="${deck.usableCardCount > 0 and deck.usableCardCount == deck.cardCount}"
+                                                  class="sh-badge sh-badge-primary"
+                                                  th:text="${deck.cardCount + ' cards'}"></span>
+                                        </label>
+
+                                        <!-- Files in subgroup -->
+                                        <label th:each="file : ${sub.files}"
+                                               class="vb-file"
+                                               th:classappend="${!file.isSupported ? ' is-disabled' : (#lists.contains(preselectedFileIds, file.fileId) ? ' is-selected' : '')}"
+                                               th:style="'--folder-color: ' + ${group.folderColor}"
+                                               th:attr="${!file.isSupported ? 'title=File too large for AI test (max 5 MB).' : ''}">
+                                            <input class="sh-checkbox sh-test-file-checkbox"
+                                                   type="checkbox"
+                                                   name="selectedFileIds"
+                                                   th:value="${file.fileId}"
+                                                   th:checked="${#lists.contains(preselectedFileIds, file.fileId)}"
+                                                   th:disabled="${!file.isSupported}"
+                                                   hx-post="/test/setup/update"
+                                                   hx-target="#test-setup-picker" hx-swap="outerHTML"
+                                                   hx-include="[name='selectedDeckIds'], [name='selectedFileIds']">
+                                            <span class="vb-file-icon">
+                                                <i data-lucide="file-text"></i>
+                                            </span>
+                                            <span class="vb-file-name" th:text="${file.filename}">file.pdf</span>
+                                            <span class="sh-badge" th:text="${file.extension.toUpperCase()}">PDF</span>
+                                            <span class="sh-mini-tag"
+                                                  th:text="${#numbers.formatDecimal(file.sizeBytes / 1024.0, 0, 0) + ' KB'}">42 KB</span>
+                                            <span th:if="${!file.isSupported}" class="sh-mini-tag sh-mini-tag-warning"
+                                                  title="File too large for AI test (max 5 MB).">too large</span>
                                         </label>
                                     </div>
                                 </div>
@@ -201,13 +335,13 @@
                 <!-- end #test-setup-picker -->
 
             </div>
-            <!-- end panel 1 -->
+            <!-- end panel 2 -->
 
-            <!-- Panel 2: Question Count -->
-            <div class="sh-wizard-panel" id="test-wizard-panel-2">
+            <!-- Panel 3: Question Count -->
+            <div class="sh-wizard-panel" id="test-wizard-panel-3">
                 <div class="sh-section-title">How many questions?</div>
                 <p class="sh-folder-meta mb-3">
-                    AI will generate multiple-choice questions from your selected flashcard content.
+                    AI will generate questions from your selected decks and documents.
                 </p>
                 <div class="sh-test-count-wrap">
                     <input type="number"
@@ -220,7 +354,7 @@
                     <span class="sh-test-count-hint">Between 1 and 20 questions.</span>
                 </div>
             </div>
-            <!-- end panel 2 -->
+            <!-- end panel 3 -->
 
             <!-- Sticky footer -->
             <div class="sh-wizard-footer" id="test-wizard-footer">
@@ -244,7 +378,7 @@
     <script>
     (function () {
         let currentStep = 1;
-        const totalSteps = 2;
+        const totalSteps = 3;
 
         function goToStep(step) {
             if (currentStep === step) return;
@@ -296,9 +430,14 @@
 
         function wizardNext() {
             if (currentStep === 1) {
-                const checked = document.querySelectorAll('.sh-test-deck-checkbox:checked');
+                // Panel 1: Mode — always valid since defaults are pre-checked
+                clearValidationError();
+            }
+            if (currentStep === 2) {
+                // Panel 2: Sources — at least one deck or file checked
+                const checked = document.querySelectorAll('.sh-test-deck-checkbox:checked, .sh-test-file-checkbox:checked');
                 if (checked.length === 0) {
-                    showValidationError('Please select at least one deck.');
+                    showValidationError('Please select at least one deck or document.');
                     return;
                 }
                 clearValidationError();
@@ -312,8 +451,8 @@
                 el = document.createElement('div');
                 el.id = 'test-wizard-validation-msg';
                 el.className = 'sh-wizard-validation-msg';
-                const panel1 = document.getElementById('test-wizard-panel-1');
-                panel1.insertBefore(el, panel1.firstChild);
+                const panel2 = document.getElementById('test-wizard-panel-2');
+                panel2.insertBefore(el, panel2.firstChild);
             }
             el.textContent = msg;
             el.style.display = '';
@@ -326,13 +465,15 @@
 
         // Select-all
         window.testUpdateSelectAll = function () {
-            const all = document.querySelectorAll('.sh-test-deck-checkbox:not([disabled])');
-            const allOn = all.length > 0 && [...all].every(cb => cb.checked);
+            const allDecks = document.querySelectorAll('.sh-test-deck-checkbox:not([disabled])');
+            const allFiles = document.querySelectorAll('.sh-test-file-checkbox:not([disabled])');
+            const all = [...allDecks, ...allFiles];
+            const allOn = all.length > 0 && all.every(cb => cb.checked);
             const btn = document.getElementById('test-vb-select-all-btn');
             if (!btn) return;
             btn.classList.toggle('is-on', allOn);
             const txt = btn.querySelector('.vb-select-all-text');
-            if (txt) txt.textContent = allOn ? 'Deselect all' : 'Select all decks';
+            if (txt) txt.textContent = allOn ? 'Deselect all' : 'Select all sources';
             const icon = btn.querySelector('[data-lucide]');
             if (icon) {
                 icon.setAttribute('data-lucide', allOn ? 'check-square' : 'list-checks');
@@ -344,32 +485,32 @@
         window.testReapplySearch = function () {
             const input = document.getElementById('test-deck-search');
             if (!input || !input.value) return;
-            filterDecks(input.value.toLowerCase());
+            filterSources(input.value.toLowerCase());
         };
 
-        function filterDecks(query) {
+        function filterSources(query) {
             if (!query) {
-                document.querySelectorAll('.vb-group, .vb-subgroup, .vb-deck').forEach(el => { el.style.display = ''; });
+                document.querySelectorAll('.vb-group, .vb-subgroup, .vb-deck, .vb-file').forEach(el => { el.style.display = ''; });
                 return;
             }
             document.querySelectorAll('.vb-group').forEach(group => {
                 const folderTitle = group.querySelector('.vb-group-title');
                 const folderMatches = folderTitle && folderTitle.textContent.toLowerCase().includes(query);
                 let anyVisible = false;
-                group.querySelectorAll(':scope > .vb-group-body > .vb-deck').forEach(deck => {
-                    const deckName = deck.querySelector('.vb-deck-name');
-                    const matches = folderMatches || (deckName && deckName.textContent.toLowerCase().includes(query));
-                    deck.style.display = matches ? '' : 'none';
+                group.querySelectorAll(':scope > .vb-group-body > .vb-deck, :scope > .vb-group-body > .vb-file').forEach(row => {
+                    const rowName = row.querySelector('.vb-deck-name, .vb-file-name');
+                    const matches = folderMatches || (rowName && rowName.textContent.toLowerCase().includes(query));
+                    row.style.display = matches ? '' : 'none';
                     if (matches) anyVisible = true;
                 });
                 group.querySelectorAll('.vb-subgroup').forEach(sub => {
                     const subName = sub.querySelector('.vb-subgroup-name');
                     const subMatches = folderMatches || (subName && subName.textContent.toLowerCase().includes(query));
                     let subAnyVisible = false;
-                    sub.querySelectorAll('.vb-deck').forEach(deck => {
-                        const deckName = deck.querySelector('.vb-deck-name');
-                        const matches = subMatches || (deckName && deckName.textContent.toLowerCase().includes(query));
-                        deck.style.display = matches ? '' : 'none';
+                    sub.querySelectorAll('.vb-deck, .vb-file').forEach(row => {
+                        const rowName = row.querySelector('.vb-deck-name, .vb-file-name');
+                        const matches = subMatches || (rowName && rowName.textContent.toLowerCase().includes(query));
+                        row.style.display = matches ? '' : 'none';
                         if (matches) subAnyVisible = true;
                     });
                     sub.style.display = (subAnyVisible || subMatches) ? '' : 'none';
@@ -381,16 +522,16 @@
 
         const searchInput = document.getElementById('test-deck-search');
         if (searchInput) {
-            searchInput.addEventListener('input', function () { filterDecks(this.value.toLowerCase()); });
+            searchInput.addEventListener('input', function () { filterSources(this.value.toLowerCase()); });
         }
 
         const selectAllBtn = document.getElementById('test-vb-select-all-btn');
         if (selectAllBtn) {
             selectAllBtn.addEventListener('click', function () {
-                const all = document.querySelectorAll('.sh-test-deck-checkbox:not([disabled])');
+                const all = document.querySelectorAll('.sh-test-deck-checkbox:not([disabled]), .sh-test-file-checkbox:not([disabled])');
                 const allOn = all.length > 0 && [...all].every(cb => cb.checked);
                 all.forEach(cb => { cb.checked = !allOn; });
-                const first = document.querySelector('.sh-test-deck-checkbox:not([disabled])');
+                const first = document.querySelector('.sh-test-deck-checkbox:not([disabled]), .sh-test-file-checkbox:not([disabled])');
                 if (first) htmx.trigger(first, 'change');
             });
         }
@@ -407,6 +548,35 @@
         updateStepIndicator();
         updateNavButtons();
         if (typeof initLucide === 'function') initLucide();
+    })();
+    </script>
+
+    <!-- Progress message cycler -->
+    <script>
+    (function () {
+        const messages = [
+            'Reading flashcards…',
+            'Reading documents…',
+            'Asking Gemini…',
+            'Building questions…',
+            'Almost there…'
+        ];
+        let timer = null;
+        document.body.addEventListener('htmx:beforeRequest', function (e) {
+            if (e.detail.elt.matches('form[hx-post="/test/session"]')) {
+                let i = 0;
+                const el = document.getElementById('test-progress-msg');
+                if (!el) return;
+                el.textContent = messages[0];
+                timer = setInterval(() => {
+                    i = Math.min(i + 1, messages.length - 1);
+                    el.textContent = messages[i];
+                }, 2500);
+            }
+        });
+        document.body.addEventListener('htmx:afterRequest', function () {
+            if (timer) { clearInterval(timer); timer = null; }
+        });
     })();
     </script>
 

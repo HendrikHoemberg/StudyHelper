@@ -2383,6 +2383,47 @@ textarea.sh-input {
     white-space: nowrap;
 }
 
+/* ---- File row ---- */
+.vb-file {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: var(--surface);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+.vb-file:hover { border-color: var(--border); }
+.vb-file.is-selected {
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 7%, var(--surface));
+    border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 40%, transparent);
+}
+.vb-file.is-disabled { opacity: 0.55; cursor: not-allowed; }
+
+.vb-file-icon {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 14%, transparent);
+    color: var(--folder-color, var(--accent));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.vb-file-icon svg { width: 12px; height: 12px; }
+
+.vb-file-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 
 
 /* ---- Empty deck label ---- */
@@ -2398,6 +2439,12 @@ textarea.sh-input {
     letter-spacing: 0.04em;
     text-transform: uppercase;
     white-space: nowrap;
+}
+
+.sh-mini-tag-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
 }
 
 /* Complete page */
@@ -2642,6 +2689,71 @@ textarea.sh-input {
     color: var(--danger);
     font-size: 0.875rem;
     padding: 0.5rem 0;
+}
+
+/* ---- Test wizard warning/error banners ---- */
+.sh-test-warn-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius);
+    background: #fff3cd;
+    color: #856404;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border: 1px solid #ffc107;
+}
+.sh-test-warn-banner i { width: 16px; height: 16px; flex-shrink: 0; }
+
+.sh-test-error-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius);
+    background: #f8d7da;
+    color: #721c24;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border: 1px solid #f5c6cb;
+}
+.sh-test-error-banner i { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* ---- Segmented control ---- */
+.sh-segmented-control {
+    display: inline-flex;
+    background: var(--border-light);
+    border-radius: var(--radius);
+    padding: 3px;
+    gap: 1px;
+}
+.sh-segmented-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: calc(var(--radius) - 2px);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+.sh-segmented-option:hover { color: var(--text); }
+.sh-segmented-option:has(input:checked) {
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.sh-segmented-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
 .sh-study-search-wrap {
