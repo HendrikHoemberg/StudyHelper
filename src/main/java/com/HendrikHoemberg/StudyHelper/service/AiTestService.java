@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.dto.QuestionType;
 import com.HendrikHoemberg.StudyHelper.dto.TestQuestion;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import tools.jackson.databind.JsonNode;
@@ -41,6 +42,9 @@ public class AiTestService {
                 throw new IllegalStateException("AI returned no questions.");
             }
             return questions.stream()
+                .map(q -> q.type() == null
+                    ? new TestQuestion(QuestionType.MULTIPLE_CHOICE, q.questionText(), q.options(), q.correctOptionIndex())
+                    : q)
                 .filter(q -> q.options() != null && q.options().size() == 4
                     && q.correctOptionIndex() >= 0 && q.correctOptionIndex() <= 3)
                 .limit(count)

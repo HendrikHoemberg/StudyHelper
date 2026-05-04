@@ -4,5 +4,8 @@ import java.util.List;
 
 public record TestConfig(
     List<Long> selectedDeckIds,
-    int questionCount
+    List<Long> selectedFileIds,
+    int questionCount,
+    TestQuestionMode questionMode,
+    Difficulty difficulty
 ) {}

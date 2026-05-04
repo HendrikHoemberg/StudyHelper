@@ -1,9 +1,11 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
+import com.HendrikHoemberg.StudyHelper.dto.Difficulty;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckGroup;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
 import com.HendrikHoemberg.StudyHelper.dto.TestConfig;
 import com.HendrikHoemberg.StudyHelper.dto.TestQuestion;
+import com.HendrikHoemberg.StudyHelper.dto.TestQuestionMode;
 import com.HendrikHoemberg.StudyHelper.dto.TestSessionState;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
@@ -131,7 +133,7 @@ public class TestController {
             List<TestQuestion> questions = aiTestService.generateQuestions(flashcards, count);
 
             TestSessionState state = new TestSessionState(
-                new TestConfig(normalizedIds, count),
+                new TestConfig(normalizedIds, List.of(), count, TestQuestionMode.MCQ_ONLY, Difficulty.MEDIUM),
                 questions, 0, new HashMap<>()
             );
             httpSession.setAttribute(SESSION_KEY, state);
