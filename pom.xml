@@ -87,7 +87,7 @@
 		<!-- Spring AI - Google Gemini -->
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-google-genai-spring-boot-starter</artifactId>
+			<artifactId>spring-ai-starter-model-google-genai</artifactId>
 		</dependency>
 
 		<!-- Test Dependencies -->

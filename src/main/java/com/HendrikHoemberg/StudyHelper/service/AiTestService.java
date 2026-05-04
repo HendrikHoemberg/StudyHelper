@@ -2,8 +2,8 @@ package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.TestQuestion;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
@@ -13,9 +13,9 @@ import java.util.List;
 public class AiTestService {
 
     private final ChatClient chatClient;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
 
-    public AiTestService(ChatClient.Builder builder, ObjectMapper objectMapper) {
+    public AiTestService(ChatClient.Builder builder, JsonMapper objectMapper) {
         this.chatClient = builder.build();
         this.objectMapper = objectMapper;
     }
