@@ -21,10 +21,13 @@ public class FolderService {
 
     private final FolderRepository folderRepository;
     private final FileStorageService fileStorageService;
+    private final FlashcardService flashcardService;
 
-    public FolderService(FolderRepository folderRepository, FileStorageService fileStorageService) {
+    public FolderService(FolderRepository folderRepository, FileStorageService fileStorageService,
+                         FlashcardService flashcardService) {
         this.folderRepository = folderRepository;
         this.fileStorageService = fileStorageService;
+        this.flashcardService = flashcardService;
     }
 
     @Transactional(readOnly = true)
@@ -102,8 +105,11 @@ public class FolderService {
     private void collectDecksRecursively(Folder folder, List<StudyDeckOption> options) {
         String path = buildFolderPathString(folder);
         for (Deck deck : folder.getDecks()) {
+            int usable = (int) deck.getFlashcards().stream()
+                .filter(flashcardService::hasUsableTextForAi).count();
             options.add(new StudyDeckOption(
-                deck.getId(), deck.getName(), folder.getId(), path, folder.getColorHex(), deck.getFlashcards().size()
+                deck.getId(), deck.getName(), folder.getId(), path, folder.getColorHex(),
+                deck.getFlashcards().size(), usable
             ));
         }
         for (Folder sub : folder.getSubFolders()) {
@@ -114,14 +120,17 @@ public class FolderService {
     private StudyDeckGroup toStudyDeckGroup(Folder folder, List<Long> selectedDeckIds) {
         List<StudyDeckOption> decks = folder.getDecks().stream()
             .map(deck -> {
-                deck.getFlashcards().size();
+                int total = deck.getFlashcards().size();
+                int usable = (int) deck.getFlashcards().stream()
+                    .filter(flashcardService::hasUsableTextForAi).count();
                 return new StudyDeckOption(
                     deck.getId(),
                     deck.getName(),
                     folder.getId(),
                     buildFolderPathString(folder),
                     folder.getColorHex(),
-                    deck.getFlashcards().size()
+                    total,
+                    usable
                 );
             })
             .toList();

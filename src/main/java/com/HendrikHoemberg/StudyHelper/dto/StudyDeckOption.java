@@ -8,6 +8,7 @@ public record StudyDeckOption(
     Long folderId,
     String folderPath,
     String folderColorHex,
-    int cardCount
+    int cardCount,
+    int usableCardCount
 ) implements Serializable {
 }

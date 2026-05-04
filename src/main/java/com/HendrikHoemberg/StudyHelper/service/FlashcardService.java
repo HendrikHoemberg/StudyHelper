@@ -140,6 +140,12 @@ public class FlashcardService {
         flashcardRepository.save(card);
     }
 
+    public boolean hasUsableTextForAi(Flashcard card) {
+        boolean hasFront = card.getFrontText() != null && !card.getFrontText().isBlank();
+        boolean hasBack = card.getBackText() != null && !card.getBackText().isBlank();
+        return hasFront || hasBack;
+    }
+
     private String storeImage(MultipartFile file) {
         if (file == null || file.isEmpty()) return null;
         String mime = file.getContentType();

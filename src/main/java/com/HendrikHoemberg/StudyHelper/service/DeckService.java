@@ -20,10 +20,13 @@ public class DeckService {
 
     private final DeckRepository deckRepository;
     private final FolderRepository folderRepository;
+    private final FlashcardService flashcardService;
 
-    public DeckService(DeckRepository deckRepository, FolderRepository folderRepository) {
+    public DeckService(DeckRepository deckRepository, FolderRepository folderRepository,
+                       FlashcardService flashcardService) {
         this.deckRepository = deckRepository;
         this.folderRepository = folderRepository;
+        this.flashcardService = flashcardService;
     }
 
     @Transactional
@@ -95,14 +98,17 @@ public class DeckService {
     public List<StudyDeckOption> getStudyDeckOptions(User user) {
         return deckRepository.findByUser(user).stream()
             .map(deck -> {
-                deck.getFlashcards().size();
+                int total = deck.getFlashcards().size();
+                int usable = (int) deck.getFlashcards().stream()
+                    .filter(flashcardService::hasUsableTextForAi).count();
                 return new StudyDeckOption(
                     deck.getId(),
                     deck.getName(),
                     deck.getFolder().getId(),
                     buildFolderPath(deck.getFolder()),
                     deck.getFolder().getColorHex(),
-                    deck.getFlashcards().size()
+                    total,
+                    usable
                 );
             })
             .sorted((a, b) -> {
