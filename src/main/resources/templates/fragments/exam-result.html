@@ -1,0 +1,94 @@
+<div th:fragment="exam-result" id="exam-runtime" class="animate-fade-in"
+     th:with="score=${exam.overallScorePct}">
+
+    <div class="sh-exam-result-header">
+        <div class="sh-exam-result-score" 
+             th:classappend="${score >= 80 ? 'score-green' : (score >= 60 ? 'score-amber' : 'score-red')}">
+            <span th:text="${score + '%'}">85%</span>
+            <span>Score</span>
+        </div>
+        
+        <div class="sh-exam-result-info">
+            <h1 th:text="${exam.title}">Exam Results</h1>
+            <div class="sh-exam-result-meta">
+                <span><i class="fa-solid fa-calendar-day"></i> <span th:text="${#temporals.format(exam.completedAt, 'd MMM yyyy, HH:mm')}">12 May 2026</span></span>
+                <span><i class="fa-solid fa-layer-group"></i> <span th:text="${exam.questionSize}">MEDIUM</span> depth</span>
+                <span><i class="fa-solid fa-list-ol"></i> <span th:text="${exam.questionCount}">10</span> questions</span>
+                <span th:if="${exam.timerMinutes != null}"><i class="fa-solid fa-clock"></i> <span th:text="${exam.timerMinutes}">30</span> min limit</span>
+            </div>
+        </div>
+
+        <div class="ms-auto">
+            <a th:href="@{/exams}" class="sh-btn sh-btn-primary">
+                <i class="fa-solid fa-list me-2"></i> View Past Exams
+            </a>
+        </div>
+    </div>
+
+    <!-- AI Report Grid -->
+    <div class="sh-exam-report-grid" th:if="${report != null}">
+        <div class="sh-exam-report-panel panel-strengths">
+            <h3><i class="fa-solid fa-circle-check"></i> Strengths</h3>
+            <ul>
+                <li th:each="s : ${report.strengths()}" th:text="${s}">Strength text</li>
+            </ul>
+        </div>
+        <div class="sh-exam-report-panel panel-weaknesses">
+            <h3><i class="fa-solid fa-circle-xmark"></i> Weaknesses</h3>
+            <ul>
+                <li th:each="w : ${report.weaknesses()}" th:text="${w}">Weakness text</li>
+            </ul>
+        </div>
+        <div class="sh-exam-report-panel panel-topics">
+            <h3><i class="fa-solid fa-book-open"></i> Topics to Revisit</h3>
+            <ul>
+                <li th:each="t : ${report.topicsToRevisit()}" th:text="${t}">Topic name</li>
+            </ul>
+        </div>
+        <div class="sh-exam-report-panel panel-next-steps">
+            <h3><i class="fa-solid fa-forward-step"></i> Next Steps</h3>
+            <ul>
+                <li th:each="n : ${report.suggestedNextSteps()}" th:text="${n}">Actionable step</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Per-Question Detail -->
+    <div class="sh-exam-question-results">
+        <h2>Detailed Feedback</h2>
+        <div th:each="q : ${exam.questions}" class="sh-exam-q-accordion-wrapper">
+            <details class="sh-exam-q-accordion">
+                <summary>
+                    <div class="sh-exam-q-header-left">
+                        <div class="sh-exam-q-status" 
+                             th:classappend="${q.scorePercent >= 80 ? 'score-green' : (q.scorePercent >= 60 ? 'score-amber' : 'score-red')}">
+                            <span th:text="${q.scorePercent + '%'}">85</span>
+                        </div>
+                        <span th:text="${#strings.abbreviate(q.questionText, 80)}">Question preview...</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-muted"></i>
+                </summary>
+                <div class="sh-exam-q-body">
+                    <div class="sh-exam-q-section">
+                        <span class="sh-exam-q-label">Question</span>
+                        <div class="sh-exam-q-content" th:text="${q.questionText}">Full question text</div>
+                    </div>
+                    <div class="sh-exam-q-section">
+                        <span class="sh-exam-q-label">Your Answer</span>
+                        <div class="sh-exam-q-content sh-exam-user-answer" 
+                             th:text="${#strings.isEmpty(q.userAnswer) ? 'Not answered' : q.userAnswer}"
+                             th:classappend="${#strings.isEmpty(q.userAnswer) ? 'text-muted fst-italic' : ''}">
+                            User answer text
+                        </div>
+                    </div>
+                    <div class="sh-exam-q-section">
+                        <span class="sh-exam-q-label">Feedback</span>
+                        <div class="sh-exam-q-content sh-exam-feedback" th:text="${q.feedback}">
+                            AI feedback explaining why it's right/wrong...
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>

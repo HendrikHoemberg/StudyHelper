@@ -1,0 +1,64 @@
+<div th:fragment="exam-question" id="exam-runtime" class="animate-fade-in"
+     th:with="currentIndex=${currentIndex != null ? currentIndex : 0}, 
+              question=${state.questions().get(currentIndex)},
+              isLast=${currentIndex == state.questions().size() - 1},
+              isFirst=${currentIndex == 0}">
+
+    <!-- Timer Header -->
+    <div th:if="${state.config().timerMinutes() != null}" 
+         class="sh-exam-timer" 
+         th:data-started-at="${state.startedAt()}"
+         th:data-timer-minutes="${state.config().timerMinutes()}">
+        <i class="fa-solid fa-clock"></i>
+        <span>--:--</span>
+    </div>
+
+    <div class="sh-exam-question-card" th:data-q-index="${currentIndex}">
+        <div class="sh-exam-progress mb-3">
+            Question <span th:text="${currentIndex + 1}">1</span> of <span th:text="${state.questions().size()}">5</span>
+        </div>
+
+        <div class="sh-exam-question-text" th:text="${question.questionText()}">
+            Question text goes here?
+        </div>
+
+        <textarea name="answer" 
+                  class="sh-exam-answer" 
+                  placeholder="Type your answer here..."
+                  th:text="${state.answers().get(currentIndex)}"></textarea>
+
+        <div class="sh-exam-footer">
+            <div>
+                <button th:if="${!isFirst}"
+                        class="sh-btn sh-btn-secondary"
+                        hx-get="/exam/prev"
+                        th:hx-vals="${'js:{currentIndex: ' + currentIndex + '}'}"
+                        hx-target="#exam-runtime"
+                        hx-swap="outerHTML">
+                    <i class="fa-solid fa-chevron-left me-2"></i> Previous
+                </button>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button th:if="${!isLast}"
+                        class="sh-btn sh-btn-primary"
+                        hx-post="/exam/answer"
+                        th:hx-vals="${'js:{index: ' + currentIndex + ', answer: document.querySelector(''.sh-exam-answer'').value}'}"
+                        hx-target="#exam-runtime"
+                        hx-swap="outerHTML">
+                    Next <i class="fa-solid fa-chevron-right ms-2"></i>
+                </button>
+
+                <button th:if="${isLast}"
+                        class="sh-btn sh-btn-success"
+                        hx-post="/exam/submit"
+                        th:hx-vals="${'js:{index: ' + currentIndex + ', answer: document.querySelector(''.sh-exam-answer'').value}'}"
+                        hx-target="#exam-runtime"
+                        hx-swap="outerHTML"
+                        hx-indicator="#grading-loader">
+                    <i class="fa-solid fa-paper-plane me-2"></i> Submit Exam
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

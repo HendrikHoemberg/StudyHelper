@@ -103,8 +103,17 @@ public class ExamController {
 
             session.setAttribute(SESSION_KEY, state);
             
-            // C1 STUB
-            return "<div>Generated " + questions.size() + " questions for exam on " + sourceSummary + ". TODO C3 real runtime view.</div>";
+            if ("true".equals(hxRequest)) {
+                model.addAttribute("state", state);
+                model.addAttribute("currentIndex", 0);
+                if (layout == ExamLayout.PER_PAGE) {
+                    return "fragments/exam-question :: exam-question";
+                } else {
+                    return "fragments/exam-single-page :: exam-single-page";
+                }
+            }
+
+            return "exam-page";
 
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -113,10 +122,11 @@ public class ExamController {
     }
 
     @PostMapping("/exam/answer")
-    @ResponseBody
-    public String saveAnswer(@RequestParam int index, @RequestParam String answer, HttpSession session) {
+    public String saveAnswer(@RequestParam int index, 
+                             @RequestParam String answer, 
+                             HttpSession session, Model model) {
         ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
-        if (state == null) return "Session expired";
+        if (state == null) return "redirect:/study/start";
 
         Map<Integer, String> newAnswers = new HashMap<>(state.answers());
         newAnswers.put(index, answer);
@@ -126,33 +136,72 @@ public class ExamController {
         );
         session.setAttribute(SESSION_KEY, newState);
         
-        return "OK";
+        model.addAttribute("state", newState);
+        model.addAttribute("currentIndex", index + 1);
+        return "fragments/exam-question :: exam-question";
     }
 
     @GetMapping("/exam/next")
-    public String next(@RequestParam int currentIndex, Model model) {
-        return "<div>Next question after " + currentIndex + " stub.</div>";
+    public String next(@RequestParam int currentIndex, HttpSession session, Model model) {
+        ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
+        if (state == null) return "redirect:/study/start";
+        
+        model.addAttribute("state", state);
+        model.addAttribute("currentIndex", currentIndex + 1);
+        return "fragments/exam-question :: exam-question";
     }
 
     @GetMapping("/exam/prev")
-    public String prev(@RequestParam int currentIndex, Model model) {
-        return "<div>Previous question before " + currentIndex + " stub.</div>";
+    public String prev(@RequestParam int currentIndex, HttpSession session, Model model) {
+        ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
+        if (state == null) return "redirect:/study/start";
+        
+        model.addAttribute("state", state);
+        model.addAttribute("currentIndex", currentIndex - 1);
+        return "fragments/exam-question :: exam-question";
     }
 
     @PostMapping("/exam/submit")
-    public String submit(Model model, Principal principal, HttpSession session, HttpServletResponse response) {
+    public String submit(@RequestParam(required = false) Integer index,
+                         @RequestParam(required = false) String answer,
+                         @RequestParam(required = false) Map<String, String> allAnswers,
+                         Model model, Principal principal, HttpSession session, HttpServletResponse response) {
         if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
         
         ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
         if (state == null) return "<div>Session expired</div>";
 
+        // Update answers one last time if they came in with the submit
+        Map<Integer, String> finalAnswers = new HashMap<>(state.answers());
+        if (index != null && answer != null) {
+            finalAnswers.put(index, answer);
+        } else if (allAnswers != null) {
+            // SINGLE_PAGE layout sends answers[0], answers[1]...
+            allAnswers.forEach((key, value) -> {
+                if (key.startsWith("answers[")) {
+                    try {
+                        int idx = Integer.parseInt(key.substring(8, key.length() - 1));
+                        finalAnswers.put(idx, value);
+                    } catch (Exception ignored) {}
+                }
+            });
+        }
+
         try {
-            ExamGradingResult grading = aiExamService.grade(state.questions(), state.answers(), state.config().size());
-            Exam saved = examService.saveCompleted(user, state, grading);
+            ExamGradingResult grading = aiExamService.grade(state.questions(), finalAnswers, state.config().size());
+            
+            // Create a new state with final answers for saving
+            ExamSessionState finalState = new ExamSessionState(
+                state.config(), state.questions(), finalAnswers, state.startedAt(), state.sourceSummary()
+            );
+            
+            Exam saved = examService.saveCompleted(user, finalState, grading);
             session.removeAttribute(SESSION_KEY);
             
-            return "<div>Exam submitted and graded! Score: " + saved.getOverallScorePct() + "%. TODO C3 real results view.</div>";
+            model.addAttribute("exam", saved);
+            model.addAttribute("report", grading.overall());
+            return "fragments/exam-result :: exam-result";
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return "<div>Grading failed: " + e.getMessage() + "</div>";

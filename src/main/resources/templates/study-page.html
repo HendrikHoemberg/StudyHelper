@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
-<head th:replace="~{fragments/layout :: head('Study Session')}"></head>
+<head th:replace="~{fragments/layout :: head('Study Session')}">
+    <link rel="stylesheet" th:href="@{/css/exam.css}">
+</head>
 <body>
 
 <div class="app-layout">
@@ -29,5 +31,6 @@
 
 <div th:replace="~{fragments/layout :: scripts}"></div>
 <script src="/js/study-wizard.js"></script>
+<script src="/js/exam.js"></script>
 </body>
 </html>

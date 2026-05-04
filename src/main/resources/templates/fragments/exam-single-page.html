@@ -1,0 +1,34 @@
+<div th:fragment="exam-single-page" id="exam-runtime" class="animate-fade-in">
+
+    <!-- Timer Header -->
+    <div th:if="${state.config().timerMinutes() != null}" 
+         class="sh-exam-timer" 
+         th:data-started-at="${state.startedAt()}"
+         th:data-timer-minutes="${state.config().timerMinutes()}">
+        <i class="fa-solid fa-clock"></i>
+        <span>--:--</span>
+    </div>
+
+    <form hx-post="/exam/submit" hx-target="#exam-runtime" hx-swap="outerHTML" hx-indicator="#grading-loader">
+        <div th:each="question, iter : ${state.questions()}" class="sh-exam-question-card">
+            <div class="sh-exam-progress mb-3">
+                Question <span th:text="${iter.index + 1}">1</span> of <span th:text="${state.questions().size()}">5</span>
+            </div>
+
+            <div class="sh-exam-question-text" th:text="${question.questionText()}">
+                Question text goes here?
+            </div>
+
+            <textarea th:name="${'answers[' + iter.index + ']'}" 
+                      class="sh-exam-answer" 
+                      placeholder="Type your answer here..."
+                      th:text="${state.answers().get(iter.index)}"></textarea>
+        </div>
+
+        <div class="d-flex justify-content-center py-4">
+            <button type="submit" class="sh-btn sh-btn-success sh-btn-lg">
+                <i class="fa-solid fa-paper-plane me-2"></i> Submit Exam
+            </button>
+        </div>
+    </form>
+</div>

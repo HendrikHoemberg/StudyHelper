@@ -206,11 +206,11 @@ public class StudyController {
 
                 if (totalChars > 150_000) throw new IllegalArgumentException("Selection too large — please deselect some sources.");
 
-                int count = Math.max(1, Math.min(questionCount, 20));
-                List<QuizQuestion> questions = aiQuizService.generate(flashcards, documents, count, quizQuestionMode, difficulty);
+                int qCount = Math.max(1, Math.min(questionCount, 20));
+                List<QuizQuestion> questions = aiQuizService.generate(flashcards, documents, qCount, quizQuestionMode, difficulty);
 
                 QuizSessionState state = new QuizSessionState(
-                    new QuizConfig(deckIds, fileIds, count, quizQuestionMode, difficulty),
+                    new QuizConfig(deckIds, fileIds, qCount, quizQuestionMode, difficulty),
                     questions, 0, new HashMap<>()
                 );
                 model.addAttribute("mode", mode);
