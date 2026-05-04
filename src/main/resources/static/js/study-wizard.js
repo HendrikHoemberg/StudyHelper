@@ -320,8 +320,13 @@
 
     // Core init — called on DOMContentLoaded AND after HTMX swaps
     window.initStudyWizard = function () {
-        // Only run if the wizard is present in the DOM
-        if (!document.getElementById('study-mode-input')) return;
+        const wizardForm = document.querySelector('.sh-study-setup-card');
+        if (!wizardForm) return;
+
+        // If this specific form instance is already initialized, don't reset state.
+        // This prevents HTMX partial updates (like source selection) from resetting the step.
+        if (wizardForm.dataset.initialized === 'true') return;
+        wizardForm.dataset.initialized = 'true';
 
         // Reset state for fresh load
         currentStep = 1;
