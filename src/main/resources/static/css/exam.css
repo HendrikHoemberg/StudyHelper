@@ -1,4 +1,17 @@
 /* Exam Runtime & Results Styling */
+:root {
+    --bg-card: var(--surface);
+    --bg-main: var(--bg);
+    --border-color: var(--border);
+    --text-main: var(--text);
+    --primary-color: var(--accent);
+    --primary-rgb: 99, 102, 241; /* Indigo */
+}
+
+[data-theme="dark"] {
+    --bg-card: var(--surface-raised);
+    --border-color: var(--border);
+}
 
 .sh-exam-timer {
     position: sticky;
@@ -42,10 +55,14 @@
 .sh-exam-question-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    margin-bottom: 2.5rem;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+    /* Add a subtle top border for more distinction */
+    border-top: 4px solid var(--primary-color);
 }
 
 .sh-exam-question-text {
