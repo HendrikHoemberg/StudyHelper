@@ -41,6 +41,10 @@ public class FileStorageService {
         }
     }
 
+    public Path resolvePath(String storedFilename) {
+        return uploadDir.resolve(storedFilename).normalize();
+    }
+
     public void replaceContents(String storedFilename, MultipartFile file) throws IOException {
         Files.copy(file.getInputStream(), uploadDir.resolve(storedFilename), StandardCopyOption.REPLACE_EXISTING);
     }

@@ -10,6 +10,7 @@ import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
+import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.StudySessionService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +49,9 @@ class StudySessionControllerTests {
 
     @MockitoBean
     private FlashcardService flashcardService;
+
+    @MockitoBean
+    private FolderService folderService;
 
     @MockitoBean
     private UserService userService;
