@@ -3,6 +3,8 @@ package com.HendrikHoemberg.StudyHelper.service;
 import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckGroup;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
+import com.HendrikHoemberg.StudyHelper.dto.TestFileOption;
+import com.HendrikHoemberg.StudyHelper.dto.TestSourceGroup;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
@@ -100,6 +102,124 @@ public class FolderService {
         List<StudyDeckOption> options = new ArrayList<>();
         collectDecksRecursively(folder, options);
         return options;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TestSourceGroup> getTestSourceTree(User user, List<Long> selectedDeckIds, List<Long> selectedFileIds) {
+        List<Folder> roots = folderRepository.findByUserAndParentFolderIsNull(user);
+        return roots.stream()
+            .map(f -> toTestSourceGroup(f, selectedDeckIds, selectedFileIds))
+            .filter(g -> !g.decks().isEmpty() || !g.files().isEmpty() || !g.subGroups().isEmpty())
+            .toList();
+    }
+
+    private TestSourceGroup toTestSourceGroup(Folder folder, List<Long> selectedDeckIds, List<Long> selectedFileIds) {
+        List<StudyDeckOption> decks = folder.getDecks().stream()
+            .map(deck -> {
+                int total = deck.getFlashcards().size();
+                int usable = (int) deck.getFlashcards().stream()
+                    .filter(flashcardService::hasUsableTextForAi).count();
+                return new StudyDeckOption(
+                    deck.getId(),
+                    deck.getName(),
+                    folder.getId(),
+                    buildFolderPathString(folder),
+                    folder.getColorHex(),
+                    total,
+                    usable
+                );
+            })
+            .toList();
+
+        List<TestFileOption> files = folder.getFiles().stream()
+            .filter(f -> {
+                String ext = getFileExtension(f.getOriginalFilename());
+                return List.of("pdf", "txt", "md").contains(ext.toLowerCase());
+            })
+            .map(f -> {
+                long size = f.getFileSizeBytes();
+                boolean isSupported = size <= 5 * 1024 * 1024; // 5MB
+                return new TestFileOption(
+                    f.getId(),
+                    f.getOriginalFilename(),
+                    size,
+                    getFileExtension(f.getOriginalFilename()),
+                    isSupported
+                );
+            })
+            .toList();
+
+        List<TestSourceGroup> subGroups = folder.getSubFolders().stream()
+            .map(f -> toTestSourceGroup(f, selectedDeckIds, selectedFileIds))
+            .filter(g -> !g.decks().isEmpty() || !g.files().isEmpty() || !g.subGroups().isEmpty())
+            .toList();
+
+        int selectableSourceCount = (int) decks.stream().filter(d -> d.usableCardCount() > 0).count()
+            + (int) files.stream().filter(TestFileOption::isSupported).count()
+            + subGroups.stream().mapToInt(TestSourceGroup::selectableSourceCount).sum();
+
+        int totalSourceCount = decks.size() + files.size()
+            + subGroups.stream().mapToInt(TestSourceGroup::totalSourceCount).sum();
+
+        boolean allSelected = true;
+        boolean someSelected = false;
+
+        for (StudyDeckOption deck : decks) {
+            if (selectedDeckIds.contains(deck.deckId())) {
+                someSelected = true;
+            } else {
+                allSelected = false;
+            }
+        }
+
+        for (TestFileOption file : files) {
+            if (selectedFileIds.contains(file.fileId())) {
+                someSelected = true;
+            } else {
+                allSelected = false;
+            }
+        }
+
+        for (TestSourceGroup sub : subGroups) {
+            if (sub.isSelected()) {
+                someSelected = true;
+            } else if (sub.isIndeterminate()) {
+                someSelected = true;
+                allSelected = false;
+            } else {
+                allSelected = false;
+            }
+        }
+
+        if (decks.isEmpty() && files.isEmpty() && subGroups.isEmpty()) {
+            allSelected = false;
+        }
+
+        boolean isSelected = allSelected && someSelected;
+        boolean isIndeterminate = !allSelected && someSelected;
+
+        String color = folder.getColorHex() != null && !folder.getColorHex().isBlank()
+            ? folder.getColorHex() : "#6366f1";
+
+        return new TestSourceGroup(
+            folder.getId(),
+            folder.getName(),
+            buildFolderPathString(folder),
+            color,
+            iconOf(folder),
+            totalSourceCount,
+            selectableSourceCount,
+            decks,
+            files,
+            subGroups,
+            isSelected,
+            isIndeterminate
+        );
+    }
+
+    private String getFileExtension(String filename) {
+        if (filename == null || !filename.contains(".")) return "";
+        return filename.substring(filename.lastIndexOf(".") + 1);
     }
 
     private void collectDecksRecursively(Folder folder, List<StudyDeckOption> options) {
