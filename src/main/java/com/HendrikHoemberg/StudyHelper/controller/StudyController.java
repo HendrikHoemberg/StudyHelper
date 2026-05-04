@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
+import com.HendrikHoemberg.StudyHelper.controller.ExamController;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
@@ -30,6 +31,7 @@ public class StudyController {
     private final UserService userService;
     private final DocumentExtractionService documentExtractionService;
     private final FileEntryService fileEntryService;
+    private final ExamController examController;
 
     public StudyController(StudySessionService studySessionService,
                            AiQuizService aiQuizService,
@@ -38,7 +40,8 @@ public class StudyController {
                            FolderService folderService,
                            UserService userService,
                            DocumentExtractionService documentExtractionService,
-                           FileEntryService fileEntryService) {
+                           FileEntryService fileEntryService,
+                           ExamController examController) {
         this.studySessionService = studySessionService;
         this.aiQuizService = aiQuizService;
         this.deckService = deckService;
@@ -47,6 +50,7 @@ public class StudyController {
         this.userService = userService;
         this.documentExtractionService = documentExtractionService;
         this.fileEntryService = fileEntryService;
+        this.examController = examController;
     }
 
     @GetMapping("/study/start")
@@ -158,6 +162,11 @@ public class StudyController {
                                 @RequestParam(defaultValue = "MCQ_ONLY") QuizQuestionMode quizQuestionMode,
                                 @RequestParam(defaultValue = "MEDIUM") Difficulty difficulty,
                                 @RequestParam(defaultValue = "5") int questionCount,
+                                // Exam params
+                                @RequestParam(defaultValue = "MEDIUM") ExamQuestionSize examQuestionSize,
+                                @RequestParam(defaultValue = "5") int examQuestionCount,
+                                @RequestParam(required = false) Integer timerMinutes,
+                                @RequestParam(defaultValue = "PER_PAGE") ExamLayout examLayout,
                                 Model model,
                                 Principal principal,
                                 HttpSession session,
@@ -211,8 +220,7 @@ public class StudyController {
                 return handleError(mode, selectedDeckIds, selectedFileIds, ex.getMessage(), model, user, session, response, hxRequest);
             }
         } else if (mode == StudyMode.EXAM) {
-            response.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);
-            return handleError(mode, selectedDeckIds, selectedFileIds, "Exam mode is coming soon!", model, user, session, response, hxRequest);
+            return examController.createSession(selectedDeckIds, selectedFileIds, examQuestionSize, examQuestionCount, timerMinutes, examLayout, model, principal, session, response, hxRequest);
         }
 
         return "redirect:/study/start";
