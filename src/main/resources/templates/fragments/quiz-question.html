@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <body>
 
-<div th:fragment="testQuestion" id="test-session-content" class="sh-fade-in sh-study-session-active">
+<div th:fragment="quizQuestion" id="quiz-session-content" class="sh-fade-in sh-study-session-active">
 
     <!-- Progress bar -->
     <div class="sh-study-progress-wrap mb-4">
@@ -19,48 +19,48 @@
     <div class="sh-card mb-3">
         <div class="sh-card-body">
             <div class="sh-flashcard-label mb-2">Question</div>
-            <p class="sh-test-question-text" th:text="${currentQuestion.questionText}">Question text</p>
+            <p class="sh-quiz-question-text" th:text="${currentQuestion.questionText}">Question text</p>
         </div>
     </div>
 
     <!-- Options: clickable form when unanswered -->
     <form th:if="${!answered}"
           method="post"
-          hx-post="/test/answer"
-          hx-target="#test-session-content"
+          hx-post="/quiz/answer"
+          hx-target="#quiz-session-content"
           hx-swap="outerHTML swap:300ms">
-        <div class="sh-test-options">
+        <div class="sh-quiz-options">
             <button th:each="option, iter : ${currentQuestion.options}"
                     type="submit"
                     name="selectedOption"
                     th:value="${iter.index}"
-                    class="sh-test-option">
-                <span class="sh-test-option-letter" th:text="${{'A','B','C','D'}[iter.index]}">A</span>
-                <span class="sh-test-option-text" th:text="${option}">Option text</span>
+                    class="sh-quiz-option">
+                <span class="sh-quiz-option-letter" th:text="${{'A','B','C','D'}[iter.index]}">A</span>
+                <span class="sh-quiz-option-text" th:text="${option}">Option text</span>
             </button>
         </div>
     </form>
 
     <!-- Options: highlighted when answered -->
-    <div th:unless="${!answered}" class="sh-test-options">
+    <div th:unless="${!answered}" class="sh-quiz-options">
         <div th:each="option, iter : ${currentQuestion.options}"
              th:with="isCorrect=${iter.index == currentQuestion.correctOptionIndex},
-                      isSelected=${iter.index == selectedOption}"
-             th:class="${'sh-test-option sh-test-option--disabled'
-                         + (isCorrect ? ' sh-test-option--correct'
-                            : (isSelected ? ' sh-test-option--wrong'
-                               : ' sh-test-option--neutral'))}">
-            <span class="sh-test-option-letter" th:text="${{'A','B','C','D'}[iter.index]}">A</span>
-            <span class="sh-test-option-text" th:text="${option}">Option text</span>
+                       isSelected=${iter.index == selectedOption}"
+             th:class="${'sh-quiz-option sh-quiz-option--disabled'
+                         + (isCorrect ? ' sh-quiz-option--correct'
+                            : (isSelected ? ' sh-quiz-option--wrong'
+                               : ' sh-quiz-option--neutral'))}">
+            <span class="sh-quiz-option-letter" th:text="${{'A','B','C','D'}[iter.index]}">A</span>
+            <span class="sh-quiz-option-text" th:text="${option}">Option text</span>
             <i th:if="${isCorrect}" data-lucide="check-circle"
-               class="sh-test-option-result-icon sh-test-result-correct"></i>
+               class="sh-quiz-option-result-icon sh-quiz-result-correct"></i>
             <i th:if="${isSelected and !isCorrect}" data-lucide="x-circle"
-               class="sh-test-option-result-icon sh-test-result-wrong"></i>
+               class="sh-quiz-option-result-icon sh-quiz-result-wrong"></i>
         </div>
     </div>
 
     <!-- Feedback + next button (shown after answering) -->
-    <div th:if="${answered}" class="sh-test-feedback">
+    <div th:if="${answered}" class="sh-quiz-feedback">
         <div th:if="${selectedOption == currentQuestion.correctOptionIndex}"
              class="sh-alert sh-alert-success">
             <i data-lucide="check-circle"></i>
@@ -71,18 +71,18 @@
             <i data-lucide="x-circle"></i>
             Incorrect.
         </div>
-        <div class="sh-test-feedback-actions">
+        <div class="sh-quiz-feedback-actions">
             <a th:if="${questionNumber < totalQuestions}"
-               hx-get="/test/next"
-               hx-target="#test-session-content"
+               hx-get="/quiz/next"
+               hx-target="#quiz-session-content"
                hx-swap="outerHTML swap:300ms"
                class="sh-btn sh-btn-primary"
                style="cursor:pointer;">
                 Next Question <i data-lucide="arrow-right"></i>
             </a>
             <a th:if="${questionNumber >= totalQuestions}"
-               hx-get="/test/next"
-               hx-target="#test-session-content"
+               hx-get="/quiz/next"
+               hx-target="#quiz-session-content"
                hx-swap="outerHTML swap:300ms"
                class="sh-btn sh-btn-primary"
                style="cursor:pointer;">

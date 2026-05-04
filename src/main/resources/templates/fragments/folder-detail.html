@@ -184,8 +184,8 @@
                             <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.txt') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.md')}"
                                class="sh-btn sh-btn-ghost sh-btn-sm"
                                style="color:var(--accent);"
-                               th:href="@{'/test/start'(fileId=${file.id})}"
-                               hx-get="/test/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
+                               th:href="@{'/quiz/start'(fileId=${file.id})}"
+                               hx-get="/quiz/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
                                hx-target="#explorer-detail" hx-push-url="true">
                                 <i data-lucide="sparkles"></i>
                                 Test

@@ -3,14 +3,14 @@ package com.HendrikHoemberg.StudyHelper.controller;
 import com.HendrikHoemberg.StudyHelper.dto.Difficulty;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckGroup;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
-import com.HendrikHoemberg.StudyHelper.dto.TestConfig;
-import com.HendrikHoemberg.StudyHelper.dto.TestQuestion;
-import com.HendrikHoemberg.StudyHelper.dto.TestQuestionMode;
-import com.HendrikHoemberg.StudyHelper.dto.TestSessionState;
+import com.HendrikHoemberg.StudyHelper.dto.QuizConfig;
+import com.HendrikHoemberg.StudyHelper.dto.QuizQuestion;
+import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionMode;
+import com.HendrikHoemberg.StudyHelper.dto.QuizSessionState;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
-import com.HendrikHoemberg.StudyHelper.service.AiTestService;
+import com.HendrikHoemberg.StudyHelper.service.AiQuizService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.DocumentExtractionService;
@@ -37,14 +37,14 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 @Controller
-public class TestController {
+public class QuizController {
 
-    private static final String SESSION_KEY = "testSessionState";
+    private static final String SESSION_KEY = "quizSessionState";
     private static final String VIEW_SETUP = "setup";
     private static final String VIEW_QUESTION = "question";
     private static final String VIEW_COMPLETE = "complete";
 
-    private final AiTestService aiTestService;
+    private final AiQuizService aiQuizService;
     private final DeckService deckService;
     private final FlashcardService flashcardService;
     private final FolderService folderService;
@@ -52,14 +52,14 @@ public class TestController {
     private final DocumentExtractionService documentExtractionService;
     private final FileEntryService fileEntryService;
 
-    public TestController(AiTestService aiTestService,
+    public QuizController(AiQuizService aiQuizService,
                           DeckService deckService,
                           FlashcardService flashcardService,
                           FolderService folderService,
                           UserService userService,
                           DocumentExtractionService documentExtractionService,
                           FileEntryService fileEntryService) {
-        this.aiTestService = aiTestService;
+        this.aiQuizService = aiQuizService;
         this.deckService = deckService;
         this.flashcardService = flashcardService;
         this.folderService = folderService;
@@ -68,7 +68,7 @@ public class TestController {
         this.fileEntryService = fileEntryService;
     }
 
-    @GetMapping("/test/start")
+    @GetMapping("/quiz/start")
     public String start(Model model, Principal principal, HttpSession session,
                         @RequestParam(required = false) Long deckId,
                         @RequestParam(required = false) Long fileId,
@@ -103,12 +103,12 @@ public class TestController {
         }
 
         prepareSetupModel(model, user, deckIds, fileIds, error, session);
-        if (hxRequest != null) return "fragments/test-setup :: testSetup";
-        model.addAttribute("testStateView", VIEW_SETUP);
-        return "test-page";
+        if (hxRequest != null) return "fragments/quiz-setup :: quizSetup";
+        model.addAttribute("quizStateView", VIEW_SETUP);
+        return "quiz-page";
     }
 
-    @PostMapping("/test/setup/update")
+    @PostMapping("/quiz/setup/update")
     public String updateSetup(
             @RequestParam(required = false) List<Long> selectedDeckIds,
             @RequestParam(required = false) List<Long> selectedFileIds,
@@ -151,14 +151,14 @@ public class TestController {
         }
 
         prepareSetupModel(model, user, selectedDecks, selectedFiles, null, session);
-        return "fragments/test-setup :: testSetupPicker";
+        return "fragments/quiz-setup :: quizSetupPicker";
     }
 
-    @PostMapping("/test/session")
+    @PostMapping("/quiz/session")
     public String createSession(
             @RequestParam(required = false) List<Long> selectedDeckIds,
             @RequestParam(required = false) List<Long> selectedFileIds,
-            @RequestParam(defaultValue = "MCQ_ONLY") TestQuestionMode questionMode,
+            @RequestParam(defaultValue = "MCQ_ONLY") QuizQuestionMode questionMode,
             @RequestParam(defaultValue = "MEDIUM") Difficulty difficulty,
             @RequestParam(defaultValue = "5") int questionCount,
             Model model, Principal principal,
@@ -174,21 +174,21 @@ public class TestController {
         if (normalizedDeckIds.isEmpty() && normalizedFileIds.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             prepareSetupModel(model, user, normalizedDeckIds, normalizedFileIds, "Please select at least one deck or document.", httpSession);
-            if (hxRequest != null) return "fragments/test-setup :: testSetup";
-            model.addAttribute("testStateView", VIEW_SETUP);
-            return "test-page";
+            if (hxRequest != null) return "fragments/quiz-setup :: quizSetup";
+            model.addAttribute("quizStateView", VIEW_SETUP);
+            return "quiz-page";
         }
 
         try {
             List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(normalizedDeckIds, user);
             List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
             
-            List<AiTestService.DocumentInput> documents = new ArrayList<>();
+            List<AiQuizService.DocumentInput> documents = new ArrayList<>();
             long totalChars = 0;
             for (Long fileId : normalizedFileIds) {
                 com.HendrikHoemberg.StudyHelper.entity.FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
                 String text = documentExtractionService.extractText(file);
-                documents.add(new AiTestService.DocumentInput(file.getOriginalFilename(), text));
+                documents.add(new AiQuizService.DocumentInput(file.getOriginalFilename(), text));
                 totalChars += text.length();
             }
 
@@ -197,10 +197,10 @@ public class TestController {
             }
 
             int count = Math.max(1, Math.min(questionCount, 20));
-            List<TestQuestion> questions = aiTestService.generate(flashcards, documents, count, questionMode, difficulty);
+            List<QuizQuestion> questions = aiQuizService.generate(flashcards, documents, count, questionMode, difficulty);
 
-            TestSessionState state = new TestSessionState(
-                new TestConfig(normalizedDeckIds, normalizedFileIds, count, questionMode, difficulty),
+            QuizSessionState state = new QuizSessionState(
+                new QuizConfig(normalizedDeckIds, normalizedFileIds, count, questionMode, difficulty),
                 questions, 0, new HashMap<>()
             );
             httpSession.setAttribute(SESSION_KEY, state);
@@ -209,13 +209,13 @@ public class TestController {
         } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException | IOException ex) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             prepareSetupModel(model, user, normalizedDeckIds, normalizedFileIds, ex.getMessage(), httpSession);
-            if (hxRequest != null) return "fragments/test-setup :: testSetup";
-            model.addAttribute("testStateView", VIEW_SETUP);
-            return "test-page";
+            if (hxRequest != null) return "fragments/quiz-setup :: quizSetup";
+            model.addAttribute("quizStateView", VIEW_SETUP);
+            return "quiz-page";
         }
     }
 
-    @PostMapping("/test/answer")
+    @PostMapping("/quiz/answer")
     public String answer(
             @RequestParam int selectedOption,
             Model model, Principal principal,
@@ -225,12 +225,12 @@ public class TestController {
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
 
-        TestSessionState state = getState(httpSession);
+        QuizSessionState state = getState(httpSession);
         if (state == null) {
-            prepareSetupModel(model, user, List.of(), List.of(), "Session expired. Please start a new test.", httpSession);
-            if (hxRequest != null) return "fragments/test-setup :: testSetup";
-            model.addAttribute("testStateView", VIEW_SETUP);
-            return "test-page";
+            prepareSetupModel(model, user, List.of(), List.of(), "Session expired. Please start a new quiz.", httpSession);
+            if (hxRequest != null) return "fragments/quiz-setup :: quizSetup";
+            model.addAttribute("quizStateView", VIEW_SETUP);
+            return "quiz-page";
         }
 
         int idx = state.currentIndex();
@@ -240,14 +240,14 @@ public class TestController {
 
         Map<Integer, Integer> newAnswers = new HashMap<>(state.answers());
         newAnswers.put(idx, selectedOption);
-        TestSessionState newState = new TestSessionState(
+        QuizSessionState newState = new QuizSessionState(
             state.config(), state.questions(), idx, newAnswers
         );
         httpSession.setAttribute(SESSION_KEY, newState);
         return renderQuestion(model, newState, hxRequest);
     }
 
-    @GetMapping("/test/next")
+    @GetMapping("/quiz/next")
     public String nextQuestion(
             Model model, Principal principal,
             HttpSession httpSession, HttpServletResponse response,
@@ -256,15 +256,15 @@ public class TestController {
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
 
-        TestSessionState state = getState(httpSession);
+        QuizSessionState state = getState(httpSession);
         if (state == null) {
-            prepareSetupModel(model, user, List.of(), List.of(), "Session expired. Please start a new test.", httpSession);
-            if (hxRequest != null) return "fragments/test-setup :: testSetup";
-            model.addAttribute("testStateView", VIEW_SETUP);
-            return "test-page";
+            prepareSetupModel(model, user, List.of(), List.of(), "Session expired. Please start a new quiz.", httpSession);
+            if (hxRequest != null) return "fragments/quiz-setup :: quizSetup";
+            model.addAttribute("quizStateView", VIEW_SETUP);
+            return "quiz-page";
         }
 
-        TestSessionState newState = new TestSessionState(
+        QuizSessionState newState = new QuizSessionState(
             state.config(), state.questions(), state.currentIndex() + 1, state.answers()
         );
         httpSession.setAttribute(SESSION_KEY, newState);
@@ -275,21 +275,21 @@ public class TestController {
         return renderQuestion(model, newState, hxRequest);
     }
 
-    private String renderQuestion(Model model, TestSessionState state, String hxRequest) {
+    private String renderQuestion(Model model, QuizSessionState state, String hxRequest) {
         int idx = state.currentIndex();
-        TestQuestion q = state.questions().get(idx);
+        QuizQuestion q = state.questions().get(idx);
         boolean answered = state.isAnswered(idx);
         model.addAttribute("currentQuestion", q);
         model.addAttribute("questionNumber", idx + 1);
         model.addAttribute("totalQuestions", state.questions().size());
         model.addAttribute("answered", answered);
         model.addAttribute("selectedOption", answered ? state.answers().get(idx) : null);
-        if (hxRequest != null) return "fragments/test-question :: testQuestion";
-        model.addAttribute("testStateView", VIEW_QUESTION);
-        return "test-page";
+        if (hxRequest != null) return "fragments/quiz-question :: quizQuestion";
+        model.addAttribute("quizStateView", VIEW_QUESTION);
+        return "quiz-page";
     }
 
-    private String renderSummary(Model model, TestSessionState state, String hxRequest) {
+    private String renderSummary(Model model, QuizSessionState state, String hxRequest) {
         int correct = state.correctCount();
         int total = state.questions().size();
         int pct = total > 0 ? (int) Math.round(100.0 * correct / total) : 0;
@@ -298,26 +298,26 @@ public class TestController {
         model.addAttribute("correctCount", correct);
         model.addAttribute("totalQuestions", total);
         model.addAttribute("scorePercent", pct);
-        if (hxRequest != null) return "fragments/test-summary :: testSummary";
-        model.addAttribute("testStateView", VIEW_COMPLETE);
-        return "test-page";
+        if (hxRequest != null) return "fragments/quiz-summary :: quizSummary";
+        model.addAttribute("quizStateView", VIEW_COMPLETE);
+        return "quiz-page";
     }
 
     private void prepareSetupModel(Model model, User user, List<Long> preselectedDeckIds, List<Long> preselectedFileIds, String error, HttpSession session) {
         List<Long> normalizedDecks = normalizeIds(preselectedDeckIds);
         List<Long> normalizedFiles = normalizeIds(preselectedFileIds);
         
-        List<com.HendrikHoemberg.StudyHelper.dto.TestSourceGroup> sourceGroups = folderService.getTestSourceTree(user, normalizedDecks, normalizedFiles);
+        List<com.HendrikHoemberg.StudyHelper.dto.QuizSourceGroup> sourceGroups = folderService.getQuizSourceTree(user, normalizedDecks, normalizedFiles);
         model.addAttribute("sourceGroups", sourceGroups);
         model.addAttribute("preselectedDeckIds", normalizedDecks);
         model.addAttribute("preselectedFileIds", normalizedFiles);
-        model.addAttribute("testError", error);
+        model.addAttribute("quizError", error);
 
         // Character count calculation and caching
-        Map<Long, Integer> charCache = (Map<Long, Integer>) session.getAttribute("testFileCharCache");
+        Map<Long, Integer> charCache = (Map<Long, Integer>) session.getAttribute("quizFileCharCache");
         if (charCache == null) {
             charCache = new HashMap<>();
-            session.setAttribute("testFileCharCache", charCache);
+            session.setAttribute("quizFileCharCache", charCache);
         }
 
         long totalChars = 0;
@@ -342,9 +342,9 @@ public class TestController {
         model.addAttribute("selectionExceedsCap", totalChars > 150_000);
     }
 
-    private TestSessionState getState(HttpSession session) {
+    private QuizSessionState getState(HttpSession session) {
         Object raw = session.getAttribute(SESSION_KEY);
-        return raw instanceof TestSessionState s ? s : null;
+        return raw instanceof QuizSessionState s ? s : null;
     }
 
     private List<Long> normalizeIds(List<Long> ids) {

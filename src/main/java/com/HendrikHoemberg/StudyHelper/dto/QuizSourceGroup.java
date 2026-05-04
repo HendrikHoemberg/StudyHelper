@@ -3,7 +3,7 @@ package com.HendrikHoemberg.StudyHelper.dto;
 import java.io.Serializable;
 import java.util.List;
 
-public record TestSourceGroup(
+public record QuizSourceGroup(
     Long folderId,
     String folderName,
     String folderPath,
@@ -12,8 +12,8 @@ public record TestSourceGroup(
     int totalSourceCount,
     int selectableSourceCount,
     List<StudyDeckOption> decks,
-    List<TestFileOption> files,
-    List<TestSourceGroup> subGroups,
+    List<QuizFileOption> files,
+    List<QuizSourceGroup> subGroups,
     boolean isSelected,
     boolean isIndeterminate
 ) implements Serializable {

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
-<head th:replace="~{fragments/layout :: head('Test Mode')}"></head>
+<head th:replace="~{fragments/layout :: head('Quiz Mode')}"></head>
 <body>
 
 <div class="app-layout">
@@ -11,10 +11,10 @@
                 <div class="sh-explorer-shell">
                     <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
                     <div id="explorer-detail" class="sh-explorer-detail sh-explorer-detail-content">
-                        <div th:switch="${testStateView}">
-                            <div th:case="'question'" th:replace="~{fragments/test-question :: testQuestion}"></div>
-                            <div th:case="'complete'" th:replace="~{fragments/test-summary :: testSummary}"></div>
-                            <div th:case="*" th:replace="~{fragments/test-setup :: testSetup}"></div>
+                        <div th:switch="${quizStateView}">
+                            <div th:case="'question'" th:replace="~{fragments/quiz-question :: quizQuestion}"></div>
+                            <div th:case="'complete'" th:replace="~{fragments/quiz-summary :: quizSummary}"></div>
+                            <div th:case="*" th:replace="~{fragments/quiz-setup :: quizSetup}"></div>
                         </div>
                     </div>
                 </div>

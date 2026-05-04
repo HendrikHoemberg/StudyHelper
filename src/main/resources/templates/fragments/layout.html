@@ -10,7 +10,7 @@
     <link href="/css/styles.css" rel="stylesheet">
     <link href="/css/color-picker.css" rel="stylesheet">
     <link href="/css/image-editor.css" rel="stylesheet">
-    <link href="/css/test.css" rel="stylesheet">
+    <link href="/css/quiz.css" rel="stylesheet">
     <!-- CSRF Meta Tags -->
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
@@ -44,8 +44,8 @@
                 <i data-lucide="book-open"></i>
                 Study Session
             </a>
-            <a href="/test/start" class="topnav-link"
-               hx-get="/test/start" hx-target="#explorer-detail" hx-push-url="true">
+            <a href="/quiz/start" class="topnav-link"
+               hx-get="/quiz/start" hx-target="#explorer-detail" hx-push-url="true">
                 <i data-lucide="sparkles"></i>
                 Test Mode
             </a>
@@ -84,8 +84,8 @@
             <i data-lucide="book-open"></i>
             Study Session
         </a>
-        <a href="/test/start" class="topnav-mobile-link"
-           hx-get="/test/start" hx-target="#explorer-detail" hx-push-url="true">
+        <a href="/quiz/start" class="topnav-mobile-link"
+           hx-get="/quiz/start" hx-target="#explorer-detail" hx-push-url="true">
             <i data-lucide="sparkles"></i>
             Test Mode
         </a>

@@ -43,8 +43,8 @@
                 Start Study
             </a>
             <a class="sh-btn sh-btn-secondary sh-btn-sm"
-               th:href="@{'/test/start'(deckId=${deck.id})}"
-               hx-get="/test/start" th:hx-vals="${'{&quot;deckId&quot;: ' + deck.id + '}'}"
+               th:href="@{'/quiz/start'(deckId=${deck.id})}"
+               hx-get="/quiz/start" th:hx-vals="${'{&quot;deckId&quot;: ' + deck.id + '}'}"
                hx-target="#explorer-detail" hx-push-url="true">
                 <i data-lucide="sparkles"></i>
                 Test me

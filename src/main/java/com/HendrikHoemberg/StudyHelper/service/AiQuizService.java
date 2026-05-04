@@ -2,8 +2,8 @@ package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.Difficulty;
 import com.HendrikHoemberg.StudyHelper.dto.QuestionType;
-import com.HendrikHoemberg.StudyHelper.dto.TestQuestion;
-import com.HendrikHoemberg.StudyHelper.dto.TestQuestionMode;
+import com.HendrikHoemberg.StudyHelper.dto.QuizQuestion;
+import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionMode;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -14,23 +14,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class AiTestService {
+public class AiQuizService {
 
     public record DocumentInput(String filename, String extractedText) {}
 
     private final ChatClient chatClient;
     private final JsonMapper objectMapper;
 
-    public AiTestService(ChatClient.Builder builder, JsonMapper objectMapper) {
+    public AiQuizService(ChatClient.Builder builder, JsonMapper objectMapper) {
         this.chatClient = builder.build();
         this.objectMapper = objectMapper;
     }
 
-    public List<TestQuestion> generate(
+    public List<QuizQuestion> generate(
             List<Flashcard> flashcards,
             List<DocumentInput> documents,
             int count,
-            TestQuestionMode mode,
+            QuizQuestionMode mode,
             Difficulty difficulty) {
 
         String cardContent = buildCardContent(flashcards);
@@ -54,14 +54,14 @@ public class AiTestService {
             String json = extractJson(response);
             JsonNode root = objectMapper.readTree(json);
             JsonNode questionsNode = root.get("questions");
-            List<TestQuestion> rawList = questionsNode != null
-                ? objectMapper.<List<TestQuestion>>readerForListOf(TestQuestion.class).readValue(questionsNode)
+            List<QuizQuestion> rawList = questionsNode != null
+                ? objectMapper.<List<QuizQuestion>>readerForListOf(QuizQuestion.class).readValue(questionsNode)
                 : List.of();
 
-            List<TestQuestion> valid = new ArrayList<>();
-            for (TestQuestion q : rawList) {
+            List<QuizQuestion> valid = new ArrayList<>();
+            for (QuizQuestion q : rawList) {
                 if (q == null) continue;
-                TestQuestion normalized = normalizeQuestion(q);
+                QuizQuestion normalized = normalizeQuestion(q);
                 if (normalized != null) valid.add(normalized);
             }
 
@@ -78,7 +78,7 @@ public class AiTestService {
         }
     }
 
-    private TestQuestion normalizeQuestion(TestQuestion q) {
+    private QuizQuestion normalizeQuestion(QuizQuestion q) {
         if (q.questionText() == null || q.questionText().isBlank()) return null;
         if (q.options() == null) return null;
 
@@ -87,14 +87,14 @@ public class AiTestService {
         if (type == QuestionType.MULTIPLE_CHOICE) {
             if (q.options().size() != 4) return null;
             if (q.correctOptionIndex() < 0 || q.correctOptionIndex() > 3) return null;
-            return new TestQuestion(QuestionType.MULTIPLE_CHOICE, q.questionText(), q.options(), q.correctOptionIndex());
+            return new QuizQuestion(QuestionType.MULTIPLE_CHOICE, q.questionText(), q.options(), q.correctOptionIndex());
         } else {
             if (q.options().size() != 2) return null;
             String opt0 = q.options().get(0).trim();
             String opt1 = q.options().get(1).trim();
             if (!opt0.equalsIgnoreCase("true") || !opt1.equalsIgnoreCase("false")) return null;
             if (q.correctOptionIndex() < 0 || q.correctOptionIndex() > 1) return null;
-            return new TestQuestion(QuestionType.TRUE_FALSE, q.questionText(), List.of("True", "False"), q.correctOptionIndex());
+            return new QuizQuestion(QuestionType.TRUE_FALSE, q.questionText(), List.of("True", "False"), q.correctOptionIndex());
         }
     }
 
@@ -140,7 +140,7 @@ public class AiTestService {
     }
 
     private String buildPrompt(String cardContent, String docContent, int count,
-                                TestQuestionMode mode, Difficulty difficulty,
+                                QuizQuestionMode mode, Difficulty difficulty,
                                 int mcqCount, int tfCount) {
         String modeDescription = switch (mode) {
             case MCQ_ONLY -> "multiple-choice questions";

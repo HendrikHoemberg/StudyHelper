@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="quizSummary" id="quiz-session-content" class="sh-fade-in sh-study-session-active">
+
+    <div class="sh-card sh-study-complete-card">
+        <div class="sh-card-body">
+            <h1 class="sh-page-title text-center mb-2">Test Complete</h1>
+
+            <!-- Score hero -->
+            <div class="sh-quiz-score-hero"
+                 th:classappend="${scorePercent >= 80 ? ' sh-quiz-score-hero--good'
+                                  : (scorePercent >= 60 ? ' sh-quiz-score-hero--warn'
+                                     : ' sh-quiz-score-hero--bad')}">
+                <div class="sh-quiz-score-value"
+                     th:text="${correctCount} + '/' + ${totalQuestions}">0/0</div>
+                <div class="sh-quiz-score-label" th:text="${scorePercent} + '% correct'">0%</div>
+            </div>
+
+            <!-- Question review -->
+            <div class="sh-section-title mt-4">Review</div>
+            <div class="sh-quiz-review-list">
+                <div th:each="question, iter : ${questions}"
+                     th:with="userAnswer=${answers[iter.index]},
+                               isCorrect=${answers[iter.index] != null and answers[iter.index] == question.correctOptionIndex}"
+                     class="sh-quiz-review-item"
+                     th:classappend="${isCorrect ? ' sh-quiz-review-item--correct' : ' sh-quiz-review-item--wrong'}">
+
+                    <div class="sh-quiz-review-header">
+                        <span class="sh-quiz-review-num" th:text="'Q' + (iter.index + 1)">Q1</span>
+                        <span class="sh-quiz-review-question" th:text="${question.questionText}">Question</span>
+                        <span class="sh-quiz-review-badge"
+                               th:classappend="${isCorrect ? ' sh-quiz-review-badge--correct' : ' sh-quiz-review-badge--wrong'}">
+                            <i th:if="${isCorrect}" data-lucide="check"></i>
+                            <i th:unless="${isCorrect}" data-lucide="x"></i>
+                        </span>
+                    </div>
+
+                    <div th:unless="${isCorrect}" class="sh-quiz-review-correct-ans">
+                        Correct answer: <strong th:text="${question.options[question.correctOptionIndex]}">Answer</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="sh-quiz-complete-actions">
+                <a href="/quiz/start" class="sh-btn sh-btn-primary"
+                   hx-get="/quiz/start" hx-target="#quiz-session-content" hx-swap="outerHTML">
+                    <i data-lucide="rotate-ccw"></i>
+                    New Test
+                </a>
+                <a href="/dashboard" class="sh-btn sh-btn-secondary"
+                   hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
+                    <i data-lucide="layout-dashboard"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

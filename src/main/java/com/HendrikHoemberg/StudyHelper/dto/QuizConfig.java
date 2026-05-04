@@ -2,10 +2,10 @@ package com.HendrikHoemberg.StudyHelper.dto;
 
 import java.util.List;
 
-public record TestConfig(
+public record QuizConfig(
     List<Long> selectedDeckIds,
     List<Long> selectedFileIds,
     int questionCount,
-    TestQuestionMode questionMode,
+    QuizQuestionMode questionMode,
     Difficulty difficulty
 ) {}

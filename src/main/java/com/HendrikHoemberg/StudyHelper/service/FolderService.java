@@ -3,8 +3,8 @@ package com.HendrikHoemberg.StudyHelper.service;
 import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckGroup;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
-import com.HendrikHoemberg.StudyHelper.dto.TestFileOption;
-import com.HendrikHoemberg.StudyHelper.dto.TestSourceGroup;
+import com.HendrikHoemberg.StudyHelper.dto.QuizFileOption;
+import com.HendrikHoemberg.StudyHelper.dto.QuizSourceGroup;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
@@ -138,15 +138,15 @@ public class FolderService {
     }
 
     @Transactional(readOnly = true)
-    public List<TestSourceGroup> getTestSourceTree(User user, List<Long> selectedDeckIds, List<Long> selectedFileIds) {
+    public List<QuizSourceGroup> getQuizSourceTree(User user, List<Long> selectedDeckIds, List<Long> selectedFileIds) {
         List<Folder> roots = folderRepository.findByUserAndParentFolderIsNull(user);
         return roots.stream()
-            .map(f -> toTestSourceGroup(f, selectedDeckIds, selectedFileIds))
+            .map(f -> toQuizSourceGroup(f, selectedDeckIds, selectedFileIds))
             .filter(g -> !g.decks().isEmpty() || !g.files().isEmpty() || !g.subGroups().isEmpty())
             .toList();
     }
 
-    private TestSourceGroup toTestSourceGroup(Folder folder, List<Long> selectedDeckIds, List<Long> selectedFileIds) {
+    private QuizSourceGroup toQuizSourceGroup(Folder folder, List<Long> selectedDeckIds, List<Long> selectedFileIds) {
         List<StudyDeckOption> decks = folder.getDecks().stream()
             .map(deck -> {
                 int total = deck.getFlashcards().size();
@@ -164,7 +164,7 @@ public class FolderService {
             })
             .toList();
 
-        List<TestFileOption> files = folder.getFiles().stream()
+        List<QuizFileOption> files = folder.getFiles().stream()
             .filter(f -> {
                 String ext = getFileExtension(f.getOriginalFilename());
                 return List.of("pdf", "txt", "md").contains(ext.toLowerCase());
@@ -172,7 +172,7 @@ public class FolderService {
             .map(f -> {
                 long size = f.getFileSizeBytes();
                 boolean isSupported = size <= 5 * 1024 * 1024; // 5MB
-                return new TestFileOption(
+                return new QuizFileOption(
                     f.getId(),
                     f.getOriginalFilename(),
                     size,
@@ -182,17 +182,17 @@ public class FolderService {
             })
             .toList();
 
-        List<TestSourceGroup> subGroups = folder.getSubFolders().stream()
-            .map(f -> toTestSourceGroup(f, selectedDeckIds, selectedFileIds))
+        List<QuizSourceGroup> subGroups = folder.getSubFolders().stream()
+            .map(f -> toQuizSourceGroup(f, selectedDeckIds, selectedFileIds))
             .filter(g -> !g.decks().isEmpty() || !g.files().isEmpty() || !g.subGroups().isEmpty())
             .toList();
 
         int selectableSourceCount = (int) decks.stream().filter(d -> d.usableCardCount() > 0).count()
-            + (int) files.stream().filter(TestFileOption::isSupported).count()
-            + subGroups.stream().mapToInt(TestSourceGroup::selectableSourceCount).sum();
+            + (int) files.stream().filter(QuizFileOption::isSupported).count()
+            + subGroups.stream().mapToInt(QuizSourceGroup::selectableSourceCount).sum();
 
         int totalSourceCount = decks.size() + files.size()
-            + subGroups.stream().mapToInt(TestSourceGroup::totalSourceCount).sum();
+            + subGroups.stream().mapToInt(QuizSourceGroup::totalSourceCount).sum();
 
         boolean allSelected = true;
         boolean someSelected = false;
@@ -205,7 +205,7 @@ public class FolderService {
             }
         }
 
-        for (TestFileOption file : files) {
+        for (QuizFileOption file : files) {
             if (selectedFileIds.contains(file.fileId())) {
                 someSelected = true;
             } else {
@@ -213,7 +213,7 @@ public class FolderService {
             }
         }
 
-        for (TestSourceGroup sub : subGroups) {
+        for (QuizSourceGroup sub : subGroups) {
             if (sub.isSelected()) {
                 someSelected = true;
             } else if (sub.isIndeterminate()) {
@@ -234,7 +234,7 @@ public class FolderService {
         String color = folder.getColorHex() != null && !folder.getColorHex().isBlank()
             ? folder.getColorHex() : "#6366f1";
 
-        return new TestSourceGroup(
+        return new QuizSourceGroup(
             folder.getId(),
             folder.getName(),
             buildFolderPathString(folder),

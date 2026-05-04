@@ -3,9 +3,9 @@ package com.HendrikHoemberg.StudyHelper.dto;
 import java.util.List;
 import java.util.Map;
 
-public record TestSessionState(
-    TestConfig config,
-    List<TestQuestion> questions,
+public record QuizSessionState(
+    QuizConfig config,
+    List<QuizQuestion> questions,
     int currentIndex,
     Map<Integer, Integer> answers
 ) {
