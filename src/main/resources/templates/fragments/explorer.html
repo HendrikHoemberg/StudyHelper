@@ -22,12 +22,7 @@
                 <a href="/study/start" class="sh-btn sh-btn-secondary"
                    hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
                     <i data-lucide="book-open"></i>
-                    Start Study
-                </a>
-                <a href="/quiz/start" class="sh-btn sh-btn-secondary"
-                   hx-get="/quiz/start" hx-target="#explorer-detail" hx-push-url="true">
-                    <i data-lucide="sparkles"></i>
-                    Take a Test
+                    Start Studying
                 </a>
                 <button class="sh-btn sh-btn-primary" hx-get="/folders/new" hx-target="#modal-placeholder">
                     <i data-lucide="plus"></i>
@@ -107,9 +102,9 @@
                              th:text="${#numbers.formatDecimal(file.fileSizeBytes / 1024.0, 1, 1) + ' KB'}">0 KB</div>
                     </div>
                     <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.txt') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.md')}"
-                       class="sh-deck-test-btn" title="Test me"
-                       th:href="@{'/quiz/start'(fileId=${file.id})}"
-                       hx-get="/quiz/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
+                       class="sh-deck-test-btn" title="Quiz this"
+                       th:href="@{'/study/start'(mode='QUIZ', fileId=${file.id})}"
+                       hx-get="/study/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
                        hx-target="#explorer-detail" hx-push-url="true">
                         <i data-lucide="sparkles"></i>
                     </a>

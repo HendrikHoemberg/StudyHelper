@@ -46,8 +46,8 @@
         <div class="sh-page-actions">
             <a th:if="${view.totalCardCount > 0}"
                class="sh-btn sh-btn-primary sh-btn-sm"
-               th:href="@{/folders/{id}/study/start(id=${view.folder.id})}"
-               hx-get th:hx-get="@{/folders/{id}/study/start(id=${view.folder.id})}"
+               th:href="@{'/study/start'(folderId=${view.folder.id})}"
+               hx-get="/study/start" th:hx-vals="${'{&quot;folderId&quot;: ' + view.folder.id + '}'}"
                hx-target="#explorer-detail" hx-push-url="true">
                 <i data-lucide="play"></i>
                 Study
@@ -184,11 +184,11 @@
                             <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.txt') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.md')}"
                                class="sh-btn sh-btn-ghost sh-btn-sm"
                                style="color:var(--accent);"
-                               th:href="@{'/quiz/start'(fileId=${file.id})}"
-                               hx-get="/quiz/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
+                               th:href="@{'/study/start'(mode='QUIZ', fileId=${file.id})}"
+                               hx-get="/study/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
                                hx-target="#explorer-detail" hx-push-url="true">
                                 <i data-lucide="sparkles"></i>
-                                Test
+                                Quiz
                             </a>
                             <button class="sh-btn sh-btn-ghost sh-btn-sm"
                                     th:hx-get="@{/files/{id}/edit-options(id=${file.id})}"

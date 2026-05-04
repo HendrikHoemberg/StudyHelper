@@ -36,18 +36,11 @@
         </div>
         <div class="sh-page-actions">
             <a class="sh-btn sh-btn-primary sh-btn-sm"
-               th:href="@{/decks/{id}/study/start(id=${deck.id})}"
-               hx-get th:hx-get="@{/decks/{id}/study/start(id=${deck.id})}"
+               th:href="@{'/study/start'(deckId=${deck.id})}"
+               hx-get="/study/start" th:hx-vals="${'{&quot;deckId&quot;: ' + deck.id + '}'}"
                hx-target="#explorer-detail" hx-push-url="true">
                 <i data-lucide="play"></i>
-                Start Study
-            </a>
-            <a class="sh-btn sh-btn-secondary sh-btn-sm"
-               th:href="@{'/quiz/start'(deckId=${deck.id})}"
-               hx-get="/quiz/start" th:hx-vals="${'{&quot;deckId&quot;: ' + deck.id + '}'}"
-               hx-target="#explorer-detail" hx-push-url="true">
-                <i data-lucide="sparkles"></i>
-                Test me
+                Study
             </a>
             <button class="sh-btn sh-btn-secondary sh-btn-sm"
                     th:hx-get="@{/decks/{id}/flashcards/new(id=${deck.id})}"

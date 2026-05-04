@@ -36,6 +36,11 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+/**
+ * Handles quiz session runtime endpoints (session creation, answering, navigation).
+ * Setup entry points (GET /quiz/start, POST /quiz/setup/update) have been retired;
+ * all setup flows now go through the unified StudyController.
+ */
 @Controller
 public class QuizController {
 
@@ -68,91 +73,8 @@ public class QuizController {
         this.fileEntryService = fileEntryService;
     }
 
-    @GetMapping("/quiz/start")
-    public String start(Model model, Principal principal, HttpSession session,
-                        @RequestParam(required = false) Long deckId,
-                        @RequestParam(required = false) Long fileId,
-                        @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        if (principal == null) return "redirect:/login";
-        User user = userService.getByUsername(principal.getName());
-        model.addAttribute("username", user.getUsername());
-
-        List<Long> deckIds = new ArrayList<>();
-        List<Long> fileIds = new ArrayList<>();
-        String error = null;
-
-        if (deckId != null) {
-            try {
-                deckService.getDeck(deckId, user);
-                deckIds.add(deckId);
-            } catch (Exception e) {
-                error = "Could not find selected deck.";
-            }
-        }
-        if (fileId != null) {
-            try {
-                com.HendrikHoemberg.StudyHelper.entity.FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-                if (documentExtractionService.isSupported(file)) {
-                    fileIds.add(fileId);
-                } else {
-                    error = "Selected file is not supported for AI testing.";
-                }
-            } catch (Exception e) {
-                error = "Could not find selected file.";
-            }
-        }
-
-        prepareSetupModel(model, user, deckIds, fileIds, error, session);
-        if (hxRequest != null) return "fragments/quiz-setup :: quizSetup";
-        model.addAttribute("quizStateView", VIEW_SETUP);
-        return "quiz-page";
-    }
-
-    @PostMapping("/quiz/setup/update")
-    public String updateSetup(
-            @RequestParam(required = false) List<Long> selectedDeckIds,
-            @RequestParam(required = false) List<Long> selectedFileIds,
-            @RequestParam(required = false) Long toggledFolderId,
-            @RequestParam(required = false) Long removeId,
-            @RequestParam(required = false) Long removeFileId,
-            @RequestParam(required = false, defaultValue = "false") boolean clearAll,
-            Model model, Principal principal, HttpSession session) {
-        User user = userService.getByUsername(principal.getName());
-        List<Long> selectedDecks = new ArrayList<>(normalizeIds(selectedDeckIds));
-        List<Long> selectedFiles = new ArrayList<>(normalizeIds(selectedFileIds));
-
-        if (clearAll) {
-            selectedDecks.clear();
-            selectedFiles.clear();
-        } else if (removeId != null) {
-            selectedDecks.remove(removeId);
-        } else if (removeFileId != null) {
-            selectedFiles.remove(removeFileId);
-        } else if (toggledFolderId != null) {
-            FolderService.FolderSources sources = folderService.getAllSourcesInFolder(toggledFolderId, user);
-            List<Long> deckIds = sources.deckIds();
-            List<Long> fileIds = sources.fileIds();
-
-            boolean allDecksSelected = !deckIds.isEmpty() && new HashSet<>(selectedDecks).containsAll(deckIds);
-            boolean allFilesSelected = !fileIds.isEmpty() && new HashSet<>(selectedFiles).containsAll(fileIds);
-            boolean allSelected = (deckIds.isEmpty() || allDecksSelected) && (fileIds.isEmpty() || allFilesSelected);
-
-            if (allSelected) {
-                selectedDecks.removeAll(deckIds);
-                selectedFiles.removeAll(fileIds);
-            } else {
-                for (Long id : deckIds) {
-                    if (!selectedDecks.contains(id)) selectedDecks.add(id);
-                }
-                for (Long id : fileIds) {
-                    if (!selectedFiles.contains(id)) selectedFiles.add(id);
-                }
-            }
-        }
-
-        prepareSetupModel(model, user, selectedDecks, selectedFiles, null, session);
-        return "fragments/quiz-setup :: quizSetupPicker";
-    }
+    // --- Legacy GET /quiz/start and POST /quiz/setup/update removed ---
+    // All setup flows now go through StudyController (GET /study/start, POST /study/setup/update)
 
     @PostMapping("/quiz/session")
     public String createSession(

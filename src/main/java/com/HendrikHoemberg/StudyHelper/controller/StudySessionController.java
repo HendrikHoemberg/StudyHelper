@@ -1,6 +1,5 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
-import com.HendrikHoemberg.StudyHelper.dto.DeckOrderMode;
 import com.HendrikHoemberg.StudyHelper.dto.SessionMode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyCardView;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckGroup;
@@ -9,7 +8,6 @@ import com.HendrikHoemberg.StudyHelper.dto.StudySessionConfig;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionState;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionStats;
 import com.HendrikHoemberg.StudyHelper.entity.User;
-import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.StudySessionService;
@@ -19,7 +17,6 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,6 +28,10 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+/**
+ * Handles flashcard session runtime endpoints (next, answer, redo).
+ * Setup routes (GET /study/start, POST /study/session, etc.) are in StudyController.
+ */
 @Controller
 public class StudySessionController {
 
@@ -40,175 +41,21 @@ public class StudySessionController {
     private static final String VIEW_COMPLETE = "complete";
 
     private final StudySessionService studySessionService;
-    private final DeckService deckService;
     private final FlashcardService flashcardService;
     private final UserService userService;
     private final FolderService folderService;
 
     public StudySessionController(StudySessionService studySessionService,
-                                  DeckService deckService,
                                   FlashcardService flashcardService,
                                   UserService userService,
                                   FolderService folderService) {
         this.studySessionService = studySessionService;
-        this.deckService = deckService;
         this.flashcardService = flashcardService;
         this.userService = userService;
         this.folderService = folderService;
     }
 
-    @GetMapping("/study/start")
-    public String startFromDashboard(Model model,
-                                     Principal principal,
-                                     @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
-        User user = userService.getByUsername(principal.getName());
-        model.addAttribute("username", user.getUsername());
-        prepareSetupModel(model, user, List.of(), null);
-
-        if (hxRequest != null) {
-            return "fragments/study-setup :: studySetup";
-        }
-
-        model.addAttribute("studyStateView", VIEW_SETUP);
-        return "study-page";
-    }
-
-    @GetMapping("/decks/{id}/study/start")
-    public String startFromDeck(@PathVariable Long id,
-                                Model model,
-                                Principal principal,
-                                @RequestHeader(value = "HX-Request", required = false) String hxRequest,
-                                HttpServletResponse response) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
-        User user = userService.getByUsername(principal.getName());
-        model.addAttribute("username", user.getUsername());
-
-        try {
-            deckService.getDeck(id, user);
-            prepareSetupModel(model, user, List.of(id), null);
-        } catch (NoSuchElementException ex) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            prepareSetupModel(model, user, List.of(), "Deck does not belong to the current user.");
-        }
-
-        if (hxRequest != null) {
-            return "fragments/study-setup :: studySetup";
-        }
-
-        model.addAttribute("studyStateView", VIEW_SETUP);
-        return "study-page";
-    }
-
-    @GetMapping("/folders/{id}/study/start")
-    public String startFromFolder(@PathVariable Long id,
-                                  Model model,
-                                  Principal principal,
-                                  @RequestHeader(value = "HX-Request", required = false) String hxRequest,
-                                  HttpServletResponse response) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
-        User user = userService.getByUsername(principal.getName());
-        model.addAttribute("username", user.getUsername());
-
-        try {
-            List<StudyDeckOption> decks = folderService.getAllDecksInFolder(id, user);
-            List<Long> ids = decks.stream()
-                    .filter(d -> d.cardCount() > 0)
-                    .map(StudyDeckOption::deckId)
-                    .toList();
-            prepareSetupModel(model, user, ids, null);
-        } catch (NoSuchElementException ex) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            prepareSetupModel(model, user, List.of(), "Folder does not belong to the current user.");
-        }
-
-        if (hxRequest != null) {
-            return "fragments/study-setup :: studySetup";
-        }
-
-        model.addAttribute("studyStateView", VIEW_SETUP);
-        return "study-page";
-    }
-
-    @PostMapping("/study/setup/update")
-    public String updateSetup(@RequestParam(name = "selectedDeckIds", required = false) List<Long> selectedDeckIds,
-                              @RequestParam(name = "orderedDeckIds", required = false) String orderedDeckIds,
-                              @RequestParam(name = "toggledFolderId", required = false) Long toggledFolderId,
-                              @RequestParam(name = "removeId", required = false) Long removeId,
-                              @RequestParam(name = "clearAll", required = false, defaultValue = "false") boolean clearAll,
-                              Model model,
-                              Principal principal) {
-        User user = userService.getByUsername(principal.getName());
-        List<Long> selected = new ArrayList<>(normalizeDeckIds(selectedDeckIds));
-
-        if (clearAll) {
-            selected.clear();
-        } else if (removeId != null) {
-            selected.remove(removeId);
-        } else if (toggledFolderId != null) {
-            List<StudyDeckOption> allDecksInFolder = folderService.getAllDecksInFolder(toggledFolderId, user);
-            List<Long> selectableDeckIds = allDecksInFolder.stream()
-                .filter(d -> d.cardCount() > 0)
-                .map(StudyDeckOption::deckId)
-                .toList();
-
-            boolean allInFolderSelected = !selectableDeckIds.isEmpty() && new HashSet<>(selected).containsAll(selectableDeckIds);
-            if (allInFolderSelected) {
-                selected.removeAll(selectableDeckIds);
-            } else {
-                for (Long id : selectableDeckIds) {
-                    if (!selected.contains(id)) selected.add(id);
-                }
-            }
-        }
-
-        List<Long> manualOrder = parseDeckOrder(orderedDeckIds);
-        List<Long> nextOrder = new ArrayList<>();
-        manualOrder.stream().filter(selected::contains).forEach(nextOrder::add);
-        selected.stream().filter(id -> !nextOrder.contains(id)).forEach(nextOrder::add);
-
-        prepareSetupModel(model, user, selected, null);
-        return "fragments/study-setup :: setupPicker";
-    }
-
-    @PostMapping("/study/session")
-    public String createSession(@RequestParam(name = "selectedDeckIds", required = false) List<Long> selectedDeckIds,
-                                @RequestParam(name = "sessionMode", defaultValue = "DECK_BY_DECK") SessionMode sessionMode,
-                                @RequestParam(name = "deckOrderMode", defaultValue = "SELECTED_ORDER") DeckOrderMode deckOrderMode,
-                                @RequestParam(name = "orderedDeckIds", required = false) String orderedDeckIds,
-                                Model model,
-                                Principal principal,
-                                HttpSession httpSession,
-                                HttpServletResponse response,
-                                @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
-        User user = userService.getByUsername(principal.getName());
-        model.addAttribute("username", user.getUsername());
-
-        try {
-            List<Long> orderedSelection = resolveOrderedSelection(selectedDeckIds, orderedDeckIds, sessionMode);
-            StudySessionConfig config = new StudySessionConfig(orderedSelection, sessionMode, deckOrderMode);
-            StudySessionState state = studySessionService.buildSession(config, user);
-            httpSession.setAttribute(SESSION_KEY, state);
-            return renderCurrentState(model, user, state, hxRequest);
-        } catch (IllegalArgumentException | NoSuchElementException ex) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            prepareSetupModel(model, user, normalizeDeckIds(selectedDeckIds), ex.getMessage());
-            if (hxRequest != null) {
-                return "fragments/study-setup :: studySetup";
-            }
-            model.addAttribute("studyStateView", VIEW_SETUP);
-            return "study-page";
-        }
-    }
+    // --- Setup routes removed: now handled by StudyController ---
 
     @GetMapping("/session/next")
     public String nextCard(Model model,
@@ -399,9 +246,6 @@ public class StudySessionController {
         model.addAttribute("preselectedDeckIds", normalized);
         model.addAttribute("studyError", error);
         model.addAttribute("sessionModes", SessionMode.values());
-        model.addAttribute("deckOrderModes", DeckOrderMode.values());
-
-
     }
 
     private void prepareCardModel(Model model, StudySessionState state, String error) {
@@ -428,57 +272,6 @@ public class StudySessionController {
             return state;
         }
         return null;
-    }
-
-
-    private List<Long> resolveOrderedSelection(List<Long> selectedDeckIds,
-                                               String orderedDeckIds,
-                                               SessionMode mode) {
-        List<Long> selected = normalizeDeckIds(selectedDeckIds);
-        if (mode != SessionMode.DECK_BY_DECK) {
-            return selected;
-        }
-
-        List<Long> manualOrder = parseDeckOrder(orderedDeckIds);
-        if (manualOrder.isEmpty()) {
-            return selected;
-        }
-
-        List<Long> resolved = new ArrayList<>();
-        Set<Long> selectedSet = new HashSet<>(selected);
-        for (Long deckId : manualOrder) {
-            if (selectedSet.contains(deckId) && !resolved.contains(deckId)) {
-                resolved.add(deckId);
-            }
-        }
-        for (Long deckId : selected) {
-            if (!resolved.contains(deckId)) {
-                resolved.add(deckId);
-            }
-        }
-
-        return List.copyOf(resolved);
-    }
-
-    private List<Long> parseDeckOrder(String orderedDeckIds) {
-        if (orderedDeckIds == null || orderedDeckIds.isBlank()) {
-            return List.of();
-        }
-
-        List<Long> parsed = new ArrayList<>();
-        for (String raw : orderedDeckIds.split(",")) {
-            String token = raw.trim();
-            if (token.isEmpty()) {
-                continue;
-            }
-            try {
-                parsed.add(Long.parseLong(token));
-            } catch (NumberFormatException ignored) {
-                // Ignore malformed tokens and rely on validated selected deck IDs.
-            }
-        }
-
-        return normalizeDeckIds(parsed);
     }
 
     private List<Long> normalizeDeckIds(List<Long> deckIds) {
