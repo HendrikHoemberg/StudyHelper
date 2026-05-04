@@ -185,14 +185,14 @@
                                        class="vb-deck"
                                        th:classappend="${(deck.usableCardCount == 0 and deck.cardCount > 0) ? ' is-empty' : (deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : ''))}"
                                        th:style="'--folder-color: ' + ${group.folderColor}"
-                                       th:attr="${(deck.usableCardCount == 0 and deck.cardCount > 0) ? 'title=All cards in this deck are image-only and can\\'t be used for AI tests.' : ''}">
+                                       th:title="${(deck.usableCardCount == 0 and deck.cardCount > 0) ? 'All cards in this deck are image-only and cannot be used for AI tests.' : null}">
                                     <input class="sh-checkbox sh-test-deck-checkbox"
                                            type="checkbox"
                                            name="selectedDeckIds"
                                            th:value="${deck.deckId}"
                                            th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}"
                                            th:disabled="${deck.usableCardCount == 0}"
-                                           th:attr="${(deck.cardCount > 0) ? 'data-card-count=' + deck.cardCount : ''}"
+                                           th:attr="data-card-count=${deck.cardCount > 0 ? deck.cardCount : null}"
                                            hx-post="/test/setup/update"
                                            hx-target="#test-setup-picker" hx-swap="outerHTML"
                                            hx-include="[name='selectedDeckIds'], [name='selectedFileIds']">
@@ -215,7 +215,7 @@
                                        class="vb-file"
                                        th:classappend="${!file.isSupported ? ' is-disabled' : (#lists.contains(preselectedFileIds, file.fileId) ? ' is-selected' : '')}"
                                        th:style="'--folder-color: ' + ${group.folderColor}"
-                                       th:attr="${!file.isSupported ? 'title=File too large for AI test (max 5 MB).' : ''}">
+                                       th:title="${!file.isSupported ? 'File too large for AI test (max 5 MB).' : null}">
                                     <input class="sh-checkbox sh-test-file-checkbox"
                                            type="checkbox"
                                            name="selectedFileIds"
@@ -266,14 +266,14 @@
                                                class="vb-deck"
                                                th:classappend="${(deck.usableCardCount == 0 and deck.cardCount > 0) ? ' is-empty' : (deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : ''))}"
                                                th:style="'--folder-color: ' + ${group.folderColor}"
-                                               th:attr="${(deck.usableCardCount == 0 and deck.cardCount > 0) ? 'title=All cards in this deck are image-only and can\\'t be used for AI tests.' : ''}">
+                                               th:title="${(deck.usableCardCount == 0 and deck.cardCount > 0) ? 'All cards in this deck are image-only and cannot be used for AI tests.' : null}">
                                             <input class="sh-checkbox sh-test-deck-checkbox"
                                                    type="checkbox"
                                                    name="selectedDeckIds"
                                                    th:value="${deck.deckId}"
                                                    th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}"
                                                    th:disabled="${deck.usableCardCount == 0}"
-                                                   th:attr="${(deck.cardCount > 0) ? 'data-card-count=' + deck.cardCount : ''}"
+                                                   th:attr="data-card-count=${deck.cardCount > 0 ? deck.cardCount : null}"
                                                    hx-post="/test/setup/update"
                                                    hx-target="#test-setup-picker" hx-swap="outerHTML"
                                                    hx-include="[name='selectedDeckIds'], [name='selectedFileIds']">
@@ -296,7 +296,7 @@
                                                class="vb-file"
                                                th:classappend="${!file.isSupported ? ' is-disabled' : (#lists.contains(preselectedFileIds, file.fileId) ? ' is-selected' : '')}"
                                                th:style="'--folder-color: ' + ${group.folderColor}"
-                                               th:attr="${!file.isSupported ? 'title=File too large for AI test (max 5 MB).' : ''}">
+                                               th:title="${!file.isSupported ? 'File too large for AI test (max 5 MB).' : null}">
                                             <input class="sh-checkbox sh-test-file-checkbox"
                                                    type="checkbox"
                                                    name="selectedFileIds"
