@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="panels">
+    <!-- Panel 2: Sub-mode -->
+    <div class="sh-wizard-panel" data-step="2" data-mode="FLASHCARDS">
+        <div class="sh-section-title">How do you want to study?</div>
+        <div class="sh-study-mode-grid">
+            <label class="sh-study-choice">
+                <input type="radio" name="sessionMode" value="DECK_BY_DECK" checked>
+                <div class="sh-study-choice-icon">
+                    <i data-lucide="layers"></i>
+                </div>
+                <div class="sh-study-choice-title">Deck-by-Deck</div>
+                <div class="sh-study-choice-subtitle">
+                    Study one deck at a time. Define the order.
+                </div>
+            </label>
+            <label class="sh-study-choice">
+                <input type="radio" name="sessionMode" value="SHUFFLED">
+                <div class="sh-study-choice-icon">
+                    <i data-lucide="shuffle"></i>
+                </div>
+                <div class="sh-study-choice-title">Shuffled</div>
+                <div class="sh-study-choice-subtitle">
+                    Mix cards from all selected decks.
+                </div>
+            </label>
+        </div>
+    </div>
+
+    <!-- Panel 4: Deck Order -->
+    <div class="sh-wizard-panel" data-step="4" data-mode="FLASHCARDS">
+        <div class="sh-section-title">Deck Order</div>
+        <p class="sh-folder-meta mb-3">Drag items to rearrange.</p>
+
+        <div class="flex gap-3 flex-wrap mb-4">
+            <label class="sh-study-inline-choice">
+                <input type="radio" name="deckOrderMode" value="SELECTED_ORDER" checked
+                       onchange="document.getElementById('sh-study-order-list').style.display = ''">
+                My order
+            </label>
+            <label class="sh-study-inline-choice">
+                <input type="radio" name="deckOrderMode" value="RANDOMIZED_ORDER"
+                       onchange="document.getElementById('sh-study-order-list').style.display = 'none'">
+                Randomize
+            </label>
+        </div>
+
+        <ul class="sh-study-order-list" id="sh-study-order-list">
+            <li class="sh-study-order-empty" id="sh-order-empty-msg">Select decks in step 3 to arrange them here.</li>
+        </ul>
+        <input type="hidden" name="orderedDeckIds" id="study-ordered-deck-ids" value="">
+    </div>
+</div>
+
+</body>
+</html>

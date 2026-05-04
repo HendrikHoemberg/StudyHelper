@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="panels">
+    <!-- Panel 2: Quiz Format -->
+    <div class="sh-wizard-panel" data-step="2" data-mode="QUIZ">
+        <div class="sh-section-title">Quiz Format</div>
+        <div class="sh-study-mode-grid">
+            <label class="sh-study-choice">
+                <input type="radio" name="quizQuestionMode" value="MCQ_ONLY" checked>
+                <div class="sh-study-choice-icon">
+                    <i data-lucide="list"></i>
+                </div>
+                <div class="sh-study-choice-title">Multiple Choice</div>
+                <div class="sh-study-choice-subtitle">4 options, one correct.</div>
+            </label>
+            <label class="sh-study-choice">
+                <input type="radio" name="quizQuestionMode" value="TF_ONLY">
+                <div class="sh-study-choice-icon">
+                    <i data-lucide="check-circle"></i>
+                </div>
+                <div class="sh-study-choice-title">True / False</div>
+                <div class="sh-study-choice-subtitle">Quick verification.</div>
+            </label>
+            <label class="sh-study-choice">
+                <input type="radio" name="quizQuestionMode" value="MIXED">
+                <div class="sh-study-choice-icon">
+                    <i data-lucide="shuffle"></i>
+                </div>
+                <div class="sh-study-choice-title">Mixed (50/50)</div>
+                <div class="sh-study-choice-subtitle">MCQ and True/False.</div>
+            </label>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:1.5rem;margin-top:1.5rem;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <span style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);">Difficulty</span>
+                <div class="sh-segmented-control">
+                    <label th:each="diff : ${difficulties}" class="sh-segmented-option">
+                        <input type="radio" name="difficulty" th:value="${diff}" th:checked="${diff.name() == 'MEDIUM'}">
+                        <span th:text="${#strings.capitalize(#strings.toLowerCase(diff))}">Medium</span>
+                    </label>
+                </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <span style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);">Count</span>
+                <div class="sh-quiz-count-wrap" style="margin:0">
+                    <input type="number" name="questionCount" class="sh-quiz-count-input" value="5" min="1" max="20" style="width:70px">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

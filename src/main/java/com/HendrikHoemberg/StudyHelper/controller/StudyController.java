@@ -143,7 +143,7 @@ public class StudyController {
 
         model.addAttribute("mode", mode);
         prepareWizardModel(model, user, decks, files, null, session);
-        return "fragments/study-setup :: setupPicker";
+        return "fragments/wizard-source-picker :: setupPicker";
     }
 
     @PostMapping("/study/session")
