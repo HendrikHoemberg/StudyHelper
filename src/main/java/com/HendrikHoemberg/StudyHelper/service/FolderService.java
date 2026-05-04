@@ -95,6 +95,39 @@ public class FolderService {
         return getStudyFolderTree(user, List.of());
     }
 
+    public record FolderSources(List<Long> deckIds, List<Long> fileIds) {}
+
+    @Transactional(readOnly = true)
+    public FolderSources getAllSourcesInFolder(Long folderId, User user) {
+        Folder folder = folderRepository.findByIdAndUser(folderId, user)
+            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+        List<Long> deckIds = new ArrayList<>();
+        List<Long> fileIds = new ArrayList<>();
+        collectSourcesRecursively(folder, deckIds, fileIds);
+        return new FolderSources(deckIds, fileIds);
+    }
+
+    private void collectSourcesRecursively(Folder folder, List<Long> deckIds, List<Long> fileIds) {
+        for (Deck deck : folder.getDecks()) {
+            int usable = (int) deck.getFlashcards().stream()
+                .filter(flashcardService::hasUsableTextForAi).count();
+            if (usable > 0) {
+                deckIds.add(deck.getId());
+            }
+        }
+        for (FileEntry file : folder.getFiles()) {
+            String ext = getFileExtension(file.getOriginalFilename()).toLowerCase();
+            boolean supported = List.of("pdf", "txt", "md").contains(ext) 
+                && file.getFileSizeBytes() <= 5 * 1024 * 1024;
+            if (supported) {
+                fileIds.add(file.getId());
+            }
+        }
+        for (Folder sub : folder.getSubFolders()) {
+            collectSourcesRecursively(sub, deckIds, fileIds);
+        }
+    }
+
     @Transactional(readOnly = true)
     public List<StudyDeckOption> getAllDecksInFolder(Long folderId, User user) {
         Folder folder = folderRepository.findByIdAndUser(folderId, user)

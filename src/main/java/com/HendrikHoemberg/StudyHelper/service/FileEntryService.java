@@ -50,6 +50,12 @@ public class FileEntryService {
     }
 
     @Transactional(readOnly = true)
+    public FileEntry getByIdAndUser(Long id, User user) {
+        return fileEntryRepository.findByIdAndUser(id, user)
+            .orElseThrow(() -> new NoSuchElementException("File not found"));
+    }
+
+    @Transactional(readOnly = true)
     public FileEntry getFile(Long id, User user) {
         FileEntry entry = fileEntryRepository.findByIdAndUser(id, user)
             .orElseThrow(() -> new NoSuchElementException("File not found"));
