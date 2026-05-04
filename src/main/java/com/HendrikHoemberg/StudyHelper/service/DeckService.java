@@ -121,6 +121,13 @@ public class DeckService {
             .toList();
     }
 
+    @Transactional(readOnly = true)
+    public Long findFolderIdByDeckId(Long deckId, User user) {
+        return deckRepository.findByIdAndUser(deckId, user)
+            .map(deck -> deck.getFolder().getId())
+            .orElse(null);
+    }
+
     private List<Long> normalizeDeckIds(List<Long> deckIds) {
         if (deckIds == null || deckIds.isEmpty()) {
             return List.of();
@@ -137,12 +144,10 @@ public class DeckService {
     }
 
     private String buildFolderPath(Folder folder) {
-        List<String> segments = new ArrayList<>();
-        Folder current = folder;
-        while (current != null) {
-            segments.add(0, current.getName());
-            current = current.getParentFolder();
+        if (folder == null) return "";
+        if (folder.getParentFolder() == null) {
+            return folder.getName();
         }
-        return String.join(" / ", segments);
+        return buildFolderPath(folder.getParentFolder()) + " / " + folder.getName();
     }
 }

@@ -8,3 +8,6 @@
 - Let users customize colors and background images in settings
 - zooming into picture edit kinda broken
 - lucide replacement -> heroicons
+- Browse files takes 2 clicks
+- edit prompt: If multiple files, decks etc. are selected, the AI should try to balance the questions across all selected sources. E.g. if I select 2 decks with 10 cards each, it should generate 10 questions in total, 5 from each deck.
+- Toggle mode: Extract text from documents or send document completely
