@@ -1,0 +1,65 @@
+<div th:fragment="exams-list" id="exams-list-container" class="sh-fade-in">
+    <div class="sh-page-header">
+        <div>
+            <h1 class="sh-page-title">Past Exams</h1>
+            <p class="sh-page-subtitle">Your previous long-form assessments and feedback.</p>
+        </div>
+        <div class="sh-page-actions">
+            <a href="/study/start?mode=EXAM" class="sh-btn sh-btn-primary"
+               hx-get="/study/start?mode=EXAM" hx-target="#explorer-detail" hx-push-url="true">
+                <i class="fa-solid fa-pencil-line me-2"></i> Take New Exam
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(exams)}" class="sh-empty mt-5">
+        <div class="sh-empty-icon">
+            <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+        <p class="sh-empty-text">No exams taken yet</p>
+        <p class="sh-empty-hint">Start an exam session to see your progress and AI feedback here.</p>
+        <a href="/study/start?mode=EXAM" class="sh-btn sh-btn-primary mt-3"
+           hx-get="/study/start?mode=EXAM" hx-target="#explorer-detail" hx-push-url="true">
+            Take your first exam
+        </a>
+    </div>
+
+    <div th:if="${!#lists.isEmpty(exams)}" class="sh-exams-grid mt-4">
+        <div th:each="exam : ${exams}" class="sh-exam-card" th:id="'exam-card-' + ${exam.id}">
+            <div class="sh-exam-card-header">
+                <div class="sh-exam-card-score"
+                     th:classappend="${exam.overallScorePct >= 80 ? 'score-green' : (exam.overallScorePct >= 60 ? 'score-amber' : 'score-red')}">
+                    <span th:text="${exam.overallScorePct + '%'}">85%</span>
+                </div>
+                <div class="sh-exam-card-title-group">
+                    <h3 class="sh-exam-card-title" th:text="${exam.title}">Exam Title</h3>
+                    <div class="sh-exam-card-meta">
+                        <span><i class="fa-solid fa-calendar-day"></i> <span th:text="${#temporals.format(exam.completedAt, 'd MMM yyyy')}">12 May 2026</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sh-exam-card-body">
+                <p class="sh-exam-card-sources" th:text="${exam.sourceSummary}">Source summary...</p>
+            </div>
+            
+            <div class="sh-exam-card-footer">
+                <a th:href="@{/exams/{id}(id=${exam.id})}" class="sh-btn sh-btn-secondary sh-btn-sm"
+                   hx-get th:hx-get="@{/exams/{id}(id=${exam.id})}"
+                   hx-target="#explorer-detail" hx-push-url="true">
+                    <i class="fa-solid fa-eye me-1"></i> View Report
+                </a>
+                <button class="sh-btn sh-btn-ghost sh-btn-icon sh-btn-sm ms-auto text-danger"
+                        th:hx-delete="@{/exams/{id}(id=${exam.id})}"
+                        hx-target="closest .sh-exam-card"
+                        hx-swap="outerHTML"
+                        hx-confirm="Delete this exam result? This cannot be undone.">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar OOB Update -->
+    <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+</div>

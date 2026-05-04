@@ -104,4 +104,13 @@ public class ExamService {
         exam.setTitle(newTitle);
         examRepository.save(exam);
     }
+
+    public ExamReport deserializeReport(String reportJson) {
+        try {
+            return objectMapper.readValue(reportJson, ExamReport.class);
+        } catch (Exception e) {
+            // Fallback for corrupt JSON
+            return new ExamReport(0, List.of(), List.of(), List.of(), List.of());
+        }
+    }
 }

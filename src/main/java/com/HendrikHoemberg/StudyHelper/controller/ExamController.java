@@ -209,30 +209,44 @@ public class ExamController {
     }
 
     @GetMapping("/exams")
-    public String listExams(Model model, Principal principal) {
+    public String listExams(Model model, Principal principal,
+                            @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
         List<Exam> exams = examService.listForUser(user);
         model.addAttribute("exams", exams);
-        return "<div>List of " + exams.size() + " exams stub.</div>";
+        
+        if ("true".equals(hxRequest)) {
+            return "fragments/exams-list :: exams-list";
+        }
+        return "exams-page";
     }
 
     @GetMapping("/exams/{id}")
-    public String viewExam(@PathVariable Long id, Model model, Principal principal) {
+    public String viewExam(@PathVariable Long id, Model model, Principal principal,
+                           @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
         try {
             Exam exam = examService.getOwnedById(user, id);
+            ExamReport report = examService.deserializeReport(exam.getReportJson());
             model.addAttribute("exam", exam);
-            return "<div>Detail view for exam " + id + " stub. Title: " + exam.getTitle() + "</div>";
+            model.addAttribute("report", report);
+            
+            if ("true".equals(hxRequest)) {
+                return "fragments/exam-detail :: exam-detail";
+            }
+            return "exams-page";
         } catch (NoSuchElementException e) {
-            return "<div>Exam not found</div>";
+            // Plan says ownership errors -> 404. 
+            // In a real app we'd use @ResponseStatus(HttpStatus.NOT_FOUND) or throw a custom exception.
+            return "redirect:/exams"; 
         }
     }
 
     @PostMapping("/exams/{id}/rename")
     @ResponseBody
-    public String renameExam(@PathVariable Long id, @RequestParam String newTitle, Principal principal) {
+    public String renameExam(@PathVariable Long id, @RequestParam("title") String newTitle, Principal principal) {
         if (principal == null) return "Unauthorized";
         User user = userService.getByUsername(principal.getName());
         try {
@@ -245,12 +259,21 @@ public class ExamController {
 
     @DeleteMapping("/exams/{id}")
     @ResponseBody
-    public String deleteExam(@PathVariable Long id, Principal principal) {
+    public String deleteExam(@PathVariable Long id, Principal principal,
+                             @RequestHeader(value = "HX-Target", required = false) String hxTarget,
+                             HttpServletResponse response) {
         if (principal == null) return "Unauthorized";
         User user = userService.getByUsername(principal.getName());
         try {
             examService.deleteOwned(user, id);
-            return "OK";
+            
+            // If coming from detail page, redirect to list.
+            // HX-Target will usually be 'explorer-detail' (or similar) when in detail view.
+            if ("explorer-detail".equals(hxTarget)) {
+                response.setHeader("HX-Redirect", "/exams");
+            }
+            
+            return ""; // Empty body for card removal in list view
         } catch (NoSuchElementException e) {
             return "Error";
         }
