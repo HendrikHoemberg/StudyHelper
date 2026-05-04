@@ -1,281 +1,532 @@
-# AI Test Mode — Expansion Plan
+# Plan: Unified Study Wizard + new Exam mode
 
-## Goals
+## 1. Goal & overview
 
-Extend AI Test Mode beyond text-only flashcards. Add document sources (PDF/TXT/MD), image-aware flashcard filtering, question-type & difficulty selection, shortcut entry points, and a more honest progress UI.
+Today the app has two separate study experiences:
 
-Saving / history of completed tests is **out of scope** for this iteration — may revisit later.
+- **Flashcards** — `/study/start` → wizard (mode → decks → order) → flip-card review.
+- **AI Quiz** (currently called "Test") — `/test/start` → wizard (mode → sources → count) → MCQ/TF instant-graded quiz.
 
----
+Each has its own entry buttons in the sidebar, explorer, folder detail and deck card. This is visually noisy and forces the user to decide *how* they want to study before they have a unified mental model of "starting a session".
 
-## 1. New entities & DTOs
+We will:
 
-### 1.1 `DocumentSource` enum (new, `dto/`)
-Lightweight marker (`PDF`, `TXT`, `MD`) used while extracting text. No persistence change to `FileEntry` — file type is derived from extension at read time.
+1. **Rename "Test" → "Quiz"** project-wide to free the word "Test" and remove ambiguity with the new Exam mode.
+2. **Introduce a new "Exam" mode** — multi-question, freeform written answers, AI-graded with per-question feedback and a structured improvement report. Sessions are persisted and viewable later in a "Past Exams" view.
+3. **Unify the three modes into one creation wizard** (`/study/start`) with a Mode picker as Step 1. All entry points throughout the app feed into this wizard, optionally pre-selecting a mode and/or pre-checking sources.
 
-### 1.2 `QuestionType` enum (new, `dto/`)
-```
-MULTIPLE_CHOICE, TRUE_FALSE
-```
-
-### 1.3 `TestQuestionMode` enum (new, `dto/`)
-```
-MCQ_ONLY, TF_ONLY, MIXED
-```
-
-### 1.4 `Difficulty` enum (new, `dto/`)
-```
-EASY, MEDIUM, HARD
-```
-
-### 1.5 `TestQuestion` (modify [src/main/java/com/HendrikHoemberg/StudyHelper/dto/TestQuestion.java](src/main/java/com/HendrikHoemberg/StudyHelper/dto/TestQuestion.java))
-Add `QuestionType type` field. For `TRUE_FALSE`, `options` will be exactly `["True", "False"]` and `correctOptionIndex` is 0 or 1. Existing MCQ shape is unchanged.
-
-### 1.6 `TestConfig` (modify [src/main/java/com/HendrikHoemberg/StudyHelper/dto/TestConfig.java](src/main/java/com/HendrikHoemberg/StudyHelper/dto/TestConfig.java))
-```java
-public record TestConfig(
-    List<Long> selectedDeckIds,
-    List<Long> selectedFileIds,
-    int questionCount,
-    TestQuestionMode questionMode,
-    Difficulty difficulty
-) {}
-```
-
-### 1.7 `StudyDeckGroup` / `StudyDeckOption` — extend for files
-Either:
-- **(a)** Add `List<TestFileOption> files` to [StudyDeckGroup](src/main/java/com/HendrikHoemberg/StudyHelper/dto/StudyDeckGroup.java) and to its sub-groups, **or**
-- **(b)** Build a parallel `TestSourceGroup` DTO used only by the test picker, leaving study-session DTOs untouched.
-
-**Decision: (b)** — keeps study-session code free of test-specific fields and avoids accidentally surfacing files in the study picker. New DTOs:
-
-```
-TestSourceGroup(folderId, folderName, folderColor, folderIcon,
-                List<StudyDeckOption> decks, List<TestFileOption> files,
-                List<TestSourceGroup> subGroups,
-                isSelected, isIndeterminate, selectableSourceCount, totalSourceCount, ...)
-
-TestFileOption(fileId, filename, sizeBytes, extension /* "pdf"|"txt"|"md" */,
-               approxCharCount /* nullable, computed on demand */,
-               isSupported)
-```
-
-`FolderService` gains a `getTestSourceTree(User user, List<Long> selectedDeckIds, List<Long> selectedFileIds)` method that filters `FileEntry` rows to extension ∈ {pdf, txt, md} per folder.
+This document specifies every file to add, change or delete and the order to do it in.
 
 ---
 
-## 2. Document text extraction
+## 2. Terminology & rename pass
 
-### 2.1 New service: `DocumentExtractionService`
-```
-String extractText(FileEntry file) throws IOException
-```
-- Dispatches by extension:
-  - `.txt` / `.md` — `Files.readString(path, UTF_8)`.
-  - `.pdf` — Apache PDFBox 3.x.
-- Throws `IllegalArgumentException` for unsupported extensions.
-- Returns trimmed text; empty string is allowed (caller validates).
+`Test` → `Quiz` everywhere it refers to the existing AI MCQ/TF mode. The new mode is `Exam`. Keep these meanings strict throughout the codebase to avoid future confusion.
 
-### 2.2 Dependency
-Add to [pom.xml](pom.xml):
-```xml
-<dependency>
-  <groupId>org.apache.pdfbox</groupId>
-  <artifactId>pdfbox</artifactId>
-  <version>3.0.3</version>
-</dependency>
-```
+| Old name                  | New name                  |
+|---------------------------|---------------------------|
+| Test mode                 | Quiz mode                 |
+| `/test/...`               | `/quiz/...`               |
+| `TestController`          | `QuizController`          |
+| `AiTestService`           | `AiQuizService`           |
+| `TestConfig` etc. DTOs    | `QuizConfig` etc.         |
+| `TestQuestion`            | `QuizQuestion`            |
+| `TestQuestionMode`        | `QuizQuestionMode`        |
+| `TestSessionState`        | `QuizSessionState`        |
+| `TestSourceGroup`         | `QuizSourceGroup`         |
+| `TestFileOption`          | `QuizFileOption`          |
+| `test-page.html`          | `quiz-page.html`          |
+| `fragments/test-*.html`   | `fragments/quiz-*.html`   |
+| `test.css`                | `quiz.css`                |
+| Java package classes referencing `Test` in name | rename accordingly |
 
-### 2.3 Limits (server-enforced, surfaced in UI)
-Constants in `DocumentExtractionService`:
-- `MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024` (5 MB) — files larger than this are marked `isSupported=false` in `TestFileOption` and shown disabled in the picker.
-- `WARN_TOTAL_CHARS = 50_000` — when the **sum** of extracted chars across the current selection crosses this, picker shows a yellow inline banner: *"Large selection — generation may be slow."*
-- `MAX_TOTAL_CHARS = 150_000` — submitting beyond this returns 400 with message *"Selection too large — please deselect some sources."*
-
-Char counts per file are computed lazily once and cached in-memory per session (simple `HashMap<Long, Integer>` on the controller; cleared on logout via session listener — or just left to expire with the session).
+The rename is mechanical. Use IDE refactor / `git grep -l "Test" -- src` to catch all references. Verify no method bodies reference test-mode-specific text the user can see.
 
 ---
 
-## 3. Image-flashcard filtering
+## 3. Unified wizard architecture
 
-### 3.1 In `FlashcardService`
-New helper:
-```java
-boolean hasUsableTextForAi(Flashcard card)
-// true if card has front text OR back text (i.e. not image-only on every side)
+### 3.1 Routes
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET`  | `/study/start` | Render unified wizard. Optional query params: `mode` (`FLASHCARDS`/`QUIZ`/`EXAM`), `deckId`, `folderId`, `fileId` for preselection. |
+| `POST` | `/study/setup/update` | HTMX picker swap. Carries `mode` so the picker knows whether to show files. |
+| `POST` | `/study/session` | Submit form. Branches by `mode` to existing flashcard/quiz/exam launchers. |
+
+The legacy `/study/start` (flashcards-only) and `/test/start` are removed; their behavior is absorbed into `/study/start?mode=...`.
+
+### 3.2 Wizard step structure
+
+The wizard is a single `<form>` with conditionally visible panels, like the existing two wizards. Steps differ per mode:
+
+| Step | Flashcards          | Quiz                             | Exam                                      |
+|------|---------------------|----------------------------------|-------------------------------------------|
+| 1    | Mode picker         | Mode picker                      | Mode picker                               |
+| 2    | Sub-mode (deck-by-deck / shuffled) | Question type + difficulty | Size + question count + timer toggle    |
+| 3    | Sources (decks only) | Sources (decks + files)        | Sources (decks + files)                   |
+| 4    | Order (only if deck-by-deck) | —                       | Layout toggle (one-per-page / single page)|
+
+Step 1 is always the **Mode picker**. Steps 2–4 change based on the chosen mode. The step indicator at the top updates labels and count when mode changes (same pattern as the current flashcards wizard already uses to hide step 3 when "Shuffled" is chosen).
+
+The picker (Step 3 for Quiz/Exam, Step 3 for Flashcards) reuses the existing `vb-list` markup. For Flashcards mode, the picker hides files entirely — the controller passes only `deckGroups` and the template branches on the `mode` hidden input.
+
+### 3.3 Mode picker (Step 1)
+
+Three large clickable cards, identical visual treatment to the existing `selectStudyMode` cards:
+
+- **Flashcards** — `book-open` icon, "Flip through cards. Track right/wrong."
+- **AI Quiz** — `list-checks` icon, "Auto-generated multiple choice & true/false questions."
+- **Exam** — `pencil-line` icon, "Long-form written answers, AI-graded with feedback."
+
+Selecting a card triggers the same slide-to-center animation already implemented for flashcards mode, then auto-advances to Step 2.
+
+If the wizard was opened with `?mode=...`, the picker is **skipped entirely** (the corresponding mode is preselected and the wizard opens at Step 2). The step indicator still shows step 1 as "done" so the user can click back to change mode.
+
+### 3.4 Entry-point consolidation
+
+Replace every existing study/quiz CTA with a single unified one. In each case the `mode` and source preselection are encoded as query params.
+
+| Location                           | Before                                              | After                                                         |
+|------------------------------------|-----------------------------------------------------|---------------------------------------------------------------|
+| Sidebar CTA                        | "Study Session" (`/study/start`)                    | "Start Studying" (`/study/start`) — mode picker shown         |
+| Explorer toolbar                   | Two buttons: "Study Session" + "Test Mode"          | Single "Start Studying" (`/study/start`)                      |
+| Folder detail header               | "Start Study Session"                               | "Study This Folder" (`/study/start?folderId={id}`) — picker shown, all decks/files in folder preselected |
+| File row "Test" button             | `/test/start?fileId={id}`                           | `/study/start?fileId={id}` — picker shown, file preselected   |
+| Deck card "Study"                  | `/decks/{id}/study/start`                           | `/study/start?mode=FLASHCARDS&deckId={id}` — **skips picker**, opens Flashcards wizard with deck preselected |
+| Deck card "Test"                   | `/test/start?deckId={id}`                           | Removed. Replaced by single "Start Studying" button per deck → `/study/start?deckId={id}` (picker shown). |
+
+> Rationale for the deck card asymmetry: the deck-level Study button is the primary way users start a flashcards session today; auto-selecting Flashcards mode preserves muscle memory. Other launches (folder, file, sidebar) show the picker because the source mix doesn't strongly imply a mode.
+
+### 3.5 Sidebar additions
+
+The sidebar gets a second CTA below "Start Studying":
+
+```
+📋 Past Exams      → /exams
 ```
 
-`FlashcardService.getFlashcardsFlattened(decks)` is **not** changed; instead the `AiTestService` filters before building the prompt. This keeps the existing flashcard pipeline intact.
-
-### 3.2 Deck card-count display
-Currently `StudyDeckOption.cardCount` is total. Add `usableCardCount` (text-bearing cards) and surface in:
-- Picker badge: `12 cards · 8 usable` (or just `8 usable` if all 12 are usable, omit redundancy).
-- A deck with `usableCardCount == 0` is disabled in the **test** picker (study picker still uses `cardCount`).
-- Folder-level meta updated to `selectableDeckCount` based on `usableCardCount > 0`.
-
-This requires a new `FlashcardRepository` projection or a small service-layer aggregation that counts text-bearing cards per deck. Computed once per request, not per row.
-
-### 3.3 Prompt-side defense
-In the AI prompt, include:
-> *"Some cards may have missing or partial context (their original images have been removed). If a card's text alone is insufficient to form a meaningful question, skip it."*
-
-This catches the text+image cards where the text references the image (e.g. "What is shown in this diagram?").
+Folders panel stays unchanged.
 
 ---
 
-## 4. `AiTestService` overhaul
+## 4. Exam mode — full specification
 
-Rename / restructure into a single `generate(...)` entry point:
+### 4.1 Configuration (Step 2)
 
-```java
-public List<TestQuestion> generate(
-    List<Flashcard> flashcards,
-    List<DocumentInput> documents,   // record(filename, extractedText)
-    int count,
-    TestQuestionMode mode,
-    Difficulty difficulty
-);
+| Field                | Values                                                   | Default   |
+|----------------------|----------------------------------------------------------|-----------|
+| `questionSize`       | `SHORT`, `MEDIUM`, `LONG`, `MIXED`                       | `MEDIUM`  |
+| `questionCount`      | integer 1–20                                             | 5         |
+| `timerEnabled`       | boolean                                                  | `true`    |
+| `timerMinutes`       | integer 1–240; UI prefills from size × count             | computed  |
+
+**Size → AI prompt mapping** (drives expected answer length, *not* the timer):
+
+| Size   | Target answer length per question | Prompt hint                                                           |
+|--------|-----------------------------------|------------------------------------------------------------------------|
+| SHORT  | ~50 words                         | "Brief recall or definition. 1–2 sentences."                          |
+| MEDIUM | ~150 words                        | "Explanation. ~150 words. Requires understanding, not just recall."    |
+| LONG   | ~400 words                        | "Essay-style. ~400 words. Synthesis, application, or comparison."      |
+| MIXED  | varies                            | "Mix all three depths. AI chooses the best depth per topic."           |
+
+**Timer prefill formula** (UI only, user can override):
+
+```
+short  → 2 min × count
+medium → 5 min × count
+long   → 10 min × count
+mixed  → 5 min × count
 ```
 
-### 4.1 Prompt construction
-- Build a single prompt that includes flashcard content **and** document content under labeled sections.
-- For documents, include the full extracted text (trimmed). The hard char cap protects against blowing up the context.
-- Mode handling:
-  - `MCQ_ONLY` — all `MULTIPLE_CHOICE`.
-  - `TF_ONLY` — all `TRUE_FALSE` (with "True"/"False" options enforced).
-  - `MIXED` — instruct the model to produce a roughly 50/50 split (`floor(n/2)` MCQ + `ceil(n/2)` TF, or vice versa). Validate post-response and reject if grossly off (e.g. all one type).
-- Difficulty handling — appended to prompt:
-  - `EASY` — direct recall, obvious distractors.
-  - `MEDIUM` — minor inference, plausible distractors.
-  - `HARD` — synthesis across sources, distractors that share surface features with the answer.
-- **Topic-relevance instruction** (per user feedback):
-  > *"First identify the dominant subject matter of the supplied content. Generate questions only about concepts that belong to that subject. Ignore incidental metadata such as author names, page numbers, publication dates, headers, footers, or off-topic asides."*
+The setup UI shows a live "Estimated time: ~X minutes" label that updates as size/count change.
 
-### 4.2 JSON contract update
+### 4.2 Source picker (Step 3)
+
+Identical to the current Quiz picker (`testSetupPicker` fragment), reused under the unified wizard. Decks + files. Same source cap of **150,000 characters total** as Quiz. Same warning/error banners.
+
+### 4.3 Layout toggle (Step 4)
+
+Two options:
+
+- **One question per page** — Next/Previous buttons. Progress shown as "Question 3 of 10". Allows the user to focus.
+- **All on one page** — All N questions stacked, single scroll, single Submit button. Useful for review-style studying or when the user wants to see everything at once.
+
+Stored as `examLayout: PER_PAGE | SINGLE_PAGE`. Default `PER_PAGE`.
+
+### 4.4 Question generation
+
+`AiExamService.generate(flashcards, documents, questionCount, size)` returns `List<ExamQuestion>` (records). Single AI call. Prompt structure mirrors `AiQuizService` but:
+
+- No options / correctOptionIndex.
+- Schema: `{"questions":[{"questionText":"...", "expectedAnswerHints":"..."}]}` where `expectedAnswerHints` is a short rubric the AI generates alongside the question (used later during grading to ensure consistency).
+- Includes the size-specific length hint from §4.1.
+- Uses the same "topic focus" / "skip cards lacking context" instructions as the quiz prompt.
+
+### 4.5 Answer flow
+
+**Per-page layout:**
+- Single textarea per question, large (~6 rows), no character limit.
+- Auto-saves to client-side state on change so navigating Previous/Next preserves answers.
+- HTMX posts `/exam/answer` on Next; server updates session state and renders next question.
+- "Submit Exam" button on the last question.
+
+**Single-page layout:**
+- All questions rendered in a `<form>` with N textareas.
+- Single "Submit Exam" button at the bottom.
+
+**Timer (if enabled):**
+- Sticky countdown header.
+- At 5 min remaining: amber visual.
+- At 1 min remaining: red visual.
+- At 0: auto-submits the form (whatever is filled).
+
+### 4.6 Grading
+
+A single AI call. Input:
+
+```
+{
+  "questions": [
+    { "questionText": "...", "expectedAnswerHints": "...", "userAnswer": "..." },
+    ...
+  ]
+}
+```
+
+Prompt instructs the model to:
+
+1. Score each answer **0–100%**.
+2. Provide per-question feedback (2–4 sentences): what was correct, what was missing or incorrect, and what the model expected.
+3. Mark blank answers as 0% with feedback "Not answered."
+4. Produce an overall structured report:
+   - **Overall score** (mean of per-question scores, percentage).
+   - **Strengths** (2–4 bullet points).
+   - **Weaknesses** (2–4 bullet points).
+   - **Topics to revisit** (3–6 short topic names tied back to the source material).
+   - **Suggested next steps** (2–3 actionable recommendations).
+
+Response schema:
+
 ```json
-{ "questions": [
-  { "type": "MULTIPLE_CHOICE", "questionText": "...", "options": ["a","b","c","d"], "correctOptionIndex": 2 },
-  { "type": "TRUE_FALSE",      "questionText": "...", "options": ["True","False"], "correctOptionIndex": 0 }
-]}
+{
+  "perQuestion": [
+    { "scorePercent": 85, "feedback": "..." },
+    ...
+  ],
+  "overall": {
+    "scorePercent": 76,
+    "strengths": ["...", "..."],
+    "weaknesses": ["...", "..."],
+    "topicsToRevisit": ["...", "..."],
+    "suggestedNextSteps": ["...", "..."]
+  }
+}
 ```
 
-Validation in `AiTestService`:
-- `MULTIPLE_CHOICE` → exactly 4 options, index ∈ [0,3].
-- `TRUE_FALSE` → options must be `["True","False"]` (normalize case), index ∈ [0,1].
-- Drop malformed questions; if fewer than `max(1, count/2)` valid remain, throw `IllegalStateException("AI returned too few valid questions; please retry.")`.
+While grading, show a `htmx-indicator` spinner with rotating progress messages (same pattern as quiz generation today): "Reading your answers…", "Comparing with source material…", "Drafting feedback…", "Compiling report…".
 
-### 4.3 Empty-source guards
-- If both `flashcards` (after filtering) and `documents` are empty → `IllegalArgumentException` with clear message.
+### 4.7 Persistence — new entities
+
+#### `Exam`
+
+| Field             | Type                | Notes                                                  |
+|-------------------|---------------------|--------------------------------------------------------|
+| `id`              | `Long`              | PK                                                     |
+| `user`            | `@ManyToOne User`   | Owner.                                                 |
+| `title`           | `String`            | Auto-generated from sources (e.g. "Exam · Biology Deck + 2 docs · 12 May 2026"). User can rename later. |
+| `createdAt`       | `LocalDateTime`     |                                                         |
+| `completedAt`     | `LocalDateTime`     |                                                         |
+| `questionSize`    | `ExamQuestionSize`  | enum                                                    |
+| `questionCount`   | `int`               |                                                         |
+| `timerMinutes`    | `Integer` (nullable)| null if disabled                                        |
+| `layout`          | `ExamLayout`        | enum                                                    |
+| `overallScorePct` | `int`               | 0–100                                                   |
+| `sourceSummary`   | `String`            | Short human-readable list of source names at the time of taking, snapshotted (sources may be deleted later). |
+| `reportJson`      | `@Lob String`       | Serialized overall report (`strengths`, `weaknesses`, `topicsToRevisit`, `suggestedNextSteps`). |
+| `questions`       | `@OneToMany`        | `ExamQuestionResult`, `cascade = ALL`, `orphanRemoval = true` |
+
+#### `ExamQuestionResult`
+
+| Field               | Type              | Notes                                            |
+|---------------------|-------------------|--------------------------------------------------|
+| `id`                | `Long`            | PK                                               |
+| `exam`              | `@ManyToOne Exam` |                                                  |
+| `position`          | `int`             | 0-based order                                    |
+| `questionText`      | `@Lob String`     | snapshotted                                      |
+| `expectedAnswerHints` | `@Lob String`   | snapshotted                                      |
+| `userAnswer`        | `@Lob String`     | may be empty                                     |
+| `scorePercent`      | `int`             | 0–100                                            |
+| `feedback`          | `@Lob String`     |                                                  |
+
+`spring.jpa.hibernate.ddl-auto=update` will create both tables automatically.
+
+> Note: we deliberately snapshot question/answer/source text into the exam record. Decks and files may be deleted after the exam is taken; the report must remain fully readable.
+
+### 4.8 Past Exams view (`/exams`)
+
+`GET /exams` — list all of the current user's exams, newest first. Card grid:
+
+- Title, taken date, source summary
+- Big overall score percent with color (green ≥80, amber 60–79, red <60)
+- "View" button → `/exams/{id}`
+- Delete button (icon, requires hover-confirm or modal — match existing deck delete pattern)
+
+`GET /exams/{id}` — full detail view:
+
+- Header: title (inline-editable), score, taken date, config (size, count, timer if used)
+- Overall report (Strengths / Weaknesses / Topics to revisit / Next steps)
+- Per-question accordion: question text, user answer, score, feedback
+- "Delete" button in header
+
+`DELETE /exams/{id}` — delete, redirect to `/exams`.
+
+No re-take flow in v1 (user can start a new exam from the same sources via the wizard).
 
 ---
 
-## 5. `TestController` changes
+## 5. Backend changes — file by file
 
-### 5.1 `/test/setup/update` — extend
-Add params:
+### 5.1 Files to add
+
+| File | Purpose |
+|------|---------|
+| `entity/Exam.java` | JPA entity, §4.7 |
+| `entity/ExamQuestionResult.java` | JPA entity, §4.7 |
+| `repository/ExamRepository.java` | `JpaRepository<Exam, Long>` + `findAllByUserOrderByCreatedAtDesc(User)` |
+| `dto/ExamQuestionSize.java` | enum `SHORT, MEDIUM, LONG, MIXED` |
+| `dto/ExamLayout.java` | enum `PER_PAGE, SINGLE_PAGE` |
+| `dto/ExamQuestion.java` | record `(String questionText, String expectedAnswerHints)` — AI generation output |
+| `dto/ExamGradingResult.java` | record holding per-question + overall report (matches §4.6 schema) |
+| `dto/ExamConfig.java` | record `(List<Long> deckIds, List<Long> fileIds, ExamQuestionSize size, int count, Integer timerMinutes, ExamLayout layout)` |
+| `dto/ExamSessionState.java` | record `(ExamConfig config, List<ExamQuestion> questions, Map<Integer,String> answers, Instant startedAt)` — held in `HttpSession` until submit |
+| `dto/ExamReport.java` | record for the overall report (used both during display and for `reportJson` serialization) |
+| `dto/StudyMode.java` | enum `FLASHCARDS, QUIZ, EXAM` — shared by unified wizard |
+| `service/AiExamService.java` | Two methods: `generate(...)` returns `List<ExamQuestion>`; `grade(...)` returns `ExamGradingResult`. Mirrors `AiQuizService` patterns (single ChatClient call, JSON parsing, error normalization). |
+| `service/ExamService.java` | Persistence: save completed exam (`Exam` + child results), list by user, fetch by id with ownership check, delete. |
+| `controller/ExamController.java` | Routes for the exam runtime + Past Exams view. See §5.3. |
+| `controller/StudyController.java` | New unified wizard controller. See §5.3. |
+
+### 5.2 Files to rename (Test → Quiz)
+
+| Old | New |
+|-----|-----|
+| `controller/TestController.java` | `controller/QuizController.java` |
+| `service/AiTestService.java` | `service/AiQuizService.java` |
+| `dto/TestConfig.java` | `dto/QuizConfig.java` |
+| `dto/TestQuestion.java` | `dto/QuizQuestion.java` |
+| `dto/TestQuestionMode.java` | `dto/QuizQuestionMode.java` |
+| `dto/TestSessionState.java` | `dto/QuizSessionState.java` |
+| `dto/TestSourceGroup.java` | `dto/QuizSourceGroup.java` |
+| `dto/TestFileOption.java` | `dto/QuizFileOption.java` |
+| `templates/test-page.html` | `templates/quiz-page.html` |
+| `templates/fragments/test-setup.html` | `templates/fragments/quiz-setup.html` |
+| `templates/fragments/test-question.html` | `templates/fragments/quiz-question.html` |
+| `templates/fragments/test-summary.html` | `templates/fragments/quiz-summary.html` |
+| `static/css/test.css` | `static/css/quiz.css` |
+| Routes `/test/...` | Routes `/quiz/...` (`/quiz/setup/update`, `/quiz/session`, `/quiz/answer`, `/quiz/next`) |
+| Method calls e.g. `folderService.getTestSourceTree(...)` | `folderService.getQuizSourceTree(...)` |
+
+After renaming, `QuizController` continues to own `/quiz/...` *runtime* endpoints (answer, next, summary). The setup endpoints (`/quiz/start`, `/quiz/setup/update`, `/quiz/session`) move conceptually under the unified wizard but the underlying handlers can stay in `QuizController`, just called from the unified setup.
+
+### 5.3 New controllers — endpoint contracts
+
+#### `StudyController` (unified wizard host)
+
 ```
-selectedFileIds: List<Long>
-toggledFileId: Long
-removeFileId: Long
-```
-Mirror existing deck-toggle logic for files. Folder toggle now selects/deselects **all usable decks AND all supported files** in that folder.
-
-### 5.2 `/test/session` — extend
-New params:
-```
-selectedFileIds: List<Long>
-questionMode: TestQuestionMode  (default MCQ_ONLY)
-difficulty: Difficulty          (default MEDIUM)
+GET  /study/start?mode=&deckId=&folderId=&fileId=
+POST /study/setup/update      (carries `mode` so picker knows what to show)
+POST /study/session           (branches on mode)
 ```
 
-Flow:
-1. Validate at least one source selected (deck OR file).
-2. Load decks + flashcards (existing path).
-3. For each selected file: load `FileEntry`, call `DocumentExtractionService.extractText(...)`, build `DocumentInput`. Sum char counts; reject if `> MAX_TOTAL_CHARS`.
-4. Call `aiTestService.generate(...)`.
-5. Persist new `TestSessionState` (extended to include mode/difficulty) in HTTP session.
+`POST /study/session` reads `mode` and:
 
-### 5.3 New endpoint: `GET /test/start?deckId=` and `GET /test/start?fileId=`
-For the "Test me on this" shortcut. Pre-selects the given source in the wizard.
-- If `deckId` provided: validate ownership, pre-fill `preselectedDeckIds`.
-- If `fileId` provided: validate ownership and supported extension, pre-fill `preselectedFileIds`.
-- Falls through to the existing setup view.
+- `FLASHCARDS` → delegates to existing flashcards launcher (today in `StudySessionController`).
+- `QUIZ` → delegates to `QuizController.createSession`.
+- `EXAM` → delegates to `ExamController.createSession`.
 
-### 5.4 New endpoint: `POST /test/sources/size`
-Returns a JSON payload `{ totalChars, warn, exceedsCap }` for the current selection. Called via HTMX whenever a deck/file checkbox toggles, used to show/hide the warn/error banners without a full picker re-render.
+This keeps mode-specific runtime logic in mode-specific controllers, while the wizard skeleton lives in one place.
 
-(Alternative: fold this into `/test/setup/update` by including the metric in the rendered fragment. Cleaner. **Use this** — separate endpoint adds round-trip complexity.)
+#### `ExamController`
 
-### 5.5 `TestSessionState` — extend
-Add `TestQuestionMode mode` and `Difficulty difficulty` fields (carried for completeness; not currently shown anywhere post-setup, but needed if we later add "regenerate same settings").
+```
+POST /exam/session           Generate questions, store ExamSessionState in HttpSession, render run view.
+POST /exam/answer            (PER_PAGE only) Save answer for current index, render same/next question.
+GET  /exam/next              (PER_PAGE only) Advance to next question.
+GET  /exam/prev              (PER_PAGE only) Step back.
+POST /exam/submit            Grade all answers, persist Exam + ExamQuestionResult, render result page.
+GET  /exams                  Past Exams list view.
+GET  /exams/{id}             Detail view.
+POST /exams/{id}/rename      Inline title edit.
+DELETE /exams/{id}           Delete with ownership check.
+```
+
+All routes follow the existing pattern: `@RequestHeader("HX-Request")` decides full-page vs fragment response.
+
+### 5.4 Service additions
+
+**`FolderService`**
+
+- Rename `getTestSourceTree(...)` → `getQuizSourceTree(...)` (also reused by Exam — same shape).
+- Existing `getAllSourcesInFolder` is reused as-is.
+
+**`StudySessionService`**
+
+- No structural change. The existing flashcard launcher stays; only its caller changes (`StudyController` instead of direct route).
 
 ---
 
-## 6. UI changes
+## 6. Frontend changes
 
-### 6.1 Wizard restructured to **3 panels** (was 2)
-[fragments/test-setup.html](src/main/resources/templates/fragments/test-setup.html):
+### 6.1 Templates to add
 
-1. **Mode** — styled like study-session step 1 ([fragments/study-setup.html:55-80](src/main/resources/templates/fragments/study-setup.html#L55-L80)). Two/three radio cards:
-   - "Multiple Choice" (icon: `list`)
-   - "True / False" (icon: `check-circle`)
-   - "Mixed (50/50)" (icon: `shuffle`)
-   
-   Plus a difficulty segmented-control row below: `Easy | Medium | Hard` (Medium pre-selected). Reuse existing `.sh-study-choice` / segmented-control styles where they exist; add small new CSS only if necessary.
+| File | Purpose |
+|------|---------|
+| `templates/study-page.html` | Host page for the unified wizard (replaces today's `study-page.html` content; the file already exists, gets rewritten). |
+| `templates/fragments/study-setup.html` | **Rewritten** to be the unified wizard with mode picker + branching panels. (See §6.3.) |
+| `templates/exam-page.html` | Host page for the exam runtime. |
+| `templates/fragments/exam-question.html` | PER_PAGE: single question + textarea + nav. |
+| `templates/fragments/exam-single-page.html` | SINGLE_PAGE: all N questions stacked. |
+| `templates/fragments/exam-grading.html` | "Grading…" loader (HTMX swap target during grading). |
+| `templates/fragments/exam-result.html` | Per-question feedback + overall report. |
+| `templates/exams-page.html` | Past Exams list view. |
+| `templates/fragments/exams-list.html` | Reusable card grid. |
+| `templates/fragments/exam-detail.html` | Detail view fragment. |
 
-2. **Sources** — current deck picker, extended:
-   - Folder groups now list **decks + supported files** inline in the same `vb-group-body`. Files render with a `file-text` / `file` lucide icon and a size badge (e.g. `42 KB`).
-   - Files exceeding the 5 MB hard cap render disabled with tooltip *"File too large for AI test (max 5 MB)."*
-   - "Select all" and folder-level checkboxes select decks + files together.
-   - Inline warning banner above the list: yellow when warn threshold crossed, red when hard cap exceeded. Driven by extra fields on the picker fragment.
+### 6.2 Templates to remove
 
-3. **Question count** — unchanged (1–20).
+- The existing `study-setup.html` is rewritten into the unified wizard, not kept separate.
+- `test-setup.html` is renamed to `quiz-setup.html` and stripped down: it no longer needs to be a standalone wizard — its contents (sources picker, count input) become panels reused inside the unified wizard via `th:fragment`. See §6.3.
 
-Wizard JS (`updateNavButtons`, `goToStep`, etc.) bumps `totalSteps` to 3 and adds a validation step for panel 1 (mode must be selected — MCQ default).
+### 6.3 Unified wizard composition
 
-### 6.2 Image-aware deck rendering
-Disabled-deck label changes from "empty" to `"image-only"` when `usableCardCount == 0` but `cardCount > 0`. Tooltip: *"All cards in this deck are image-only and can't be used for AI tests."*
+`fragments/study-setup.html` becomes the orchestrator. To keep it manageable, mode-specific panels are separate fragments included via `th:replace`:
 
-Decks with mixed cards show: `8 usable / 12 cards`.
-
-### 6.3 Progress UI (cosmetic stages)
-Replace the static "Generating your test with AI…" with a JS-driven cycler. While `htmx-indicator` is active, cycle messages every ~2.5s:
 ```
-Reading flashcards…
-Reading documents…
-Asking Gemini…
-Building questions…
-Almost there…
+fragments/study-setup.html          ← orchestrator (mode picker, step indicator, footer, JS)
+  ├── fragments/wizard-flashcards.html  (sub-mode panel + order panel)
+  ├── fragments/wizard-quiz.html        (question type + difficulty + count panels)
+  ├── fragments/wizard-exam.html        (size+count+timer panel + layout panel)
+  └── fragments/wizard-source-picker.html (shared source picker — accepts `mode` parameter to show/hide files)
 ```
-Stop on `htmx:afterRequest`. Pure client-side, no server signal.
 
-### 6.4 "Test me on this" shortcuts
-- **Deck page** ([fragments/deck.html](src/main/resources/templates/fragments/deck.html)): add a button in the deck header actions row → `GET /test/start?deckId={id}` with `hx-target="#explorer-detail"`, `hx-push-url="true"`.
-- **Folder page file rows** ([fragments/folder-detail.html](src/main/resources/templates/fragments/folder-detail.html)): for files with extension pdf/txt/md, add a small "Test" action (sparkles icon) in the row's action cluster → `GET /test/start?fileId={id}`.
-- **Dashboard document tiles** ([fragments/explorer.html:88-110](src/main/resources/templates/fragments/explorer.html#L88-L110)): for tiles whose mime/extension is pdf/txt/md, add a hover action button (sparkles icon) → `GET /test/start?fileId={id}`. Position alongside the existing edit-options button so tile layout is undisturbed.
+The orchestrator JS:
+
+- Tracks `currentStep`, `currentMode`.
+- On mode select (Step 1), records mode and computes `totalSteps` per mode.
+- Step indicator labels are mode-specific: derived from `currentMode` via a small JS map.
+- Validation per step (e.g. Step 3 source picker requires ≥1 selection) lives in the orchestrator.
+- The drag-to-order interaction (today only used by Flashcards Step 4) stays in `wizard-flashcards.html`.
+- The picker HTMX swap target is shared; the controller responds with the correct picker fragment based on `mode`.
+
+### 6.4 Past Exams & detail UI
+
+- List view: card grid (`sh-card`-style) reusing existing badge/score visual conventions.
+- Detail view: header strip with score circle (color-coded), then the structured report in 4 panels (Strengths / Weaknesses / Topics to revisit / Next steps), then a per-question accordion using `<details>` elements for simplicity (no extra JS).
+
+### 6.5 CSS additions
+
+Add `static/css/exam.css` for:
+
+- Exam textareas (`sh-exam-answer`, autosize on input).
+- Sticky timer header (`sh-exam-timer`, `is-warn`, `is-danger`).
+- Grading loader (reuse `sh-test-loading` from quiz, alias if needed).
+- Result page layout: score circle, report sections, per-question cards.
+- Past Exams card grid.
+
+Rename existing `test.css` → `quiz.css` and update `<link>` references.
+
+### 6.6 JS additions
+
+Add `static/js/exam.js`:
+
+- Timer countdown (driven by server-provided `startedAt` + `timerMinutes` so refresh doesn't reset it).
+- Auto-resize for answer textareas.
+- Submit-with-confirm if any answer is blank ("Submit with N unanswered questions?").
+- Auto-submit on timer expiry.
+- For PER_PAGE: client-side answer cache so back/forward preserves text without server round-trips.
 
 ---
 
-## 7. Order of implementation
+## 7. Migration & cleanup tasks
 
-Each step compiles & runs independently.
+Concrete order of work — designed so the app stays runnable between steps.
 
-1. **Add enums + extend `TestQuestion` / `TestConfig` / `TestSessionState`.** Update existing tests to compile (default new enum fields).
-2. **Add PDFBox dependency + `DocumentExtractionService`.** Unit-test `.txt`, `.md`, `.pdf` extraction in isolation.
-3. **Add `usableCardCount` to `StudyDeckOption` + service aggregation.** Verify study picker is unaffected.
-4. **Build `TestSourceGroup` + `FolderService.getTestSourceTree(...)`.** Returns decks (existing) + supported files filtered by extension.
-5. **Rewrite `AiTestService.generate(...)`** — accept docs, mode, difficulty; new prompt; new JSON contract; new validators. Update `AiTestServiceTests` if any (none currently).
-6. **Extend `TestController`** — `/test/setup/update`, `/test/session`, `TestSessionState` shape, `/test/start` query-param shortcuts.
-7. **Wizard UI rework** — 3-panel wizard, files inline in picker, warning banners, progress cycler.
-8. **"Test me on this" buttons** in deck page, folder file rows, dashboard document tiles.
-9. **Manual QA pass** — run dev server, walk through each flow including: empty-source error, 5 MB cap, warn banner, hard cap, image-only deck disabled, mixed-card deck reduced count, deck+file mixed test, shortcut from each entry point, mode + difficulty variations.
+### Phase A — rename Test → Quiz (no behavior change)
+
+1. Rename Java classes (use IDE refactor).
+2. Rename DTO files.
+3. Rename templates and update all `th:replace` / `th:fragment` references.
+4. Rename routes `/test/...` → `/quiz/...`.
+5. Update entry-point links (sidebar, explorer, deck card, folder detail, file row) to new `/quiz/...` URLs.
+6. Rename `test.css` → `quiz.css`, update `<link>` tags.
+7. Verify: existing quiz mode end-to-end works exactly as before.
+
+**Commit point.**
+
+### Phase B — unified wizard skeleton (still no Exam)
+
+1. Add `dto/StudyMode.java` enum.
+2. Add `controller/StudyController.java` with `GET /study/start` and `POST /study/session`.
+3. Rewrite `study-setup.html` into the orchestrator with the mode picker and existing Flashcards/Quiz panels wired in (Exam panel is a stub).
+4. Extract reusable wizard panel fragments (`wizard-flashcards.html`, `wizard-quiz.html`, `wizard-source-picker.html`).
+5. Update entry points per §3.4 to point at the unified wizard with appropriate query params.
+6. Remove the standalone `/quiz/start` route once the unified wizard handles its setup; keep `/quiz/session`, `/quiz/answer`, `/quiz/next` as the runtime endpoints.
+7. Verify: Flashcards and Quiz both work end-to-end via the unified wizard, all entry points lead to the right preselected state.
+
+**Commit point.**
+
+### Phase C — Exam mode
+
+1. Add `server.servlet.session.timeout=1d` to `application.properties` so long exams can't be lost to default 30-minute session expiry.
+2. Add Exam DTOs (config, session state, question, grading result, report, enums).
+3. Add `entity/Exam.java` and `entity/ExamQuestionResult.java` + repository.
+4. Add `service/AiExamService.java` (generate + grade).
+5. Add `service/ExamService.java` (persistence).
+6. Add `controller/ExamController.java`.
+7. Build `wizard-exam.html` panel with size/count/timer/layout fields and the live time estimate.
+8. Build exam runtime templates (`exam-page.html`, `fragments/exam-question.html`, `fragments/exam-single-page.html`, `fragments/exam-grading.html`, `fragments/exam-result.html`).
+9. Add `exam.js` (timer, autosize, autosave).
+10. Add `exam.css`.
+11. Verify: full exam flow — setup → questions → submit → grading loader → result.
+
+**Commit point.**
+
+### Phase D — Past Exams
+
+1. Add `templates/exams-page.html`, `fragments/exams-list.html`, `fragments/exam-detail.html`.
+2. Wire `GET /exams`, `GET /exams/{id}`, `POST /exams/{id}/rename`, `DELETE /exams/{id}`.
+3. Add Past Exams CTA to sidebar.
+4. Wire "View" / "Delete" actions in list and detail views.
+5. Verify: take an exam → appears in Past Exams → opens detail → renames → deletes.
+
+**Commit point.**
+
+### Phase E — polish & cleanup
+
+1. Walk all entry points one more time; remove dead code from old per-mode wizards.
+2. Update `todo.md`: cross off "redesign step 3 of session creation" if the new design satisfies it.
+3. Visual QA: mode picker animation, step indicator transitions, timer color states, grading loader messages.
 
 ---
 
-## 8. Open risks / things to watch
+## 8. Risks & open questions
 
-- **PDFBox extraction quality** varies on scanned/image PDFs (returns blank text). Surface this: if a selected PDF extracts to <50 chars, treat it like an empty source and show a tile-level warning.
-- **Token blow-up.** A 150 K-char prompt is ~37 K tokens — within Gemini Flash limits but slow. The 50 K warning threshold is the realistic comfort zone.
-- **HTMX picker re-render preserving file checkboxes** — the existing pattern uses `hx-include="[name='selectedDeckIds']"`; we'll need a parallel `[name='selectedFileIds']` include on every toggle control. Easy to miss one.
-- **Mixed mode fairness** — Gemini sometimes ignores 50/50 split instructions. Validation in §4.2 won't catch a 30/70 split; if this becomes a problem, escalate to two separate AI calls (n/2 MCQ + n/2 TF) and merge.
-- **JSON parsing fragility** — TF questions returning `["true","false"]` (lowercase) or `["Yes","No"]`. Normalize defensively.
+- **AI grading consistency.** Freeform grading is harder than MCQ scoring. Mitigation: AI generates `expectedAnswerHints` at question-creation time, then grades against those hints. This anchors scoring to a per-question rubric the user cannot see but the model can.
+- **Grading latency.** Using Gemini 3.1 Flash Lite, a single grading call for up to 20 answers is acceptable. We use one prompt per exam in v1. The grading loader UX stays. If latency or quality becomes a problem later, splitting into batched parallel calls is a small refactor on `AiExamService.grade(...)` only — no schema or controller changes needed.
+- **HttpSession size.** `ExamSessionState` holding 20 long answers is fine (KB-scale). We persist only on submit.
+- **DDL changes.** `ddl-auto=update` will add the new tables non-destructively. No data loss.
+- **Session expiry mid-exam.** Today no explicit session timeout is configured, so Spring Boot's default (30 minutes) applies. We will raise it to **1 day** by adding `server.servlet.session.timeout=1d` to `application.properties`. This eliminates mid-exam loss for any realistic exam length and also benefits in-progress flashcards/quiz sessions. Done as part of Phase C (alongside other Exam-mode work).
+- **Concurrent exams.** A user starts an exam, navigates away, starts another. The HttpSession key holds only one. Decision: **starting a new exam overwrites any in-progress one** silently — no confirm dialog. Rationale: simplest behavior, matches how the existing quiz/flashcards sessions already work.
+
+---
+
+## 9. Out of scope (v1)
+
+- Re-taking an exam with the same questions.
+- Re-grading an existing exam.
+- Exporting an exam result (PDF / share link).
+- Comparing two past exams side-by-side.
+- Per-question timing.
+- Storing in-progress exams across sessions (resume after browser close).
+- Stats / trends across past exams (would be a nice follow-up: average score over time, weakest topics).
