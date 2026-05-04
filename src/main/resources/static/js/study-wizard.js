@@ -1,6 +1,6 @@
 (function () {
-    let currentStep = document.getElementById('study-mode-input').value ? 2 : 1;
-    let currentMode = document.getElementById('study-mode-input').value || 'FLASHCARDS';
+    let currentStep = 1;
+    let currentMode = 'FLASHCARDS';
 
     const STEP_LABELS = {
         FLASHCARDS: ["Mode", "Type", "Decks", "Order"],
@@ -318,15 +318,35 @@
         }
     };
 
-    // Initialize events
-    document.addEventListener('DOMContentLoaded', () => {
+    // Core init — called on DOMContentLoaded AND after HTMX swaps
+    window.initStudyWizard = function () {
+        // Only run if the wizard is present in the DOM
+        if (!document.getElementById('study-mode-input')) return;
+
+        // Reset state for fresh load
+        currentStep = 1;
+        currentMode = 'FLASHCARDS';
+
         const nextBtn = document.getElementById('wizard-btn-next');
         const backBtn = document.getElementById('wizard-btn-back');
         const searchInput = document.getElementById('sh-source-search');
-        
-        if (nextBtn) nextBtn.addEventListener('click', wizardNext);
-        if (backBtn) backBtn.addEventListener('click', () => goToStep(currentStep - 1));
-        if (searchInput) searchInput.addEventListener('input', reapplySearch);
+
+        // Use replaceWith-safe pattern: remove old listeners by cloning
+        if (nextBtn) {
+            const fresh = nextBtn.cloneNode(true);
+            nextBtn.parentNode.replaceChild(fresh, nextBtn);
+            fresh.addEventListener('click', wizardNext);
+        }
+        if (backBtn) {
+            const fresh = backBtn.cloneNode(true);
+            backBtn.parentNode.replaceChild(fresh, backBtn);
+            fresh.addEventListener('click', () => goToStep(currentStep - 1));
+        }
+        if (searchInput) {
+            const fresh = searchInput.cloneNode(true);
+            searchInput.parentNode.replaceChild(fresh, searchInput);
+            fresh.addEventListener('input', reapplySearch);
+        }
 
         // EXAM Step 2 logic: time estimation
         const TIMER_PER_Q = { SHORT: 2, MEDIUM: 5, LONG: 10, MIXED: 5 };
@@ -334,13 +354,13 @@
             const size = document.querySelector('input[name="questionSize"]:checked')?.value || 'MEDIUM';
             const count = parseInt(document.getElementById('exam-count-input')?.value || '5');
             const estimate = TIMER_PER_Q[size] * count;
-            
+
             const label = document.getElementById('exam-estimate-label');
             if (label) {
                 label.innerHTML = `<i data-lucide="clock" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> Estimated time: ~${estimate} minutes`;
                 if (typeof initLucide === 'function') initLucide();
             }
-            
+
             const timerInput = document.getElementById('exam-timer-input');
             if (timerInput && !timerInput.hasAttribute('data-user-overridden')) {
                 timerInput.value = estimate;
@@ -383,6 +403,16 @@
             switchContent(2);
         } else {
             switchContent(1);
+        }
+    };
+
+    // Initialize on first page load
+    document.addEventListener('DOMContentLoaded', window.initStudyWizard);
+
+    // Re-initialize after HTMX injects the wizard via navigation
+    document.body.addEventListener('htmx:afterSettle', function (e) {
+        if (document.getElementById('study-mode-input')) {
+            window.initStudyWizard();
         }
     });
 
