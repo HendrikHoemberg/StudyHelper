@@ -78,10 +78,6 @@ public class DeckService {
     @Transactional(readOnly = true)
     public List<Deck> getValidatedDecksInRequestedOrder(List<Long> deckIds, User user) {
         List<Long> normalized = normalizeDeckIds(deckIds);
-        if (normalized.isEmpty()) {
-            throw new IllegalArgumentException("Select at least one deck.");
-        }
-
         List<Deck> orderedDecks = new ArrayList<>();
         for (Long deckId : normalized) {
             Deck deck = deckRepository.findByIdAndUser(deckId, user)
@@ -90,7 +86,6 @@ public class DeckService {
             deck.getFolder().getId();
             orderedDecks.add(deck);
         }
-
         return orderedDecks;
     }
 
