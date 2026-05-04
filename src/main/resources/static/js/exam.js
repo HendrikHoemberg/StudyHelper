@@ -2,10 +2,22 @@
  * Exam Runtime Logic
  */
 (function() {
+    let timerInterval = null;
+    let loaderInterval = null;
+
     // --- Timer Logic ---
     function initTimer() {
         const timerEl = document.querySelector('.sh-exam-timer');
-        if (!timerEl) return;
+        if (!timerEl) {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            return;
+        }
+
+        // Avoid duplicate timers
+        if (timerInterval) return;
 
         const startedAtStr = timerEl.dataset.startedAt;
         const timerMinutes = parseInt(timerEl.dataset.timerMinutes);
@@ -20,6 +32,8 @@
 
             if (remaining <= 0) {
                 timerEl.querySelector('span').textContent = "00:00";
+                clearInterval(timerInterval);
+                timerInterval = null;
                 autoSubmit();
                 return;
             }
@@ -36,22 +50,39 @@
             } else if (remaining <= 300000) { // 5 mins
                 timerEl.classList.add('is-warn');
             }
-
-            setTimeout(updateTimer, 1000);
         };
 
         updateTimer();
+        timerInterval = setInterval(updateTimer, 1000);
     }
 
     function autoSubmit() {
         console.log("Timer expired, auto-submitting...");
+        window._sh_auto_submitting = true;
+
         const submitBtn = document.querySelector('button[hx-post="/exam/submit"]');
         if (submitBtn) {
             submitBtn.click();
         } else {
-            const form = document.querySelector('form[hx-post="/exam/submit"]');
-            if (form) {
-                htmx.trigger(form, 'submit');
+            // In PER_PAGE mode, if we are not on the last page, we still want to submit.
+            // We can manually trigger an HTMX request to the submit endpoint.
+            const textarea = document.querySelector('.sh-exam-answer');
+            const currentIndex = textarea?.closest('[data-q-index]')?.dataset.qIndex;
+            
+            if (currentIndex !== undefined) {
+                htmx.ajax('POST', '/exam/submit', {
+                    target: '#exam-runtime',
+                    swap: 'outerHTML',
+                    indicator: '#grading-loader',
+                    values: {
+                        index: currentIndex,
+                        answer: textarea.value
+                    }
+                });
+            } else {
+                // Fallback for SINGLE_PAGE if form trigger fails
+                const form = document.querySelector('form[hx-post="/exam/submit"]');
+                if (form) htmx.trigger(form, 'submit');
             }
         }
     }
@@ -60,6 +91,9 @@
     function initAutosize() {
         const textareas = document.querySelectorAll('.sh-exam-answer');
         textareas.forEach(textarea => {
+            if (textarea._sh_autosize_init) return;
+            textarea._sh_autosize_init = true;
+
             const adjustHeight = () => {
                 textarea.style.height = 'auto';
                 textarea.style.height = textarea.scrollHeight + 'px';
@@ -73,7 +107,15 @@
     // --- Loader Rotator ---
     function initLoaderRotator() {
         const loaderText = document.querySelector('.sh-exam-loader-text');
-        if (!loaderText) return;
+        if (!loaderText) {
+            if (loaderInterval) {
+                clearInterval(loaderInterval);
+                loaderInterval = null;
+            }
+            return;
+        }
+
+        if (loaderInterval) return;
 
         const messages = [
             "Reading your answers...",
@@ -83,7 +125,7 @@
         ];
         let index = 0;
 
-        setInterval(() => {
+        loaderInterval = setInterval(() => {
              index = (index + 1) % messages.length;
              loaderText.textContent = messages[index];
         }, 3000);
@@ -91,6 +133,8 @@
 
     // --- Submit Confirmation ---
     function handleConfirmSubmit(e) {
+        if (window._sh_auto_submitting) return true;
+
         const textareas = document.querySelectorAll('.sh-exam-answer');
         let emptyCount = 0;
         textareas.forEach(ta => {
@@ -99,8 +143,8 @@
 
         if (emptyCount > 0) {
             if (!confirm(`Submit with ${emptyCount} unanswered question${emptyCount > 1 ? 's' : ''}?`)) {
-                e.preventDefault();
-                e.stopPropagation();
+                if (e.preventDefault) e.preventDefault();
+                if (e.stopPropagation) e.stopPropagation();
                 return false;
             }
         }
@@ -110,10 +154,11 @@
     // --- Answer Cache (PER_PAGE) ---
     function initAnswerCache() {
         const textarea = document.querySelector('.sh-exam-answer[name="answer"]');
-        if (!textarea) return;
+        if (!textarea || textarea._sh_cache_init) return;
+        textarea._sh_cache_init = true;
 
         const index = textarea.closest('[data-q-index]')?.dataset.qIndex;
-        const examId = "current-exam"; // Could be more specific if we had the ID in state
+        const examId = "current-exam"; 
 
         if (index !== undefined) {
             const cacheKey = `exam_ans_${examId}_${index}`;
@@ -121,7 +166,10 @@
             // Load from cache if empty
             if (!textarea.value.trim()) {
                 const cached = sessionStorage.getItem(cacheKey);
-                if (cached) textarea.value = cached;
+                if (cached) {
+                    textarea.value = cached;
+                    textarea.dispatchEvent(new Event('input')); // Trigger autosize
+                }
             }
 
             // Save to cache on input
@@ -140,21 +188,25 @@
 
         // Attach confirm handler to submit buttons
         document.querySelectorAll('button[hx-post="/exam/submit"]').forEach(btn => {
+            if (btn._sh_confirm_init) return;
+            btn._sh_confirm_init = true;
+
             btn.addEventListener('click', function(e) {
                 if (!handleConfirmSubmit(e)) {
-                    // HTMX might still trigger, so we need to prevent it more strongly if needed
-                    // Actually, returning false or stopPropagation usually works with standard listeners.
+                    // Standard click listener can't easily stop HTMX from here if it's already bound,
+                    // but 'htmx:confirm' is better. However, for buttons we use 'click' often.
+                    // Let's use htmx:confirm for buttons too.
                 }
             });
         });
         
-        // For the single page form
-        document.querySelectorAll('form[hx-post="/exam/submit"]').forEach(form => {
-            form.addEventListener('htmx:confirm', function(evt) {
+        // Use HTMX confirm event for better integration
+        document.body.addEventListener('htmx:confirm', function(evt) {
+            if (evt.detail.path === '/exam/submit') {
                 if (!handleConfirmSubmit(evt)) {
                     evt.preventDefault();
                 }
-            });
+            }
         });
     }
 
