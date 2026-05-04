@@ -123,22 +123,19 @@
 /* ── Loading indicator ──────────────────────────────────────────────────────── */
 
 .sh-quiz-loading {
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
-    padding: 3rem 2rem;
+    padding: 1.5rem 2rem;
     color: var(--text-muted);
-    opacity: 0;
-    transition: opacity 200ms ease-in;
-    pointer-events: none;
 }
 
 .htmx-request .sh-quiz-loading,
 .sh-quiz-loading.htmx-request {
-    opacity: 1;
-    pointer-events: auto;
+    display: flex;
 }
+
 
 .sh-quiz-loading-spinner {
     width: 2.5rem;

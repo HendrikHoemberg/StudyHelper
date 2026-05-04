@@ -6,6 +6,7 @@
 - maybe remove My library section in dashboard
 - make folders in session creation collapsed by default
 - Let users customize colors and background images in settings
+- Language settings german/english
 - zooming into picture edit kinda broken
 - lucide replacement -> heroicons
 - Browse files takes 2 clicks
