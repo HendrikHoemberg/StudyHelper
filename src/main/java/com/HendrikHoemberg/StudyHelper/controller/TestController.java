@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -205,7 +206,7 @@ public class TestController {
             httpSession.setAttribute(SESSION_KEY, state);
             return renderQuestion(model, state, hxRequest);
 
-        } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException ex) {
+        } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException | IOException ex) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             prepareSetupModel(model, user, normalizedDeckIds, normalizedFileIds, ex.getMessage(), httpSession);
             if (hxRequest != null) return "fragments/test-setup :: testSetup";
