@@ -130,7 +130,7 @@ public class TestController {
             List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
             int count = Math.max(1, Math.min(questionCount, 20));
 
-            List<TestQuestion> questions = aiTestService.generateQuestions(flashcards, count);
+            List<TestQuestion> questions = aiTestService.generate(flashcards, List.of(), count, TestQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
 
             TestSessionState state = new TestSessionState(
                 new TestConfig(normalizedIds, List.of(), count, TestQuestionMode.MCQ_ONLY, Difficulty.MEDIUM),
