@@ -15,7 +15,7 @@ import java.util.Set;
 @Service
 public class DocumentExtractionService {
 
-    public static final long MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024;
+    public static final long MAX_FILE_SIZE_BYTES = 10L * 1024 * 1024;
 
     private static final Set<String> SUPPORTED_EXTENSIONS = Set.of("pdf", "txt", "md");
 

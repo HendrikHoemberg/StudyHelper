@@ -118,7 +118,7 @@ public class FolderService {
         for (FileEntry file : folder.getFiles()) {
             String ext = getFileExtension(file.getOriginalFilename()).toLowerCase();
             boolean supported = List.of("pdf", "txt", "md").contains(ext) 
-                && file.getFileSizeBytes() <= 5 * 1024 * 1024;
+                && file.getFileSizeBytes() <= DocumentExtractionService.MAX_FILE_SIZE_BYTES;
             if (supported) {
                 fileIds.add(file.getId());
             }
@@ -171,7 +171,7 @@ public class FolderService {
             })
             .map(f -> {
                 long size = f.getFileSizeBytes();
-                boolean isSupported = size <= 5 * 1024 * 1024; // 5MB
+                boolean isSupported = size <= DocumentExtractionService.MAX_FILE_SIZE_BYTES; // 10MB
                 return new QuizFileOption(
                     f.getId(),
                     f.getOriginalFilename(),

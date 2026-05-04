@@ -215,7 +215,7 @@
                                        class="vb-file"
                                        th:classappend="${!file.isSupported ? ' is-disabled' : (#lists.contains(preselectedFileIds, file.fileId) ? ' is-selected' : '')}"
                                        th:style="'--folder-color: ' + ${group.folderColor}"
-                                       th:title="${!file.isSupported ? 'File too large for AI test (max 5 MB).' : null}">
+                                       th:title="${!file.isSupported ? 'File too large for AI test (max 10 MB).' : null}">
                                     <input class="sh-checkbox sh-quiz-file-checkbox"
                                            type="checkbox"
                                            name="selectedFileIds"
@@ -233,7 +233,7 @@
                                     <span class="sh-mini-tag"
                                           th:text="${#numbers.formatDecimal(file.sizeBytes / 1024.0, 0, 0) + ' KB'}">42 KB</span>
                                     <span th:if="${!file.isSupported}" class="sh-mini-tag sh-mini-tag-warning"
-                                          title="File too large for AI test (max 5 MB).">too large</span>
+                                          title="File too large for AI test (max 10 MB).">too large</span>
                                 </label>
 
                                 <!-- Subgroups -->
@@ -296,7 +296,7 @@
                                                class="vb-file"
                                                th:classappend="${!file.isSupported ? ' is-disabled' : (#lists.contains(preselectedFileIds, file.fileId) ? ' is-selected' : '')}"
                                                th:style="'--folder-color: ' + ${group.folderColor}"
-                                               th:title="${!file.isSupported ? 'File too large for AI test (max 5 MB).' : null}">
+                                               th:title="${!file.isSupported ? 'File too large for AI test (max 10 MB).' : null}">
                                             <input class="sh-checkbox sh-quiz-file-checkbox"
                                                    type="checkbox"
                                                    name="selectedFileIds"
@@ -314,7 +314,7 @@
                                             <span class="sh-mini-tag"
                                                   th:text="${#numbers.formatDecimal(file.sizeBytes / 1024.0, 0, 0) + ' KB'}">42 KB</span>
                                             <span th:if="${!file.isSupported}" class="sh-mini-tag sh-mini-tag-warning"
-                                                  title="File too large for AI test (max 5 MB).">too large</span>
+                                                  title="File too large for AI test (max 10 MB).">too large</span>
                                         </label>
                                     </div>
                                 </div>

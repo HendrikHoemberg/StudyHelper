@@ -13,3 +13,4 @@
 - edit prompt: If multiple files, decks etc. are selected, the AI should try to balance the questions across all selected sources. E.g. if I select 2 decks with 10 cards each, it should generate 10 questions in total, 5 from each deck.
 - Toggle mode: Extract text from documents or send document completely
 - Gamify the system
+- exam mode -> move clock anywhere else

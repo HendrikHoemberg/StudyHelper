@@ -23,7 +23,7 @@ public class FlashcardService {
     private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
         "image/jpeg", "image/png", "image/webp", "image/gif"
     );
-    private static final long MAX_IMAGE_BYTES = 5L * 1024 * 1024;
+    private static final long MAX_IMAGE_BYTES = 10L * 1024 * 1024;
 
     private final FlashcardRepository flashcardRepository;
     private final DeckRepository deckRepository;
@@ -153,7 +153,7 @@ public class FlashcardService {
             throw new IllegalArgumentException("Unsupported image type. Use JPEG, PNG, WebP, or GIF.");
         }
         if (file.getSize() > MAX_IMAGE_BYTES) {
-            throw new IllegalArgumentException("Image exceeds the 5 MB limit.");
+            throw new IllegalArgumentException("Image exceeds the 10 MB limit.");
         }
         try {
             return fileStorageService.store(file);
