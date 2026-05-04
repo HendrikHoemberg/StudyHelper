@@ -50,7 +50,7 @@ public class ExamController {
     public String createSession(
             @RequestParam(required = false) List<Long> selectedDeckIds,
             @RequestParam(required = false) List<Long> selectedFileIds,
-            @RequestParam(defaultValue = "MEDIUM") ExamQuestionSize size,
+            @RequestParam(defaultValue = "MEDIUM") ExamQuestionSize questionSize,
             @RequestParam(defaultValue = "5") int count,
             @RequestParam(required = false) Integer timerMinutes,
             @RequestParam(defaultValue = "PER_PAGE") ExamLayout layout,
@@ -91,13 +91,13 @@ public class ExamController {
             }
 
             int qCount = Math.max(1, Math.min(count, 20));
-            List<ExamQuestion> questions = aiExamService.generate(flashcards, documents, qCount, size);
+            List<ExamQuestion> questions = aiExamService.generate(flashcards, documents, qCount, questionSize);
 
             String sourceSummary = sourceNames.stream().limit(3).collect(Collectors.joining(", "));
             if (sourceNames.size() > 3) sourceSummary += " + " + (sourceNames.size() - 3) + " more";
 
             ExamSessionState state = new ExamSessionState(
-                new ExamConfig(deckIds, fileIds, size, qCount, timerMinutes, layout),
+                new ExamConfig(deckIds, fileIds, questionSize, qCount, timerMinutes, layout),
                 questions, new HashMap<>(), Instant.now(), sourceSummary
             );
 

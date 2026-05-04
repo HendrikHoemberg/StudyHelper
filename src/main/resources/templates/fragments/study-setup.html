@@ -75,14 +75,14 @@
                             Auto-generated multiple choice & true/false questions.
                         </div>
                     </label>
-                    <label class="sh-study-choice is-disabled" title="Coming soon">
-                        <input type="radio" name="mode_picker" value="EXAM" disabled>
+                    <label class="sh-study-choice" onclick="selectStudyMode(this, 'EXAM')">
+                        <input type="radio" name="mode_picker" value="EXAM" th:checked="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).EXAM}">
                         <div class="sh-study-choice-icon">
                             <i data-lucide="pencil-line"></i>
                         </div>
                         <div class="sh-study-choice-title">Exam</div>
                         <div class="sh-study-choice-subtitle">
-                            Long-form written answers, AI-graded. (Coming soon)
+                            Long-form written answers, AI-graded.
                         </div>
                     </label>
                 </div>
@@ -91,6 +91,7 @@
             <!-- Panel 2s (Branched) -->
             <div th:replace="~{fragments/wizard-flashcards :: panels}"></div>
             <div th:replace="~{fragments/wizard-quiz :: panels}"></div>
+            <div th:replace="~{fragments/wizard-exam :: panels}"></div>
 
             <!-- Panel 3: Sources (Shared) -->
             <div th:replace="~{fragments/wizard-source-picker :: picker}"></div>

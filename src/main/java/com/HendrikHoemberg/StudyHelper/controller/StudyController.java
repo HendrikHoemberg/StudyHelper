@@ -163,10 +163,10 @@ public class StudyController {
                                 @RequestParam(defaultValue = "MEDIUM") Difficulty difficulty,
                                 @RequestParam(defaultValue = "5") int questionCount,
                                 // Exam params
-                                @RequestParam(defaultValue = "MEDIUM") ExamQuestionSize examQuestionSize,
-                                @RequestParam(defaultValue = "5") int examQuestionCount,
+                                @RequestParam(defaultValue = "MEDIUM") ExamQuestionSize questionSize,
+                                @RequestParam(defaultValue = "5") int count,
                                 @RequestParam(required = false) Integer timerMinutes,
-                                @RequestParam(defaultValue = "PER_PAGE") ExamLayout examLayout,
+                                @RequestParam(defaultValue = "PER_PAGE") ExamLayout layout,
                                 Model model,
                                 Principal principal,
                                 HttpSession session,
@@ -220,7 +220,7 @@ public class StudyController {
                 return handleError(mode, selectedDeckIds, selectedFileIds, ex.getMessage(), model, user, session, response, hxRequest);
             }
         } else if (mode == StudyMode.EXAM) {
-            return examController.createSession(selectedDeckIds, selectedFileIds, examQuestionSize, examQuestionCount, timerMinutes, examLayout, model, principal, session, response, hxRequest);
+            return examController.createSession(selectedDeckIds, selectedFileIds, questionSize, count, timerMinutes, layout, model, principal, session, response, hxRequest);
         }
 
         return "redirect:/study/start";

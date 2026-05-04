@@ -13,6 +13,9 @@
             const type = document.querySelector('input[name="sessionMode"]:checked')?.value;
             return type === 'SHUFFLED' ? 3 : 4;
         }
+        if (currentMode === 'EXAM') {
+            return 4;
+        }
         return 3;
     }
 
@@ -185,12 +188,38 @@
                     return false;
                 }
             }
+            if (currentMode === 'EXAM') {
+                const countInput = document.getElementById('exam-count-input');
+                const timerToggle = document.getElementById('exam-timer-toggle');
+                const timerInput = document.getElementById('exam-timer-input');
+                
+                if (countInput && (parseInt(countInput.value) < 1 || parseInt(countInput.value) > 20)) {
+                    alert('Please enter a question count between 1 and 20.');
+                    return false;
+                }
+                
+                if (timerToggle && timerToggle.checked && timerInput) {
+                    if (parseInt(timerInput.value) < 1 || parseInt(timerInput.value) > 240) {
+                        alert('Please enter a timer duration between 1 and 240 minutes.');
+                        return false;
+                    }
+                }
+            }
         }
         if (step === 3) {
             const checked = document.querySelectorAll('.sh-source-checkbox:checked');
             if (checked.length === 0) {
                 alert('Please select at least one source.');
                 return false;
+            }
+        }
+        if (step === 4) {
+            if (currentMode === 'EXAM') {
+                const selected = document.querySelector('input[name="layout"]:checked');
+                if (!selected) {
+                    alert('Please select an exam layout.');
+                    return false;
+                }
             }
         }
         return true;
@@ -299,11 +328,58 @@
         if (backBtn) backBtn.addEventListener('click', () => goToStep(currentStep - 1));
         if (searchInput) searchInput.addEventListener('input', reapplySearch);
 
+        // EXAM Step 2 logic: time estimation
+        const TIMER_PER_Q = { SHORT: 2, MEDIUM: 5, LONG: 10, MIXED: 5 };
+        const updateExamEstimate = () => {
+            const size = document.querySelector('input[name="questionSize"]:checked')?.value || 'MEDIUM';
+            const count = parseInt(document.getElementById('exam-count-input')?.value || '5');
+            const estimate = TIMER_PER_Q[size] * count;
+            
+            const label = document.getElementById('exam-estimate-label');
+            if (label) {
+                label.innerHTML = `<i data-lucide="clock" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> Estimated time: ~${estimate} minutes`;
+                if (typeof initLucide === 'function') initLucide();
+            }
+            
+            const timerInput = document.getElementById('exam-timer-input');
+            if (timerInput && !timerInput.hasAttribute('data-user-overridden')) {
+                timerInput.value = estimate;
+            }
+        };
+
+        const examTimerToggle = document.getElementById('exam-timer-toggle');
+        const examTimerInput = document.getElementById('exam-timer-input');
+        const examCountInput = document.getElementById('exam-count-input');
+
+        if (examTimerToggle) {
+            examTimerToggle.addEventListener('change', () => {
+                if (examTimerInput) {
+                    examTimerInput.disabled = !examTimerToggle.checked;
+                    examTimerInput.closest('#exam-timer-input-wrap').style.opacity = examTimerToggle.checked ? '1' : '0.5';
+                }
+            });
+        }
+
+        if (examTimerInput) {
+            examTimerInput.addEventListener('input', () => {
+                examTimerInput.setAttribute('data-user-overridden', 'true');
+            });
+        }
+
+        if (examCountInput) {
+            examCountInput.addEventListener('input', updateExamEstimate);
+        }
+
+        document.querySelectorAll('input[name="questionSize"]').forEach(input => {
+            input.addEventListener('change', updateExamEstimate);
+        });
+
         // Handle preselected mode from server (Skip step 1)
         const modeInput = document.getElementById('study-mode-input');
         if (modeInput && modeInput.value) {
             currentMode = modeInput.value;
             currentStep = 2;
+            if (currentMode === 'EXAM') updateExamEstimate();
             switchContent(2);
         } else {
             switchContent(1);

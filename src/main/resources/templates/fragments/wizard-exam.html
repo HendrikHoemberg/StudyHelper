@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="panels">
+    <!-- Panel 2: Exam Setup -->
+    <div class="sh-wizard-panel" data-step="2" data-mode="EXAM">
+        <div class="sh-section-title">Exam Setup</div>
+        
+        <div class="sh-field-group">
+            <label class="sh-field-label">Question Depth</label>
+            <div class="sh-study-mode-grid sh-grid-4">
+                <label class="sh-study-choice">
+                    <input type="radio" name="questionSize" value="SHORT">
+                    <div class="sh-study-choice-icon"><i data-lucide="minus"></i></div>
+                    <div class="sh-study-choice-title">Short</div>
+                    <div class="sh-study-choice-subtitle">~50 words. Brief recall.</div>
+                </label>
+                <label class="sh-study-choice">
+                    <input type="radio" name="questionSize" value="MEDIUM" checked>
+                    <div class="sh-study-choice-icon"><i data-lucide="menu"></i></div>
+                    <div class="sh-study-choice-title">Medium</div>
+                    <div class="sh-study-choice-subtitle">~150 words. Explanation.</div>
+                </label>
+                <label class="sh-study-choice">
+                    <input type="radio" name="questionSize" value="LONG">
+                    <div class="sh-study-choice-icon"><i data-lucide="align-left"></i></div>
+                    <div class="sh-study-choice-title">Long</div>
+                    <div class="sh-study-choice-subtitle">~400 words. Synthesis.</div>
+                </label>
+                <label class="sh-study-choice">
+                    <input type="radio" name="questionSize" value="MIXED">
+                    <div class="sh-study-choice-icon"><i data-lucide="layers"></i></div>
+                    <div class="sh-study-choice-title">Mixed</div>
+                    <div class="sh-study-choice-subtitle">Varying depths.</div>
+                </label>
+            </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:2rem;margin-top:2rem;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <span style="font-size:0.875rem;font-weight:600;color:var(--text-secondary);">Questions</span>
+                <div class="sh-quiz-count-wrap" style="margin:0">
+                    <input type="number" name="count" id="exam-count-input" class="sh-quiz-count-input" value="5" min="1" max="20" style="width:70px">
+                </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:1rem;">
+                <label class="sh-checkbox-container" style="margin:0">
+                    <input type="checkbox" name="timerEnabled" id="exam-timer-toggle" checked>
+                    <span class="sh-checkbox-checkmark"></span>
+                    <span class="sh-checkbox-label">Enable Timer</span>
+                </label>
+                <div id="exam-timer-input-wrap" style="display:flex;align-items:center;gap:0.5rem;">
+                    <input type="number" name="timerMinutes" id="exam-timer-input" class="sh-quiz-count-input" value="25" min="1" max="240" style="width:70px">
+                    <span style="font-size:0.8125rem;color:var(--text-tertiary);">minutes</span>
+                </div>
+            </div>
+
+            <div id="exam-estimate-label" style="margin-left:auto; font-size:0.8125rem; color:var(--accent-color); font-weight:600; background:rgba(var(--accent-rgb), 0.1); padding:0.4rem 0.75rem; border-radius:100px;">
+                <i data-lucide="clock" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>
+                Estimated time: ~25 minutes
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 4: Exam Layout -->
+    <div class="sh-wizard-panel" data-step="4" data-mode="EXAM">
+        <div class="sh-section-title">Exam Layout</div>
+        <div class="sh-study-mode-grid">
+            <label class="sh-study-choice">
+                <input type="radio" name="layout" value="PER_PAGE" checked>
+                <div class="sh-study-choice-icon">
+                    <i data-lucide="copy"></i>
+                </div>
+                <div class="sh-study-choice-title">One per page</div>
+                <div class="sh-study-choice-subtitle">Focus on one question at a time.</div>
+            </label>
+            <label class="sh-study-choice">
+                <input type="radio" name="layout" value="SINGLE_PAGE">
+                <div class="sh-study-choice-icon">
+                    <i data-lucide="file-text"></i>
+                </div>
+                <div class="sh-study-choice-title">All on one page</div>
+                <div class="sh-study-choice-subtitle">See everything at once. Scroll to answer.</div>
+            </label>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
