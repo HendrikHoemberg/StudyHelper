@@ -13,8 +13,8 @@
 
     <div class="sh-page-header">
         <div>
-            <h1 class="sh-page-title">Start Study Session</h1>
-            <p class="sh-page-subtitle">Set up your session in a few steps.</p>
+            <h1 class="sh-page-title">Start Studying</h1>
+            <p class="sh-page-subtitle">Select how you want to learn today.</p>
         </div>
         <div class="sh-page-actions">
             <a href="/dashboard" class="sh-btn sh-btn-secondary"
@@ -27,19 +27,15 @@
 
     <!-- Step indicator -->
     <div class="sh-wizard-steps" id="sh-wizard-steps">
-        <div class="sh-wizard-step is-active" data-step="1">
-            <div class="sh-wizard-step-dot">1</div>
-            <div class="sh-wizard-step-label">Mode</div>
-        </div>
-        <div class="sh-wizard-step-connector"></div>
-        <div class="sh-wizard-step" data-step="2">
-            <div class="sh-wizard-step-dot">2</div>
-            <div class="sh-wizard-step-label">Decks</div>
-        </div>
-        <div class="sh-wizard-step-connector sh-wizard-connector-3"></div>
-        <div class="sh-wizard-step" data-step="3">
-            <div class="sh-wizard-step-dot">3</div>
-            <div class="sh-wizard-step-label">Order</div>
+        <!-- Filled by JS -->
+    </div>
+
+    <!-- Loading indicator (shown during AI generation) -->
+    <div id="quiz-generating-indicator" class="htmx-indicator sh-quiz-loading">
+        <div class="sh-quiz-loading-spinner"></div>
+        <div class="sh-quiz-loading-text">
+            <span id="quiz-progress-msg">Generating your quiz with AI…</span><br>
+            <span style="font-size:0.8125rem;opacity:0.7;">This may take a few seconds.</span>
         </div>
     </div>
 
@@ -48,243 +44,205 @@
           method="post"
           hx-post="/study/session"
           hx-target="#study-session-content"
-          hx-swap="outerHTML swap:500ms">
+          hx-swap="outerHTML swap:500ms"
+          hx-indicator="#quiz-generating-indicator">
+
+        <input type="hidden" name="mode" id="study-mode-input" th:value="${mode}">
 
         <div class="sh-card-body sh-wizard-body">
 
-            <!-- Panel 1: Mode -->
-            <div class="sh-wizard-panel is-active is-active-fade" id="wizard-panel-1">
-                <div class="sh-section-title">How do you want to study?</div>
+            <!-- Panel 1: Mode Picker -->
+            <div class="sh-wizard-panel" id="wizard-panel-1" th:classappend="${mode == null ? 'is-active is-active-fade' : ''}">
+                <div class="sh-section-title">What's the plan?</div>
                 <div class="sh-study-mode-grid">
-                    <label class="sh-study-choice" onclick="selectStudyMode(this)">
-                        <input type="radio" name="sessionMode" value="DECK_BY_DECK">
+                    <label class="sh-study-choice" onclick="selectStudyMode(this, 'FLASHCARDS')">
+                        <input type="radio" name="mode_picker" value="FLASHCARDS" th:checked="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).FLASHCARDS}">
                         <div class="sh-study-choice-icon">
-                            <i data-lucide="layers"></i>
+                            <i data-lucide="book-open"></i>
                         </div>
-                        <div class="sh-study-choice-title">Deck-by-Deck</div>
+                        <div class="sh-study-choice-title">Flashcards</div>
                         <div class="sh-study-choice-subtitle">
-                            Study one deck at a time. Define the order yourself or let it randomize.
+                            Flip through cards. Track right/wrong.
                         </div>
                     </label>
-                    <label class="sh-study-choice" onclick="selectStudyMode(this)">
-                        <input type="radio" name="sessionMode" value="SHUFFLED">
+                    <label class="sh-study-choice" onclick="selectStudyMode(this, 'QUIZ')">
+                        <input type="radio" name="mode_picker" value="QUIZ" th:checked="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).QUIZ}">
                         <div class="sh-study-choice-icon">
-                            <i data-lucide="shuffle"></i>
+                            <i data-lucide="list-checks"></i>
                         </div>
-                        <div class="sh-study-choice-title">Shuffled</div>
+                        <div class="sh-study-choice-title">AI Quiz</div>
                         <div class="sh-study-choice-subtitle">
-                            Mix cards from all selected decks into one randomized queue.
+                            Auto-generated multiple choice & true/false questions.
+                        </div>
+                    </label>
+                    <label class="sh-study-choice is-disabled" title="Coming soon">
+                        <input type="radio" name="mode_picker" value="EXAM" disabled>
+                        <div class="sh-study-choice-icon">
+                            <i data-lucide="pencil-line"></i>
+                        </div>
+                        <div class="sh-study-choice-title">Exam</div>
+                        <div class="sh-study-choice-subtitle">
+                            Long-form written answers, AI-graded. (Coming soon)
                         </div>
                     </label>
                 </div>
             </div>
 
-            <!-- Panel 2: Deck Picker -->
-            <div class="sh-wizard-panel" id="wizard-panel-2">
+            <!-- Panel 2: Sub-mode / Format -->
+            <div class="sh-wizard-panel" id="wizard-panel-2" th:classappend="${mode != null ? 'is-active is-active-fade' : ''}">
+                
+                <!-- Flashcards Sub-mode -->
+                <div th:if="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).FLASHCARDS or mode == null}" class="mode-panel-flashcards">
+                    <div class="sh-section-title">How do you want to study?</div>
+                    <div class="sh-study-mode-grid">
+                        <label class="sh-study-choice">
+                            <input type="radio" name="sessionMode" value="DECK_BY_DECK" checked>
+                            <div class="sh-study-choice-icon">
+                                <i data-lucide="layers"></i>
+                            </div>
+                            <div class="sh-study-choice-title">Deck-by-Deck</div>
+                            <div class="sh-study-choice-subtitle">
+                                Study one deck at a time. Define the order.
+                            </div>
+                        </label>
+                        <label class="sh-study-choice">
+                            <input type="radio" name="sessionMode" value="SHUFFLED">
+                            <div class="sh-study-choice-icon">
+                                <i data-lucide="shuffle"></i>
+                            </div>
+                            <div class="sh-study-choice-title">Shuffled</div>
+                            <div class="sh-study-choice-subtitle">
+                                Mix cards from all selected decks.
+                            </div>
+                        </label>
+                    </div>
+                </div>
 
-                <!-- Picker head: survives HTMX swaps (outside #setup-picker) -->
+                <!-- Quiz Format -->
+                <div th:if="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).QUIZ or mode == null}" class="mode-panel-quiz">
+                    <div class="sh-section-title">Quiz Format</div>
+                    <div class="sh-study-mode-grid">
+                        <label class="sh-study-choice">
+                            <input type="radio" name="quizQuestionMode" value="MCQ_ONLY" checked>
+                            <div class="sh-study-choice-icon">
+                                <i data-lucide="list"></i>
+                            </div>
+                            <div class="sh-study-choice-title">Multiple Choice</div>
+                            <div class="sh-study-choice-subtitle">4 options, one correct.</div>
+                        </label>
+                        <label class="sh-study-choice">
+                            <input type="radio" name="quizQuestionMode" value="TF_ONLY">
+                            <div class="sh-study-choice-icon">
+                                <i data-lucide="check-circle"></i>
+                            </div>
+                            <div class="sh-study-choice-title">True / False</div>
+                            <div class="sh-study-choice-subtitle">Quick verification.</div>
+                        </label>
+                        <label class="sh-study-choice">
+                            <input type="radio" name="quizQuestionMode" value="MIXED">
+                            <div class="sh-study-choice-icon">
+                                <i data-lucide="shuffle"></i>
+                            </div>
+                            <div class="sh-study-choice-title">Mixed (50/50)</div>
+                            <div class="sh-study-choice-subtitle">MCQ and True/False.</div>
+                        </label>
+                    </div>
+
+                    <div style="display:flex;align-items:center;gap:1.5rem;margin-top:1.5rem;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:0.75rem;">
+                            <span style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);">Difficulty</span>
+                            <div class="sh-segmented-control">
+                                <label th:each="diff : ${difficulties}" class="sh-segmented-option">
+                                    <input type="radio" name="difficulty" th:value="${diff}" th:checked="${diff.name() == 'MEDIUM'}">
+                                    <span th:text="${#strings.capitalize(#strings.toLowerCase(diff))}">Medium</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;align-items:center;gap:0.75rem;">
+                            <span style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);">Count</span>
+                            <div class="sh-quiz-count-wrap" style="margin:0">
+                                <input type="number" name="questionCount" class="sh-quiz-count-input" value="5" min="1" max="20" style="width:70px">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Panel 3: Sources -->
+            <div class="sh-wizard-panel" id="wizard-panel-3">
+
+                <!-- Warning banners for Quiz -->
+                <div class="mode-panel-quiz">
+                    <div th:if="${selectionExceedsCap}" class="sh-quiz-error-banner">
+                        <i data-lucide="x-circle"></i>
+                        <span>Selection too large. Deselect some sources to continue.</span>
+                    </div>
+                    <div th:if="${selectionWarn and !selectionExceedsCap}" class="sh-quiz-warn-banner">
+                        <i data-lucide="alert-triangle"></i>
+                        <span>Large selection — generation may be slow.</span>
+                    </div>
+                </div>
+
                 <div class="vb-picker-head">
-                    <div class="sh-section-title" style="margin:0">Which decks?</div>
+                    <div class="sh-section-title" style="margin:0">Which sources?</div>
                     <button type="button" id="vb-select-all-btn" class="vb-select-all">
                         <i data-lucide="list-checks"></i>
-                        <span class="vb-select-all-text">Select all decks</span>
+                        <span class="vb-select-all-text">Select all</span>
                     </button>
                 </div>
 
-                <!-- Search: outside #setup-picker so it survives HTMX swaps -->
                 <div class="sh-study-search-wrap" style="margin-bottom:1rem;">
                     <i data-lucide="search" class="sh-study-search-icon"></i>
                     <input type="text"
-                           id="sh-deck-search"
+                           id="sh-source-search"
                            class="sh-study-search-input"
-                           placeholder="Search folders &amp; decks…"
+                           placeholder="Search decks &amp; files…"
                            autocomplete="off">
                 </div>
 
-                <!-- HTMX-swapped region: deck tree + selection bar -->
+                <!-- HTMX-swapped region -->
                 <div th:fragment="setupPicker" id="setup-picker">
-
-                    <div th:if="${#lists.isEmpty(deckGroups)}" class="sh-empty" style="padding:1.25rem 1rem;">
-                        <p class="sh-empty-text mb-1">No decks available</p>
-                        <p class="sh-empty-hint mb-0">Create decks and cards before starting a study session.</p>
-                    </div>
-
-                    <div th:if="${!#lists.isEmpty(deckGroups)}" class="vb-list">
-
-                        <div th:each="group : ${deckGroups}"
-                             class="vb-group"
-                             th:style="'--folder-color: ' + ${group.folderColor}">
-
-                            <!-- Folder head: checkbox first, then icon cap, then title + meta -->
-                            <label class="vb-group-head">
-                                <input type="checkbox"
-                                       class="sh-checkbox sh-study-folder-checkbox"
-                                       th:data-folder-id="${group.folderId}"
-                                       th:checked="${group.isSelected}"
-                                       th:attr="data-indeterminate=${group.isIndeterminate}"
-                                       th:disabled="${group.selectableDeckCount == 0}"
-                                       hx-post="/study/setup/update"
-                                       th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + group.folderId + '}'}"
-                                       hx-target="#setup-picker" hx-swap="outerHTML"
-                                       hx-include="[name='selectedDeckIds']">
-                                <span class="vb-group-cap">
-                                    <i th:attr="data-lucide=${group.folderIcon}"></i>
-                                </span>
-                                <div class="vb-group-title" th:text="${group.folderName}">Folder</div>
-                                <div class="vb-group-meta"
-                                     th:text="${group.selectableDeckCount + '/' + group.totalDeckCount + ' usable · ' + group.totalCardCount + ' cards'}">
-                                    0/0 usable · 0 cards
-                                </div>
-                            </label>
-
-                            <!-- Group body: direct decks + subgroups -->
-                            <div class="vb-group-body">
-
-                                <!-- Direct deck rows -->
-                                <label th:each="deck : ${group.decks}"
-                                       class="vb-deck"
-                                       th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}"
-                                       th:style="'--folder-color: ' + ${group.folderColor}">
-                                    <input class="sh-checkbox sh-study-deck-checkbox"
-                                           type="checkbox"
-                                           name="selectedDeckIds"
-                                           th:value="${deck.deckId}"
-                                           th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}"
-                                           th:disabled="${deck.cardCount == 0}"
-                                           th:attr="data-card-count=${deck.cardCount}"
-                                           hx-post="/study/setup/update"
-                                           hx-target="#setup-picker" hx-swap="outerHTML"
-                                           hx-include="[name='selectedDeckIds']">
-                                    <span class="vb-deck-icon">
-                                        <i data-lucide="layers"></i>
-                                    </span>
-                                    <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
-                                    <span th:if="${deck.cardCount == 0}" class="sh-mini-tag">empty</span>
-                                    <span th:if="${deck.cardCount > 0}" class="sh-badge sh-badge-primary"
-                                          th:text="${deck.cardCount} + ' cards'">0 cards</span>
-                                </label>
-
-                                <!-- Subgroups -->
-                                <div th:each="sub : ${group.subGroups}"
-                                     class="vb-subgroup"
-                                     th:style="'--folder-color: ' + ${group.folderColor}">
-
-                                    <label class="vb-subgroup-head">
-                                        <input type="checkbox"
-                                               class="sh-checkbox sh-study-folder-checkbox"
-                                               th:data-folder-id="${sub.folderId}"
-                                               th:checked="${sub.isSelected}"
-                                               th:attr="data-indeterminate=${sub.isIndeterminate}"
-                                               th:disabled="${sub.selectableDeckCount == 0}"
-                                               hx-post="/study/setup/update"
-                                               th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + sub.folderId + '}'}"
-                                               hx-target="#setup-picker" hx-swap="outerHTML"
-                                               hx-include="[name='selectedDeckIds']">
-                                        <span class="vb-subgroup-cap">
-                                            <i th:attr="data-lucide=${sub.folderIcon}"></i>
-                                        </span>
-                                        <span class="vb-subgroup-name" th:text="${sub.folderName}">Subfolder</span>
-                                        <span class="vb-subgroup-meta"
-                                              th:text="${sub.selectableDeckCount + '/' + sub.totalDeckCount + ' · ' + sub.totalCardCount + ' cards'}">
-                                            0/0 · 0 cards
-                                        </span>
-                                    </label>
-
-                                    <div class="vb-subgroup-body">
-                                        <label th:each="deck : ${sub.decks}"
-                                               class="vb-deck"
-                                               th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}"
-                                               th:style="'--folder-color: ' + ${group.folderColor}">
-                                            <input class="sh-checkbox sh-study-deck-checkbox"
-                                                   type="checkbox"
-                                                   name="selectedDeckIds"
-                                                   th:value="${deck.deckId}"
-                                                   th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}"
-                                                   th:disabled="${deck.cardCount == 0}"
-                                                   th:attr="data-card-count=${deck.cardCount}"
-                                                   hx-post="/study/setup/update"
-                                                   hx-target="#setup-picker" hx-swap="outerHTML"
-                                                   hx-include="[name='selectedDeckIds']">
-                                            <span class="vb-deck-icon">
-                                                <i data-lucide="layers"></i>
-                                            </span>
-                                            <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
-                                            <span th:if="${deck.cardCount == 0}" class="sh-mini-tag">empty</span>
-                                            <span th:if="${deck.cardCount > 0}" class="sh-badge sh-badge-primary"
-                                                  th:text="${deck.cardCount} + ' cards'">0 cards</span>
-                                        </label>
-                                    </div>
-
-                                </div>
-                                <!-- end subgroups -->
-
-                            </div>
-                            <!-- end vb-group-body -->
-
-                        </div>
-                        <!-- end each group -->
-
-                    </div>
-                    <!-- end vb-list -->
-
-
-
-                    <!-- Inline script: runs after every HTMX swap of this fragment -->
+                    <!-- Branching Picker -->
+                    <div th:if="${#strings.toString(mode) == 'FLASHCARDS'}" th:replace="~{this :: deckOnlyPicker}"></div>
+                    <div th:if="${#strings.toString(mode) == 'QUIZ'}" th:replace="~{this :: combinedPicker}"></div>
+                    
                     <script>
-                        document.querySelectorAll('.sh-study-folder-checkbox').forEach(cb => {
-                            cb.indeterminate = cb.dataset.indeterminate === 'true';
-                        });
                         if (typeof reapplySearch === 'function') reapplySearch();
                         if (typeof initLucide === 'function') initLucide();
                         if (typeof updateSelectAllButton === 'function') updateSelectAllButton();
                     </script>
-
                 </div>
-                <!-- end #setup-picker -->
-
             </div>
-            <!-- end panel 2 -->
 
-            <!-- Panel 3: Deck Order -->
-            <div class="sh-wizard-panel" id="wizard-panel-3">
-
+            <!-- Panel 4: Deck Order (Flashcards only) -->
+            <div class="sh-wizard-panel" id="wizard-panel-4">
                 <div class="sh-section-title">Deck Order</div>
-                <p class="sh-folder-meta mb-3">
-                    Define the order in which decks are studied. Drag items to rearrange.
-                </p>
+                <p class="sh-folder-meta mb-3">Drag items to rearrange.</p>
 
-                <!-- Deck order mode radios -->
                 <div class="flex gap-3 flex-wrap mb-4">
                     <label class="sh-study-inline-choice">
                         <input type="radio" name="deckOrderMode" value="SELECTED_ORDER" checked
                                onchange="document.getElementById('sh-study-order-list').style.display = ''">
-                        My order (drag to rearrange)
+                        My order
                     </label>
                     <label class="sh-study-inline-choice">
                         <input type="radio" name="deckOrderMode" value="RANDOMIZED_ORDER"
                                onchange="document.getElementById('sh-study-order-list').style.display = 'none'">
-                        Randomize deck order
+                        Randomize
                     </label>
                 </div>
 
-                <!-- Drag-and-drop order list (populated by JS) -->
                 <ul class="sh-study-order-list" id="sh-study-order-list">
-                    <li class="sh-study-order-empty" id="sh-order-empty-msg">
-                        Select decks in step 2 to arrange them here.
-                    </li>
-                    <!-- JS inserts <li class="sh-study-drag-item" draggable="true" data-deck-id="…"> here -->
+                    <li class="sh-study-order-empty" id="sh-order-empty-msg">Select decks in step 3 to arrange them here.</li>
                 </ul>
-
-                <!-- Hidden input submitted with form -->
                 <input type="hidden" name="orderedDeckIds" id="study-ordered-deck-ids" value="">
-
             </div>
-            <!-- end panel 3 -->
 
             <!-- Sticky footer -->
             <div class="sh-wizard-footer">
-                <button type="button" class="sh-btn sh-btn-secondary"
-                        id="wizard-btn-back" style="display:none;">
+                <button type="button" class="sh-btn sh-btn-secondary" id="wizard-btn-back" style="display:none;">
                     <i data-lucide="arrow-left"></i> Back
                 </button>
                 <div style="display:flex;gap:0.75rem;margin-left:auto;">
@@ -292,41 +250,102 @@
                         Next <i data-lucide="arrow-right"></i>
                     </button>
                     <button type="submit" class="sh-btn sh-btn-primary" id="wizard-btn-submit" style="display:none;">
-                        <i data-lucide="play"></i> Start Session
+                        <i data-lucide="play"></i> Start
                     </button>
                 </div>
             </div>
-
         </div>
     </form>
 
-    <!-- Wizard JavaScript -->
+    <!-- Fragment: Deck-only picker for Flashcards -->
+    <div th:fragment="deckOnlyPicker" class="vb-list">
+        <div th:if="${#lists.isEmpty(deckGroups)}" class="sh-empty" style="padding:1.25rem 1rem;">
+            <p class="sh-empty-text mb-1">No decks available</p>
+        </div>
+        <div th:each="group : ${deckGroups}" class="vb-group" th:style="'--folder-color: ' + ${group.folderColor}">
+            <label class="vb-group-head">
+                <input type="checkbox" class="sh-checkbox sh-source-folder-checkbox" th:checked="${group.isSelected}" th:attr="data-indeterminate=${group.isIndeterminate}" th:disabled="${group.selectableDeckCount == 0}"
+                       hx-post="/study/setup/update" th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + group.folderId + ', &quot;mode&quot;: &quot;FLASHCARDS&quot;}'}" hx-target="#setup-picker" hx-include="[name='selectedDeckIds']">
+                <span class="vb-group-cap"><i th:attr="data-lucide=${group.folderIcon}"></i></span>
+                <div class="vb-group-title" th:text="${group.folderName}">Folder</div>
+            </label>
+            <div class="vb-group-body">
+                <label th:each="deck : ${group.decks}" class="vb-deck" th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
+                    <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.cardCount == 0}"
+                           hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;FLASHCARDS&quot;}'}" hx-include="[name='selectedDeckIds']">
+                    <span class="vb-deck-icon"><i data-lucide="layers"></i></span>
+                    <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
+                    <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fragment: Combined picker for Quiz -->
+    <div th:fragment="combinedPicker" class="vb-list">
+        <div th:if="${#lists.isEmpty(quizSourceTree)}" class="sh-empty" style="padding:1.25rem 1rem;">
+            <p class="sh-empty-text mb-1">No sources available</p>
+        </div>
+        <div th:each="group : ${quizSourceTree}" class="vb-group" th:style="'--folder-color: ' + ${group.folderColor}">
+            <label class="vb-group-head">
+                <input type="checkbox" class="sh-checkbox sh-source-folder-checkbox" th:checked="${group.isSelected}" th:attr="data-indeterminate=${group.isIndeterminate}" th:disabled="${group.selectableSourceCount == 0}"
+                       hx-post="/study/setup/update" th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + group.folderId + ', &quot;mode&quot;: &quot;QUIZ&quot;}'}" hx-target="#setup-picker" hx-include="[name='selectedDeckIds'], [name='selectedFileIds']">
+                <span class="vb-group-cap"><i th:attr="data-lucide=${group.folderIcon}"></i></span>
+                <div class="vb-group-title" th:text="${group.folderName}">Folder</div>
+            </label>
+            <div class="vb-group-body">
+                <label th:each="deck : ${group.decks}" class="vb-deck" th:classappend="${deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
+                    <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.usableCardCount == 0}"
+                           hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;QUIZ&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds']">
+                    <span class="vb-deck-icon"><i data-lucide="layers"></i></span>
+                    <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
+                    <span class="sh-badge sh-badge-primary" th:text="${deck.usableCardCount} + ' cards'"></span>
+                </label>
+                <label th:each="file : ${group.files}" class="vb-file" th:classappend="${!file.isSupported ? ' is-disabled' : (#lists.contains(preselectedFileIds, file.fileId) ? ' is-selected' : '')}">
+                    <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedFileIds" th:value="${file.fileId}" th:checked="${#lists.contains(preselectedFileIds, file.fileId)}" th:disabled="${!file.isSupported}"
+                           hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;QUIZ&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds']">
+                    <span class="vb-file-icon"><i data-lucide="file-text"></i></span>
+                    <span class="vb-file-name" th:text="${file.filename}">file.pdf</span>
+                    <span class="sh-badge" th:text="${file.extension.toUpperCase()}"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS Orchestrator -->
     <script>
     (function () {
-      // ── State ─────────────────────────────────────────────────────────────────
-      let currentStep = 1;
+      let currentStep = document.getElementById('study-mode-input').value ? 2 : 1;
+      const stepMaps = {
+        'FLASHCARDS': ['Mode', 'Type', 'Decks', 'Order'],
+        'QUIZ': ['Mode', 'Format', 'Sources'],
+        'EXAM': ['Mode', 'Setup', 'Sources', 'Layout']
+      };
 
       function getMode() {
-        const checked = document.querySelector('input[name="sessionMode"]:checked');
-        return checked ? checked.value : 'DECK_BY_DECK';
+        return document.getElementById('study-mode-input').value || 'FLASHCARDS';
       }
 
-      window.selectStudyMode = function(element) {
-        if (element.classList.contains('is-selected-animating')) return;
+      function maxSteps() {
+        const mode = getMode();
+        if (mode === 'FLASHCARDS') {
+          const type = document.querySelector('input[name="sessionMode"]:checked')?.value;
+          return type === 'SHUFFLED' ? 3 : 4;
+        }
+        return 3;
+      }
 
-        const radio = element.querySelector('input[type="radio"]');
-        radio.checked = true;
-        radio.dispatchEvent(new Event('change'));
-
+      window.selectStudyMode = function(element, mode) {
+        if (element.classList.contains('is-disabled')) return;
+        
+        document.getElementById('study-mode-input').value = mode;
+        
+        // UI feedback
         const container = element.closest('.sh-study-mode-grid');
         const allCards = container.querySelectorAll('.sh-study-choice');
-        
-        // Calculate slide offset to middle
         const rect = element.getBoundingClientRect();
         const parentRect = container.getBoundingClientRect();
-        const elementCenter = rect.left + rect.width / 2;
-        const parentCenter = parentRect.left + parentRect.width / 2;
-        const slideX = parentCenter - elementCenter;
+        const slideX = (parentRect.left + parentRect.width/2) - (rect.left + rect.width/2);
 
         allCards.forEach(card => {
           if (card === element) {
@@ -337,57 +356,31 @@
           }
         });
 
+        // HTMX update picker
+        htmx.ajax('POST', '/study/setup/update', {
+          target: '#setup-picker',
+          values: { mode: mode },
+          swap: 'outerHTML'
+        });
+
         setTimeout(() => {
-          wizardNext();
-          // Reset animation classes for if the user comes back
+          goToStep(2);
           setTimeout(() => {
-              allCards.forEach(c => {
-                  c.classList.remove('is-selected-animating', 'is-unselected');
-                  c.style.removeProperty('--slide-x');
-              });
+            allCards.forEach(c => {
+              c.classList.remove('is-selected-animating', 'is-unselected');
+              c.style.removeProperty('--slide-x');
+            });
           }, 800);
         }, 900);
       };
 
-      function maxSteps() {
-        return getMode() === 'DECK_BY_DECK' ? 3 : 2;
-      }
-
-      // ── Navigation ────────────────────────────────────────────────────────────
-      function wizardNext() {
-        if (currentStep === 2) {
-          const checked = document.querySelectorAll('.sh-study-deck-checkbox:checked');
-          if (checked.length === 0) {
-            showValidationError('Please select at least one deck.');
-            return;
-          }
-          clearValidationError();
-
-          if (getMode() === 'SHUFFLED') {
-            const form = document.querySelector('.sh-study-setup-card');
-            htmx.trigger(form, 'submit');
-            return;
-          }
-
-          populateOrderList();
-        }
-
-        goToStep(currentStep + 1);
-      }
-
-      function wizardBack() {
-        goToStep(currentStep - 1);
-      }
-
       function goToStep(step) {
         if (currentStep === step) return;
-        
         const activePanel = document.querySelector('.sh-wizard-panel.is-active');
         if (activePanel) {
           activePanel.classList.remove('is-active-fade');
           activePanel.classList.add('is-fading-out');
           activePanel.classList.remove('is-active');
-          
           setTimeout(() => {
             activePanel.classList.remove('is-fading-out');
             switchContent(step);
@@ -399,13 +392,13 @@
 
       function switchContent(step) {
         currentStep = step;
-
+        const mode = getMode();
+        
+        // Toggle visibility of panels
         document.querySelectorAll('.sh-wizard-panel').forEach((panel, i) => {
           const isTarget = (i + 1) === step;
           panel.classList.toggle('is-active', isTarget);
-          
           if (isTarget) {
-            // Force reflow to ensure transition runs after display: flex
             panel.offsetHeight;
             panel.classList.add('is-active-fade');
           } else {
@@ -413,258 +406,152 @@
           }
         });
 
+        // Toggle mode-specific content within panels
+        document.querySelectorAll('.mode-panel-flashcards').forEach(el => el.style.display = mode === 'FLASHCARDS' ? '' : 'none');
+        document.querySelectorAll('.mode-panel-quiz').forEach(el => el.style.display = mode === 'QUIZ' ? '' : 'none');
+
         updateStepIndicator();
         updateNavButtons();
         if (typeof initLucide === 'function') initLucide();
       }
 
       function updateStepIndicator() {
+        const mode = getMode();
+        const labels = stepMaps[mode];
         const max = maxSteps();
-        const steps = document.querySelectorAll('.sh-wizard-step');
-        steps.forEach((el) => {
-          const n = parseInt(el.dataset.step, 10);
-          el.classList.toggle('is-active', n === currentStep);
-          el.classList.toggle('is-done', n < currentStep);
-          if (n === 3) el.style.display = max < 3 ? 'none' : '';
+        const container = document.getElementById('sh-wizard-steps');
+        container.innerHTML = '';
+
+        labels.forEach((label, i) => {
+          const stepNum = i + 1;
+          if (stepNum > max) return;
+
+          if (i > 0) {
+            const conn = document.createElement('div');
+            conn.className = 'sh-wizard-step-connector';
+            container.appendChild(conn);
+          }
+
+          const stepEl = document.createElement('div');
+          stepEl.className = 'sh-wizard-step';
+          if (stepNum === currentStep) stepEl.classList.add('is-active');
+          if (stepNum < currentStep) stepEl.classList.add('is-done');
+          stepEl.innerHTML = `<div class="sh-wizard-step-dot">${stepNum}</div><div class="sh-wizard-step-label">${label}</div>`;
+          container.appendChild(stepEl);
         });
-        const connector3 = document.querySelector('.sh-wizard-connector-3');
-        if (connector3) connector3.style.display = max < 3 ? 'none' : '';
       }
 
       function updateNavButtons() {
         const max = maxSteps();
         const isLast = currentStep === max;
-
         document.getElementById('wizard-btn-back').style.display = currentStep > 1 ? '' : 'none';
         document.getElementById('wizard-btn-next').style.display = (isLast || currentStep === 1) ? 'none' : '';
         document.getElementById('wizard-btn-submit').style.display = isLast ? '' : 'none';
         
         const footer = document.querySelector('.sh-wizard-footer');
         if (footer) footer.style.display = currentStep === 1 ? 'none' : '';
-      }
-
-      // ── Validation ────────────────────────────────────────────────────────────
-      function showValidationError(msg) {
-        let el = document.getElementById('sh-wizard-validation-msg');
-        if (!el) {
-          el = document.createElement('div');
-          el.id = 'sh-wizard-validation-msg';
-          el.className = 'sh-wizard-validation-msg';
-          const panel2 = document.getElementById('wizard-panel-2');
-          panel2.insertBefore(el, panel2.firstChild);
+        
+        const submitBtn = document.getElementById('wizard-btn-submit');
+        const mode = getMode();
+        const icon = submitBtn.querySelector('i');
+        const text = submitBtn.childNodes[1];
+        if (mode === 'QUIZ') {
+          icon.setAttribute('data-lucide', 'sparkles');
+          text.textContent = ' Generate Quiz';
+        } else {
+          icon.setAttribute('data-lucide', 'play');
+          text.textContent = ' Start Session';
         }
-        el.textContent = msg;
-        el.style.display = '';
-      }
-
-      function clearValidationError() {
-        const el = document.getElementById('sh-wizard-validation-msg');
-        if (el) el.style.display = 'none';
-      }
-
-      // ── Deck Order List (Step 3) ──────────────────────────────────────────────
-      function populateOrderList() {
-        const list = document.getElementById('sh-study-order-list');
-        const emptyMsg = document.getElementById('sh-order-empty-msg');
-        const checked = document.querySelectorAll('.sh-study-deck-checkbox:checked');
-
-        list.querySelectorAll('.sh-study-drag-item').forEach(el => el.remove());
-
-        if (checked.length === 0) {
-          emptyMsg.style.display = '';
-          document.getElementById('study-ordered-deck-ids').value = '';
-          return;
-        }
-
-        emptyMsg.style.display = 'none';
-
-        checked.forEach(cb => {
-          const deckId = cb.value;
-          const label = cb.closest('label.vb-deck');
-          const deckName = label
-            ? label.querySelector('.vb-deck-name').textContent.trim()
-            : 'Unknown Deck';
-
-          const li = createDragItem(deckId, deckName);
-          list.appendChild(li);
-        });
-
-        updateOrderInput();
         if (typeof initLucide === 'function') initLucide();
       }
 
-      function createDragItem(deckId, deckName) {
-        const li = document.createElement('li');
-        li.className = 'sh-study-drag-item';
-        li.draggable = true;
-        li.dataset.deckId = deckId;
-        li.innerHTML =
-          '<i data-lucide="grip-vertical" class="sh-study-drag-handle"></i>' +
-          '<span class="sh-study-order-name">' + deckName + '</span>';
+      function wizardNext() {
+        const mode = getMode();
+        if (currentStep === 2 && mode === 'QUIZ') {
+           // No validation needed for panel 2 in Quiz
+        }
+        if (currentStep === 3) {
+          const checked = document.querySelectorAll('.sh-source-checkbox:checked');
+          if (checked.length === 0) {
+            alert('Please select at least one source.');
+            return;
+          }
+          if (mode === 'FLASHCARDS' && document.querySelector('input[name="sessionMode"]:checked').value === 'SHUFFLED') {
+            document.querySelector('.sh-study-setup-card').submit();
+            return;
+          }
+          if (mode === 'QUIZ') {
+            document.querySelector('.sh-study-setup-card').submit();
+            return;
+          }
+          populateOrderList();
+        }
+        goToStep(currentStep + 1);
+      }
 
-        li.addEventListener('dragstart', onDragStart);
-        li.addEventListener('dragover', onDragOver);
-        li.addEventListener('dragleave', onDragLeave);
-        li.addEventListener('drop', onDrop);
-        li.addEventListener('dragend', onDragEnd);
-        return li;
+      // Drag and drop logic for order
+      function populateOrderList() {
+        const list = document.getElementById('sh-study-order-list');
+        const checked = document.querySelectorAll('input[name="selectedDeckIds"]:checked');
+        list.querySelectorAll('.sh-study-drag-item').forEach(el => el.remove());
+        checked.forEach(cb => {
+          const deckName = cb.closest('.vb-deck').querySelector('.vb-deck-name').textContent;
+          const li = document.createElement('li');
+          li.className = 'sh-study-drag-item';
+          li.draggable = true;
+          li.dataset.deckId = cb.value;
+          li.innerHTML = `<i data-lucide="grip-vertical" class="sh-study-drag-handle"></i><span>${deckName}</span>`;
+          li.addEventListener('dragstart', e => { e.target.classList.add('is-dragging'); });
+          li.addEventListener('dragend', e => { e.target.classList.remove('is-dragging'); updateOrderInput(); });
+          list.appendChild(li);
+        });
+        list.addEventListener('dragover', e => {
+          e.preventDefault();
+          const dragging = document.querySelector('.is-dragging');
+          const afterElement = [...list.querySelectorAll('.sh-study-drag-item:not(.is-dragging)')].reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = e.clientY - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+            return closest;
+          }, { offset: Number.NEGATIVE_INFINITY }).element;
+          if (afterElement) list.insertBefore(dragging, afterElement);
+          else list.appendChild(dragging);
+        });
+        updateOrderInput();
       }
 
       function updateOrderInput() {
-        const ids = [...document.querySelectorAll('.sh-study-drag-item')]
-          .map(el => el.dataset.deckId);
+        const ids = [...document.querySelectorAll('.sh-study-drag-item')].map(el => el.dataset.deckId);
         document.getElementById('study-ordered-deck-ids').value = ids.join(',');
       }
 
-      // ── Drag-and-Drop ─────────────────────────────────────────────────────────
-      let draggedItem = null;
-
-      function onDragStart(e) {
-        draggedItem = this;
-        this.classList.add('is-dragging');
-        e.dataTransfer.effectAllowed = 'move';
-      }
-
-      function onDragOver(e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        if (this !== draggedItem) this.classList.add('drag-over');
-      }
-
-      function onDragLeave() {
-        this.classList.remove('drag-over');
-      }
-
-      function onDrop(e) {
-        e.preventDefault();
-        if (this !== draggedItem) {
-          const list = this.parentNode;
-          const items = [...list.querySelectorAll('.sh-study-drag-item')];
-          const fromIdx = items.indexOf(draggedItem);
-          const toIdx = items.indexOf(this);
-          if (fromIdx < toIdx) {
-            list.insertBefore(draggedItem, this.nextSibling);
-          } else {
-            list.insertBefore(draggedItem, this);
-          }
-          updateOrderInput();
-        }
-        this.classList.remove('drag-over');
-      }
-
-      function onDragEnd() {
-        this.classList.remove('is-dragging');
-        document.querySelectorAll('.sh-study-drag-item')
-          .forEach(el => el.classList.remove('drag-over'));
-      }
-
-
-
-      // ── Select-all button state ───────────────────────────────────────────────
-      window.updateSelectAllButton = function () {
-        const allDecks = document.querySelectorAll('.sh-study-deck-checkbox:not([disabled])');
-        const allSelected = allDecks.length > 0 && [...allDecks].every(cb => cb.checked);
-        const btn = document.getElementById('vb-select-all-btn');
-        if (!btn) return;
-        btn.classList.toggle('is-on', allSelected);
-        const txt = btn.querySelector('.vb-select-all-text');
-        if (txt) txt.textContent = allSelected ? 'Deselect all' : 'Select all decks';
-        const icon = btn.querySelector('[data-lucide]');
-        if (icon) {
-          icon.setAttribute('data-lucide', allSelected ? 'check-square' : 'list-checks');
-          if (typeof initLucide === 'function') initLucide();
-        }
-      };
-
-      // ── Deck Search ───────────────────────────────────────────────────────────
-      window.reapplySearch = function () {
-        const input = document.getElementById('sh-deck-search');
-        if (!input || !input.value) return;
-        filterDecks(input.value.toLowerCase());
-      };
-
-      function filterDecks(query) {
-        if (!query) {
-          document.querySelectorAll('.vb-group, .vb-subgroup, .vb-deck').forEach(el => {
-            el.style.display = '';
-          });
-          return;
-        }
-        document.querySelectorAll('.vb-group').forEach(group => {
-          const folderTitle = group.querySelector('.vb-group-title');
-          const folderMatches = folderTitle && folderTitle.textContent.toLowerCase().includes(query);
-          let anyVisible = false;
-
-          group.querySelectorAll(':scope > .vb-group-body > .vb-deck').forEach(deck => {
-            const deckName = deck.querySelector('.vb-deck-name');
-            const matches = folderMatches || (deckName && deckName.textContent.toLowerCase().includes(query));
-            deck.style.display = matches ? '' : 'none';
-            if (matches) anyVisible = true;
-          });
-
-          group.querySelectorAll('.vb-subgroup').forEach(sub => {
-            const subName = sub.querySelector('.vb-subgroup-name');
-            const subMatches = folderMatches || (subName && subName.textContent.toLowerCase().includes(query));
-            let subAnyVisible = false;
-            sub.querySelectorAll('.vb-deck').forEach(deck => {
-              const deckName = deck.querySelector('.vb-deck-name');
-              const matches = subMatches || (deckName && deckName.textContent.toLowerCase().includes(query));
-              deck.style.display = matches ? '' : 'none';
-              if (matches) subAnyVisible = true;
-            });
-            sub.style.display = (subAnyVisible || subMatches) ? '' : 'none';
-            if (sub.style.display !== 'none') anyVisible = true;
-          });
-
-          group.style.display = anyVisible ? '' : 'none';
+      window.reapplySearch = function() {
+        const q = document.getElementById('sh-source-search').value.toLowerCase();
+        document.querySelectorAll('.vb-group, .vb-deck, .vb-file').forEach(el => {
+          const text = el.innerText.toLowerCase();
+          el.style.display = text.includes(q) ? '' : 'none';
         });
       }
 
-      const searchInput = document.getElementById('sh-deck-search');
-      if (searchInput) {
-        searchInput.addEventListener('input', function () {
-          filterDecks(this.value.toLowerCase());
-        });
-      }
-
-      // ── Select-all button wiring ──────────────────────────────────────────────
-      const selectAllBtn = document.getElementById('vb-select-all-btn');
-      if (selectAllBtn) {
-        selectAllBtn.addEventListener('click', function () {
-          const allDecks = document.querySelectorAll('.sh-study-deck-checkbox:not([disabled])');
-          const allSelected = allDecks.length > 0 && [...allDecks].every(cb => cb.checked);
-          allDecks.forEach(cb => { cb.checked = !allSelected; });
-          const firstCb = document.querySelector('.sh-study-deck-checkbox:not([disabled])');
-          if (firstCb) htmx.trigger(firstCb, 'change');
-        });
-      }
-
-      // ── Refresh select-all button after each HTMX picker swap ────────────────
-      document.body.addEventListener('htmx:afterSwap', function (evt) {
-        if (evt.detail.target && evt.detail.target.id === 'setup-picker') {
-          if (typeof updateSelectAllButton === 'function') updateSelectAllButton();
-        }
-      });
-
-      // ── Button Event Wiring ───────────────────────────────────────────────────
       document.getElementById('wizard-btn-next').addEventListener('click', wizardNext);
-      document.getElementById('wizard-btn-back').addEventListener('click', wizardBack);
+      document.getElementById('wizard-btn-back').addEventListener('click', () => goToStep(currentStep - 1));
+      document.getElementById('sh-source-search')?.addEventListener('input', reapplySearch);
 
-      document.querySelectorAll('input[name="sessionMode"]').forEach(radio => {
-        radio.addEventListener('change', function () {
-          updateStepIndicator();
-          updateNavButtons();
-        });
+      // Progress message cycler for Quiz
+      const messages = ['Reading content...', 'Analyzing topics...', 'Asking Gemini...', 'Generating questions...'];
+      let timer = null;
+      document.body.addEventListener('htmx:beforeRequest', (e) => {
+        if (getMode() === 'QUIZ' && e.detail.elt.matches('form')) {
+          let i = 0;
+          const el = document.getElementById('quiz-progress-msg');
+          timer = setInterval(() => { el.textContent = messages[i++ % messages.length]; }, 2000);
+        }
       });
+      document.body.addEventListener('htmx:afterRequest', () => { if (timer) clearInterval(timer); });
 
-      // ── Init ──────────────────────────────────────────────────────────────────
-      updateStepIndicator();
-      updateNavButtons();
-      if (typeof initLucide === 'function') initLucide();
-
+      switchContent(currentStep);
     })();
     </script>
-
 </div>
 
 </body>

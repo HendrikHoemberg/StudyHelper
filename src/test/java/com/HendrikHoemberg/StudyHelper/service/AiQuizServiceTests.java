@@ -2,8 +2,8 @@ package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.Difficulty;
 import com.HendrikHoemberg.StudyHelper.dto.QuestionType;
-import com.HendrikHoemberg.StudyHelper.dto.TestQuestion;
-import com.HendrikHoemberg.StudyHelper.dto.TestQuestionMode;
+import com.HendrikHoemberg.StudyHelper.dto.QuizQuestion;
+import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionMode;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,10 +19,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class AiTestServiceTests {
+class AiQuizServiceTests {
 
     private ChatClient.CallResponseSpec callSpec;
-    private AiTestService service;
+    private AiQuizService service;
 
     @BeforeEach
     void setUp() {
@@ -36,7 +36,7 @@ class AiTestServiceTests {
         when(requestSpec.user(anyString())).thenReturn(requestSpec);
         when(requestSpec.call()).thenReturn(callSpec);
 
-        service = new AiTestService(builder, new JsonMapper());
+        service = new AiQuizService(builder, new JsonMapper());
     }
 
     @Test
@@ -50,7 +50,7 @@ class AiTestServiceTests {
               {"type":"MULTIPLE_CHOICE","questionText":"Q5","options":["a","b","c","d"],"correctOptionIndex":0}
             ]}""");
 
-        List<TestQuestion> result = service.generate(cards(3), List.of(), 5, TestQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
+        List<QuizQuestion> result = service.generate(cards(3), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
 
         assertThat(result).hasSize(5);
         assertThat(result).allMatch(q -> q.type() == QuestionType.MULTIPLE_CHOICE);
@@ -66,7 +66,7 @@ class AiTestServiceTests {
               {"type":"TRUE_FALSE","questionText":"Q3","options":["True","False"],"correctOptionIndex":0}
             ]}""");
 
-        List<TestQuestion> result = service.generate(cards(3), List.of(), 3, TestQuestionMode.TF_ONLY, Difficulty.EASY);
+        List<QuizQuestion> result = service.generate(cards(3), List.of(), 3, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
 
         assertThat(result).hasSize(3);
         assertThat(result).allMatch(q -> q.type() == QuestionType.TRUE_FALSE);
@@ -83,7 +83,7 @@ class AiTestServiceTests {
               {"type":"TRUE_FALSE","questionText":"Q4","options":["True","False"],"correctOptionIndex":0}
             ]}""");
 
-        List<TestQuestion> result = service.generate(cards(3), List.of(), 4, TestQuestionMode.MIXED, Difficulty.MEDIUM);
+        List<QuizQuestion> result = service.generate(cards(3), List.of(), 4, QuizQuestionMode.MIXED, Difficulty.MEDIUM);
 
         assertThat(result).hasSize(4);
         assertThat(result).anyMatch(q -> q.type() == QuestionType.MULTIPLE_CHOICE);
@@ -98,7 +98,7 @@ class AiTestServiceTests {
               {"type":"TRUE_FALSE","questionText":"Q2","options":["true","false"],"correctOptionIndex":1}
             ]}""");
 
-        List<TestQuestion> result = service.generate(cards(2), List.of(), 2, TestQuestionMode.TF_ONLY, Difficulty.EASY);
+        List<QuizQuestion> result = service.generate(cards(2), List.of(), 2, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
 
         assertThat(result).hasSize(2);
         assertThat(result).allMatch(q -> q.options().equals(List.of("True", "False")));
@@ -112,7 +112,7 @@ class AiTestServiceTests {
               {"questionText":"Q2","options":["True","False"],"correctOptionIndex":1}
             ]}""");
 
-        List<TestQuestion> result = service.generate(cards(2), List.of(), 2, TestQuestionMode.MIXED, Difficulty.MEDIUM);
+        List<QuizQuestion> result = service.generate(cards(2), List.of(), 2, QuizQuestionMode.MIXED, Difficulty.MEDIUM);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).type()).isEqualTo(QuestionType.MULTIPLE_CHOICE);
@@ -127,14 +127,14 @@ class AiTestServiceTests {
               {"type":"MULTIPLE_CHOICE","questionText":"Q2","options":["only","two"],"correctOptionIndex":0}
             ]}""");
 
-        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, TestQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
+        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("too few valid questions");
     }
 
     @Test
     void generate_EmptyFlashcardsAndDocs_ThrowsIllegalArgument() {
-        assertThatThrownBy(() -> service.generate(List.of(), List.of(), 5, TestQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
+        assertThatThrownBy(() -> service.generate(List.of(), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("no usable text");
     }
@@ -146,7 +146,7 @@ class AiTestServiceTests {
         imageOnly.setBackText("");
         imageOnly.setFrontImageFilename("diagram.png");
 
-        assertThatThrownBy(() -> service.generate(List.of(imageOnly), List.of(), 5, TestQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
+        assertThatThrownBy(() -> service.generate(List.of(imageOnly), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("no usable text");
     }

@@ -1,6 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
-import com.HendrikHoemberg.StudyHelper.dto.TestSourceGroup;
+import com.HendrikHoemberg.StudyHelper.dto.QuizSourceGroup;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
@@ -37,7 +37,7 @@ class FolderServiceTests {
     }
 
     @Test
-    void getTestSourceTree_FiltersUnsupportedFilesAndCalculatesCounts() {
+    void getQuizSourceTree_FiltersUnsupportedFilesAndCalculatesCounts() {
         Folder root = new Folder();
         root.setId(1L);
         root.setName("Root");
@@ -67,10 +67,10 @@ class FolderServiceTests {
 
         when(folderRepository.findByUserAndParentFolderIsNull(user)).thenReturn(List.of(root));
 
-        List<TestSourceGroup> tree = folderService.getTestSourceTree(user, List.of(), List.of());
+        List<QuizSourceGroup> tree = folderService.getQuizSourceTree(user, List.of(), List.of());
 
         assertThat(tree).hasSize(1);
-        TestSourceGroup group = tree.get(0);
+        QuizSourceGroup group = tree.get(0);
         assertThat(group.decks()).hasSize(1);
         assertThat(group.files()).hasSize(1);
         assertThat(group.files().get(0).filename()).isEqualTo("test.pdf");

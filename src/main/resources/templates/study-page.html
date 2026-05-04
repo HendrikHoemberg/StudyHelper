@@ -13,7 +13,11 @@
                     <div id="explorer-detail" class="sh-explorer-detail sh-explorer-detail-content">
                         <div th:switch="${studyStateView}">
                             <div th:case="'card'" th:replace="~{fragments/study-card :: studyCard}"></div>
-                            <div th:case="'complete'" th:replace="~{fragments/study-complete :: studyComplete}"></div>
+                            <div th:case="'question'" th:replace="~{fragments/quiz-question :: quizQuestion}"></div>
+                            <div th:case="'complete'">
+                                <div th:if="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).QUIZ}" th:replace="~{fragments/quiz-summary :: quizSummary}"></div>
+                                <div th:if="${mode != T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).QUIZ}" th:replace="~{fragments/study-complete :: studyComplete}"></div>
+                            </div>
                             <div th:case="*" th:replace="~{fragments/study-setup :: studySetup}"></div>
                         </div>
                     </div>
