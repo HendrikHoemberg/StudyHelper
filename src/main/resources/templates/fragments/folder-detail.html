@@ -181,6 +181,15 @@
                         <td class="sh-file-meta" th:data-timestamp="${file.uploadedAt}"
                             th:text="${#temporals.format(file.uploadedAt, 'dd MMM yyyy HH:mm')}">01 Jan 2025</td>
                         <td style="text-align:right; white-space:nowrap;">
+                            <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.txt') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.md')}"
+                               class="sh-btn sh-btn-ghost sh-btn-sm"
+                               style="color:var(--accent);"
+                               th:href="@{'/test/start'(fileId=${file.id})}"
+                               hx-get="/test/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
+                               hx-target="#explorer-detail" hx-push-url="true">
+                                <i data-lucide="sparkles"></i>
+                                Test
+                            </a>
                             <button class="sh-btn sh-btn-ghost sh-btn-sm"
                                     th:hx-get="@{/files/{id}/edit-options(id=${file.id})}"
                                     hx-target="#modal-placeholder">

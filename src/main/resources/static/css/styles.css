@@ -658,6 +658,37 @@ a {
     height: 14px;
 }
 
+.sh-deck-test-btn {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 2.75rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    transition: all var(--transition-fast);
+    z-index: 5;
+    cursor: pointer;
+    padding: 0;
+}
+
+.sh-deck-test-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    transform: scale(1.1);
+}
+
+.sh-deck-test-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
 .sh-deck-body {
     display: flex;
     flex-direction: column;

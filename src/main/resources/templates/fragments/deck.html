@@ -42,6 +42,13 @@
                 <i data-lucide="play"></i>
                 Start Study
             </a>
+            <a class="sh-btn sh-btn-secondary sh-btn-sm"
+               th:href="@{'/test/start'(deckId=${deck.id})}"
+               hx-get="/test/start" th:hx-vals="${'{&quot;deckId&quot;: ' + deck.id + '}'}"
+               hx-target="#explorer-detail" hx-push-url="true">
+                <i data-lucide="sparkles"></i>
+                Test me
+            </a>
             <button class="sh-btn sh-btn-secondary sh-btn-sm"
                     th:hx-get="@{/decks/{id}/flashcards/new(id=${deck.id})}"
                     hx-target="#modal-placeholder">
