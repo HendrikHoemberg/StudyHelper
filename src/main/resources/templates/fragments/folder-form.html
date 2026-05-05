@@ -42,6 +42,13 @@
             <input type="text" class="sh-input sh-icon-search" placeholder="Search icons…"
                    oninput="handleIconSearch(this)">
         </div>
+
+        <div id="iconify-filters" class="mb-3" style="display: none; padding: 0 0.25rem;">
+            <label class="sh-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.75rem; color: var(--text-muted);">
+                <input type="checkbox" id="iconify-square-only" checked onchange="handleIconSearch(this.closest('.sh-modal').querySelector('.sh-icon-search'))">
+                Square icons only (UI Sets)
+            </label>
+        </div>
         
         <div class="sh-icon-grid" th:id="${prefix + 'IconGrid'}">
             <!-- Icons rendered by JS -->

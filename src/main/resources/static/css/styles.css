@@ -3034,9 +3034,18 @@ textarea.sh-input {
     color: var(--accent);
 }
 
-.sh-icon-btn svg {
+.sh-icon-btn svg,
+.sh-icon-btn iconify-icon {
     width: 22px;
     height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+iconify-icon {
+    display: inline-flex;
+    vertical-align: middle;
 }
 
 .sh-edit-preview {

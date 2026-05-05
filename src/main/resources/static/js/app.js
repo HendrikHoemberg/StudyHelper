@@ -133,6 +133,10 @@ function switchIconMode(btn, mode) {
     const searchInput = modal.querySelector('.sh-icon-search');
     searchInput.value = '';
     
+    // Show/hide Iconify filters
+    const filters = modal.querySelector('#iconify-filters');
+    if (filters) filters.style.display = (mode === 'extended') ? 'block' : 'none';
+    
     // Reset grid
     const grid = modal.querySelector('.sh-icon-grid');
     grid.innerHTML = '';
@@ -163,8 +167,12 @@ function debouncedIconifySearch(input) {
 
     grid.innerHTML = '<div class="sh-sidebar-empty">Searching Iconify...</div>';
     
+    const squareOnly = modal.querySelector('#iconify-square-only')?.checked;
+    const squarePrefixes = 'lucide,heroicons,ph,mdi,tabler,octicon,bi,ri,fluent,carbon,ic';
+    const prefixParam = squareOnly ? `&prefixes=${squarePrefixes}` : '';
+
     iconifySearchTimeout = setTimeout(() => {
-        fetch(`https://api.iconify.design/search?query=${encodeURIComponent(query)}&limit=40`)
+        fetch(`https://api.iconify.design/search?query=${encodeURIComponent(query)}&limit=40${prefixParam}`)
             .then(res => res.json())
             .then(data => {
                 if (iconPickerMode !== 'extended') return; // Mode changed while fetching
