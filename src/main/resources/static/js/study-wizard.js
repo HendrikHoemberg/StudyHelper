@@ -422,19 +422,33 @@
         }
     });
 
-    // Progress message cycler for Quiz (HTMX integration)
-    const messages = ['Reading content...', 'Analyzing topics...', 'Asking Gemini...', 'Generating questions...'];
+    // Progress message cycler for AI generation (Quiz & Exam)
+    const PROGRESS_MESSAGES = {
+        QUIZ: ['Generating your quiz with AI…', 'Reading content...', 'Analyzing topics...', 'Asking Gemini...', 'Generating questions...'],
+        EXAM: ['Generating your exam with AI…', 'Reading content...', 'Analyzing topics...', 'Generating questions...', 'Setting up exam...'],
+    };
     let timer = null;
     document.body.addEventListener('htmx:beforeRequest', (e) => {
-        if (currentMode === 'QUIZ' && e.detail.elt.matches('form')) {
+        if ((currentMode === 'QUIZ' || currentMode === 'EXAM') && e.detail.elt.matches('form')) {
+            const messages = PROGRESS_MESSAGES[currentMode];
             let i = 0;
-            const el = document.getElementById('quiz-progress-msg');
+            const el = document.getElementById('ai-gen-title');
             if (el) {
-                timer = setInterval(() => { el.textContent = messages[i++ % messages.length]; }, 2000);
+                el.textContent = messages[0];
+                timer = setInterval(() => { el.textContent = messages[(++i) % messages.length]; }, 2000);
             }
         }
     });
-    document.body.addEventListener('htmx:afterRequest', () => { if (timer) clearInterval(timer); });
+    document.body.addEventListener('htmx:afterRequest', () => { if (timer) { clearInterval(timer); timer = null; } });
+
+    // Abort AI generation when Cancel is clicked
+    document.body.addEventListener('click', (e) => {
+        if (e.target.closest('#ai-gen-abort-btn')) {
+            const form = document.querySelector('.sh-study-setup-card');
+            if (form) htmx.trigger(form, 'htmx:abort');
+            if (timer) { clearInterval(timer); timer = null; }
+        }
+    });
 
     // Handle "Select All" button
     document.addEventListener('click', e => {

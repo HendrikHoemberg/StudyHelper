@@ -30,22 +30,13 @@
         <!-- Filled by JS -->
     </div>
 
-    <!-- Loading indicator (shown during AI generation) -->
-    <div id="quiz-generating-indicator" class="htmx-indicator sh-quiz-loading">
-        <div class="sh-quiz-loading-spinner"></div>
-        <div class="sh-quiz-loading-text">
-            <span id="quiz-progress-msg">Generating your quiz with AI…</span><br>
-            <span style="font-size:0.8125rem;opacity:0.7;">This may take a few seconds.</span>
-        </div>
-    </div>
-
     <!-- Single form wrapping all panels -->
     <form class="sh-card sh-study-setup-card"
           method="post"
           hx-post="/study/session"
           hx-target="#study-session-content"
           hx-swap="outerHTML swap:500ms"
-          hx-indicator="#quiz-generating-indicator"
+          hx-indicator="#ai-generating-modal"
           hx-disabled-elt="#wizard-btn-submit, #wizard-btn-next, #wizard-btn-back">
 
         <input type="hidden" name="mode" id="study-mode-input" th:value="${mode}">
@@ -113,6 +104,19 @@
             </div>
         </div>
     </form>
+
+    <!-- AI Generation Modal (shown during quiz/exam AI generation) -->
+    <div id="ai-generating-modal" class="sh-ai-gen-modal" role="dialog" aria-modal="true">
+        <div class="sh-ai-gen-backdrop"></div>
+        <div class="sh-ai-gen-dialog">
+            <div class="sh-ai-gen-spinner"></div>
+            <div>
+                <div id="ai-gen-title" class="sh-ai-gen-title">Generating your quiz with AI…</div>
+                <div class="sh-ai-gen-subtitle">This may take a few seconds.</div>
+            </div>
+            <button type="button" class="sh-btn sh-btn-secondary sh-btn-sm" id="ai-gen-abort-btn">Cancel</button>
+        </div>
+    </div>
 </div>
 
 </body>

@@ -199,7 +199,7 @@
                 }
             });
         });
-        
+
         // Use HTMX confirm event for better integration
         document.body.addEventListener('htmx:confirm', function(evt) {
             if (evt.detail.path === '/exam/submit') {
@@ -208,6 +208,18 @@
                 }
             }
         });
+
+        // Abort grading when Cancel is clicked
+        const gradingAbortBtn = document.getElementById('grading-abort-btn');
+        if (gradingAbortBtn && !gradingAbortBtn._sh_abort_init) {
+            gradingAbortBtn._sh_abort_init = true;
+            gradingAbortBtn.addEventListener('click', function() {
+                const submitBtn = document.querySelector('button[hx-post="/exam/submit"]');
+                const submitForm = document.querySelector('form[hx-post="/exam/submit"]');
+                if (submitBtn) htmx.trigger(submitBtn, 'htmx:abort');
+                if (submitForm) htmx.trigger(submitForm, 'htmx:abort');
+            });
+        }
     }
 
     document.addEventListener('DOMContentLoaded', init);
