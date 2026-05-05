@@ -1,7 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
-import com.HendrikHoemberg.StudyHelper.controller.ExamController;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
 

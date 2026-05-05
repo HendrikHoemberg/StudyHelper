@@ -2,14 +2,11 @@ package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.SessionMode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyCardView;
-import com.HendrikHoemberg.StudyHelper.dto.StudyDeckGroup;
-import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
-import com.HendrikHoemberg.StudyHelper.dto.StudySessionConfig;
+import com.HendrikHoemberg.StudyHelper.dto.StudyMode;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionState;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionStats;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
-import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.StudySessionService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,40 +19,31 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 /**
  * Handles flashcard session runtime endpoints (next, answer, redo).
- * Setup routes (GET /study/start, POST /study/session, etc.) are in StudyController.
+ * Setup routes (GET /study/start, POST /study/session) are in StudyController.
  */
 @Controller
 public class StudySessionController {
 
     private static final String SESSION_KEY = "studySessionState";
-    private static final String VIEW_SETUP = "setup";
     private static final String VIEW_CARD = "card";
     private static final String VIEW_COMPLETE = "complete";
+    private static final String SETUP_REDIRECT = "redirect:/study/start?mode=FLASHCARDS";
 
     private final StudySessionService studySessionService;
     private final FlashcardService flashcardService;
     private final UserService userService;
-    private final FolderService folderService;
 
     public StudySessionController(StudySessionService studySessionService,
                                   FlashcardService flashcardService,
-                                  UserService userService,
-                                  FolderService folderService) {
+                                  UserService userService) {
         this.studySessionService = studySessionService;
         this.flashcardService = flashcardService;
         this.userService = userService;
-        this.folderService = folderService;
     }
-
-    // --- Setup routes removed: now handled by StudyController ---
 
     @GetMapping("/session/next")
     public String nextCard(Model model,
@@ -71,25 +59,13 @@ public class StudySessionController {
         StudySessionState state = getState(httpSession);
 
         if (state == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            prepareSetupModel(model, user, List.of(), "Session expired. Start a new study session.");
-            if (hxRequest != null) {
-                return "fragments/study-setup :: studySetup";
-            }
-            model.addAttribute("studyStateView", VIEW_SETUP);
-            return "study-page";
+            return SETUP_REDIRECT;
         }
 
         try {
             return renderCurrentState(model, user, state, hxRequest);
         } catch (NoSuchElementException | IllegalArgumentException ex) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            prepareSetupModel(model, user, state.config().selectedDeckIds(), ex.getMessage());
-            if (hxRequest != null) {
-                return "fragments/study-setup :: studySetup";
-            }
-            model.addAttribute("studyStateView", VIEW_SETUP);
-            return "study-page";
+            return SETUP_REDIRECT;
         }
     }
 
@@ -109,13 +85,7 @@ public class StudySessionController {
         StudySessionState state = getState(httpSession);
 
         if (state == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            prepareSetupModel(model, user, List.of(), "Session expired. Start a new study session.");
-            if (hxRequest != null) {
-                return "fragments/study-setup :: studySetup";
-            }
-            model.addAttribute("studyStateView", VIEW_SETUP);
-            return "study-page";
+            return SETUP_REDIRECT;
         }
 
         try {
@@ -157,13 +127,7 @@ public class StudySessionController {
         StudySessionState state = getState(httpSession);
 
         if (state == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            prepareSetupModel(model, user, List.of(), "Session expired. Start a new study session.");
-            if (hxRequest != null) {
-                return "fragments/study-setup :: studySetup";
-            }
-            model.addAttribute("studyStateView", VIEW_SETUP);
-            return "study-page";
+            return SETUP_REDIRECT;
         }
 
         try {
@@ -171,13 +135,7 @@ public class StudySessionController {
             httpSession.setAttribute(SESSION_KEY, rebuilt);
             return renderCurrentState(model, user, rebuilt, hxRequest);
         } catch (IllegalArgumentException | NoSuchElementException ex) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            prepareSetupModel(model, user, state.config().selectedDeckIds(), ex.getMessage());
-            if (hxRequest != null) {
-                return "fragments/study-setup :: studySetup";
-            }
-            model.addAttribute("studyStateView", VIEW_SETUP);
-            return "study-page";
+            return SETUP_REDIRECT;
         }
     }
 
@@ -194,11 +152,7 @@ public class StudySessionController {
         StudySessionState state = getState(httpSession);
 
         if (state == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            prepareSetupModel(model, user, List.of(), "Session expired. Start a new study session.");
-            if (hxRequest != null) return "fragments/study-setup :: studySetup";
-            model.addAttribute("studyStateView", VIEW_SETUP);
-            return "study-page";
+            return SETUP_REDIRECT;
         }
 
         try {
@@ -216,6 +170,7 @@ public class StudySessionController {
     }
 
     private String renderCurrentState(Model model, User user, StudySessionState state, String hxRequest) {
+        model.addAttribute("mode", StudyMode.FLASHCARDS);
         if (studySessionService.isComplete(state)) {
             prepareCompletionModel(model, state);
             if (hxRequest != null) {
@@ -234,18 +189,6 @@ public class StudySessionController {
         }
         model.addAttribute("studyStateView", VIEW_CARD);
         return "study-page";
-    }
-
-    private void prepareSetupModel(Model model,
-                                   User user,
-                                   List<Long> preselectedDeckIds,
-                                   String error) {
-        List<Long> normalized = normalizeDeckIds(preselectedDeckIds);
-        List<StudyDeckGroup> deckGroups = folderService.getStudyFolderTree(user, normalized);
-        model.addAttribute("deckGroups", deckGroups);
-        model.addAttribute("preselectedDeckIds", normalized);
-        model.addAttribute("studyError", error);
-        model.addAttribute("sessionModes", SessionMode.values());
     }
 
     private void prepareCardModel(Model model, StudySessionState state, String error) {
@@ -272,21 +215,5 @@ public class StudySessionController {
             return state;
         }
         return null;
-    }
-
-    private List<Long> normalizeDeckIds(List<Long> deckIds) {
-        if (deckIds == null || deckIds.isEmpty()) {
-            return List.of();
-        }
-
-        List<Long> normalized = new ArrayList<>();
-        Set<Long> seen = new HashSet<>();
-        for (Long deckId : deckIds) {
-            if (deckId != null && seen.add(deckId)) {
-                normalized.add(deckId);
-            }
-        }
-
-        return List.copyOf(normalized);
     }
 }

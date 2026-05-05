@@ -24,10 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,16 +42,16 @@ class StudySessionControllerTests {
     private StudySessionService studySessionService;
 
     @MockitoBean
-    private DeckService deckService;
+    private FlashcardService flashcardService;
 
     @MockitoBean
-    private FlashcardService flashcardService;
+    private UserService userService;
 
     @MockitoBean
     private FolderService folderService;
 
     @MockitoBean
-    private UserService userService;
+    private DeckService deckService;
 
     private User user;
 
@@ -65,30 +62,6 @@ class StudySessionControllerTests {
         user.setUsername("alice");
 
         when(userService.getByUsername("alice")).thenReturn(user);
-        when(deckService.getStudyDeckOptions(user)).thenReturn(List.of());
-    }
-
-    @Test
-    void startStudy_UnauthorizedRedirectsToLogin() throws Exception {
-        mockMvc.perform(get("/study/start"))
-            .andExpect(status().is3xxRedirection());
-    }
-
-    @Test
-    @WithMockUser(username = "alice")
-    void createSession_InvalidDeckOwnershipRejected() throws Exception {
-        when(studySessionService.buildSession(any(StudySessionConfig.class), eq(user)))
-            .thenThrow(new NoSuchElementException("Deck not found for user"));
-
-        mockMvc.perform(post("/study/session")
-                .with(csrf())
-            .principal(() -> "alice")
-                .header("HX-Request", "true")
-                .param("selectedDeckIds", "99")
-                .param("sessionMode", "DECK_BY_DECK")
-                .param("deckOrderMode", "SELECTED_ORDER"))
-            .andExpect(status().isBadRequest())
-            .andExpect(view().name("fragments/study-setup :: studySetup"));
     }
 
     @Test
