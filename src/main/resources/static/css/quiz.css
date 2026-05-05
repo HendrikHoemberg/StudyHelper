@@ -44,8 +44,11 @@
     opacity: 0.5;
 }
 
-.sh-quiz-option--disabled {
-    cursor: default;
+.sh-quiz-option:disabled,
+.sh-quiz-option.sh-quiz-option--disabled,
+.sh-quiz-option.htmx-request {
+    opacity: 0.6;
+    cursor: not-allowed !important;
 }
 
 .sh-quiz-option-letter {

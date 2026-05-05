@@ -9,7 +9,7 @@
         <span>--:--</span>
     </div>
 
-    <form hx-post="/exam/submit" hx-target="#exam-runtime" hx-swap="outerHTML" hx-indicator="#grading-loader">
+    <form hx-post="/exam/submit" hx-target="#exam-runtime" hx-swap="outerHTML" hx-indicator="#grading-loader" hx-disabled-elt="find button[type='submit']">
         <div th:each="question, iter : ${state.questions()}" class="sh-exam-question-card">
             <div class="sh-exam-progress mb-3">
                 Question <span th:text="${iter.index + 1}">1</span> of <span th:text="${state.questions().size()}">5</span>

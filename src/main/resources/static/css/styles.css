@@ -897,6 +897,14 @@ a {
     justify-content: center;
 }
 
+.sh-btn:disabled,
+.sh-btn.is-disabled,
+.sh-btn.htmx-request {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+}
+
 /* ============================================================
    BADGES
    ============================================================ */

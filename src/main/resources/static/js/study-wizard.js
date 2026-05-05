@@ -229,12 +229,13 @@
         if (!validateStep(currentStep)) return;
         
         if (currentStep === 3) {
+            const form = document.querySelector('.sh-study-setup-card');
             if (currentMode === 'FLASHCARDS' && document.querySelector('input[name="sessionMode"]:checked').value === 'SHUFFLED') {
-                document.querySelector('.sh-study-setup-card').submit();
+                form.requestSubmit();
                 return;
             }
             if (currentMode === 'QUIZ') {
-                document.querySelector('.sh-study-setup-card').submit();
+                form.requestSubmit();
                 return;
             }
             // If Flashcards + Deck-by-deck, we go to step 4 (Order)

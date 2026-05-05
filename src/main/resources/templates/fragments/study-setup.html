@@ -45,7 +45,8 @@
           hx-post="/study/session"
           hx-target="#study-session-content"
           hx-swap="outerHTML swap:500ms"
-          hx-indicator="#quiz-generating-indicator">
+          hx-indicator="#quiz-generating-indicator"
+          hx-disabled-elt="#wizard-btn-submit, #wizard-btn-next, #wizard-btn-back">
 
         <input type="hidden" name="mode" id="study-mode-input" th:value="${mode}">
 

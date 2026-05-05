@@ -45,7 +45,8 @@
                         hx-post="/exam/answer"
                         th:hx-vals="${'js:{index: ' + currentIndex + ', answer: document.querySelector(''.sh-exam-answer'').value}'}"
                         hx-target="#exam-runtime"
-                        hx-swap="outerHTML">
+                        hx-swap="outerHTML"
+                        hx-disabled-elt="this">
                     Next <i class="fa-solid fa-chevron-right ms-2"></i>
                 </button>
 
@@ -55,7 +56,8 @@
                         th:hx-vals="${'js:{index: ' + currentIndex + ', answer: document.querySelector(''.sh-exam-answer'').value}'}"
                         hx-target="#exam-runtime"
                         hx-swap="outerHTML"
-                        hx-indicator="#grading-loader">
+                        hx-indicator="#grading-loader"
+                        hx-disabled-elt="this">
                     <i class="fa-solid fa-paper-plane me-2"></i> Submit Exam
                 </button>
             </div>

@@ -28,7 +28,8 @@
           method="post"
           hx-post="/quiz/answer"
           hx-target="#quiz-session-content"
-          hx-swap="outerHTML swap:300ms">
+          hx-swap="outerHTML swap:300ms"
+          hx-disabled-elt="find button">
         <div class="sh-quiz-options">
             <button th:each="option, iter : ${currentQuestion.options}"
                     type="submit"
@@ -76,6 +77,7 @@
                hx-get="/quiz/next"
                hx-target="#quiz-session-content"
                hx-swap="outerHTML swap:300ms"
+               hx-disabled-elt="this"
                class="sh-btn sh-btn-primary"
                style="cursor:pointer;">
                 Next Question <i data-lucide="arrow-right"></i>
@@ -84,6 +86,7 @@
                hx-get="/quiz/next"
                hx-target="#quiz-session-content"
                hx-swap="outerHTML swap:300ms"
+               hx-disabled-elt="this"
                class="sh-btn sh-btn-primary"
                style="cursor:pointer;">
                 <i data-lucide="flag"></i> View Results
