@@ -29,11 +29,18 @@
 
     <!-- Icon Selection -->
     <div>
-        <label class="sh-label">Icon</label>
+        <div class="sh-icon-picker-header">
+            <label class="sh-label mb-0">Icon</label>
+            <div class="sh-icon-tabs" id="icon-picker-tabs">
+                <button type="button" class="sh-icon-tab is-active" data-mode="standard" onclick="switchIconMode(this, 'standard')">Lucide</button>
+                <button type="button" class="sh-icon-tab" data-mode="extended" onclick="switchIconMode(this, 'extended')">Iconify</button>
+            </div>
+        </div>
+
         <div class="sh-search-bar sh-search-bar-sm mb-2">
             <span class="sh-search-icon"><i data-lucide="search"></i></span>
             <input type="text" class="sh-input sh-icon-search" placeholder="Search icons…"
-                   oninput="filterFolderIcons(this)">
+                   oninput="handleIconSearch(this)">
         </div>
         
         <div class="sh-icon-grid" th:id="${prefix + 'IconGrid'}">
