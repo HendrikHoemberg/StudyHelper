@@ -35,9 +35,7 @@
           method="post"
           hx-post="/study/session"
           hx-target="#study-session-content"
-          hx-swap="outerHTML swap:500ms"
-          hx-indicator="#ai-generating-modal"
-          hx-disabled-elt="#wizard-btn-submit, #wizard-btn-next, #wizard-btn-back">
+          hx-swap="outerHTML swap:500ms">
 
         <input type="hidden" name="mode" id="study-mode-input" th:value="${mode}">
 
@@ -97,7 +95,9 @@
                     <button type="button" class="sh-btn sh-btn-primary" id="wizard-btn-next">
                         Next <i data-lucide="arrow-right"></i>
                     </button>
-                    <button type="submit" class="sh-btn sh-btn-primary" id="wizard-btn-submit" style="display:none;">
+                    <button type="submit" class="sh-btn sh-btn-primary" id="wizard-btn-submit" style="display:none;"
+                            hx-indicator="#ai-generating-modal"
+                            hx-disabled-elt="#wizard-btn-submit, #wizard-btn-next, #wizard-btn-back">
                         <i data-lucide="play"></i> Start
                     </button>
                 </div>
