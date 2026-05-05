@@ -7,11 +7,11 @@
         <!-- Warning banners for Quiz/Exam -->
         <div th:if="${#strings.toString(mode) == 'QUIZ' or #strings.toString(mode) == 'EXAM'}">
             <div th:if="${selectionExceedsCap}" class="sh-quiz-error-banner">
-                <i data-lucide="x-circle"></i>
+                <iconify-icon icon="lucide:x-circle"></iconify-icon>
                 <span>Selection too large. Deselect some sources to continue.</span>
             </div>
             <div th:if="${selectionWarn and !selectionExceedsCap}" class="sh-quiz-warn-banner">
-                <i data-lucide="alert-triangle"></i>
+                <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
                 <span>Large selection — generation may be slow.</span>
             </div>
         </div>
@@ -19,13 +19,13 @@
         <div class="vb-picker-head">
             <div class="sh-section-title" style="margin:0">Which sources?</div>
             <button type="button" id="vb-select-all-btn" class="vb-select-all">
-                <i data-lucide="list-checks"></i>
+                <iconify-icon icon="lucide:list-checks"></iconify-icon>
                 <span class="vb-select-all-text">Select all</span>
             </button>
         </div>
 
         <div class="sh-study-search-wrap" style="margin-bottom:1rem;">
-            <i data-lucide="search" class="sh-study-search-icon"></i>
+            <iconify-icon icon="lucide:search" class="sh-study-search-icon"></iconify-icon>
             <input type="text"
                    id="sh-source-search"
                    class="sh-study-search-input"
@@ -52,7 +52,7 @@
                             <label th:each="deck : ${group.decks}" class="vb-deck" th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
                                 <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.cardCount == 0}"
                                        hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;FLASHCARDS&quot;}'}" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
-                                <span class="vb-deck-icon"><i data-lucide="layers"></i></span>
+                                <span class="vb-deck-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
                                 <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                 <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
                             </label>
@@ -76,14 +76,14 @@
                             <label th:each="deck : ${group.decks}" class="vb-deck" th:classappend="${deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
                                 <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.usableCardCount == 0}"
                                        hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds']" hx-swap="outerHTML">
-                                <span class="vb-deck-icon"><i data-lucide="layers"></i></span>
+                                <span class="vb-deck-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
                                 <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                 <span class="sh-badge sh-badge-primary" th:text="${deck.usableCardCount} + ' cards'"></span>
                             </label>
                             <label th:each="file : ${group.files}" class="vb-file" th:classappend="${!file.isSupported ? ' is-disabled' : (#lists.contains(preselectedFileIds, file.fileId) ? ' is-selected' : '')}">
                                 <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedFileIds" th:value="${file.fileId}" th:checked="${#lists.contains(preselectedFileIds, file.fileId)}" th:disabled="${!file.isSupported}"
                                        hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds']" hx-swap="outerHTML">
-                                <span class="vb-file-icon"><i data-lucide="file-text"></i></span>
+                                <span class="vb-file-icon"><iconify-icon icon="lucide:file-text"></iconify-icon></span>
                                 <span class="vb-file-name" th:text="${file.filename}">file.pdf</span>
                                 <span class="sh-badge" th:text="${file.extension.toUpperCase()}"></span>
                             </label>

@@ -7,7 +7,7 @@
     <div th:if="${studyError}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${studyError}"></div>
         <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
-            <i data-lucide="x"></i>
+            <iconify-icon icon="lucide:x"></iconify-icon>
         </button>
     </div>
 
@@ -64,7 +64,7 @@
                             <input type="hidden" name="isCorrect" value="true">
                             <button type="submit" class="sh-study-btn-answer sh-study-btn-correct"
                                     title="Correct">
-                                <i data-lucide="check"></i>
+                                <iconify-icon icon="lucide:check"></iconify-icon>
                             </button>
                         </form>
 
@@ -76,7 +76,7 @@
                             <input type="hidden" name="isCorrect" value="false">
                             <button type="submit" class="sh-study-btn-answer sh-study-btn-incorrect"
                                     title="Incorrect">
-                                <i data-lucide="x"></i>
+                                <iconify-icon icon="lucide:x"></iconify-icon>
                             </button>
                         </form>
                     </div>

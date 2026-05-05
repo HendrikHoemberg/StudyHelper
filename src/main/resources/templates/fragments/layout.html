@@ -30,7 +30,7 @@
         <a href="/dashboard" class="topnav-brand"
            hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
             <span class="topnav-brand-icon">
-                <i data-lucide="book-open"></i>
+                <iconify-icon icon="lucide:book-open"></iconify-icon>
             </span>
             <span class="topnav-brand-name">StudyHelper</span>
         </a>
@@ -38,73 +38,73 @@
         <div class="topnav-links">
             <a href="/dashboard" class="topnav-link"
                hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
-                <i data-lucide="layout-dashboard"></i>
+                <iconify-icon icon="lucide:layout-dashboard"></iconify-icon>
                 Dashboard
             </a>
             <a href="/study/start" class="topnav-link"
                hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
-                <i data-lucide="book-open"></i>
+                <iconify-icon icon="lucide:book-open"></iconify-icon>
                 Study Session
             </a>
             <a href="/exams" class="topnav-link"
                hx-get="/exams" hx-target="#explorer-detail" hx-push-url="true">
-                <i data-lucide="clipboard-list"></i>
+                <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
                 Past Exams
             </a>
         </div>
 
         <div class="topnav-right">
             <span class="topnav-user">
-                <i data-lucide="user"></i>
+                <iconify-icon icon="lucide:user"></iconify-icon>
                 <span th:text="${username}">User</span>
             </span>
             <button class="sh-btn sh-btn-ghost sh-btn-icon topnav-theme-btn" type="button" onclick="toggleTheme()" title="Toggle theme">
-                <i data-lucide="sun" class="theme-icon-light"></i>
-                <i data-lucide="moon" class="theme-icon-dark"></i>
+                <iconify-icon icon="lucide:sun" class="theme-icon-light"></iconify-icon>
+                <iconify-icon icon="lucide:moon" class="theme-icon-dark"></iconify-icon>
             </button>
             <form th:action="@{/logout}" method="post" style="display:contents;">
                 <button type="submit" class="sh-btn sh-btn-ghost sh-btn-sm topnav-logout-btn">
-                    <i data-lucide="log-out"></i>
+                    <iconify-icon icon="lucide:log-out"></iconify-icon>
                     Sign out
                 </button>
             </form>
         </div>
 
         <button id="topnav-menu-btn" class="sh-btn sh-btn-ghost sh-btn-icon topnav-mobile-toggle" type="button">
-            <i data-lucide="menu"></i>
+            <iconify-icon icon="lucide:menu"></iconify-icon>
         </button>
     </div>
 
     <div class="topnav-mobile-menu" id="topnav-mobile-menu">
         <a href="/dashboard" class="topnav-mobile-link"
            hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
-            <i data-lucide="layout-dashboard"></i>
+            <iconify-icon icon="lucide:layout-dashboard"></iconify-icon>
             Dashboard
         </a>
         <a href="/study/start" class="topnav-mobile-link"
            hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
-            <i data-lucide="book-open"></i>
+            <iconify-icon icon="lucide:book-open"></iconify-icon>
             Study Session
         </a>
         <a href="/exams" class="topnav-mobile-link"
            hx-get="/exams" hx-target="#explorer-detail" hx-push-url="true">
-            <i data-lucide="clipboard-list"></i>
+            <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
             Past Exams
         </a>
         <div class="topnav-mobile-divider"></div>
         <span class="topnav-mobile-user">
-            <i data-lucide="user"></i>
+            <iconify-icon icon="lucide:user"></iconify-icon>
             <span th:text="${username}">User</span>
         </span>
         <form th:action="@{/logout}" method="post">
             <button type="submit" class="topnav-mobile-link">
-                <i data-lucide="log-out"></i>
+                <iconify-icon icon="lucide:log-out"></iconify-icon>
                 Sign out
             </button>
         </form>
         <button class="topnav-mobile-link" type="button" onclick="toggleTheme()">
-            <i data-lucide="sun" class="theme-icon-light"></i>
-            <i data-lucide="moon" class="theme-icon-dark"></i>
+            <iconify-icon icon="lucide:sun" class="theme-icon-light"></iconify-icon>
+            <iconify-icon icon="lucide:moon" class="theme-icon-dark"></iconify-icon>
             Toggle theme
         </button>
     </div>
@@ -112,7 +112,6 @@
 
 <!-- Layout fragment: scripts -->
 <div th:fragment="scripts">
-    <script src="/js/lucide.min.js"></script>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <script src="/js/lib/fabric.min.js"></script>

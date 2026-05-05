@@ -9,7 +9,7 @@
             <div class="sh-modal-header">
                 <h5 class="sh-modal-title" th:text="${title}">Flashcard</h5>
                 <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').remove()">
-                    <i data-lucide="x"></i>
+                    <iconify-icon icon="lucide:x"></iconify-icon>
                 </button>
             </div>
             <form th:action="${action}" method="post"
@@ -35,15 +35,15 @@
                                  th:attr="data-existing-url=${frontImageUrl}">
                                 <img th:src="${frontImageUrl}" class="sh-img-preview sh-lightbox-trigger" alt="Front image">
                                 <button type="button" class="sh-img-edit-btn" data-side="front" aria-label="Edit image">
-                                    <i data-lucide="pencil"></i>
+                                    <iconify-icon icon="lucide:pencil"></iconify-icon>
                                 </button>
                                 <button type="button" class="sh-img-remove-btn" id="front-remove-btn">
-                                    <i data-lucide="x"></i>
+                                    <iconify-icon icon="lucide:x"></iconify-icon>
                                 </button>
                             </div>
                             <label th:class="${frontImageUrl != null} ? 'sh-img-drop-label is-hidden' : 'sh-img-drop-label'"
                                    id="front-drop-label" for="frontImageInput">
-                                <i data-lucide="image-plus"></i>
+                                <iconify-icon icon="lucide:image-plus"></iconify-icon>
                                 <span>Add image</span>
                             </label>
                             <input type="file" id="frontImageInput" name="frontImage"
@@ -64,15 +64,15 @@
                                  th:attr="data-existing-url=${backImageUrl}">
                                 <img th:src="${backImageUrl}" class="sh-img-preview sh-lightbox-trigger" alt="Back image">
                                 <button type="button" class="sh-img-edit-btn" data-side="back" aria-label="Edit image">
-                                    <i data-lucide="pencil"></i>
+                                    <iconify-icon icon="lucide:pencil"></iconify-icon>
                                 </button>
                                 <button type="button" class="sh-img-remove-btn" id="back-remove-btn">
-                                    <i data-lucide="x"></i>
+                                    <iconify-icon icon="lucide:x"></iconify-icon>
                                 </button>
                             </div>
                             <label th:class="${backImageUrl != null} ? 'sh-img-drop-label is-hidden' : 'sh-img-drop-label'"
                                    id="back-drop-label" for="backImageInput">
-                                <i data-lucide="image-plus"></i>
+                                <iconify-icon icon="lucide:image-plus"></iconify-icon>
                                 <span>Add image</span>
                             </label>
                             <input type="file" id="backImageInput" name="backImage"
@@ -164,13 +164,13 @@
                     editBtn.className = 'sh-img-edit-btn';
                     editBtn.setAttribute('data-side', side);
                     editBtn.setAttribute('aria-label', 'Edit image');
-                    editBtn.innerHTML = '<i data-lucide="pencil"></i>';
+                    editBtn.innerHTML = '<iconify-icon icon="lucide:pencil"></iconify-icon>';
                     editBtn.addEventListener('click', function() { openEditor(side); });
 
                     var btn = document.createElement('button');
                     btn.type = 'button';
                     btn.className = 'sh-img-remove-btn';
-                    btn.innerHTML = '<i data-lucide="x"></i>';
+                    btn.innerHTML = '<iconify-icon icon="lucide:x"></iconify-icon>';
                     btn.addEventListener('click', clearPreview);
 
                     wrap.appendChild(img);

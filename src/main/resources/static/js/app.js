@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Re-run initializations after HTMX swaps
 document.body.addEventListener('htmx:afterSwap', () => {
-    initIcons();
+    // No-op for now as iconify-icon is a web component and handles itself
 });
 
 // Optional fade-in animation after settle
@@ -74,25 +74,9 @@ function toggleTheme() {
     localStorage.setItem('theme', next);
 }
 
-/* ---------- Icons (Lucide + Iconify) ---------- */
+/* ---------- Icons (Iconify Only) ---------- */
 function initIcons() {
-    // 1. Init Lucide
-    if (window.lucide) {
-        lucide.createIcons();
-    }
-    
-    // 2. Handle Iconify integration for any [data-lucide] that contains a colon
-    // This allows us to use Iconify icons in existing Lucide-targeted elements
-    document.querySelectorAll('[data-lucide*=":"]').forEach(el => {
-        const iconName = el.getAttribute('data-lucide');
-        const iconifyTag = document.createElement('iconify-icon');
-        iconifyTag.setAttribute('icon', iconName);
-        
-        // Copy relevant styles/classes if needed
-        if (el.style.width) iconifyTag.style.fontSize = el.style.width;
-        
-        el.parentNode.replaceChild(iconifyTag, el);
-    });
+    // No-op: iconify-icon web component handles its own lifecycle
 }
 
 function initLucide() {
@@ -118,40 +102,12 @@ function syncColorHex(input, target) {
     if (targetEl) targetEl.value = input.value;
 }
 
-/* ---------- Folder Icons (Hybrid Picker) ---------- */
+/* ---------- Folder Icons (Iconify Search) ---------- */
 
-let iconPickerMode = 'standard'; // 'standard' or 'extended'
 let iconifySearchTimeout = null;
 
-function switchIconMode(btn, mode) {
-    const tabs = btn.closest('.sh-icon-tabs');
-    tabs.querySelectorAll('.sh-icon-tab').forEach(t => t.classList.remove('is-active'));
-    btn.classList.add('is-active');
-    
-    iconPickerMode = mode;
-    const modal = btn.closest('.sh-modal');
-    const searchInput = modal.querySelector('.sh-icon-search');
-    searchInput.value = '';
-    
-    // Show/hide Iconify filters
-    const filters = modal.querySelector('#iconify-filters');
-    if (filters) filters.style.display = (mode === 'extended') ? 'block' : 'none';
-    
-    // Reset grid
-    const grid = modal.querySelector('.sh-icon-grid');
-    grid.innerHTML = '';
-    grid.dataset.rendered = '';
-    
-    const selectedIcon = modal.querySelector('input[name="iconName"]')?.value || 'folder';
-    renderIconGrid(modal, selectedIcon);
-}
-
 function handleIconSearch(input) {
-    if (iconPickerMode === 'standard') {
-        filterFolderIcons(input);
-    } else {
-        debouncedIconifySearch(input);
-    }
+    debouncedIconifySearch(input);
 }
 
 function debouncedIconifySearch(input) {
@@ -161,21 +117,18 @@ function debouncedIconifySearch(input) {
     const grid = modal.querySelector('.sh-icon-grid');
 
     if (query.length < 2) {
-        grid.innerHTML = '<div class="sh-sidebar-empty">Type at least 2 chars...</div>';
+        grid.innerHTML = '<div class="sh-sidebar-empty">Type at least 2 chars to search...</div>';
         return;
     }
 
-    grid.innerHTML = '<div class="sh-sidebar-empty">Searching Iconify...</div>';
+    grid.innerHTML = '<div class="sh-sidebar-empty">Searching icons...</div>';
     
-    const squareOnly = modal.querySelector('#iconify-square-only')?.checked;
     const squarePrefixes = 'lucide,heroicons,ph,mdi,tabler,octicon,bi,ri,fluent,carbon,ic';
-    const prefixParam = squareOnly ? `&prefixes=${squarePrefixes}` : '';
 
     iconifySearchTimeout = setTimeout(() => {
-        fetch(`https://api.iconify.design/search?query=${encodeURIComponent(query)}&limit=40${prefixParam}`)
+        fetch(`https://api.iconify.design/search?query=${encodeURIComponent(query)}&limit=40&prefixes=${squarePrefixes}`)
             .then(res => res.json())
             .then(data => {
-                if (iconPickerMode !== 'extended') return; // Mode changed while fetching
                 renderIconifyResults(modal, data.icons || []);
             })
             .catch(err => {
@@ -208,29 +161,8 @@ function renderIconGrid(modal, selectedIcon) {
     const grid = modal.querySelector('.sh-icon-grid');
     if (!grid) return;
 
-    if (iconPickerMode === 'standard') {
-        if (!grid.dataset.rendered) {
-            const fallbackIcons = ['folder', 'layers', 'book', 'bookmark', 'calendar', 'clipboard', 'file', 'image', 'star', 'tag', 'heart', 'flag', 'briefcase', 'home', 'settings', 'user', 'search', 'mail', 'lock', 'bell'];
-            const lucideIcons = (window.lucide && lucide.icons) ? Object.keys(lucide.icons) : [];
-            const icons = lucideIcons.length > 5 ? lucideIcons.sort() : fallbackIcons;
-            
-            grid.innerHTML = icons.map(name =>
-                `<button type="button" class="sh-icon-btn" data-icon="${name}" title="${name}" ` +
-                `onclick="selectFolderIcon(this,'${name}')"><i data-lucide="${name}"></i></button>`
-            ).join('');
-            grid.dataset.rendered = '1';
-            if (window.lucide) lucide.createIcons({
-                attrs: { style: 'width:22px; height:22px;' },
-                nameAttr: 'data-lucide',
-                root: grid
-            });
-        }
-    } else {
-        // Extended mode usually starts empty or with search results
-        if (!grid.innerHTML || grid.dataset.rendered === '1') {
-            grid.innerHTML = '<div class="sh-sidebar-empty">Search thousands of icons...</div>';
-            grid.dataset.rendered = 'extended';
-        }
+    if (!grid.innerHTML) {
+        grid.innerHTML = '<div class="sh-sidebar-empty">Start typing to find icons...</div>';
     }
 
     grid.querySelectorAll('.sh-icon-btn').forEach(b => {
@@ -269,14 +201,6 @@ function updateFolderPreview(modal) {
     
     preview.style.setProperty('--preview-color', color);
     
-    if (iconName.includes(':')) {
-        preview.innerHTML = `<iconify-icon icon="${iconName}" style="font-size:22px;"></iconify-icon>`;
-    } else {
-        preview.innerHTML = `<i data-lucide="${iconName}" style="width:22px;height:22px;"></i>`;
-        if (window.lucide) lucide.createIcons({
-            attrs: { style: 'width:22px; height:22px;' },
-            nameAttr: 'data-lucide',
-            root: preview
-        });
-    }
+    const fullIconName = iconName.includes(':') ? iconName : `lucide:${iconName}`;
+    preview.innerHTML = `<iconify-icon icon="${fullIconName}" style="font-size:22px;"></iconify-icon>`;
 }

@@ -6,7 +6,7 @@
     <!-- Preview & Name Row -->
     <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
         <div class="sh-edit-preview" th:id="${prefix + 'FolderPreview'}" th:style="'--preview-color:' + ${colorHex}">
-            <i th:attr="data-lucide=${iconName ?: 'folder'}" style="width:22px;height:22px;"></i>
+            <iconify-icon th:attr="icon=${iconName.contains(':') ? iconName : 'lucide:' + (iconName ?: 'folder')}" style="font-size:22px;"></iconify-icon>
         </div>
         <div style="flex:1;">
             <label class="sh-label">Name</label>
@@ -31,24 +31,17 @@
     <div>
         <div class="sh-icon-picker-header">
             <label class="sh-label mb-0">Icon</label>
-            <div class="sh-icon-tabs" id="icon-picker-tabs">
-                <button type="button" class="sh-icon-tab is-active" data-mode="standard" onclick="switchIconMode(this, 'standard')">Lucide</button>
-                <button type="button" class="sh-icon-tab" data-mode="extended" onclick="switchIconMode(this, 'extended')">Iconify</button>
-            </div>
+            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">Iconify Extended Set</span>
         </div>
 
-        <div class="sh-search-bar sh-search-bar-sm mb-2">
-            <span class="sh-search-icon"><i data-lucide="search"></i></span>
-            <input type="text" class="sh-input sh-icon-search" placeholder="Search icons…"
+        <div class="sh-search-bar sh-search-bar-sm mb-3">
+            <span class="sh-search-icon"><iconify-icon icon="lucide:search"></iconify-icon></span>
+            <input type="text" class="sh-input sh-icon-search" placeholder="Search for square icons…"
                    oninput="handleIconSearch(this)">
         </div>
-
-        <div id="iconify-filters" class="mb-3" style="display: none; padding: 0 0.25rem;">
-            <label class="sh-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.75rem; color: var(--text-muted);">
-                <input type="checkbox" id="iconify-square-only" checked onchange="handleIconSearch(this.closest('.sh-modal').querySelector('.sh-icon-search'))">
-                Square icons only (UI Sets)
-            </label>
-        </div>
+        
+        <!-- Hidden checkbox to maintain logic -->
+        <input type="checkbox" id="iconify-square-only" checked style="display:none;">
         
         <div class="sh-icon-grid" th:id="${prefix + 'IconGrid'}">
             <!-- Icons rendered by JS -->
@@ -66,7 +59,7 @@
             <div class="sh-modal-header">
                 <h5 class="sh-modal-title" th:text="${title}">Folder</h5>
                 <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').remove()">
-                    <i data-lucide="x"></i>
+                    <iconify-icon icon="lucide:x"></iconify-icon>
                 </button>
             </div>
             <form th:action="${action}" method="post">

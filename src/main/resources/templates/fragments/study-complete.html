@@ -7,7 +7,7 @@
     <div th:if="${studyError}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${studyError}"></div>
         <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
-            <i data-lucide="x"></i>
+            <iconify-icon icon="lucide:x"></iconify-icon>
         </button>
     </div>
 
@@ -22,12 +22,12 @@
 
             <div class="sh-study-stats-grid">
                 <div class="sh-study-stat sh-study-stat--correct">
-                    <div class="sh-study-stat-icon"><i data-lucide="check"></i></div>
+                    <div class="sh-study-stat-icon"><iconify-icon icon="lucide:check"></iconify-icon></div>
                     <div class="sh-study-stat-label">Correct</div>
                     <div class="sh-study-stat-value" th:text="${stats.correctAnswers}">0</div>
                 </div>
                 <div class="sh-study-stat sh-study-stat--incorrect">
-                    <div class="sh-study-stat-icon"><i data-lucide="x"></i></div>
+                    <div class="sh-study-stat-icon"><iconify-icon icon="lucide:x"></iconify-icon></div>
                     <div class="sh-study-stat-label">Incorrect</div>
                     <div class="sh-study-stat-value" th:text="${stats.incorrectAnswers}">0</div>
                 </div>
@@ -41,7 +41,7 @@
                       hx-target="#study-session-content"
                       hx-swap="outerHTML">
                     <button type="submit" class="sh-btn sh-btn-secondary">
-                        <i data-lucide="x-circle"></i>
+                        <iconify-icon icon="lucide:x-circle"></iconify-icon>
                         Redo Incorrect (<span th:text="${incorrectCardCount}">0</span>)
                     </button>
                 </form>
@@ -50,18 +50,18 @@
                       hx-target="#study-session-content"
                       hx-swap="outerHTML">
                     <button type="submit" class="sh-btn sh-btn-primary">
-                        <i data-lucide="refresh-cw"></i>
+                        <iconify-icon icon="lucide:refresh-cw"></iconify-icon>
                         Redo Session
                     </button>
                 </form>
                 <a href="/study/start" class="sh-btn sh-btn-secondary"
                    hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
-                    <i data-lucide="settings"></i>
+                    <iconify-icon icon="lucide:settings"></iconify-icon>
                     Reconfigure
                 </a>
                 <a href="/dashboard" class="sh-btn sh-btn-secondary"
                    hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
-                    <i data-lucide="layout-dashboard"></i>
+                    <iconify-icon icon="lucide:layout-dashboard"></iconify-icon>
                     Back to Dashboard
                 </a>
             </div>

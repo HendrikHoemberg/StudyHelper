@@ -7,7 +7,7 @@
         <div class="sh-sidebar-header">
             <div class="sh-sidebar-title">Folders</div>
             <button class="sh-btn sh-btn-ghost sh-btn-icon" hx-get="/folders/new" hx-target="#modal-placeholder" title="New folder">
-                <i data-lucide="plus"></i>
+                <iconify-icon icon="lucide:plus"></iconify-icon>
             </button>
         </div>
         <div th:if="${#lists.isEmpty(sidebarTree)}" class="sh-sidebar-empty">
@@ -24,11 +24,11 @@
                             th:if="${!#lists.isEmpty(folder.children)}"
                             hx-on:click="this.closest('.sh-d-folder').classList.toggle('is-open')"
                             title="Expand / collapse">
-                        <i th:attr="data-lucide=${folder.iconName ?: 'folder'}" class="sh-d-cap-icon-closed"></i>
-                        <i th:attr="data-lucide=${folder.iconName ?: 'folder'}" class="sh-d-cap-icon-open"></i>
+                        <iconify-icon th:attr="icon=${folder.iconName.contains(':') ? folder.iconName : 'lucide:' + (folder.iconName ?: 'folder')}" class="sh-d-cap-icon-closed"></iconify-icon>
+                        <iconify-icon th:attr="icon=${folder.iconName.contains(':') ? folder.iconName : 'lucide:' + (folder.iconName ?: 'folder')}" class="sh-d-cap-icon-open"></iconify-icon>
                     </button>
                     <span th:if="${#lists.isEmpty(folder.children)}" class="sh-d-pill-cap sh-d-pill-cap-static">
-                        <i th:attr="data-lucide=${folder.iconName ?: 'folder'}"></i>
+                        <iconify-icon th:attr="icon=${folder.iconName.contains(':') ? folder.iconName : 'lucide:' + (folder.iconName ?: 'folder')}"></iconify-icon>
                     </span>
                     <a th:href="@{/folders/{id}(id=${folder.id})}"
                        class="sh-d-pill-name"
@@ -58,13 +58,13 @@
     </div>
     <a href="/study/start" class="sh-btn sh-btn-secondary sh-sidebar-cta"
        hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
-        <i data-lucide="book-open"></i>
+        <iconify-icon icon="lucide:book-open"></iconify-icon>
         Start Studying
     </a>
     <a href="/exams" class="sh-btn sh-btn-ghost sh-sidebar-cta mt-2"
        hx-get="/exams" hx-target="#explorer-detail" hx-push-url="true"
        style="justify-content: flex-start; padding-left: 1rem; border: 1px solid var(--border-color);">
-        <i data-lucide="clipboard-list"></i>
+        <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
         Past Exams
     </a>
 </aside>

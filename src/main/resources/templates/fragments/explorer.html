@@ -8,7 +8,7 @@
     <div th:if="${error}" class="sh-alert sh-alert-danger" style="grid-column: 1 / -1; margin-bottom: 1rem;">
         <div class="sh-alert-body" th:text="${error}"></div>
         <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
-            <i data-lucide="x"></i>
+            <iconify-icon icon="lucide:x"></iconify-icon>
         </button>
     </div>
 
@@ -21,11 +21,11 @@
             <div class="sh-page-actions">
                 <a href="/study/start" class="sh-btn sh-btn-secondary"
                    hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
-                    <i data-lucide="book-open"></i>
+                    <iconify-icon icon="lucide:book-open"></iconify-icon>
                     Start Studying
                 </a>
                 <button class="sh-btn sh-btn-primary" hx-get="/folders/new" hx-target="#modal-placeholder">
-                    <i data-lucide="plus"></i>
+                    <iconify-icon icon="lucide:plus"></iconify-icon>
                     New Folder
                 </button>
             </div>
@@ -34,7 +34,7 @@
         <div class="sh-dashboard-search">
             <div class="sh-search-bar sh-search-bar-lg">
                 <span class="sh-search-icon">
-                    <i data-lucide="search"></i>
+                    <iconify-icon icon="lucide:search"></iconify-icon>
                 </span>
                 <input type="text" name="q" class="sh-input sh-search-input" placeholder="Search decks and files..."
                        hx-get="/dashboard"
@@ -48,7 +48,7 @@
 
         <div th:if="${#lists.isEmpty(deckOptions)} and ${#lists.isEmpty(fileSummaries)}" class="sh-empty">
             <div class="sh-empty-icon">
-                <i data-lucide="layers"></i>
+                <iconify-icon icon="lucide:layers"></iconify-icon>
             </div>
             <p class="sh-empty-text">No decks or files yet</p>
             <p class="sh-empty-hint">Create a deck or upload a file to see it here.</p>
@@ -65,7 +65,7 @@
                        hx-get th:hx-get="@{/decks/{id}(id=${deck.deckId})}"
                        hx-target="#explorer-detail" hx-push-url="true">
                         <span class="sh-deck-cover-icon">
-                            <i data-lucide="layers"></i>
+                            <iconify-icon icon="lucide:layers"></iconify-icon>
                         </span>
                     </a>
                     <div class="sh-deck-body">
@@ -76,7 +76,7 @@
                     <button class="sh-deck-edit-btn" title="Edit Deck"
                             th:hx-get="@{/decks/{id}/rename(id=${deck.deckId})}"
                             hx-target="#modal-placeholder">
-                        <i data-lucide="pencil"></i>
+                        <iconify-icon icon="lucide:pencil"></iconify-icon>
                     </button>
                 </div>
 
@@ -92,7 +92,7 @@
                              th:src="@{/files/{id}/view(id=${file.id})}"
                              class="sh-deck-cover-img" alt="Preview">
                         <span th:unless="${#strings.startsWith(file.mimeType, 'image/')}" class="sh-deck-cover-icon">
-                            <i data-lucide="file"></i>
+                            <iconify-icon icon="lucide:file"></iconify-icon>
                         </span>
                     </a>
                     <div class="sh-deck-body">
@@ -106,12 +106,12 @@
                        th:href="@{'/study/start'(mode='QUIZ', fileId=${file.id})}"
                        hx-get="/study/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
                        hx-target="#explorer-detail" hx-push-url="true">
-                        <i data-lucide="sparkles"></i>
+                        <iconify-icon icon="lucide:sparkles"></iconify-icon>
                     </a>
                     <button class="sh-deck-edit-btn" title="Edit Options"
                             th:hx-get="@{/files/{id}/edit-options(id=${file.id})}"
                             hx-target="#modal-placeholder">
-                        <i data-lucide="pencil"></i>
+                        <iconify-icon icon="lucide:pencil"></iconify-icon>
                     </button>
                 </div>
             </div>

@@ -9,7 +9,7 @@
     <div th:if="${error}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${error}"></div>
         <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
-            <i data-lucide="x"></i>
+            <iconify-icon icon="lucide:x"></iconify-icon>
         </button>
     </div>
 
@@ -35,7 +35,7 @@
     <div class="sh-page-header">
         <div class="flex items-center gap-3">
             <div class="sh-folder-card-icon" th:style="'--folder-color:' + ${view.folder.colorHex}">
-                <i th:attr="data-lucide=${view.folder.iconName ?: 'folder'}"></i>
+                <iconify-icon th:attr="icon=${view.folder.iconName != null && view.folder.iconName.contains(':') ? view.folder.iconName : 'lucide:' + (view.folder.iconName ?: 'folder')}"></iconify-icon>
             </div>
             <div>
                 <h1 class="sh-page-title" th:text="${view.folder.name}">Folder Name</h1>
@@ -49,29 +49,29 @@
                th:href="@{'/study/start'(folderId=${view.folder.id})}"
                hx-get="/study/start" th:hx-vals="${'{&quot;folderId&quot;: ' + view.folder.id + '}'}"
                hx-target="#explorer-detail" hx-push-url="true">
-                <i data-lucide="play"></i>
+                <iconify-icon icon="lucide:play"></iconify-icon>
                 Study
             </a>
             <button th:if="${view.folder.parentFolder == null}" class="sh-btn sh-btn-secondary sh-btn-sm" 
                     th:hx-get="@{/folders/new(parentId=${view.folder.id})}" hx-target="#modal-placeholder">
-                <i data-lucide="folder-plus"></i>
+                <iconify-icon icon="lucide:folder-plus"></iconify-icon>
                 Subfolder
             </button>
             <button class="sh-btn sh-btn-secondary sh-btn-sm" 
                     th:hx-get="@{/folders/{fid}/decks/new(fid=${view.folder.id})}"
                     hx-target="#modal-placeholder">
-                <i data-lucide="layers"></i>
+                <iconify-icon icon="lucide:layers"></iconify-icon>
                 Deck
             </button>
             <button class="sh-btn sh-btn-secondary sh-btn-sm"
                     th:hx-get="@{/folders/{fid}/files/upload(fid=${view.folder.id})}"
                     hx-target="#modal-placeholder">
-                <i data-lucide="upload"></i>
+                <iconify-icon icon="lucide:upload"></iconify-icon>
                 Upload
             </button>
             <button class="sh-btn sh-btn-secondary sh-btn-sm"
                     th:hx-get="@{/folders/{id}/edit(id=${view.folder.id})}" hx-target="#modal-placeholder">
-                <i data-lucide="pencil"></i>
+                <iconify-icon icon="lucide:pencil"></iconify-icon>
                 Edit
             </button>
             <button class="sh-btn sh-btn-danger sh-btn-sm"
@@ -79,7 +79,7 @@
                     hx-confirm="Delete this folder and all its contents? This action cannot be undone."
                     hx-target="#explorer-detail"
                     hx-push-url="true">
-                <i data-lucide="trash-2"></i>
+                <iconify-icon icon="lucide:trash-2"></iconify-icon>
                 Delete
             </button>
         </div>
@@ -96,7 +96,7 @@
                hx-get th:hx-get="@{/folders/{id}(id=${sub.id})}"
                hx-target="#explorer-detail" hx-push-url="true">
                 <span class="sh-d-pill-cap sh-d-pill-cap-static">
-                    <i th:attr="data-lucide=${sub.iconName ?: 'folder'}"></i>
+                    <iconify-icon th:attr="icon=${sub.iconName != null && sub.iconName.contains(':') ? sub.iconName : 'lucide:' + (sub.iconName ?: 'folder')}"></iconify-icon>
                 </span>
                 <span class="sh-d-pill-name">
                     <span class="sh-d-pill-text" th:text="${sub.name}">Subfolder</span>
@@ -117,7 +117,7 @@
                hx-target="#explorer-detail" hx-push-url="true">
                 <div class="sh-deck-info">
                     <div class="sh-deck-icon">
-                        <i data-lucide="layers"></i>
+                        <iconify-icon icon="lucide:layers"></iconify-icon>
                     </div>
                     <div>
                         <div class="sh-deck-name" th:text="${deck.name}">Deck Name</div>
@@ -135,7 +135,7 @@
             <button class="sh-btn sh-btn-primary sh-btn-sm"
                     th:hx-get="@{/folders/{fid}/files/upload(fid=${view.folder.id})}"
                     hx-target="#modal-placeholder">
-                <i data-lucide="upload"></i>
+                <iconify-icon icon="lucide:upload"></iconify-icon>
                 Upload File
             </button>
         </div>
@@ -187,13 +187,13 @@
                                th:href="@{'/study/start'(mode='QUIZ', fileId=${file.id})}"
                                hx-get="/study/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
                                hx-target="#explorer-detail" hx-push-url="true">
-                                <i data-lucide="sparkles"></i>
+                                <iconify-icon icon="lucide:sparkles"></iconify-icon>
                                 Quiz
                             </a>
                             <button class="sh-btn sh-btn-ghost sh-btn-sm"
                                     th:hx-get="@{/files/{id}/edit-options(id=${file.id})}"
                                     hx-target="#modal-placeholder">
-                                <i data-lucide="pencil"></i>
+                                <iconify-icon icon="lucide:pencil"></iconify-icon>
                                 Edit
                             </button>
                             <a th:href="@{/files/{id}/view(id=${file.id})}" target="_blank"

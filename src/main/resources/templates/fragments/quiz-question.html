@@ -53,10 +53,8 @@
                                : ' sh-quiz-option--neutral'))}">
             <span class="sh-quiz-option-letter" th:text="${{'A','B','C','D'}[iter.index]}">A</span>
             <span class="sh-quiz-option-text" th:text="${option}">Option text</span>
-            <i th:if="${isCorrect}" data-lucide="check-circle"
-               class="sh-quiz-option-result-icon sh-quiz-result-correct"></i>
-            <i th:if="${isSelected and !isCorrect}" data-lucide="x-circle"
-               class="sh-quiz-option-result-icon sh-quiz-result-wrong"></i>
+            <iconify-icon th:if="${isCorrect}" icon="lucide:check-circle" class="sh-quiz-option-result-icon sh-quiz-result-correct"></iconify-icon>
+            <iconify-icon th:if="${isSelected and !isCorrect}" icon="lucide:x-circle" class="sh-quiz-option-result-icon sh-quiz-result-wrong"></iconify-icon>
         </div>
     </div>
 
@@ -64,12 +62,12 @@
     <div th:if="${answered}" class="sh-quiz-feedback">
         <div th:if="${selectedOption == currentQuestion.correctOptionIndex}"
              class="sh-alert sh-alert-success">
-            <i data-lucide="check-circle"></i>
+            <iconify-icon icon="lucide:check-circle"></iconify-icon>
             Correct!
         </div>
         <div th:unless="${selectedOption == currentQuestion.correctOptionIndex}"
              class="sh-alert sh-alert-danger">
-            <i data-lucide="x-circle"></i>
+            <iconify-icon icon="lucide:x-circle"></iconify-icon>
             Incorrect.
         </div>
         <div class="sh-quiz-feedback-actions">
@@ -80,7 +78,7 @@
                hx-disabled-elt="this"
                class="sh-btn sh-btn-primary"
                style="cursor:pointer;">
-                Next Question <i data-lucide="arrow-right"></i>
+                Next Question <iconify-icon icon="lucide:arrow-right"></iconify-icon>
             </a>
             <a th:if="${questionNumber >= totalQuestions}"
                hx-get="/quiz/next"
@@ -89,7 +87,7 @@
                hx-disabled-elt="this"
                class="sh-btn sh-btn-primary"
                style="cursor:pointer;">
-                <i data-lucide="flag"></i> View Results
+                <iconify-icon icon="lucide:flag"></iconify-icon> View Results
             </a>
         </div>
     </div>

@@ -7,7 +7,7 @@
     <div th:if="${studyError}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${studyError}"></div>
         <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
-            <i data-lucide="x"></i>
+            <iconify-icon icon="lucide:x"></iconify-icon>
         </button>
     </div>
 
@@ -19,7 +19,7 @@
         <div class="sh-page-actions">
             <a href="/dashboard" class="sh-btn sh-btn-secondary"
                hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
-                <i data-lucide="arrow-left"></i>
+                <iconify-icon icon="lucide:arrow-left"></iconify-icon>
                 Back to Dashboard
             </a>
         </div>
@@ -48,7 +48,7 @@
                     <label class="sh-study-choice" onclick="selectStudyMode(this, 'FLASHCARDS')">
                         <input type="radio" name="mode_picker" value="FLASHCARDS" th:checked="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).FLASHCARDS}">
                         <div class="sh-study-choice-icon">
-                            <i data-lucide="book-open"></i>
+                            <iconify-icon icon="lucide:book-open"></iconify-icon>
                         </div>
                         <div class="sh-study-choice-title">Flashcards</div>
                         <div class="sh-study-choice-subtitle">
@@ -58,7 +58,7 @@
                     <label class="sh-study-choice" onclick="selectStudyMode(this, 'QUIZ')">
                         <input type="radio" name="mode_picker" value="QUIZ" th:checked="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).QUIZ}">
                         <div class="sh-study-choice-icon">
-                            <i data-lucide="list-checks"></i>
+                            <iconify-icon icon="lucide:list-checks"></iconify-icon>
                         </div>
                         <div class="sh-study-choice-title">AI Quiz</div>
                         <div class="sh-study-choice-subtitle">
@@ -68,7 +68,7 @@
                     <label class="sh-study-choice" onclick="selectStudyMode(this, 'EXAM')">
                         <input type="radio" name="mode_picker" value="EXAM" th:checked="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).EXAM}">
                         <div class="sh-study-choice-icon">
-                            <i data-lucide="pencil-line"></i>
+                            <iconify-icon icon="lucide:pencil-line"></iconify-icon>
                         </div>
                         <div class="sh-study-choice-title">Exam</div>
                         <div class="sh-study-choice-subtitle">
@@ -89,16 +89,16 @@
             <!-- Sticky footer -->
             <div class="sh-wizard-footer">
                 <button type="button" class="sh-btn sh-btn-secondary" id="wizard-btn-back">
-                    <i data-lucide="arrow-left"></i> Back
+                    <iconify-icon icon="lucide:arrow-left"></iconify-icon> Back
                 </button>
                 <div style="display:flex;gap:0.75rem;margin-left:auto;">
                     <button type="button" class="sh-btn sh-btn-primary" id="wizard-btn-next">
-                        Next <i data-lucide="arrow-right"></i>
+                        Next <iconify-icon icon="lucide:arrow-right"></iconify-icon>
                     </button>
                     <button type="submit" class="sh-btn sh-btn-primary" id="wizard-btn-submit" style="display:none;"
                             hx-indicator="#ai-generating-modal"
                             hx-disabled-elt="#wizard-btn-submit, #wizard-btn-next, #wizard-btn-back">
-                        <i data-lucide="play"></i> Start
+                        <iconify-icon icon="lucide:play"></iconify-icon> Start
                     </button>
                 </div>
             </div>

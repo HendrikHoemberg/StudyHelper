@@ -13,10 +13,10 @@
          style="margin-bottom: 0.25rem;">
         <div class="sh-tree-header" hx-on:click="this.closest('.sh-tree-item').classList.toggle('expanded')">
             <span class="sh-tree-toggle">
-                <i data-lucide="chevron-right"></i>
+                <iconify-icon icon="lucide:chevron-right"></iconify-icon>
             </span>
             <span class="sh-tree-folder-icon">
-                <i th:attr="data-lucide=${sub.iconName ?: 'folder'}"></i>
+                <iconify-icon th:attr="icon=${sub.iconName != null && sub.iconName.contains(':') ? sub.iconName : 'lucide:' + (sub.iconName ?: 'folder')}"></iconify-icon>
             </span>
             <a th:href="@{/folders/{id}(id=${sub.id})}" class="sh-folder-name flex-1"
                hx-get th:hx-get="@{/folders/{id}(id=${sub.id})}"
@@ -37,7 +37,7 @@
     hx-get th:hx-get="@{/decks/{id}(id=${deck.id})}"
     hx-target="#explorer-detail" hx-push-url="true">
         <span class="sh-tree-deck-icon">
-            <i data-lucide="layers"></i>
+            <iconify-icon icon="lucide:layers"></iconify-icon>
         </span>
         <span class="sh-folder-name flex-1" th:text="${deck.name}" style="font-size:0.8375rem;">Deck</span>
         <span class="sh-badge sh-badge-primary" th:text="${deck.flashcards.size()} + ' cards'"></span>
