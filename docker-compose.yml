@@ -24,6 +24,10 @@ services:
       SPRING_DATASOURCE_PASSWORD: studyhelper
       FILE_UPLOAD_DIR: /app/uploads
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      APP_USER1_NAME: ${APP_USER1_NAME}
+      APP_USER1_PASSWORD: ${APP_USER1_PASSWORD}
+      APP_USER2_NAME: ${APP_USER2_NAME}
+      APP_USER2_PASSWORD: ${APP_USER2_PASSWORD}
     volumes:
       - uploads:/app/uploads
     depends_on:
