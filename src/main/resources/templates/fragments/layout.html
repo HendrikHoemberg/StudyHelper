@@ -70,6 +70,11 @@
             </form>
         </div>
 
+        <button id="topnav-folders-btn" class="sh-btn sh-btn-ghost sh-btn-sm topnav-folders-btn" type="button" title="Show folders">
+            <iconify-icon icon="lucide:folder"></iconify-icon>
+            <span>Folders</span>
+        </button>
+
         <button id="topnav-menu-btn" class="sh-btn sh-btn-ghost sh-btn-icon topnav-mobile-toggle" type="button">
             <iconify-icon icon="lucide:menu"></iconify-icon>
         </button>
@@ -125,6 +130,7 @@
     <div th:replace="~{fragments/lightbox :: lightbox}"></div>
     <div th:replace="~{fragments/exam-grading :: exam-grading-loader}"></div>
     <div th:replace="~{fragments/dialog :: dialog}"></div>
+    <div id="sh-sidebar-backdrop" class="sh-sidebar-backdrop" aria-hidden="true"></div>
 </div>
 
 </html>

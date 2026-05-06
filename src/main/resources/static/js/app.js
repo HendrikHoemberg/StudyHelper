@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initLucide();
     initTopnav();
+    initSidebarDrawer();
     initCsrf();
     initLightbox();
     initShDialog();
@@ -94,6 +95,53 @@ function initTopnav() {
 
     menu.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', () => menu.classList.remove('open'));
+    });
+}
+
+/* ---------- Sidebar Drawer (mobile) ---------- */
+function initSidebarDrawer() {
+    const btn = document.getElementById('topnav-folders-btn');
+    const backdrop = document.getElementById('sh-sidebar-backdrop');
+    if (!btn || !backdrop) return;
+
+    const getSidebar = () => document.getElementById('sidebar-aside');
+
+    const open = () => {
+        const sidebar = getSidebar();
+        if (!sidebar) return;
+        sidebar.classList.add('is-open');
+        backdrop.classList.add('is-open');
+    };
+
+    const close = () => {
+        const sidebar = getSidebar();
+        if (sidebar) sidebar.classList.remove('is-open');
+        backdrop.classList.remove('is-open');
+    };
+
+    btn.addEventListener('click', () => {
+        const sidebar = getSidebar();
+        if (sidebar && sidebar.classList.contains('is-open')) close();
+        else open();
+    });
+
+    backdrop.addEventListener('click', close);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+    });
+
+    // Close when navigating via a sidebar link
+    document.body.addEventListener('click', (e) => {
+        const sidebar = getSidebar();
+        if (!sidebar || !sidebar.classList.contains('is-open')) return;
+        const link = e.target.closest('a');
+        if (link && sidebar.contains(link)) close();
+    });
+
+    // Close when an HTMX swap replaces the sidebar (e.g. OOB refresh after mutation)
+    document.body.addEventListener('htmx:afterSwap', () => {
+        backdrop.classList.remove('is-open');
     });
 }
 
