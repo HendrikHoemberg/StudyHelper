@@ -3812,3 +3812,115 @@ iconify-icon {
     from { opacity: 0; }
     to   { opacity: 1; }
 }
+
+/* ============================================================
+   CUSTOM DIALOG (confirm / alert / prompt)
+   ============================================================ */
+
+.sh-dialog {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2050;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.sh-dialog.is-open {
+    display: flex;
+    animation: sh-fade-in-fast 0.15s ease;
+}
+
+.sh-dialog-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    cursor: pointer;
+}
+
+.sh-dialog-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 440px;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    padding: 2rem 1.75rem 1.5rem;
+    text-align: center;
+    animation: modalIn 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sh-dialog-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--accent);
+    font-size: 28px;
+}
+
+.sh-dialog.is-danger .sh-dialog-icon {
+    background: color-mix(in srgb, var(--danger) 15%, transparent);
+    color: var(--danger);
+}
+
+.sh-dialog-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    color: var(--text-main);
+}
+
+.sh-dialog-message {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin: 0 0 1.25rem;
+    line-height: 1.5;
+}
+
+.sh-dialog-input {
+    width: 100%;
+    margin-bottom: 1.25rem;
+}
+
+.sh-dialog-actions {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+}
+
+.sh-dialog-actions .sh-btn {
+    min-width: 100px;
+    justify-content: center;
+}
+
+.sh-dialog.is-danger .sh-dialog-actions .sh-btn-primary {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+}
+
+.sh-dialog.is-danger .sh-dialog-actions .sh-btn-primary:hover {
+    filter: brightness(1.05);
+}
+
+@media (max-width: 480px) {
+    .sh-dialog-card {
+        padding: 1.5rem 1.25rem 1.25rem;
+    }
+    .sh-dialog-actions {
+        flex-direction: column-reverse;
+    }
+    .sh-dialog-actions .sh-btn {
+        width: 100%;
+    }
+}

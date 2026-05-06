@@ -132,23 +132,12 @@
     }
 
     // --- Submit Confirmation ---
-    function handleConfirmSubmit(e) {
-        if (window._sh_auto_submitting) return true;
-
-        const textareas = document.querySelectorAll('.sh-exam-answer');
+    function countEmptyAnswers() {
         let emptyCount = 0;
-        textareas.forEach(ta => {
+        document.querySelectorAll('.sh-exam-answer').forEach(ta => {
             if (!ta.value.trim()) emptyCount++;
         });
-
-        if (emptyCount > 0) {
-            if (!confirm(`Submit with ${emptyCount} unanswered question${emptyCount > 1 ? 's' : ''}?`)) {
-                if (e.preventDefault) e.preventDefault();
-                if (e.stopPropagation) e.stopPropagation();
-                return false;
-            }
-        }
-        return true;
+        return emptyCount;
     }
 
     // --- Answer Cache (PER_PAGE) ---
@@ -186,27 +175,21 @@
         initLoaderRotator();
         initAnswerCache();
 
-        // Attach confirm handler to submit buttons
-        document.querySelectorAll('button[hx-post="/exam/submit"]').forEach(btn => {
-            if (btn._sh_confirm_init) return;
-            btn._sh_confirm_init = true;
-
-            btn.addEventListener('click', function(e) {
-                if (!handleConfirmSubmit(e)) {
-                    // Standard click listener can't easily stop HTMX from here if it's already bound,
-                    // but 'htmx:confirm' is better. However, for buttons we use 'click' often.
-                    // Let's use htmx:confirm for buttons too.
-                }
-            });
-        });
-
         // Use HTMX confirm event for better integration
         document.body.addEventListener('htmx:confirm', function(evt) {
-            if (evt.detail.path === '/exam/submit') {
-                if (!handleConfirmSubmit(evt)) {
-                    evt.preventDefault();
-                }
-            }
+            if (evt.detail.path !== '/exam/submit') return;
+            if (window._sh_auto_submitting) return;
+
+            const emptyCount = countEmptyAnswers();
+            if (emptyCount === 0) return;
+
+            evt.preventDefault();
+            shConfirm({
+                title: 'Submit exam?',
+                message: `You have ${emptyCount} unanswered question${emptyCount > 1 ? 's' : ''}. Submit anyway?`,
+                confirmText: 'Submit',
+                danger: true
+            }).then((ok) => { if (ok) evt.detail.issueRequest(true); });
         });
 
         // Abort grading when Cancel is clicked

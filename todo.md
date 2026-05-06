@@ -15,3 +15,4 @@
 - Gamify the system
 - exam mode -> move clock anywhere else
 - Folder deletion and deck creation doesn't refresh the page
+- check htmx for correct version syntax (v1 vs v2)

@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTopnav();
     initCsrf();
     initLightbox();
+    initShDialog();
 });
 
 // Re-run initializations after HTMX swaps
@@ -203,4 +204,127 @@ function updateFolderPreview(modal) {
     
     const fullIconName = iconName.includes(':') ? iconName : `lucide:${iconName}`;
     preview.innerHTML = `<iconify-icon icon="${fullIconName}" style="font-size:22px;"></iconify-icon>`;
+}
+
+/* ---------- Custom Dialog (replaces native confirm/alert/prompt) ---------- */
+
+let shDialogState = null;
+
+function initShDialog() {
+    const dlg = document.getElementById('sh-dialog');
+    if (!dlg) return;
+
+    dlg.addEventListener('click', (e) => {
+        if (e.target.closest('[data-sh-dialog-cancel]')) {
+            shDialogResolve(null);
+        } else if (e.target.id === 'sh-dialog-ok') {
+            const input = document.getElementById('sh-dialog-input');
+            const isPrompt = input && input.style.display !== 'none';
+            shDialogResolve(isPrompt ? input.value : true);
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (!dlg.classList.contains('is-open')) return;
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            shDialogResolve(null);
+        } else if (e.key === 'Enter') {
+            const input = document.getElementById('sh-dialog-input');
+            const isPrompt = input && input.style.display !== 'none';
+            // For prompt, only submit on Enter when input is focused.
+            if (isPrompt && document.activeElement !== input) return;
+            e.preventDefault();
+            shDialogResolve(isPrompt ? input.value : true);
+        }
+    });
+
+    document.body.addEventListener('htmx:confirm', (evt) => {
+        if (!evt.detail.question) return;
+        evt.preventDefault();
+        shConfirm({ message: evt.detail.question, danger: true })
+            .then((ok) => { if (ok) evt.detail.issueRequest(true); });
+    });
+}
+
+function shDialogResolve(value) {
+    const dlg = document.getElementById('sh-dialog');
+    if (!dlg) return;
+    dlg.classList.remove('is-open', 'is-danger');
+    dlg.setAttribute('aria-hidden', 'true');
+    const state = shDialogState;
+    shDialogState = null;
+    if (state) state.resolve(value);
+}
+
+function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText, danger, prompt, defaultValue, placeholder, hideCancel }) {
+    return new Promise((resolve) => {
+        // If a previous dialog is open, dismiss it first.
+        if (shDialogState) shDialogResolve(null);
+
+        const dlg = document.getElementById('sh-dialog');
+        if (!dlg) {
+            // Fallback to native if fragment is missing.
+            if (prompt) return resolve(window.prompt(message, defaultValue || ''));
+            if (hideCancel) { window.alert(message); return resolve(true); }
+            return resolve(window.confirm(message));
+        }
+
+        const titleEl = document.getElementById('sh-dialog-title');
+        const msgEl = document.getElementById('sh-dialog-message');
+        const iconEl = document.getElementById('sh-dialog-icon');
+        const okBtn = document.getElementById('sh-dialog-ok');
+        const cancelBtn = document.getElementById('sh-dialog-cancel');
+        const input = document.getElementById('sh-dialog-input');
+
+        titleEl.textContent = title || (prompt ? 'Enter a value' : (hideCancel ? 'Notice' : 'Confirm'));
+        msgEl.textContent = message || '';
+        msgEl.style.display = message ? '' : 'none';
+
+        const iconName = icon || (iconKind === 'info' ? 'lucide:info'
+            : iconKind === 'edit' ? 'lucide:pencil'
+            : danger ? 'lucide:alert-triangle'
+            : 'lucide:help-circle');
+        iconEl.innerHTML = `<iconify-icon icon="${iconName}"></iconify-icon>`;
+
+        okBtn.textContent = confirmText || (prompt ? 'Save' : 'OK');
+        cancelBtn.textContent = cancelText || 'Cancel';
+        cancelBtn.style.display = hideCancel ? 'none' : '';
+
+        if (prompt) {
+            input.style.display = '';
+            input.value = defaultValue || '';
+            input.placeholder = placeholder || '';
+        } else {
+            input.style.display = 'none';
+            input.value = '';
+        }
+
+        dlg.classList.toggle('is-danger', !!danger);
+        dlg.classList.add('is-open');
+        dlg.setAttribute('aria-hidden', 'false');
+
+        shDialogState = { resolve };
+
+        // Focus management
+        setTimeout(() => {
+            if (prompt) input.focus();
+            else okBtn.focus();
+        }, 0);
+    });
+}
+
+function shConfirm(opts) {
+    if (typeof opts === 'string') opts = { message: opts };
+    return _shOpenDialog({ ...opts, prompt: false });
+}
+
+function shAlert(opts) {
+    if (typeof opts === 'string') opts = { message: opts };
+    return _shOpenDialog({ iconKind: 'info', hideCancel: true, ...opts, prompt: false });
+}
+
+function shPrompt(opts) {
+    if (typeof opts === 'string') opts = { message: opts };
+    return _shOpenDialog({ iconKind: 'edit', ...opts, prompt: true });
 }

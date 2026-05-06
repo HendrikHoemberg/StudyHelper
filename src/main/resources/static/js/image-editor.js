@@ -519,9 +519,15 @@
         var promptEl = $id('sh-ie-prompt');
         var inputEl  = $id('sh-ie-prompt-input');
         if (!promptEl || !inputEl) {
-            var name = prompt('Enter a name for the new file:', defaultName);
-            if (name !== null) onConfirm(name);
-            else if (onCancel) onCancel();
+            shPrompt({
+                title: 'Save as new file',
+                message: 'Enter a name for the new file:',
+                defaultValue: defaultName,
+                confirmText: 'Save'
+            }).then(function(name) {
+                if (name !== null) onConfirm(name);
+                else if (onCancel) onCancel();
+            });
             return;
         }
 
@@ -607,8 +613,13 @@
     // ── Unsaved-changes guard ─────────────────────────────────────────
     function _guardedClose() {
         var hasEdits = _history.length > 1;
-        if (hasEdits && !confirm('Discard changes?')) return;
-        close();
+        if (!hasEdits) { close(); return; }
+        shConfirm({
+            title: 'Discard changes?',
+            message: 'You have unsaved edits. Close without saving?',
+            confirmText: 'Discard',
+            danger: true
+        }).then(function(ok) { if (ok) close(); });
     }
 
     // ── Keyboard shortcuts ────────────────────────────────────────────
@@ -700,12 +711,19 @@
         // Clear
         $id('sh-ie-clear-btn').addEventListener('click', function () {
             if (!_fc) return;
-            if (!confirm('Clear all drawings?')) return;
-            _fc.getObjects().slice().forEach(function (obj) {
-                if (obj !== _baseImg) _fc.remove(obj);
+            shConfirm({
+                title: 'Clear all drawings?',
+                message: 'This will remove every drawing on top of the image. The base image is kept.',
+                confirmText: 'Clear',
+                danger: true
+            }).then(function(ok) {
+                if (!ok) return;
+                _fc.getObjects().slice().forEach(function (obj) {
+                    if (obj !== _baseImg) _fc.remove(obj);
+                });
+                _fc.renderAll();
+                _histPush();
             });
-            _fc.renderAll();
-            _histPush();
         });
 
         // Size slider

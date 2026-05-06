@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="dialog" id="sh-dialog" class="sh-dialog" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="sh-dialog-backdrop" data-sh-dialog-cancel></div>
+    <div class="sh-dialog-card" role="document">
+        <div class="sh-dialog-icon" id="sh-dialog-icon">
+            <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
+        </div>
+        <h3 class="sh-dialog-title" id="sh-dialog-title">Confirm</h3>
+        <p class="sh-dialog-message" id="sh-dialog-message">Are you sure?</p>
+        <input type="text" class="sh-input sh-dialog-input" id="sh-dialog-input" style="display:none;">
+        <div class="sh-dialog-actions">
+            <button type="button" class="sh-btn sh-btn-secondary" id="sh-dialog-cancel" data-sh-dialog-cancel>Cancel</button>
+            <button type="button" class="sh-btn sh-btn-primary" id="sh-dialog-ok">OK</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

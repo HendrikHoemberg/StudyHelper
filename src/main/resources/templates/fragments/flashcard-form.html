@@ -185,13 +185,20 @@
                 }
 
                 function clearPreview() {
-                    if (!confirm('Remove this image from the flashcard?')) return;
-                    var wrap = zone.querySelector('.sh-img-preview-wrap');
-                    if (wrap) wrap.remove();
-                    var lbl = document.getElementById(dropLabelId);
-                    if (lbl) lbl.classList.remove('is-hidden');
-                    input.value = '';
-                    if (removeInput) removeInput.value = 'true';
+                    shConfirm({
+                        title: 'Remove image?',
+                        message: 'Remove this image from the flashcard?',
+                        confirmText: 'Remove',
+                        danger: true
+                    }).then(function(ok) {
+                        if (!ok) return;
+                        var wrap = zone.querySelector('.sh-img-preview-wrap');
+                        if (wrap) wrap.remove();
+                        var lbl = document.getElementById(dropLabelId);
+                        if (lbl) lbl.classList.remove('is-hidden');
+                        input.value = '';
+                        if (removeInput) removeInput.value = 'true';
+                    });
                 }
             }
 

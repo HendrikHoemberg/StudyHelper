@@ -177,14 +177,14 @@
             if (currentMode === 'FLASHCARDS') {
                 const selected = document.querySelector('input[name="sessionMode"]:checked');
                 if (!selected) {
-                    alert('Please select a study mode.');
+                    shAlert({ title: 'Missing selection', message: 'Please select a study mode.' });
                     return false;
                 }
             }
             if (currentMode === 'QUIZ') {
                 const selected = document.querySelector('input[name="quizQuestionMode"]:checked');
                 if (!selected) {
-                    alert('Please select a quiz format.');
+                    shAlert({ title: 'Missing selection', message: 'Please select a quiz format.' });
                     return false;
                 }
             }
@@ -194,13 +194,13 @@
                 const timerInput = document.getElementById('exam-timer-input');
                 
                 if (countInput && (parseInt(countInput.value) < 1 || parseInt(countInput.value) > 20)) {
-                    alert('Please enter a question count between 1 and 20.');
+                    shAlert({ title: 'Invalid value', message: 'Please enter a question count between 1 and 20.' });
                     return false;
                 }
                 
                 if (timerToggle && timerToggle.checked && timerInput) {
                     if (parseInt(timerInput.value) < 1 || parseInt(timerInput.value) > 240) {
-                        alert('Please enter a timer duration between 1 and 240 minutes.');
+                        shAlert({ title: 'Invalid value', message: 'Please enter a timer duration between 1 and 240 minutes.' });
                         return false;
                     }
                 }
@@ -209,7 +209,7 @@
         if (step === 3) {
             const checked = document.querySelectorAll('.sh-source-checkbox:checked');
             if (checked.length === 0) {
-                alert('Please select at least one source.');
+                shAlert({ title: 'Missing source', message: 'Please select at least one source.' });
                 return false;
             }
         }
@@ -217,7 +217,7 @@
             if (currentMode === 'EXAM') {
                 const selected = document.querySelector('input[name="layout"]:checked');
                 if (!selected) {
-                    alert('Please select an exam layout.');
+                    shAlert({ title: 'Missing selection', message: 'Please select an exam layout.' });
                     return false;
                 }
             }

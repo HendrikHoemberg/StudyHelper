@@ -178,13 +178,31 @@ public class FolderController {
 
     @PostMapping("/folders/{id}/delete")
     public String deleteFolder(@PathVariable Long id, Principal principal,
+                               Model model,
                                RedirectAttributes redirectAttributes,
-                               @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+                               @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                               jakarta.servlet.http.HttpServletResponse response) {
         User user = userService.getByUsername(principal.getName());
+        String error = null;
         try {
             folderService.deleteFolder(id, user);
         } catch (IOException e) {
-            redirectAttributes.addFlashAttribute("error", "Could not delete all files: " + e.getMessage());
+            error = "Could not delete all files: " + e.getMessage();
+            redirectAttributes.addFlashAttribute("error", error);
+        }
+
+        if (hxRequest != null) {
+            response.setHeader("HX-Push-Url", "/dashboard");
+            List<Folder> folders = folderService.getRootFolders(user);
+            model.addAttribute("folders", folders);
+            model.addAttribute("deckOptions", deckService.getStudyDeckOptions(user));
+            model.addAttribute("fileSummaries", fileEntryService.getFileSummaries(user));
+            model.addAttribute("username", principal.getName());
+            model.addAttribute("query", null);
+            if (error != null) {
+                model.addAttribute("error", error);
+            }
+            return "fragments/explorer :: dashboardContent";
         }
         return "redirect:/dashboard";
     }

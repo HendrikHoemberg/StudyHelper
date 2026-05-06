@@ -4,6 +4,8 @@ import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
+import com.HendrikHoemberg.StudyHelper.service.FolderService;
+import com.HendrikHoemberg.StudyHelper.service.FolderView;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,11 +19,14 @@ public class DeckController {
 
     private final DeckService deckService;
     private final FlashcardService flashcardService;
+    private final FolderService folderService;
     private final UserService userService;
 
-    public DeckController(DeckService deckService, FlashcardService flashcardService, UserService userService) {
+    public DeckController(DeckService deckService, FlashcardService flashcardService,
+                          FolderService folderService, UserService userService) {
         this.deckService = deckService;
         this.flashcardService = flashcardService;
+        this.folderService = folderService;
         this.userService = userService;
     }
 
@@ -36,6 +41,7 @@ public class DeckController {
     public String createDeck(@PathVariable Long folderId,
                              @RequestParam String name,
                              Principal principal,
+                             Model model,
                              @RequestHeader(value = "HX-Request", required = false) String hxRequest,
                              HttpServletResponse response) {
         User user = userService.getByUsername(principal.getName());
@@ -43,7 +49,10 @@ public class DeckController {
 
         if (hxRequest != null) {
             response.setHeader("HX-Push-Url", "/decks/" + deck.getId());
-            return "redirect:/decks/" + deck.getId();
+            model.addAttribute("deck", deck);
+            model.addAttribute("flashcards", deck.getFlashcards());
+            model.addAttribute("username", principal.getName());
+            return "fragments/deck :: deckDetail";
         }
         return "redirect:/decks/" + deck.getId();
     }
@@ -94,12 +103,18 @@ public class DeckController {
     @PostMapping("/decks/{id}/delete")
     public String deleteDeck(@PathVariable Long id,
                              Principal principal,
-                             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+                             Model model,
+                             @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                             HttpServletResponse response) {
         User user = userService.getByUsername(principal.getName());
         Long folderId = deckService.deleteDeck(id, user);
 
         if (hxRequest != null) {
-            return "redirect:/folders/" + folderId;
+            response.setHeader("HX-Push-Url", "/folders/" + folderId);
+            FolderView view = folderService.getFolderView(folderId, user, null, "asc");
+            model.addAttribute("view", view);
+            model.addAttribute("username", principal.getName());
+            return "fragments/folder-detail :: folderDetail";
         }
         return "redirect:/folders/" + folderId;
     }
