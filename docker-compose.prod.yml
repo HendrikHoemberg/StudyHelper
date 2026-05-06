@@ -1,0 +1,63 @@
+services:
+  db:
+    image: mysql:8.4
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: studyhelper
+      MYSQL_USER: studyhelper
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  app:
+    build: .
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/studyhelper
+      SPRING_DATASOURCE_USERNAME: studyhelper
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      FILE_UPLOAD_DIR: /app/uploads
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      APP_USER1_NAME: ${APP_USER1_NAME}
+      APP_USER1_PASSWORD: ${APP_USER1_PASSWORD}
+      APP_USER2_NAME: ${APP_USER2_NAME}
+      APP_USER2_PASSWORD: ${APP_USER2_PASSWORD}
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+      - proxy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - proxy
+
+networks:
+  internal:
+  proxy:
+
+volumes:
+  db_data:
+  uploads:
+  caddy_data:
+  caddy_config:

@@ -33,3 +33,8 @@ build/
 .vscode/
 
 .env
+deployment_guide.md
+
+# Local data and backups
+uploads/
+backups/

@@ -9,7 +9,12 @@ RUN ./mvnw package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
+
+# Create a non-root user to run the app
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
+
+COPY --from=builder --chown=spring:spring /app/target/*.jar app.jar
 VOLUME /app/uploads
-COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
