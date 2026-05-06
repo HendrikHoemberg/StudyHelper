@@ -14,3 +14,4 @@
 - Toggle mode: Extract text from documents or send document completely
 - Gamify the system
 - exam mode -> move clock anywhere else
+- Folder deletion and deck creation doesn't refresh the page
