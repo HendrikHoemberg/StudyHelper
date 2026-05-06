@@ -1959,13 +1959,28 @@ textarea.sh-input {
 
 .sh-study-mode-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 420px));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     justify-content: center;
-    gap: 3rem;
+    gap: 1.5rem;
     margin-top: 2rem;
     padding-bottom: 4rem;
     position: relative;
     perspective: 1000px;
+}
+
+@media (max-width: 768px) {
+    .sh-study-mode-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        padding-bottom: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sh-study-mode-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
 }
 
 .sh-study-choice {
@@ -1975,7 +1990,7 @@ textarea.sh-input {
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 3rem 2rem;
+    padding: 2rem 1.25rem;
     border: 2px solid var(--border);
     border-radius: var(--radius-xl);
     background: var(--surface);
@@ -1987,8 +2002,23 @@ textarea.sh-input {
         background-color 0.2s ease,
         box-shadow 0.6s ease,
         filter 0.7s ease;
-    min-height: 400px;
+    min-height: 260px;
     aspect-ratio: 1 / 1;
+}
+
+@media (max-width: 768px) {
+    .sh-study-choice {
+        min-height: 240px;
+        padding: 1.5rem 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sh-study-choice {
+        min-height: auto;
+        aspect-ratio: auto;
+        padding: 1.25rem;
+    }
 }
 
 .sh-study-choice:hover .sh-study-choice-icon {
@@ -2034,16 +2064,61 @@ textarea.sh-input {
 }
 
 .sh-study-choice-icon {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     background: var(--bg);
-    border-radius: 24px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     color: var(--text-secondary);
     transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sh-study-choice-icon iconify-icon,
+.sh-study-choice-icon svg {
+    width: 32px;
+    height: 32px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .sh-study-choice-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
+        margin-bottom: 1.25rem;
+    }
+    .sh-study-choice-icon iconify-icon,
+    .sh-study-choice-icon svg {
+        width: 28px;
+        height: 28px;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .sh-study-choice-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        margin-bottom: 0.75rem;
+    }
+    .sh-study-choice-icon iconify-icon,
+    .sh-study-choice-icon svg {
+        width: 22px;
+        height: 22px;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
 }
 
 .sh-study-choice:has(input:checked) .sh-study-choice-icon {
@@ -2059,19 +2134,39 @@ textarea.sh-input {
 }
 
 .sh-study-choice-title {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 800;
     line-height: 1.2;
     color: var(--text);
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.6rem;
     font-family: var(--font-heading);
 }
 
+@media (max-width: 768px) {
+    .sh-study-choice-title {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sh-study-choice-title {
+        font-size: 1rem;
+    }
+}
+
 .sh-study-choice-subtitle {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     color: var(--text-secondary);
     line-height: 1.6;
     max-width: 260px;
+}
+
+@media (max-width: 768px) {
+    .sh-study-choice-subtitle {
+        font-size: 0.8125rem;
+        line-height: 1.4;
+    }
 }
 
 .sh-study-inline-choice {
