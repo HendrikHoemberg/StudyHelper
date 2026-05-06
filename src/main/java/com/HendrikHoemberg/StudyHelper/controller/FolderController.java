@@ -69,7 +69,6 @@ public class FolderController {
             if ("library-grid-container".equals(hxTarget)) {
                 return "fragments/explorer :: libraryGrid";
             }
-            model.addAttribute("sidebarOob", true);
             return "fragments/explorer :: dashboardContent";
         }
         return "dashboard";
@@ -123,7 +122,6 @@ public class FolderController {
             if ("files-table-container".equals(hxTarget)) {
                 return "fragments/folder-detail :: filesTable";
             }
-            model.addAttribute("sidebarOob", true);
             return "fragments/folder-detail :: folderDetail";
         }
         return "folder-page";

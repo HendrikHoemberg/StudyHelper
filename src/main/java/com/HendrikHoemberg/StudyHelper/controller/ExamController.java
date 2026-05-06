@@ -217,7 +217,6 @@ public class ExamController {
         model.addAttribute("exams", exams);
         
         if ("true".equals(hxRequest)) {
-            model.addAttribute("sidebarOob", true);
             return "fragments/exams-list :: exams-list";
         }
         return "exams-page";
@@ -235,7 +234,6 @@ public class ExamController {
             model.addAttribute("report", report);
             
             if ("true".equals(hxRequest)) {
-                model.addAttribute("sidebarOob", true);
                 return "fragments/exam-detail :: exam-detail";
             }
             return "exams-page";
