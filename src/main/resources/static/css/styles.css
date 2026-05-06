@@ -1986,7 +1986,7 @@ textarea.sh-input {
 
 .sh-study-mode-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 22rem));
     justify-content: center;
     gap: 1.5rem;
     margin-top: 2rem;
@@ -1997,7 +1997,7 @@ textarea.sh-input {
 
 @media (max-width: 768px) {
     .sh-study-mode-grid {
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(240px, 22rem));
         gap: 1.5rem;
         padding-bottom: 2rem;
     }
