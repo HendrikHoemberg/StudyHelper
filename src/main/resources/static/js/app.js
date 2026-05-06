@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initLucide();
     initTopnav();
     initSidebarDrawer();
+    initSidebarFolderExpand();
     initCsrf();
     initLightbox();
     initShDialog();
@@ -143,6 +144,22 @@ function initSidebarDrawer() {
     document.body.addEventListener('htmx:afterSwap', () => {
         backdrop.classList.remove('is-open');
     });
+}
+
+/* ---------- Sidebar folder two-stage click ---------- */
+// Folders with subfolders: first click expands, second click navigates.
+// Folders without subfolders: navigate immediately (default behavior).
+function initSidebarFolderExpand() {
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('.sh-d-pill-name');
+        if (!link) return;
+        const folder = link.closest('.sh-d-folder.has-children');
+        if (!folder) return;
+        if (folder.classList.contains('is-open')) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        folder.classList.add('is-open');
+    }, true);
 }
 
 /* ---------- Color Picker Hex Sync ---------- */

@@ -3601,7 +3601,7 @@ iconify-icon {
     .sh-dashboard-sidebar {
         position: fixed;
         top: 0;
-        left: 0;
+        right: 0;
         bottom: 0;
         width: min(85vw, 320px);
         max-width: 320px;
@@ -3609,10 +3609,10 @@ iconify-icon {
         background: var(--surface);
         padding: 1rem;
         overflow-y: auto;
-        transform: translateX(-100%);
+        transform: translateX(100%);
         transition: transform 0.25s ease;
-        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
-        border-right: 1px solid var(--border-light);
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
+        border-left: 1px solid var(--border-light);
     }
 
     .sh-dashboard-sidebar.is-open {

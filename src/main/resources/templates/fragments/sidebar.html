@@ -33,8 +33,7 @@
                     <a th:href="@{/folders/{id}(id=${folder.id})}"
                        class="sh-d-pill-name"
                        hx-get th:hx-get="@{/folders/{id}(id=${folder.id})}"
-                       hx-target="#explorer-detail" hx-push-url="true"
-                       hx-on:click="this.closest('.sh-d-folder').classList.add('is-open')">
+                       hx-target="#explorer-detail" hx-push-url="true">
                         <span class="sh-d-pill-text" th:text="${folder.name}">Folder</span>
                         <span class="sh-d-pill-count" th:text="${folder.deckCount}">0</span>
                     </a>
