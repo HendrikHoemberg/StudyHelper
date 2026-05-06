@@ -199,6 +199,8 @@ public class FolderController {
             model.addAttribute("fileSummaries", fileEntryService.getFileSummaries(user));
             model.addAttribute("username", principal.getName());
             model.addAttribute("query", null);
+            model.addAttribute("refreshSidebar", true);
+            model.addAttribute("sidebarTree", folderService.getSidebarTree(user, null));
             if (error != null) {
                 model.addAttribute("error", error);
             }

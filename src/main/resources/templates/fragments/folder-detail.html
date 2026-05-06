@@ -5,6 +5,9 @@
 <!-- Fragment: folder detail view (swapped into #main-content) -->
 <div th:fragment="folderDetail" class="sh-fade-in">
 
+    <!-- Sidebar OOB refresh (rendered when refreshSidebar flag is set on mutation responses) -->
+    <aside th:if="${refreshSidebar}" th:replace="~{fragments/sidebar :: sidebar}"></aside>
+
     <!-- Alert for errors -->
     <div th:if="${error}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${error}"></div>

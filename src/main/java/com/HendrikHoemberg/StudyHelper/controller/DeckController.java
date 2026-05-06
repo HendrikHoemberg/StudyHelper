@@ -52,6 +52,8 @@ public class DeckController {
             model.addAttribute("deck", deck);
             model.addAttribute("flashcards", deck.getFlashcards());
             model.addAttribute("username", principal.getName());
+            model.addAttribute("refreshSidebar", true);
+            model.addAttribute("sidebarTree", folderService.getSidebarTree(user, folderId));
             return "fragments/deck :: deckDetail";
         }
         return "redirect:/decks/" + deck.getId();
@@ -114,6 +116,8 @@ public class DeckController {
             FolderView view = folderService.getFolderView(folderId, user, null, "asc");
             model.addAttribute("view", view);
             model.addAttribute("username", principal.getName());
+            model.addAttribute("refreshSidebar", true);
+            model.addAttribute("sidebarTree", folderService.getSidebarTree(user, folderId));
             return "fragments/folder-detail :: folderDetail";
         }
         return "redirect:/folders/" + folderId;

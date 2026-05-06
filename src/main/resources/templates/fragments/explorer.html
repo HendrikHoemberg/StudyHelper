@@ -4,6 +4,9 @@
 
 <!-- Dashboard main content fragment — swapped into #explorer-detail -->
 <div th:fragment="dashboardContent" class="sh-dashboard-content sh-fade-in">
+    <!-- Sidebar OOB refresh (rendered when refreshSidebar flag is set on mutation responses) -->
+    <aside th:if="${refreshSidebar}" th:replace="~{fragments/sidebar :: sidebar}"></aside>
+
     <!-- Alert for errors -->
     <div th:if="${error}" class="sh-alert sh-alert-danger" style="grid-column: 1 / -1; margin-bottom: 1rem;">
         <div class="sh-alert-body" th:text="${error}"></div>
