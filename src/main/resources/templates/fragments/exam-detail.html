@@ -1,5 +1,4 @@
-<div th:fragment="exam-detail" id="exam-detail-container" class="sh-fade-in"
-     th:with="score=${exam.overallScorePct}">
+<div th:fragment="exam-detail" id="exam-detail-container" class="sh-fade-in" th:with="score=${exam.overallScorePct}">
 
     <!-- Breadcrumb -->
     <ul class="sh-breadcrumb">
@@ -11,45 +10,45 @@
     </ul>
 
     <div class="sh-exam-result-header mt-3">
-        <div class="sh-exam-result-score" 
-             th:classappend="${score >= 80 ? 'score-green' : (score >= 60 ? 'score-amber' : 'score-red')}">
+        <div class="sh-exam-result-score"
+            th:classappend="${score >= 80 ? 'score-green' : (score >= 60 ? 'score-amber' : 'score-red')}">
             <span th:text="${score + '%'}">85%</span>
             <span>Score</span>
         </div>
-        
+
         <div class="sh-exam-result-info">
             <div class="sh-inline-edit-group">
                 <h1 class="sh-page-title" th:text="${exam.title}" id="exam-title-display">Exam Results</h1>
-                <button class="sh-btn sh-btn-ghost sh-btn-icon sh-btn-sm" 
-                        onclick="toggleExamTitleEdit()">
+                <button class="sh-btn sh-btn-ghost sh-btn-icon sh-btn-sm" onclick="toggleExamTitleEdit()">
                     <i class="fa-solid fa-pencil"></i>
                 </button>
             </div>
-            
+
             <!-- Hidden form for title editing -->
             <form id="exam-title-form" class="sh-inline-edit-form d-none"
-                  th:hx-post="@{/exams/{id}/rename(id=${exam.id})}"
-                  hx-target="#exam-title-display"
-                  hx-swap="innerHTML"
-                  onsubmit="setTimeout(toggleExamTitleEdit, 50)">
+                th:hx-post="@{/exams/{id}/rename(id=${exam.id})}" hx-target="#exam-title-display" hx-swap="innerHTML"
+                onsubmit="setTimeout(toggleExamTitleEdit, 50)">
                 <input type="text" name="title" class="sh-input sh-input-sm" th:value="${exam.title}">
                 <button type="submit" class="sh-btn sh-btn-primary sh-btn-sm">Save</button>
-                <button type="button" class="sh-btn sh-btn-ghost sh-btn-sm" onclick="toggleExamTitleEdit()">Cancel</button>
+                <button type="button" class="sh-btn sh-btn-ghost sh-btn-sm"
+                    onclick="toggleExamTitleEdit()">Cancel</button>
             </form>
 
             <div class="sh-exam-result-meta mt-2">
-                <span><i class="fa-solid fa-calendar-day"></i> <span th:text="${#temporals.format(exam.completedAt, 'd MMM yyyy, HH:mm')}">12 May 2026</span></span>
-                <span><i class="fa-solid fa-layer-group"></i> <span th:text="${exam.questionSize}">MEDIUM</span> depth</span>
-                <span><i class="fa-solid fa-list-ol"></i> <span th:text="${exam.questionCount}">10</span> questions</span>
-                <span th:if="${exam.timerMinutes != null}"><i class="fa-solid fa-clock"></i> <span th:text="${exam.timerMinutes}">30</span> min limit</span>
+                <span><i class="fa-solid fa-calendar-day"></i> <span
+                        th:text="${#temporals.format(exam.completedAt, 'd MMM yyyy, HH:mm')}">12 May 2026</span></span>
+                <span><i class="fa-solid fa-layer-group"></i> <span th:text="${exam.questionSize}">MEDIUM</span>
+                    depth</span>
+                <span><i class="fa-solid fa-list-ol"></i> <span th:text="${exam.questionCount}">10</span>
+                    questions</span>
+                <span th:if="${exam.timerMinutes != null}"><i class="fa-solid fa-clock"></i> <span
+                        th:text="${exam.timerMinutes}">30</span> min limit</span>
             </div>
         </div>
 
         <div class="ms-auto align-self-start">
-            <button class="sh-btn sh-btn-danger sh-btn-sm"
-                    th:hx-delete="@{/exams/{id}(id=${exam.id})}"
-                    hx-target="#explorer-detail"
-                    hx-confirm="Delete this exam result? This cannot be undone.">
+            <button class="sh-btn sh-btn-danger sh-btn-sm" th:hx-delete="@{/exams/{id}(id=${exam.id})}"
+                hx-target="#explorer-detail" hx-confirm="Delete this exam result? This cannot be undone.">
                 <i class="fa-solid fa-trash-can me-2"></i> Delete
             </button>
         </div>
@@ -90,8 +89,8 @@
             <details class="sh-exam-q-accordion">
                 <summary>
                     <div class="sh-exam-q-header-left">
-                        <div class="sh-exam-q-status" 
-                             th:classappend="${q.scorePercent >= 80 ? 'score-green' : (q.scorePercent >= 60 ? 'score-amber' : 'score-red')}">
+                        <div class="sh-exam-q-status"
+                            th:classappend="${q.scorePercent >= 80 ? 'score-green' : (q.scorePercent >= 60 ? 'score-amber' : 'score-red')}">
                             <span th:text="${q.scorePercent + '%'}">85</span>
                         </div>
                         <span th:text="${#strings.abbreviate(q.questionText, 80)}">Question preview...</span>
@@ -105,9 +104,9 @@
                     </div>
                     <div class="sh-exam-q-section">
                         <span class="sh-exam-q-label">Your Answer</span>
-                        <div class="sh-exam-q-content sh-exam-user-answer" 
-                             th:text="${#strings.isEmpty(q.userAnswer) ? 'Not answered' : q.userAnswer}"
-                             th:classappend="${#strings.isEmpty(q.userAnswer) ? 'text-muted fst-italic' : ''}">
+                        <div class="sh-exam-q-content sh-exam-user-answer"
+                            th:text="${#strings.isEmpty(q.userAnswer) ? 'Not answered' : q.userAnswer}"
+                            th:classappend="${#strings.isEmpty(q.userAnswer) ? 'text-muted fst-italic' : ''}">
                             User answer text
                         </div>
                     </div>
@@ -121,9 +120,6 @@
             </details>
         </div>
     </div>
-
-    <!-- Sidebar OOB Update -->
-    <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
 
     <script>
         function toggleExamTitleEdit() {
