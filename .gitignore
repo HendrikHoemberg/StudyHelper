@@ -34,6 +34,8 @@ build/
 
 .env
 deployment_guide.md
+.gitignore
+security_review.md
 
 # Local data and backups
 uploads/
