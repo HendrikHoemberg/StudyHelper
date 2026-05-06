@@ -429,7 +429,11 @@
     };
     let timer = null;
     document.body.addEventListener('htmx:beforeRequest', (e) => {
-        if ((currentMode === 'QUIZ' || currentMode === 'EXAM') && e.detail.elt.matches('form')) {
+        if (!e.detail.elt.matches || !e.detail.elt.matches('form.sh-study-setup-card')) return;
+
+        const modal = document.getElementById('ai-generating-modal');
+        if (currentMode === 'QUIZ' || currentMode === 'EXAM') {
+            if (modal) modal.style.display = '';
             const messages = PROGRESS_MESSAGES[currentMode];
             let i = 0;
             const el = document.getElementById('ai-gen-title');
@@ -437,9 +441,15 @@
                 el.textContent = messages[0];
                 timer = setInterval(() => { el.textContent = messages[(++i) % messages.length]; }, 2000);
             }
+        } else if (modal) {
+            modal.style.display = 'none';
         }
     });
-    document.body.addEventListener('htmx:afterRequest', () => { if (timer) { clearInterval(timer); timer = null; } });
+    document.body.addEventListener('htmx:afterRequest', () => {
+        if (timer) { clearInterval(timer); timer = null; }
+        const modal = document.getElementById('ai-generating-modal');
+        if (modal) modal.style.display = '';
+    });
 
     // Abort AI generation when Cancel is clicked
     document.body.addEventListener('click', (e) => {
