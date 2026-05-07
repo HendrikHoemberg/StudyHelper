@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="tabBar" class="sh-tab-bar" role="tablist">
+    <a th:classappend="${view.activeTab == T(com.HendrikHoemberg.StudyHelper.service.ActiveTab).FOLDERS} ? 'sh-tab-link is-active' : 'sh-tab-link'"
+       th:href="@{/folders/{id}(id=${view.folder.id}, tab='folders')}"
+       hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, tab='folders')}"
+       hx-target="#tab-content"
+       hx-push-url="true"
+       hx-swap="innerHTML"
+       role="tab"
+       th:aria-selected="${view.activeTab == T(com.HendrikHoemberg.StudyHelper.service.ActiveTab).FOLDERS}"
+        aria-controls="tab-content"
+        th:tabindex="${view.activeTab == T(com.HendrikHoemberg.StudyHelper.service.ActiveTab).FOLDERS} ? 0 : -1">
+         Folders <span class="sh-tab-badge" th:text="${view.subFolders.size()}">0</span>
+    </a>
+    <a th:classappend="${view.activeTab == T(com.HendrikHoemberg.StudyHelper.service.ActiveTab).DECKS} ? 'sh-tab-link is-active' : 'sh-tab-link'"
+       th:href="@{/folders/{id}(id=${view.folder.id}, tab='decks')}"
+       hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, tab='decks')}"
+       hx-target="#tab-content"
+       hx-push-url="true"
+       hx-swap="innerHTML"
+       role="tab"
+       th:aria-selected="${view.activeTab == T(com.HendrikHoemberg.StudyHelper.service.ActiveTab).DECKS}"
+        aria-controls="tab-content"
+        th:tabindex="${view.activeTab == T(com.HendrikHoemberg.StudyHelper.service.ActiveTab).DECKS} ? 0 : -1">
+         Decks <span class="sh-tab-badge" th:text="${view.decks.size()}">0</span>
+    </a>
+    <a th:classappend="${view.activeTab == T(com.HendrikHoemberg.StudyHelper.service.ActiveTab).FILES} ? 'sh-tab-link is-active' : 'sh-tab-link'"
+       th:href="@{/folders/{id}(id=${view.folder.id}, tab='files')}"
+       hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, tab='files')}"
+       hx-target="#tab-content"
+       hx-push-url="true"
+       hx-swap="innerHTML"
+       role="tab"
+       th:aria-selected="${view.activeTab == T(com.HendrikHoemberg.StudyHelper.service.ActiveTab).FILES}"
+        aria-controls="tab-content"
+        th:tabindex="${view.activeTab == T(com.HendrikHoemberg.StudyHelper.service.ActiveTab).FILES} ? 0 : -1">
+         Files <span class="sh-tab-badge" th:text="${view.files.size()}">0</span>
+    </a>
+</div>
+
+</body>
+</html>
