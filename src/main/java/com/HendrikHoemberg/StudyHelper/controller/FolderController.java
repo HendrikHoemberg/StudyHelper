@@ -126,12 +126,8 @@ public class FolderController {
             if ("files-table-container".equals(hxTarget)) {
                 return "fragments/folder-detail :: filesTable";
             }
-            if ("tab-content".equals(hxTarget)) {
-                return switch (activeTab) {
-                    case FOLDERS -> "fragments/tab-folders :: tabContent";
-                    case DECKS -> "fragments/tab-decks :: tabContent";
-                    case FILES -> "fragments/tab-files :: tabContent";
-                };
+            if ("folder-tabs-section".equals(hxTarget)) {
+                return "fragments/folder-detail :: tabsSection";
             }
             model.addAttribute("refreshSidebar", true);
             return "fragments/folder-detail :: folderDetail";
