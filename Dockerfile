@@ -12,6 +12,10 @@ WORKDIR /app
 
 # Create a non-root user to run the app
 RUN addgroup -S spring && adduser -S spring -G spring
+
+# Create uploads directory and set permissions
+RUN mkdir -p /app/uploads && chown spring:spring /app/uploads
+
 USER spring:spring
 
 COPY --from=builder --chown=spring:spring /app/target/*.jar app.jar
