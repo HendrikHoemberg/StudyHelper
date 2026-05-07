@@ -11,9 +11,9 @@
        hx-swap="innerHTML"
        role="tab"
        th:aria-selected="${view.activeTab.name() == 'FOLDERS'}"
-        aria-controls="tab-content"
-        th:tabindex="${view.activeTab.name() == 'FOLDERS'} ? 0 : -1">
-         Folders <span class="sh-tab-badge" th:text="${view.subFolders.size()}">0</span>
+       aria-controls="tab-content"
+       th:tabindex="${view.activeTab.name() == 'FOLDERS'} ? 0 : -1">
+        Folders <span class="sh-tab-badge" th:text="${view.subFolders.size()}">0</span>
     </a>
     <a th:classappend="${view.activeTab.name() == 'DECKS'} ? 'sh-tab-link is-active' : 'sh-tab-link'"
        th:href="@{/folders/{id}(id=${view.folder.id}, tab='decks')}"
@@ -23,9 +23,9 @@
        hx-swap="innerHTML"
        role="tab"
        th:aria-selected="${view.activeTab.name() == 'DECKS'}"
-        aria-controls="tab-content"
-        th:tabindex="${view.activeTab.name() == 'DECKS'} ? 0 : -1">
-         Decks <span class="sh-tab-badge" th:text="${view.decks.size()}">0</span>
+       aria-controls="tab-content"
+       th:tabindex="${view.activeTab.name() == 'DECKS'} ? 0 : -1">
+        Decks <span class="sh-tab-badge" th:text="${view.decks.size()}">0</span>
     </a>
     <a th:classappend="${view.activeTab.name() == 'FILES'} ? 'sh-tab-link is-active' : 'sh-tab-link'"
        th:href="@{/folders/{id}(id=${view.folder.id}, tab='files')}"
@@ -35,9 +35,9 @@
        hx-swap="innerHTML"
        role="tab"
        th:aria-selected="${view.activeTab.name() == 'FILES'}"
-        aria-controls="tab-content"
-        th:tabindex="${view.activeTab.name() == 'FILES'} ? 0 : -1">
-         Files <span class="sh-tab-badge" th:text="${view.files.size()}">0</span>
+       aria-controls="tab-content"
+       th:tabindex="${view.activeTab.name() == 'FILES'} ? 0 : -1">
+        Files <span class="sh-tab-badge" th:text="${view.files.size()}">0</span>
     </a>
 </div>
 

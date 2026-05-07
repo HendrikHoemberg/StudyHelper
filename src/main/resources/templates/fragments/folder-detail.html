@@ -77,7 +77,7 @@
     <div th:replace="~{fragments/tab-bar :: tabBar}"></div>
 
     <!-- Tab content (HTMX target) -->
-    <div id="tab-content" class="sh-tab-content-area">
+    <div id="tab-content" class="sh-tab-content-area" role="tabpanel">
         <div th:if="${view.activeTab.name() == 'FOLDERS'}"
              th:replace="~{fragments/tab-folders :: tabContent}"></div>
         <div th:if="${view.activeTab.name() == 'DECKS'}"
