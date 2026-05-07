@@ -73,12 +73,15 @@
         </div>
     </div>
 
-    <!-- Tab bar -->
-    <div th:replace="~{fragments/tab-bar :: tabBar}"></div>
+    <!-- Tab section (Integrated target) -->
+    <div id="folder-tabs-section" class="mt-6" th:fragment="tabsSection">
+        <!-- Tab bar -->
+        <div th:replace="~{fragments/tab-bar :: tabBar}"></div>
 
-    <!-- Tab content (HTMX target) -->
-    <div id="tab-content" class="sh-tab-content-area" role="tabpanel">
-        <th:block th:replace="~{fragments/tab-__${view.activeTab.name().toLowerCase()}__ :: tabContent}"></th:block>
+        <!-- Tab content (HTMX target) -->
+        <div id="tab-content" class="sh-tab-content-area" role="tabpanel">
+            <th:block th:replace="~{fragments/tab-__${view.activeTab.name().toLowerCase()}__ :: tabContent}"></th:block>
+        </div>
     </div>
 
 </div>
