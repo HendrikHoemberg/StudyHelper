@@ -4101,32 +4101,43 @@ iconify-icon {
     display: flex;
     align-items: center;
     gap: 0;
-    border-bottom: 2px solid var(--border);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     margin-bottom: 0;
+    overflow: hidden;
 }
 
 .sh-tab-link {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.75rem 1.25rem;
+    padding: 0.875rem 1.5rem;
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-muted);
     text-decoration: none;
     border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
+    margin-bottom: 0;
     transition: all var(--transition-fast);
     cursor: pointer;
+    background: var(--surface-hover);
+    border-right: 1px solid var(--border);
+}
+
+.sh-tab-link:last-child {
+    border-right: none;
 }
 
 .sh-tab-link:hover {
     color: var(--text);
-    background: var(--surface-hover);
+    background: var(--surface);
 }
 
 .sh-tab-link.is-active {
     color: var(--accent);
+    background: var(--surface);
     border-bottom-color: var(--accent);
     font-weight: 600;
 }
@@ -4153,7 +4164,6 @@ iconify-icon {
 .sh-tab-content-area {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-top: none;
     border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     min-height: 200px;
 }
