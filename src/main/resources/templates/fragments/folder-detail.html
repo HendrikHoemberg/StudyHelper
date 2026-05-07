@@ -78,11 +78,11 @@
 
     <!-- Tab content (HTMX target) -->
     <div id="tab-content" class="sh-tab-content-area">
-        <div th:if="${view.activeTab == T(com.HendrikHoemberg.StudyHelper.service.ActiveTab).FOLDERS}"
+        <div th:if="${view.activeTab.name() == 'FOLDERS'}"
              th:replace="~{fragments/tab-folders :: tabContent}"></div>
-        <div th:if="${view.activeTab == T(com.HendrikHoemberg.StudyHelper.service.ActiveTab).DECKS}"
+        <div th:if="${view.activeTab.name() == 'DECKS'}"
              th:replace="~{fragments/tab-decks :: tabContent}"></div>
-        <div th:if="${view.activeTab == T(com.HendrikHoemberg.StudyHelper.service.ActiveTab).FILES}"
+        <div th:if="${view.activeTab.name() == 'FILES'}"
              th:replace="~{fragments/tab-files :: tabContent}"></div>
     </div>
 
