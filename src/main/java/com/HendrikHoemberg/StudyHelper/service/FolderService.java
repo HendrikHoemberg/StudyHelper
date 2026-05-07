@@ -429,6 +429,15 @@ public class FolderService {
         return new FolderView(folder, subFolders, decks, files, breadcrumb, totalCardCount);
     }
 
+    @Transactional(readOnly = true)
+    public FolderView getFolderView(Long id, User user, String sortBy, String direction, ActiveTab activeTab) {
+        FolderView base = getFolderView(id, user, sortBy, direction);
+        return new FolderView(
+            base.folder(), base.subFolders(), base.decks(), base.files(),
+            base.breadcrumb(), base.totalCardCount(), activeTab
+        );
+    }
+
     private void sortFiles(List<FileEntry> files, String sortBy, boolean desc) {
         files.sort((a, b) -> {
             int cmp = 0;

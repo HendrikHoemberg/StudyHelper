@@ -12,5 +12,11 @@ public record FolderView(
     List<Deck> decks,
     List<FileEntry> files,
     List<Folder> breadcrumb,
-    int totalCardCount
-) {}
+    int totalCardCount,
+    ActiveTab activeTab
+) {
+    public FolderView(Folder folder, List<Folder> subFolders, List<Deck> decks,
+                      List<FileEntry> files, List<Folder> breadcrumb, int totalCardCount) {
+        this(folder, subFolders, decks, files, breadcrumb, totalCardCount, ActiveTab.FOLDERS);
+    }
+}
