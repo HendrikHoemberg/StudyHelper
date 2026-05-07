@@ -13,17 +13,7 @@
         </button>
     </div>
 
-    <div th:if="${#lists.isEmpty(view.decks)}" class="sh-empty-state">
-        <iconify-icon icon="lucide:layers" style="font-size:2rem;color:var(--text-muted);"></iconify-icon>
-        <p class="sh-empty-text">No decks yet.</p>
-        <button class="sh-btn sh-btn-secondary sh-btn-sm"
-                th:hx-get="@{/folders/{fid}/decks/new(fid=${view.folder.id})}"
-                hx-target="#modal-placeholder">
-            Create your first deck
-        </button>
-    </div>
-
-    <div th:if="${!#lists.isEmpty(view.decks)}" class="sh-deck-grid">
+    <div class="sh-deck-grid">
         <div th:each="deck : ${view.decks}"
              class="sh-deck-tile"
              th:style="'--folder-color:' + ${view.folder.colorHex}">
@@ -44,6 +34,13 @@
                     hx-target="#modal-placeholder">
                 <iconify-icon icon="lucide:pencil"></iconify-icon>
             </button>
+        </div>
+
+        <div class="sh-deck-tile-add"
+             th:hx-get="@{/folders/{fid}/decks/new(fid=${view.folder.id})}"
+             hx-target="#modal-placeholder">
+            <iconify-icon icon="lucide:plus"></iconify-icon>
+            <span>New Deck</span>
         </div>
     </div>
 </div>

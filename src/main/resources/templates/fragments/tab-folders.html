@@ -13,17 +13,7 @@
         </button>
     </div>
 
-    <div th:if="${#lists.isEmpty(view.subFolders)}" class="sh-empty-state">
-        <iconify-icon icon="lucide:folder-open" style="font-size:2rem;color:var(--text-muted);"></iconify-icon>
-        <p class="sh-empty-text">No subfolders yet.</p>
-        <button class="sh-btn sh-btn-secondary sh-btn-sm"
-                th:hx-get="@{/folders/new(parentId=${view.folder.id})}"
-                hx-target="#modal-placeholder">
-            Create your first subfolder
-        </button>
-    </div>
-
-    <div th:if="${!#lists.isEmpty(view.subFolders)}" class="sh-card-grid">
+    <div class="sh-card-grid">
         <a th:each="sub : ${view.subFolders}"
            th:href="@{/folders/{id}(id=${sub.id})}"
            class="sh-d-pill"
@@ -38,6 +28,13 @@
                 <span class="sh-d-pill-count" th:text="${sub.decks.size()}">0</span>
             </span>
         </a>
+
+        <div class="sh-d-pill-add"
+             th:hx-get="@{/folders/new(parentId=${view.folder.id})}"
+             hx-target="#modal-placeholder">
+            <iconify-icon icon="lucide:plus"></iconify-icon>
+            <span>Add Subfolder</span>
+        </div>
     </div>
 </div>
 
