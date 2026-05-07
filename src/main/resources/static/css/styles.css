@@ -3772,6 +3772,14 @@ iconify-icon {
     .sh-flashcard-grid {
         grid-template-columns: 1fr;
     }
+
+    .sh-wizard-panel {
+        padding-bottom: 6rem;
+    }
+
+    .sh-wizard-footer {
+        margin-bottom: 4rem;
+    }
 }
 
 /* ============================================================
