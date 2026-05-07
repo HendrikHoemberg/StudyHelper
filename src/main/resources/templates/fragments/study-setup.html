@@ -4,6 +4,11 @@
 
 <div th:fragment="studySetup" id="study-session-content" class="sh-fade-in">
 
+    <!-- Sidebar OOB refresh (rendered when refreshSidebar flag is set) -->
+    <th:block th:if="${refreshSidebar}">
+        <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+    </th:block>
+
     <div th:if="${studyError}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${studyError}"></div>
         <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">

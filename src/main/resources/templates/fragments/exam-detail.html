@@ -1,5 +1,10 @@
 <div th:fragment="exam-detail" id="exam-detail-container" class="sh-fade-in" th:with="score=${exam.overallScorePct}">
 
+    <!-- Sidebar OOB refresh (rendered when refreshSidebar flag is set) -->
+    <th:block th:if="${refreshSidebar}">
+        <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+    </th:block>
+
     <!-- Breadcrumb -->
     <ul class="sh-breadcrumb">
         <li>

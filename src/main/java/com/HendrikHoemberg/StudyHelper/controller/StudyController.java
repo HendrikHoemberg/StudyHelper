@@ -97,6 +97,7 @@ public class StudyController {
         prepareWizardModel(model, user, preselectedDeckIds, preselectedFileIds, null, session);
 
         if (hxRequest != null) {
+            model.addAttribute("refreshSidebar", true);
             return "fragments/study-setup :: studySetup";
         }
 

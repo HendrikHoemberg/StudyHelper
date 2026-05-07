@@ -69,6 +69,7 @@ public class DeckController {
         model.addAttribute("username", principal.getName());
 
         if (hxRequest != null) {
+            model.addAttribute("refreshSidebar", true);
             return "fragments/deck :: deckDetail";
         }
         return "deck-page";

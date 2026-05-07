@@ -1,4 +1,9 @@
 <div th:fragment="exams-list" id="exams-list-container" class="sh-fade-in">
+    <!-- Sidebar OOB refresh (rendered when refreshSidebar flag is set) -->
+    <th:block th:if="${refreshSidebar}">
+        <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+    </th:block>
+
     <div class="sh-page-header">
         <div>
             <h1 class="sh-page-title">Past Exams</h1>
