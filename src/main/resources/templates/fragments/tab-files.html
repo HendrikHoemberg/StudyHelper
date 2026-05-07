@@ -29,19 +29,19 @@
                 <thead>
                     <tr>
                         <th hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, sortBy='name', direction=${sortBy == 'name' && direction == 'asc' ? 'desc' : 'asc'}, tab='files')}"
-                            hx-target="#files-table-container" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
+                            hx-target="#folder-tabs-section" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
                             Name <span class="sort-indicator" th:text="${sortBy == 'name' ? (direction == 'asc' ? '▲' : '▼') : '▲'}">▲</span>
                         </th>
                         <th hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, sortBy='type', direction=${sortBy == 'type' && direction == 'asc' ? 'desc' : 'asc'}, tab='files')}"
-                            hx-target="#files-table-container" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
+                            hx-target="#folder-tabs-section" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
                             Type <span class="sort-indicator" th:text="${sortBy == 'type' ? (direction == 'asc' ? '▲' : '▼') : '▲'}">▲</span>
                         </th>
                         <th hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, sortBy='size', direction=${sortBy == 'size' && direction == 'asc' ? 'desc' : 'asc'}, tab='files')}"
-                            hx-target="#files-table-container" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
+                            hx-target="#folder-tabs-section" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
                             Size <span class="sort-indicator" th:text="${sortBy == 'size' ? (direction == 'asc' ? '▲' : '▼') : '▲'}">▲</span>
                         </th>
                         <th hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, sortBy='date', direction=${sortBy == 'date' && direction == 'asc' ? 'desc' : 'asc'}, tab='files')}"
-                            hx-target="#files-table-container" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
+                            hx-target="#folder-tabs-section" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
                             Uploaded <span class="sort-indicator" th:text="${sortBy == 'date' ? (direction == 'asc' ? '▲' : '▼') : '▲'}">▲</span>
                         </th>
                         <th style="text-align:right;">Actions</th>
