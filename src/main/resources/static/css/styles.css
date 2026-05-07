@@ -624,8 +624,8 @@ a {
 }
 
 .sh-deck-cover-icon {
-    width: 52px;
-    height: 52px;
+    width: 64px;
+    height: 64px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -642,8 +642,8 @@ a {
 }
 
 .sh-deck-cover-icon svg {
-    width: 24px;
-    height: 24px;
+    width: 36px;
+    height: 36px;
 }
 
 .sh-deck-cover-img {
@@ -1370,9 +1370,11 @@ textarea.sh-input {
     cursor: default;
 }
 
-.sh-d-pill-cap svg {
-    width: 18px;
-    height: 18px;
+.sh-d-pill-cap svg,
+.sh-d-pill-cap iconify-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
 }
 
 /* Toggle which cap icon shows based on open state */
@@ -1438,6 +1440,38 @@ textarea.sh-input {
 .sh-d-folder.is-active .sh-d-pill-count {
     background: rgba(255, 255, 255, 0.6);
     color: var(--folder-ink);
+}
+
+/* Bigger folder pills in tabs */
+.sh-tab-panel .sh-d-pill {
+    height: 60px;
+    border-radius: 14px;
+}
+
+.sh-tab-panel .sh-d-pill-cap {
+    width: 60px;
+}
+
+.sh-tab-panel .sh-d-pill-cap svg,
+.sh-tab-panel .sh-d-pill-cap iconify-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
+}
+
+.sh-tab-panel .sh-d-pill-name {
+    padding: 0 1.125rem;
+    gap: 0.75rem;
+}
+
+.sh-tab-panel .sh-d-pill-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.sh-tab-panel .sh-d-pill-count {
+    font-size: 0.8125rem;
+    padding: 0.2rem 0.625rem;
 }
 
 [data-theme="dark"] .sh-d-folder.is-active .sh-d-pill-count {
@@ -1559,9 +1593,11 @@ textarea.sh-input {
     box-shadow: var(--shadow-sm);
 }
 
+.sh-folder-card-icon iconify-icon,
 .sh-folder-card-icon svg {
     width: 24px;
     height: 24px;
+    font-size: 24px;
 }
 
 .sh-folder-name {

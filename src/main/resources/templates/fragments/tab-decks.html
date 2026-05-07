@@ -23,22 +23,28 @@
         </button>
     </div>
 
-    <div th:if="${!#lists.isEmpty(view.decks)}" class="sh-card-grid">
-        <a th:each="deck : ${view.decks}"
-           th:href="@{/decks/{id}(id=${deck.id})}"
-           class="sh-deck-card"
-           hx-get th:hx-get="@{/decks/{id}(id=${deck.id})}"
-           hx-target="#explorer-detail" hx-push-url="true">
-            <div class="sh-deck-info">
-                <div class="sh-deck-icon">
+    <div th:if="${!#lists.isEmpty(view.decks)}" class="sh-deck-grid">
+        <div th:each="deck : ${view.decks}"
+             class="sh-deck-tile"
+             th:style="'--folder-color:' + ${view.folder.colorHex}">
+            <a th:href="@{/decks/{id}(id=${deck.id})}"
+               class="sh-deck-cover"
+               hx-get th:hx-get="@{/decks/{id}(id=${deck.id})}"
+               hx-target="#explorer-detail" hx-push-url="true">
+                <span class="sh-deck-cover-icon">
                     <iconify-icon icon="lucide:layers"></iconify-icon>
-                </div>
-                <div>
-                    <div class="sh-deck-name" th:text="${deck.name}">Deck Name</div>
-                    <div class="sh-folder-meta" th:text="${deck.flashcards.size()} + ' cards'">0 cards</div>
-                </div>
+                </span>
+            </a>
+            <div class="sh-deck-body">
+                <div class="sh-deck-title" th:text="${deck.name}">Deck Name</div>
+                <div class="sh-deck-meta" th:text="${deck.flashcards.size()} + ' cards'">0 cards</div>
             </div>
-        </a>
+            <button class="sh-deck-edit-btn" title="Edit Deck"
+                    th:hx-get="@{/decks/{id}/rename(id=${deck.id})}"
+                    hx-target="#modal-placeholder">
+                <iconify-icon icon="lucide:pencil"></iconify-icon>
+            </button>
+        </div>
     </div>
 </div>
 
