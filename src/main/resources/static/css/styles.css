@@ -1719,6 +1719,7 @@ textarea.sh-input {
     transition: all var(--transition);
     position: relative;
 }
+
 .sh-flashcard:hover {
     box-shadow: var(--shadow-md);
     border-color: var(--border);
@@ -1787,6 +1788,11 @@ textarea.sh-input {
     color: var(--text);
     word-break: break-word;
     white-space: pre-wrap;
+}
+
+.sh-flashcard-front .sh-flashcard-text {
+    font-weight: 600;
+    font-size: 0.925rem;
 }
 
 .sh-flashcard-front {
@@ -2022,7 +2028,7 @@ textarea.sh-input {
     border-radius: var(--radius-xl);
     background: var(--surface);
     cursor: pointer;
-    transition: 
+    transition:
         transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
         opacity 0.7s ease,
         border-color 0.2s ease,
@@ -2121,6 +2127,7 @@ textarea.sh-input {
         border-radius: 18px;
         margin-bottom: 1.25rem;
     }
+
     .sh-study-choice-icon iconify-icon,
     .sh-study-choice-icon svg {
         width: 28px;
@@ -2138,6 +2145,7 @@ textarea.sh-input {
         border-radius: 14px;
         margin-bottom: 0.75rem;
     }
+
     .sh-study-choice-icon iconify-icon,
     .sh-study-choice-icon svg {
         width: 22px;
@@ -2367,15 +2375,27 @@ textarea.sh-input {
     white-space: nowrap;
     flex-shrink: 0;
 }
-.vb-select-all svg { width: 13px; height: 13px; }
-.vb-select-all:hover { background: var(--accent-light); }
+
+.vb-select-all svg {
+    width: 13px;
+    height: 13px;
+}
+
+.vb-select-all:hover {
+    background: var(--accent-light);
+}
+
 .vb-select-all.is-on {
     background: var(--accent);
     color: #fff;
     border-color: var(--accent);
     box-shadow: 0 4px 14px var(--accent-glow);
 }
-.vb-select-all:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.vb-select-all:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
 
 .vb-list {
     display: flex;
@@ -2392,10 +2412,13 @@ textarea.sh-input {
     overflow: hidden;
     position: relative;
 }
+
 .vb-group::before {
     content: '';
     position: absolute;
-    left: 0; top: 0; bottom: 0;
+    left: 0;
+    top: 0;
+    bottom: 0;
     width: 4px;
     background: var(--folder-color, var(--accent));
     z-index: 1;
@@ -2411,12 +2434,14 @@ textarea.sh-input {
     cursor: pointer;
     transition: background var(--transition-fast);
 }
+
 .vb-group-head:hover {
     background: color-mix(in srgb, var(--folder-color, var(--accent)) 10%, var(--surface));
 }
 
 .vb-group-cap {
-    width: 26px; height: 26px;
+    width: 26px;
+    height: 26px;
     border-radius: 7px;
     background: var(--folder-color, var(--accent));
     color: #fff;
@@ -2425,7 +2450,13 @@ textarea.sh-input {
     justify-content: center;
     flex-shrink: 0;
 }
-.vb-group-cap svg, .vb-group-cap iconify-icon { width: 14px; height: 14px; font-size: 14px; }
+
+.vb-group-cap svg,
+.vb-group-cap iconify-icon {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+}
 
 .vb-group-title {
     font-family: var(--font-heading);
@@ -2433,6 +2464,7 @@ textarea.sh-input {
     font-size: 0.95rem;
     color: var(--text);
 }
+
 .vb-group-meta {
     font-size: 0.72rem;
     color: var(--text-muted);
@@ -2466,12 +2498,14 @@ textarea.sh-input {
     cursor: pointer;
     transition: background var(--transition-fast);
 }
+
 .vb-subgroup-head:hover {
     background: color-mix(in srgb, var(--folder-color, var(--accent)) 8%, transparent);
 }
 
 .vb-subgroup-cap {
-    width: 22px; height: 22px;
+    width: 22px;
+    height: 22px;
     border-radius: 6px;
     background: color-mix(in srgb, var(--folder-color, var(--accent)) 18%, transparent);
     color: var(--folder-color, var(--accent));
@@ -2480,7 +2514,13 @@ textarea.sh-input {
     justify-content: center;
     flex-shrink: 0;
 }
-.vb-subgroup-cap svg, .vb-subgroup-cap iconify-icon { width: 12px; height: 12px; font-size: 12px; }
+
+.vb-subgroup-cap svg,
+.vb-subgroup-cap iconify-icon {
+    width: 12px;
+    height: 12px;
+    font-size: 12px;
+}
 
 .vb-subgroup-name {
     font-size: 0.78rem;
@@ -2489,12 +2529,14 @@ textarea.sh-input {
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
+
 .vb-subgroup-meta {
     font-size: 0.7rem;
     color: var(--text-muted);
     margin-left: auto;
     white-space: nowrap;
 }
+
 .vb-subgroup-body {
     display: flex;
     flex-direction: column;
@@ -2515,15 +2557,24 @@ textarea.sh-input {
     cursor: pointer;
     transition: all var(--transition-fast);
 }
-.vb-deck:hover { border-color: var(--border); }
+
+.vb-deck:hover {
+    border-color: var(--border);
+}
+
 .vb-deck.is-selected {
     background: color-mix(in srgb, var(--folder-color, var(--accent)) 7%, var(--surface));
     border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 40%, transparent);
 }
-.vb-deck.is-empty { opacity: 0.55; cursor: not-allowed; }
+
+.vb-deck.is-empty {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
 
 .vb-deck-icon {
-    width: 24px; height: 24px;
+    width: 24px;
+    height: 24px;
     border-radius: 6px;
     background: color-mix(in srgb, var(--folder-color, var(--accent)) 14%, transparent);
     color: var(--folder-color, var(--accent));
@@ -2532,7 +2583,11 @@ textarea.sh-input {
     justify-content: center;
     flex-shrink: 0;
 }
-.vb-deck-icon svg { width: 12px; height: 12px; }
+
+.vb-deck-icon svg {
+    width: 12px;
+    height: 12px;
+}
 
 .vb-deck-name {
     flex: 1;
@@ -2556,15 +2611,24 @@ textarea.sh-input {
     cursor: pointer;
     transition: all var(--transition-fast);
 }
-.vb-file:hover { border-color: var(--border); }
+
+.vb-file:hover {
+    border-color: var(--border);
+}
+
 .vb-file.is-selected {
     background: color-mix(in srgb, var(--folder-color, var(--accent)) 7%, var(--surface));
     border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 40%, transparent);
 }
-.vb-file.is-disabled { opacity: 0.55; cursor: not-allowed; }
+
+.vb-file.is-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
 
 .vb-file-icon {
-    width: 24px; height: 24px;
+    width: 24px;
+    height: 24px;
     border-radius: 6px;
     background: color-mix(in srgb, var(--folder-color, var(--accent)) 14%, transparent);
     color: var(--folder-color, var(--accent));
@@ -2573,7 +2637,11 @@ textarea.sh-input {
     justify-content: center;
     flex-shrink: 0;
 }
-.vb-file-icon svg { width: 12px; height: 12px; }
+
+.vb-file-icon svg {
+    width: 12px;
+    height: 12px;
+}
 
 .vb-file-name {
     flex: 1;
@@ -2636,9 +2704,17 @@ textarea.sh-input {
     letter-spacing: -0.04em;
 }
 
-.sh-study-score-hero.sh-study-score--good .sh-study-stat-value { color: var(--success); }
-.sh-study-score-hero.sh-study-score--warn .sh-study-stat-value { color: var(--warning, #f59e0b); }
-.sh-study-score-hero.sh-study-score--bad .sh-study-stat-value { color: var(--danger); }
+.sh-study-score-hero.sh-study-score--good .sh-study-stat-value {
+    color: var(--success);
+}
+
+.sh-study-score-hero.sh-study-score--warn .sh-study-stat-value {
+    color: var(--warning, #f59e0b);
+}
+
+.sh-study-score-hero.sh-study-score--bad .sh-study-stat-value {
+    color: var(--danger);
+}
 
 .sh-study-stats-grid {
     display: grid;
@@ -2723,13 +2799,19 @@ textarea.sh-input {
 }
 
 .sh-study-score--good .sh-study-stat-value,
-.sh-study-score--good .sh-study-stat-icon { color: var(--success); }
+.sh-study-score--good .sh-study-stat-icon {
+    color: var(--success);
+}
 
 .sh-study-score--warn .sh-study-stat-value,
-.sh-study-score--warn .sh-study-stat-icon { color: var(--warning, #f59e0b); }
+.sh-study-score--warn .sh-study-stat-icon {
+    color: var(--warning, #f59e0b);
+}
 
 .sh-study-score--bad .sh-study-stat-value,
-.sh-study-score--bad .sh-study-stat-icon { color: var(--danger); }
+.sh-study-score--bad .sh-study-stat-icon {
+    color: var(--danger);
+}
 
 .sh-study-score-message {
     text-align: center;
@@ -2865,7 +2947,12 @@ textarea.sh-input {
     font-weight: 500;
     border: 1px solid #ffc107;
 }
-.sh-test-warn-banner i { width: 16px; height: 16px; flex-shrink: 0; }
+
+.sh-test-warn-banner i {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
 
 .sh-test-error-banner {
     display: flex;
@@ -2879,7 +2966,12 @@ textarea.sh-input {
     font-weight: 500;
     border: 1px solid #f5c6cb;
 }
-.sh-test-error-banner i { width: 16px; height: 16px; flex-shrink: 0; }
+
+.sh-test-error-banner i {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
 
 /* ---- Segmented control ---- */
 .sh-segmented-control {
@@ -2889,6 +2981,7 @@ textarea.sh-input {
     padding: 3px;
     gap: 1px;
 }
+
 .sh-segmented-option {
     position: relative;
     display: flex;
@@ -2903,13 +2996,18 @@ textarea.sh-input {
     transition: all var(--transition-fast);
     white-space: nowrap;
 }
-.sh-segmented-option:hover { color: var(--text); }
+
+.sh-segmented-option:hover {
+    color: var(--text);
+}
+
 .sh-segmented-option:has(input:checked) {
     background: var(--surface);
     color: var(--text);
     font-weight: 600;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
+
 .sh-segmented-option input[type="radio"] {
     position: absolute;
     opacity: 0;
@@ -3834,7 +3932,7 @@ iconify-icon {
     max-height: 85vh;
     object-fit: contain;
     border-radius: var(--radius-sm);
-    box-shadow: 0 8px 48px rgba(0,0,0,0.6);
+    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
 }
 
 .sh-lightbox-close {
@@ -3844,8 +3942,8 @@ iconify-icon {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #fff;
     cursor: pointer;
     display: flex;
@@ -3855,7 +3953,7 @@ iconify-icon {
 }
 
 .sh-lightbox-close:hover {
-    background: rgba(255,255,255,0.22);
+    background: rgba(255, 255, 255, 0.22);
 }
 
 .sh-lightbox-close i {
@@ -3864,8 +3962,13 @@ iconify-icon {
 }
 
 @keyframes sh-fade-in-fast {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* ============================================================
@@ -3972,9 +4075,11 @@ iconify-icon {
     .sh-dialog-card {
         padding: 1.5rem 1.25rem 1.25rem;
     }
+
     .sh-dialog-actions {
         flex-direction: column-reverse;
     }
+
     .sh-dialog-actions .sh-btn {
         width: 100%;
     }
