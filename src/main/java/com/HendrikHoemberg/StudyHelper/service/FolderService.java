@@ -432,9 +432,13 @@ public class FolderService {
     @Transactional(readOnly = true)
     public FolderView getFolderView(Long id, User user, String sortBy, String direction, ActiveTab activeTab) {
         FolderView base = getFolderView(id, user, sortBy, direction);
+        boolean isSubfolder = base.folder().getParentFolder() != null;
+        if (isSubfolder && activeTab == ActiveTab.FOLDERS) {
+            activeTab = ActiveTab.DECKS;
+        }
         return new FolderView(
             base.folder(), base.subFolders(), base.decks(), base.files(),
-            base.breadcrumb(), base.totalCardCount(), activeTab
+            base.breadcrumb(), base.totalCardCount(), activeTab, isSubfolder
         );
     }
 

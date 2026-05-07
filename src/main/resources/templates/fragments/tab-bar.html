@@ -3,7 +3,8 @@
 <body>
 
 <div th:fragment="tabBar" class="sh-tab-bar" role="tablist">
-    <a th:classappend="${view.activeTab.name() == 'FOLDERS'} ? 'sh-tab-link is-active' : 'sh-tab-link'"
+    <a th:if="${!view.isSubfolder}"
+       th:classappend="${view.activeTab.name() == 'FOLDERS'} ? 'sh-tab-link is-active' : 'sh-tab-link'"
        th:href="@{/folders/{id}(id=${view.folder.id}, tab='folders')}"
        hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, tab='folders')}"
        hx-target="#folder-tabs-section"

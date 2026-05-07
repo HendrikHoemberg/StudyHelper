@@ -62,7 +62,7 @@ class FolderControllerTests {
 
         folderView = new FolderView(
             folder, Collections.emptyList(), Collections.emptyList(),
-            Collections.emptyList(), Collections.singletonList(folder), 0, ActiveTab.FOLDERS
+            Collections.emptyList(), Collections.singletonList(folder), 0, ActiveTab.FOLDERS, false
         );
 
         when(userService.getByUsername("alice")).thenReturn(user);
@@ -86,7 +86,7 @@ class FolderControllerTests {
     void viewFolder_WithTabParam_PassesActiveTab() throws Exception {
         FolderView decksView = new FolderView(
             folder, Collections.emptyList(), Collections.emptyList(),
-            Collections.emptyList(), Collections.singletonList(folder), 0, ActiveTab.DECKS
+            Collections.emptyList(), Collections.singletonList(folder), 0, ActiveTab.DECKS, false
         );
         when(folderService.getFolderView(eq(42L), eq(user), any(), any(), eq(ActiveTab.DECKS)))
             .thenReturn(decksView);

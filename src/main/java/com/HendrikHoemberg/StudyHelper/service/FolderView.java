@@ -13,10 +13,13 @@ public record FolderView(
     List<FileEntry> files,
     List<Folder> breadcrumb,
     int totalCardCount,
-    ActiveTab activeTab
+    ActiveTab activeTab,
+    boolean isSubfolder
 ) {
     public FolderView(Folder folder, List<Folder> subFolders, List<Deck> decks,
                       List<FileEntry> files, List<Folder> breadcrumb, int totalCardCount) {
-        this(folder, subFolders, decks, files, breadcrumb, totalCardCount, ActiveTab.FOLDERS);
+        this(folder, subFolders, decks, files, breadcrumb, totalCardCount,
+            folder.getParentFolder() != null ? ActiveTab.DECKS : ActiveTab.FOLDERS,
+            folder.getParentFolder() != null);
     }
 }
