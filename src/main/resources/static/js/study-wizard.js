@@ -41,10 +41,21 @@
             }
         });
 
-        // HTMX update picker for the new mode
+        // HTMX update picker for the new mode.
+        // If no checkboxes exist yet (picker was hidden because mode was null on load),
+        // fall back to the server-rendered initial preselection stored in #sh-initial-selection.
+        const hasRenderedCheckboxes = document.querySelectorAll('.sh-source-checkbox').length > 0;
+        let deckIds, fileIds;
+        if (hasRenderedCheckboxes) {
+            deckIds = Array.from(document.querySelectorAll('input[name="selectedDeckIds"]:checked')).map(cb => cb.value);
+            fileIds = Array.from(document.querySelectorAll('input[name="selectedFileIds"]:checked')).map(cb => cb.value);
+        } else {
+            deckIds = Array.from(document.querySelectorAll('#sh-initial-selection [data-init-deck]')).map(el => el.value);
+            fileIds = Array.from(document.querySelectorAll('#sh-initial-selection [data-init-file]')).map(el => el.value);
+        }
         htmx.ajax('POST', '/study/setup/update', {
             target: '#setup-picker',
-            values: { mode: mode },
+            values: { mode: mode, selectedDeckIds: deckIds, selectedFileIds: fileIds },
             swap: 'outerHTML'
         });
 

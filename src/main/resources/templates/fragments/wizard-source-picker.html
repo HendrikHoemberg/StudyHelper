@@ -33,6 +33,12 @@
                    autocomplete="off">
         </div>
 
+        <!-- Preserved initial preselection (outside #setup-picker so it survives mode-switch refreshes) -->
+        <div id="sh-initial-selection" hidden>
+            <input type="hidden" data-init-deck th:each="id : ${preselectedDeckIds}" th:value="${id}">
+            <input type="hidden" data-init-file th:each="id : ${preselectedFileIds}" th:value="${id}">
+        </div>
+
         <!-- HTMX-swapped region -->
         <div th:fragment="setupPicker" id="setup-picker">
             <div class="vb-list">
@@ -45,7 +51,9 @@
                         <label class="vb-group-head">
                             <input type="checkbox" class="sh-checkbox sh-source-folder-checkbox" th:checked="${group.isSelected}" th:attr="data-indeterminate=${group.isIndeterminate}" th:disabled="${group.selectableDeckCount == 0}"
                                    hx-post="/study/setup/update" th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + group.folderId + ', &quot;mode&quot;: &quot;FLASHCARDS&quot;}'}" hx-target="#setup-picker" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
-                            <span class="vb-group-cap"><i th:attr="data-lucide=${group.folderIcon}"></i></span>
+                            <span class="vb-group-cap">
+                                <iconify-icon th:attr="icon=${group.folderIcon.contains(':') ? group.folderIcon : 'lucide:' + group.folderIcon}"></iconify-icon>
+                            </span>
                             <div class="vb-group-title" th:text="${group.folderName}">Folder</div>
                         </label>
                         <div class="vb-group-body">
@@ -56,6 +64,26 @@
                                 <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                 <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
                             </label>
+                            <!-- Subfolders -->
+                            <div th:each="sub : ${group.subGroups}" class="vb-subgroup" th:style="'--folder-color: ' + ${sub.folderColor}">
+                                <label class="vb-subgroup-head">
+                                    <input type="checkbox" class="sh-checkbox sh-source-folder-checkbox" th:checked="${sub.isSelected}" th:attr="data-indeterminate=${sub.isIndeterminate}" th:disabled="${sub.selectableDeckCount == 0}"
+                                           hx-post="/study/setup/update" th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + sub.folderId + ', &quot;mode&quot;: &quot;FLASHCARDS&quot;}'}" hx-target="#setup-picker" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
+                                    <span class="vb-subgroup-cap">
+                                        <iconify-icon th:attr="icon=${sub.folderIcon.contains(':') ? sub.folderIcon : 'lucide:' + sub.folderIcon}"></iconify-icon>
+                                    </span>
+                                    <span class="vb-subgroup-name" th:text="${sub.folderName}">Subfolder</span>
+                                </label>
+                                <div class="vb-subgroup-body">
+                                    <label th:each="deck : ${sub.decks}" class="vb-deck" th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
+                                        <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.cardCount == 0}"
+                                               hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;FLASHCARDS&quot;}'}" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
+                                        <span class="vb-deck-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
+                                        <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
+                                        <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </th:block>
@@ -69,7 +97,9 @@
                         <label class="vb-group-head">
                             <input type="checkbox" class="sh-checkbox sh-source-folder-checkbox" th:checked="${group.isSelected}" th:attr="data-indeterminate=${group.isIndeterminate}" th:disabled="${group.selectableSourceCount == 0}"
                                    hx-post="/study/setup/update" th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + group.folderId + ', &quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-target="#setup-picker" hx-include="[name='selectedDeckIds'], [name='selectedFileIds']" hx-swap="outerHTML">
-                            <span class="vb-group-cap"><i th:attr="data-lucide=${group.folderIcon}"></i></span>
+                            <span class="vb-group-cap">
+                                <iconify-icon th:attr="icon=${group.folderIcon.contains(':') ? group.folderIcon : 'lucide:' + group.folderIcon}"></iconify-icon>
+                            </span>
                             <div class="vb-group-title" th:text="${group.folderName}">Folder</div>
                         </label>
                         <div class="vb-group-body">
@@ -87,14 +117,40 @@
                                 <span class="vb-file-name" th:text="${file.filename}">file.pdf</span>
                                 <span class="sh-badge" th:text="${file.extension.toUpperCase()}"></span>
                             </label>
+                            <!-- Subfolders -->
+                            <div th:each="sub : ${group.subGroups}" class="vb-subgroup" th:style="'--folder-color: ' + ${sub.folderColor}">
+                                <label class="vb-subgroup-head">
+                                    <input type="checkbox" class="sh-checkbox sh-source-folder-checkbox" th:checked="${sub.isSelected}" th:attr="data-indeterminate=${sub.isIndeterminate}" th:disabled="${sub.selectableSourceCount == 0}"
+                                           hx-post="/study/setup/update" th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + sub.folderId + ', &quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-target="#setup-picker" hx-include="[name='selectedDeckIds'], [name='selectedFileIds']" hx-swap="outerHTML">
+                                    <span class="vb-subgroup-cap">
+                                        <iconify-icon th:attr="icon=${sub.folderIcon.contains(':') ? sub.folderIcon : 'lucide:' + sub.folderIcon}"></iconify-icon>
+                                    </span>
+                                    <span class="vb-subgroup-name" th:text="${sub.folderName}">Subfolder</span>
+                                </label>
+                                <div class="vb-subgroup-body">
+                                    <label th:each="deck : ${sub.decks}" class="vb-deck" th:classappend="${deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
+                                        <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.usableCardCount == 0}"
+                                               hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds']" hx-swap="outerHTML">
+                                        <span class="vb-deck-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
+                                        <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
+                                        <span class="sh-badge sh-badge-primary" th:text="${deck.usableCardCount} + ' cards'"></span>
+                                    </label>
+                                    <label th:each="file : ${sub.files}" class="vb-file" th:classappend="${!file.isSupported ? ' is-disabled' : (#lists.contains(preselectedFileIds, file.fileId) ? ' is-selected' : '')}">
+                                        <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedFileIds" th:value="${file.fileId}" th:checked="${#lists.contains(preselectedFileIds, file.fileId)}" th:disabled="${!file.isSupported}"
+                                               hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds']" hx-swap="outerHTML">
+                                        <span class="vb-file-icon"><iconify-icon icon="lucide:file-text"></iconify-icon></span>
+                                        <span class="vb-file-name" th:text="${file.filename}">file.pdf</span>
+                                        <span class="sh-badge" th:text="${file.extension.toUpperCase()}"></span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </th:block>
             </div>
-            
+
             <script>
                 if (typeof reapplySearch === 'function') reapplySearch();
-                if (typeof initLucide === 'function') initLucide();
                 if (typeof updateSelectAllButton === 'function') updateSelectAllButton();
             </script>
         </div>

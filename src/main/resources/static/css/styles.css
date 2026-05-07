@@ -2425,7 +2425,7 @@ textarea.sh-input {
     justify-content: center;
     flex-shrink: 0;
 }
-.vb-group-cap svg { width: 14px; height: 14px; }
+.vb-group-cap svg, .vb-group-cap iconify-icon { width: 14px; height: 14px; font-size: 14px; }
 
 .vb-group-title {
     font-family: var(--font-heading);
@@ -2480,7 +2480,7 @@ textarea.sh-input {
     justify-content: center;
     flex-shrink: 0;
 }
-.vb-subgroup-cap svg { width: 12px; height: 12px; }
+.vb-subgroup-cap svg, .vb-subgroup-cap iconify-icon { width: 12px; height: 12px; font-size: 12px; }
 
 .vb-subgroup-name {
     font-size: 0.78rem;
