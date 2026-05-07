@@ -4122,7 +4122,7 @@ iconify-icon {
     margin-bottom: 0;
     transition: all var(--transition-fast);
     cursor: pointer;
-    background: var(--surface-hover);
+    background: var(--surface);
     border-right: 1px solid var(--border);
 }
 
