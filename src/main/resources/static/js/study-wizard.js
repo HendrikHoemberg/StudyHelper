@@ -359,6 +359,14 @@
             backBtn.parentNode.replaceChild(fresh, backBtn);
             fresh.addEventListener('click', () => goToStep(currentStep - 1));
         }
+        const submitBtn = document.getElementById('wizard-btn-submit');
+        if (submitBtn) {
+            const fresh = submitBtn.cloneNode(true);
+            submitBtn.parentNode.replaceChild(fresh, submitBtn);
+            fresh.addEventListener('click', (e) => {
+                if (!validateStep(currentStep)) e.preventDefault();
+            });
+        }
         if (searchInput) {
             const fresh = searchInput.cloneNode(true);
             searchInput.parentNode.replaceChild(fresh, searchInput);
