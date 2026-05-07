@@ -5,6 +5,7 @@ import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.service.ActiveTab;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
@@ -109,11 +110,13 @@ public class FolderController {
     public String viewFolder(@PathVariable Long id, 
                              @RequestParam(required = false) String sortBy,
                              @RequestParam(required = false, defaultValue = "asc") String direction,
+                             @RequestParam(required = false) String tab,
                              Model model, Principal principal,
                              @RequestHeader(value = "HX-Request", required = false) String hxRequest,
                              @RequestHeader(value = "HX-Target", required = false) String hxTarget) {
         User user = userService.getByUsername(principal.getName());
-        FolderView view = folderService.getFolderView(id, user, sortBy, direction);
+        ActiveTab activeTab = parseTab(tab);
+        FolderView view = folderService.getFolderView(id, user, sortBy, direction, activeTab);
         model.addAttribute("view", view);
         model.addAttribute("username", principal.getName());
         model.addAttribute("sortBy", sortBy);
@@ -127,6 +130,17 @@ public class FolderController {
             return "fragments/folder-detail :: folderDetail";
         }
         return "folder-page";
+    }
+
+    private ActiveTab parseTab(String tab) {
+        if (tab == null || tab.isBlank()) {
+            return ActiveTab.FOLDERS;
+        }
+        try {
+            return ActiveTab.valueOf(tab.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ActiveTab.FOLDERS;
+        }
     }
 
     @GetMapping("/folders/{id}/children")
