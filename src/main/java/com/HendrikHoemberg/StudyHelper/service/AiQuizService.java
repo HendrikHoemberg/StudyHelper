@@ -1,22 +1,25 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.Difficulty;
+import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
+import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.QuestionType;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionMode;
+import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.content.Media;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MimeType;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class AiQuizService {
-
-    public record DocumentInput(String filename, String extractedText) {}
 
     private final ChatClient chatClient;
     private final JsonMapper objectMapper;
@@ -34,19 +37,24 @@ public class AiQuizService {
             Difficulty difficulty) {
 
         String cardContent = buildCardContent(flashcards);
-        String docContent = buildDocContent(documents);
+        String docContent  = buildTextDocContent(documents);
+        String pdfListing  = buildPdfListing(documents);
+        Media[] pdfMedia   = buildPdfMedia(documents);
 
-        if (cardContent.isBlank() && docContent.isBlank()) {
-            throw new IllegalArgumentException("Selected sources contain no usable text. Pick a deck with text or a document with extractable content.");
+        if (cardContent.isBlank() && docContent.isBlank() && pdfMedia.length == 0) {
+            throw new IllegalArgumentException("Selected sources contain no usable text or PDFs. Pick a deck, a document with extractable content, or a PDF in full-document mode.");
         }
 
         int mcqCount = count / 2;
         int tfCount = count - mcqCount;
 
-        String prompt = buildPrompt(cardContent, docContent, count, mode, difficulty, mcqCount, tfCount);
+        String prompt = buildPrompt(cardContent, docContent, pdfListing, count, mode, difficulty, mcqCount, tfCount);
 
         String response = chatClient.prompt()
-            .user(prompt)
+            .user(u -> {
+                u.text(prompt);
+                if (pdfMedia.length > 0) u.media(pdfMedia);
+            })
             .call()
             .content();
 
@@ -126,21 +134,42 @@ public class AiQuizService {
         return sb.toString();
     }
 
-    private String buildDocContent(List<DocumentInput> documents) {
+    private String buildTextDocContent(List<DocumentInput> documents) {
         if (documents == null || documents.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
         int n = 0;
         for (DocumentInput doc : documents) {
-            if (doc.extractedText() == null || doc.extractedText().isBlank()) continue;
+            if (!(doc instanceof TextDocument td)) continue;
+            if (td.extractedText() == null || td.extractedText().isBlank()) continue;
             n++;
-            sb.append("Document ").append(n).append(" — ").append(doc.filename()).append(":\n")
-              .append(doc.extractedText()).append("\n\n");
+            sb.append("Document ").append(n).append(" — ").append(td.filename()).append(":\n")
+              .append(td.extractedText()).append("\n\n");
         }
         return sb.toString();
     }
 
-    private String buildPrompt(String cardContent, String docContent, int count,
-                                QuizQuestionMode mode, Difficulty difficulty,
+    private String buildPdfListing(List<DocumentInput> documents) {
+        if (documents == null || documents.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (DocumentInput doc : documents) {
+            if (doc instanceof PdfDocument pd) {
+                sb.append("- ").append(pd.filename()).append("\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    private Media[] buildPdfMedia(List<DocumentInput> documents) {
+        if (documents == null || documents.isEmpty()) return new Media[0];
+        return documents.stream()
+                .filter(d -> d instanceof PdfDocument)
+                .map(d -> (PdfDocument) d)
+                .map(pd -> new Media(new MimeType("application", "pdf"), pd.source()))
+                .toArray(Media[]::new);
+    }
+
+    private String buildPrompt(String cardContent, String docContent, String pdfListing,
+                                int count, QuizQuestionMode mode, Difficulty difficulty,
                                 int mcqCount, int tfCount) {
         String modeDescription = switch (mode) {
             case MCQ_ONLY -> "multiple-choice questions";
@@ -164,7 +193,8 @@ public class AiQuizService {
         };
 
         String cardSection = cardContent.isBlank() ? "(none)" : cardContent;
-        String docSection = docContent.isBlank() ? "(none)" : docContent;
+        String docSection  = docContent.isBlank()  ? "(none)" : docContent;
+        String pdfSection  = pdfListing.isBlank()  ? "(none)" : pdfListing;
 
         return ("You are a study assistant. Generate %d %s based on the source material below.\n\n"
             + "DIFFICULTY: %s\n\n"
@@ -183,17 +213,20 @@ public class AiQuizService {
             + "- Each question stands alone — do not reference \"the text\" or \"the document\".\n"
             + "- correctOptionIndex is 0-based.\n"
             + "- Vary which index is correct across questions.\n"
-            + "- Test understanding, not exact wording.\n\n"
+            + "- Test understanding, not exact wording.\n"
+            + "- Use the attached PDF documents (including their figures, diagrams, and tables) as primary source material for question generation.\n\n"
             + "=== FLASHCARDS ===\n"
             + "%s\n\n"
             + "=== DOCUMENTS ===\n"
+            + "%s\n\n"
+            + "=== ATTACHED PDFs ===\n"
             + "%s\n\n"
             + "Respond ONLY with valid JSON, no extra text. Schema:\n"
             + "{\"questions\":[\n"
             + "  {\"type\":\"MULTIPLE_CHOICE\",\"questionText\":\"...\",\"options\":[\"a\",\"b\",\"c\",\"d\"],\"correctOptionIndex\":0},\n"
             + "  {\"type\":\"TRUE_FALSE\",\"questionText\":\"...\",\"options\":[\"True\",\"False\"],\"correctOptionIndex\":0}\n"
             + "]}"
-        ).formatted(count, modeDescription, difficultyInstruction, typeRules, cardSection, docSection);
+        ).formatted(count, modeDescription, difficultyInstruction, typeRules, cardSection, docSection, pdfSection);
     }
 
     private String extractJson(String response) {

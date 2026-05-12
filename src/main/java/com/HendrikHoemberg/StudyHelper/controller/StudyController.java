@@ -6,6 +6,7 @@ import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.*;
+import com.HendrikHoemberg.StudyHelper.service.DocumentModeResolver;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -153,6 +154,7 @@ public class StudyController {
     public String createSession(@RequestParam StudyMode mode,
                                 @RequestParam(required = false) List<Long> selectedDeckIds,
                                 @RequestParam(required = false) List<Long> selectedFileIds,
+                                @RequestParam(required = false) Map<Long, DocumentMode> pdfMode,
                                 // Flashcard params
                                 @RequestParam(defaultValue = "DECK_BY_DECK") SessionMode sessionMode,
                                 @RequestParam(defaultValue = "SELECTED_ORDER") DeckOrderMode deckOrderMode,
@@ -194,13 +196,22 @@ public class StudyController {
 
                 List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(deckIds, user);
                 List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
-                List<AiQuizService.DocumentInput> documents = new ArrayList<>();
+                List<DocumentInput> documents = new ArrayList<>();
                 long totalChars = 0;
                 for (Long fileId : fileIds) {
                     FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-                    String text = documentExtractionService.extractText(file);
-                    documents.add(new AiQuizService.DocumentInput(file.getOriginalFilename(), text));
-                    totalChars += text.length();
+                    DocumentMode docMode = DocumentModeResolver.resolve(file, pdfMode);
+                    switch (docMode) {
+                        case TEXT -> {
+                            String text = documentExtractionService.extractText(file);
+                            documents.add(new TextDocument(file.getOriginalFilename(), text));
+                            totalChars += text.length();
+                        }
+                        case FULL_PDF -> {
+                            documents.add(new PdfDocument(file.getOriginalFilename(),
+                                    documentExtractionService.loadResource(file)));
+                        }
+                    }
                 }
 
                 if (totalChars > 150_000) throw new IllegalArgumentException("Selection too large — please deselect some sources.");
@@ -219,7 +230,7 @@ public class StudyController {
                 return handleError(mode, selectedDeckIds, selectedFileIds, ex.getMessage(), model, user, session, response, hxRequest);
             }
         } else if (mode == StudyMode.EXAM) {
-            return examController.createSession(selectedDeckIds, selectedFileIds, questionSize, count, timerMinutes, layout, model, principal, session, response, hxRequest);
+            return examController.createSession(selectedDeckIds, selectedFileIds, pdfMode, questionSize, count, timerMinutes, layout, model, principal, session, response, hxRequest);
         }
 
         return "redirect:/study/start";

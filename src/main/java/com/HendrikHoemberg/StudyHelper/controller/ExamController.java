@@ -6,6 +6,7 @@ import com.HendrikHoemberg.StudyHelper.entity.Exam;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.*;
+import com.HendrikHoemberg.StudyHelper.service.DocumentModeResolver;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -50,6 +51,7 @@ public class ExamController {
     public String createSession(
             @RequestParam(required = false) List<Long> selectedDeckIds,
             @RequestParam(required = false) List<Long> selectedFileIds,
+            @RequestParam(required = false) Map<Long, DocumentMode> pdfMode,
             @RequestParam(defaultValue = "MEDIUM") ExamQuestionSize questionSize,
             @RequestParam(defaultValue = "5") int count,
             @RequestParam(required = false) Integer timerMinutes,
@@ -73,17 +75,24 @@ public class ExamController {
             List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(deckIds, user);
             List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
             
-            List<AiExamService.DocumentInput> documents = new ArrayList<>();
+            List<DocumentInput> documents = new ArrayList<>();
             List<String> sourceNames = new ArrayList<>();
             decks.forEach(d -> sourceNames.add(d.getName()));
-            
+
             long totalChars = 0;
             for (Long fileId : fileIds) {
                 com.HendrikHoemberg.StudyHelper.entity.FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-                String text = documentExtractionService.extractText(file);
-                documents.add(new AiExamService.DocumentInput(file.getOriginalFilename(), text));
+                DocumentMode docMode = DocumentModeResolver.resolve(file, pdfMode);
+                switch (docMode) {
+                    case TEXT -> {
+                        String text = documentExtractionService.extractText(file);
+                        documents.add(new TextDocument(file.getOriginalFilename(), text));
+                        totalChars += text.length();
+                    }
+                    case FULL_PDF -> documents.add(new PdfDocument(file.getOriginalFilename(),
+                            documentExtractionService.loadResource(file)));
+                }
                 sourceNames.add(file.getOriginalFilename());
-                totalChars += text.length();
             }
 
             if (totalChars > 150_000) {

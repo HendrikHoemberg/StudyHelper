@@ -1,23 +1,25 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
 import com.HendrikHoemberg.StudyHelper.dto.ExamGradingResult;
 import com.HendrikHoemberg.StudyHelper.dto.ExamQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.ExamQuestionSize;
+import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
+import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.content.Media;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MimeType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class AiExamService {
-
-    public record DocumentInput(String filename, String extractedText) {}
 
     private final ChatClient chatClient;
     private final JsonMapper objectMapper;
@@ -34,16 +36,21 @@ public class AiExamService {
             ExamQuestionSize size) {
 
         String cardContent = buildCardContent(flashcards);
-        String docContent = buildDocContent(documents);
+        String docContent  = buildTextDocContent(documents);
+        String pdfListing  = buildPdfListing(documents);
+        Media[] pdfMedia   = buildPdfMedia(documents);
 
-        if (cardContent.isBlank() && docContent.isBlank()) {
-            throw new IllegalArgumentException("Selected sources contain no usable text. Pick a deck with text or a document with extractable content.");
+        if (cardContent.isBlank() && docContent.isBlank() && pdfMedia.length == 0) {
+            throw new IllegalArgumentException("Selected sources contain no usable text or PDFs. Pick a deck, a document with extractable content, or a PDF in full-document mode.");
         }
 
-        String prompt = buildGenerationPrompt(cardContent, docContent, questionCount, size);
+        String prompt = buildGenerationPrompt(cardContent, docContent, pdfListing, questionCount, size);
 
         String response = chatClient.prompt()
-                .user(prompt)
+                .user(u -> {
+                    u.text(prompt);
+                    if (pdfMedia.length > 0) u.media(pdfMedia);
+                })
                 .call()
                 .content();
 
@@ -111,20 +118,42 @@ public class AiExamService {
         return sb.toString();
     }
 
-    private String buildDocContent(List<DocumentInput> documents) {
+    private String buildTextDocContent(List<DocumentInput> documents) {
         if (documents == null || documents.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
         int n = 0;
         for (DocumentInput doc : documents) {
-            if (doc.extractedText() == null || doc.extractedText().isBlank()) continue;
+            if (!(doc instanceof TextDocument td)) continue;
+            if (td.extractedText() == null || td.extractedText().isBlank()) continue;
             n++;
-            sb.append("Document ").append(n).append(" — ").append(doc.filename()).append(":\n")
-                    .append(doc.extractedText()).append("\n\n");
+            sb.append("Document ").append(n).append(" — ").append(td.filename()).append(":\n")
+              .append(td.extractedText()).append("\n\n");
         }
         return sb.toString();
     }
 
-    private String buildGenerationPrompt(String cardContent, String docContent, int count, ExamQuestionSize size) {
+    private String buildPdfListing(List<DocumentInput> documents) {
+        if (documents == null || documents.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (DocumentInput doc : documents) {
+            if (doc instanceof PdfDocument pd) {
+                sb.append("- ").append(pd.filename()).append("\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    private Media[] buildPdfMedia(List<DocumentInput> documents) {
+        if (documents == null || documents.isEmpty()) return new Media[0];
+        return documents.stream()
+                .filter(d -> d instanceof PdfDocument)
+                .map(d -> (PdfDocument) d)
+                .map(pd -> new Media(new MimeType("application", "pdf"), pd.source()))
+                .toArray(Media[]::new);
+    }
+
+    private String buildGenerationPrompt(String cardContent, String docContent, String pdfListing,
+                                         int count, ExamQuestionSize size) {
         String sizeInstruction = switch (size) {
             case SHORT -> "Each question should require a brief recall or definition answer (1–2 sentences, ~50 words).";
             case MEDIUM -> "Each question should require an explanatory answer (~150 words). Test understanding, not just recall.";
@@ -133,7 +162,8 @@ public class AiExamService {
         };
 
         String cardSection = cardContent.isBlank() ? "(none)" : cardContent;
-        String docSection = docContent.isBlank() ? "(none)" : docContent;
+        String docSection  = docContent.isBlank()  ? "(none)" : docContent;
+        String pdfSection  = pdfListing.isBlank()  ? "(none)" : pdfListing;
 
         return ("You are a study assistant. Generate %d exam questions based on the source material below.\n\n"
                 + "QUESTION DEPTH:\n"
@@ -150,17 +180,20 @@ public class AiExamService {
                 + "GENERAL RULES:\n"
                 + "- Each question stands alone — do not reference \"the text\" or \"the document\".\n"
                 + "- Test understanding, not exact wording.\n"
+                + "- Use the attached PDF documents (including their figures, diagrams, and tables) as primary source material for question generation.\n"
                 + "- For each question, provide 'expectedAnswerHints' which is a 2–3 sentence rubric\n"
                 + "  describing what a perfect answer should contain. This rubric is never shown to the user.\n\n"
                 + "=== FLASHCARDS ===\n"
                 + "%s\n\n"
                 + "=== DOCUMENTS ===\n"
                 + "%s\n\n"
+                + "=== ATTACHED PDFs ===\n"
+                + "%s\n\n"
                 + "Respond ONLY with valid JSON, no extra text. Schema:\n"
                 + "{\"questions\":[\n"
                 + "  {\"questionText\":\"...\",\"expectedAnswerHints\":\"...\"}\n"
                 + "]}"
-        ).formatted(count, sizeInstruction, cardSection, docSection);
+        ).formatted(count, sizeInstruction, cardSection, docSection, pdfSection);
     }
 
     private String buildGradingPrompt(List<ExamQuestion> questions, Map<Integer, String> userAnswers, ExamQuestionSize size) {
@@ -171,7 +204,7 @@ public class AiExamService {
         sb.append("- Provide per-question feedback: 2–4 sentences. State what was correct, what was missing/incorrect, and what was expected.\n");
         sb.append("- Blank or whitespace-only answers MUST be scored 0 with feedback: \"Not answered.\"\n");
         sb.append("- Produce an overall report with mean score, strengths, weaknesses, topics to revisit, and next steps.\n\n");
-        
+
         sb.append("=== EXAM DATA ===\n");
         for (int i = 0; i < questions.size(); i++) {
             ExamQuestion q = questions.get(i);
