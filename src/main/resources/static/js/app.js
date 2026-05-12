@@ -482,6 +482,13 @@ document.addEventListener('click', (event) => {
     updateAiPdfSizeWarning(group?.closest('.sh-ai-pdf-row'));
 });
 
+document.body.addEventListener('click', (e) => {
+    if (e.target.closest('#ai-gen-abort-btn')) {
+        const form = document.querySelector('form.sh-ai-flashcard-form');
+        if (form) htmx.trigger(form, 'htmx:abort');
+    }
+});
+
 document.body.addEventListener('htmx:afterSettle', () => {
     updateAiFlashcardDestinationPanels();
     syncAiFolderSelectionWithSelectedPdf();
