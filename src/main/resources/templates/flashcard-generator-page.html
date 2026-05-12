@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('AI Flashcards')}"></head>
+<body>
+<div class="app-layout">
+    <nav th:replace="~{fragments/layout :: topnav}"></nav>
+    <div id="main-content" class="app-main-content">
+        <div class="sh-fade-in">
+            <div class="sh-dashboard-shell">
+                <div class="sh-explorer-shell">
+                    <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+                    <div id="explorer-detail" class="sh-explorer-detail sh-explorer-detail-content">
+                        <div th:replace="~{fragments/flashcard-generator :: generator}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modal-placeholder"></div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

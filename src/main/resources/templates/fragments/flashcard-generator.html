@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="generator" class="sh-flashcard-generator sh-fade-in">
+    <div class="sh-page-header">
+        <div>
+            <h1 class="sh-page-title">AI Flashcards</h1>
+            <p class="sh-page-subtitle">Generate flashcards from one uploaded PDF.</p>
+        </div>
+        <div class="sh-page-actions">
+            <a href="/dashboard" class="sh-btn sh-btn-secondary"
+               hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
+                <iconify-icon icon="lucide:arrow-left"></iconify-icon>
+                Back to Library
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${generationError}" class="sh-alert sh-alert-danger">
+        <div class="sh-alert-body" th:text="${generationError}"></div>
+        <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
+            <iconify-icon icon="lucide:x"></iconify-icon>
+        </button>
+    </div>
+
+    <form class="sh-card sh-ai-flashcard-form"
+          method="post"
+          hx-post="/flashcards/generate"
+          hx-target="#explorer-detail"
+          hx-swap="innerHTML swap:500ms"
+          hx-indicator="#ai-generating-modal"
+          hx-disabled-elt="#ai-flashcard-submit">
+        <div class="sh-card-body">
+            <div class="sh-ai-flashcard-grid">
+                <section>
+                    <div class="sh-section-title">Choose one PDF</div>
+                    <div class="sh-study-search-wrap mb-3">
+                        <iconify-icon icon="lucide:search" class="sh-study-search-icon"></iconify-icon>
+                        <input type="text" class="sh-study-search-input" id="ai-pdf-search" placeholder="Search PDFs..." autocomplete="off">
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(pdfOptions)}" class="sh-empty" style="padding:1.25rem 1rem;">
+                        <p class="sh-empty-text mb-1">No supported PDFs available</p>
+                        <p class="sh-empty-hint">Upload a PDF under 10 MB first.</p>
+                    </div>
+
+                    <div class="sh-ai-pdf-list" th:if="${!#lists.isEmpty(pdfOptions)}">
+                        <label th:each="pdf : ${pdfOptions}"
+                               class="sh-ai-pdf-row"
+                               th:classappend="${selectedFileId == pdf.id} ? ' is-selected' : ''"
+                               th:data-name="${pdf.filename + ' ' + pdf.folderPath}"
+                               th:style="'--folder-color:' + ${pdf.folderColorHex}">
+                            <input type="radio" name="fileId" th:value="${pdf.id}" th:checked="${selectedFileId == pdf.id}">
+                            <span class="vb-file-icon"><iconify-icon icon="lucide:file-text"></iconify-icon></span>
+                            <span class="sh-ai-pdf-main">
+                                <span class="sh-ai-pdf-name" th:text="${pdf.filename}">lecture.pdf</span>
+                                <span class="sh-ai-pdf-meta" th:text="${pdf.folderPath}">Folder</span>
+                            </span>
+                            <span class="vb-pdf-mode sh-ai-pdf-mode" th:data-file-id="${pdf.id}">
+                                <input type="hidden" name="documentMode" th:value="${selectedDocumentMode ?: T(com.HendrikHoemberg.StudyHelper.dto.DocumentMode).TEXT}">
+                                <button type="button" class="vb-pdf-mode-btn" th:classappend="${selectedDocumentMode == null || #strings.toString(selectedDocumentMode) == 'TEXT'} ? ' is-active' : ''" data-mode="TEXT" th:attr="aria-pressed=${selectedDocumentMode == null || #strings.toString(selectedDocumentMode) == 'TEXT'}">Text</button>
+                                <button type="button" class="vb-pdf-mode-btn" th:classappend="${#strings.toString(selectedDocumentMode) == 'FULL_PDF'} ? ' is-active' : ''" data-mode="FULL_PDF" th:attr="aria-pressed=${#strings.toString(selectedDocumentMode) == 'FULL_PDF'}" title="Send the full PDF with figures, diagrams, and layout.">Full PDF</button>
+                            </span>
+                        </label>
+                    </div>
+                </section>
+
+                <section>
+                    <div class="sh-section-title">Save generated cards to</div>
+                    <div class="sh-ai-destination-list">
+                        <label class="sh-ai-destination-row">
+                            <input type="radio" name="destination" value="EXISTING_DECK" th:checked="${selectedDestination == null || #strings.toString(selectedDestination) == 'EXISTING_DECK'}">
+                            <span class="sh-ai-destination-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
+                            <span class="sh-ai-destination-main">
+                                <span class="sh-ai-destination-title">Existing deck</span>
+                                <span class="sh-ai-destination-subtitle">Append cards to one of your decks.</span>
+                            </span>
+                        </label>
+                        <div class="sh-ai-destination-panel" data-destination-panel="EXISTING_DECK">
+                            <select class="sh-input" name="existingDeckId">
+                                <option value="">Select a deck</option>
+                                <option th:each="deck : ${deckOptions}" th:value="${deck.deckId}" th:selected="${selectedExistingDeckId == deck.deckId}" th:text="${deck.folderPath + ' / ' + deck.deckName}">Folder / Deck</option>
+                            </select>
+                        </div>
+
+                        <label class="sh-ai-destination-row">
+                            <input type="radio" name="destination" value="NEW_DECK" th:checked="${#strings.toString(selectedDestination) == 'NEW_DECK'}">
+                            <span class="sh-ai-destination-icon"><iconify-icon icon="lucide:plus"></iconify-icon></span>
+                            <span class="sh-ai-destination-main">
+                                <span class="sh-ai-destination-title">New deck</span>
+                                <span class="sh-ai-destination-subtitle">Create a deck in a selected folder.</span>
+                            </span>
+                        </label>
+                        <div class="sh-ai-destination-panel" data-destination-panel="NEW_DECK">
+                            <input class="sh-input" name="newDeckName" th:value="${newDeckName}" placeholder="New deck name">
+                            <select class="sh-input mt-2" name="newDeckFolderId">
+                                <option value="">Select a folder</option>
+                                <option th:each="folder : ${folderOptions}" th:value="${folder.id}" th:selected="${selectedNewDeckFolderId == folder.id}" th:text="${folder.path}">Folder</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <div class="sh-wizard-footer" style="display:flex;">
+            <button type="submit" id="ai-flashcard-submit" class="sh-btn sh-btn-primary" style="margin-left:auto;">
+                <iconify-icon icon="lucide:sparkles"></iconify-icon>
+                Generate flashcards
+            </button>
+        </div>
+    </form>
+
+    <div id="ai-generating-modal" class="sh-ai-gen-modal" role="dialog" aria-modal="true">
+        <div class="sh-ai-gen-backdrop"></div>
+        <div class="sh-ai-gen-dialog">
+            <div class="sh-ai-gen-spinner"></div>
+            <div>
+                <div id="ai-gen-title" class="sh-ai-gen-title">Generating your flashcards with AI…</div>
+                <div class="sh-ai-gen-subtitle">This may take a few seconds.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

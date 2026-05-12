@@ -716,6 +716,10 @@ a {
     height: 14px;
 }
 
+.sh-deck-ai-flashcards-btn {
+    right: 4.75rem;
+}
+
 .sh-deck-body {
     display: flex;
     flex-direction: column;
@@ -4388,4 +4392,150 @@ iconify-icon {
     pointer-events: none;
     opacity: 0.4;
     cursor: not-allowed;
+}
+
+.sh-ai-flashcard-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.sh-ai-pdf-list,
+.sh-ai-destination-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.sh-ai-pdf-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem;
+    background: var(--surface-color);
+    cursor: pointer;
+}
+
+.sh-ai-pdf-row.is-selected {
+    border-color: var(--accent-color);
+    background: rgba(var(--accent-rgb), 0.08);
+}
+
+.sh-ai-pdf-row input[type="radio"] {
+    margin: 0;
+}
+
+.sh-ai-pdf-main {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.sh-ai-pdf-name {
+    font-weight: 700;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sh-ai-pdf-meta {
+    color: var(--text-tertiary);
+    font-size: 0.8125rem;
+}
+
+.sh-ai-pdf-mode {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.sh-ai-destination-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 0.625rem 0.75rem;
+    background: var(--surface-color);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.sh-ai-destination-row:hover {
+    border-color: var(--accent-color);
+}
+
+.sh-ai-destination-row:has(input:checked) {
+    border-color: var(--accent-color);
+    background: rgba(var(--accent-rgb), 0.08);
+}
+
+.sh-ai-destination-row input[type="radio"] {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.sh-ai-destination-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(var(--accent-rgb), 0.12);
+    color: var(--accent-color);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sh-ai-destination-icon iconify-icon {
+    font-size: 0.95rem;
+}
+
+.sh-ai-destination-main {
+    display: grid;
+    gap: 0.1rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.sh-ai-destination-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.sh-ai-destination-subtitle {
+    color: var(--text-tertiary);
+    font-size: 0.8125rem;
+}
+
+.sh-ai-destination-panel {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem;
+    background: var(--surface-muted);
+}
+
+.sh-alert-success {
+    border-color: rgba(34, 197, 94, 0.35);
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+}
+
+@media (max-width: 900px) {
+    .sh-ai-flashcard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sh-ai-pdf-row {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .sh-ai-pdf-mode {
+        margin-left: 1.75rem;
+    }
 }

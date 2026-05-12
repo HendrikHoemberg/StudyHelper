@@ -393,3 +393,60 @@ function shPrompt(opts) {
     if (typeof opts === 'string') opts = { message: opts };
     return _shOpenDialog({ iconKind: 'edit', ...opts, prompt: true });
 }
+
+/* ---------- AI Flashcard Generator ---------- */
+document.addEventListener('input', (event) => {
+    if (!event.target.matches('#ai-pdf-search')) return;
+    const q = event.target.value.toLowerCase();
+    document.querySelectorAll('.sh-ai-pdf-row').forEach(row => {
+        const text = (row.dataset.name || row.innerText).toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+    });
+});
+
+document.addEventListener('change', (event) => {
+    if (event.target.matches('.sh-ai-pdf-row input[name="fileId"]')) {
+        document.querySelectorAll('.sh-ai-pdf-row').forEach(row => row.classList.remove('is-selected'));
+        event.target.closest('.sh-ai-pdf-row')?.classList.add('is-selected');
+    }
+    if (event.target.matches('input[name="destination"]')) {
+        updateAiFlashcardDestinationPanels();
+    }
+});
+
+document.addEventListener('click', (event) => {
+    const btn = event.target.closest('.sh-ai-pdf-mode .vb-pdf-mode-btn');
+    if (!btn) return;
+    event.preventDefault();
+    const group = btn.closest('.sh-ai-pdf-mode');
+    const hidden = group?.querySelector('input[name="documentMode"]');
+    if (hidden) hidden.value = btn.dataset.mode;
+    group?.querySelectorAll('.vb-pdf-mode-btn').forEach(option => {
+        const selected = option === btn;
+        option.classList.toggle('is-active', selected);
+        option.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+});
+
+document.body.addEventListener('htmx:afterSettle', () => {
+    updateAiFlashcardDestinationPanels();
+});
+
+document.body.addEventListener('htmx:beforeRequest', (event) => {
+    if (!event.detail.elt?.matches?.('form.sh-ai-flashcard-form')) return;
+    const modal = document.getElementById('ai-generating-modal');
+    if (modal) modal.style.display = 'flex';
+});
+
+document.body.addEventListener('htmx:afterRequest', (event) => {
+    if (!event.detail.elt?.matches?.('form.sh-ai-flashcard-form')) return;
+    const modal = document.getElementById('ai-generating-modal');
+    if (modal) modal.style.display = 'none';
+});
+
+function updateAiFlashcardDestinationPanels() {
+    const selected = document.querySelector('input[name="destination"]:checked')?.value || 'EXISTING_DECK';
+    document.querySelectorAll('[data-destination-panel]').forEach(panel => {
+        panel.style.display = panel.dataset.destinationPanel === selected ? '' : 'none';
+    });
+}

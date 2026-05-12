@@ -9,6 +9,13 @@
         <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
     </th:block>
 
+    <div th:if="${successMessage}" class="sh-alert sh-alert-success">
+        <div class="sh-alert-body" th:text="${successMessage}"></div>
+        <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
+            <iconify-icon icon="lucide:x"></iconify-icon>
+        </button>
+    </div>
+
     <!-- Breadcrumb -->
     <ul class="sh-breadcrumb">
         <li>
