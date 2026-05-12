@@ -3,6 +3,7 @@ package com.HendrikHoemberg.StudyHelper.controller;
 import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
 import com.HendrikHoemberg.StudyHelper.dto.DocumentMode;
 import com.HendrikHoemberg.StudyHelper.dto.FlashcardGenerationDestination;
+import com.HendrikHoemberg.StudyHelper.dto.FlashcardPdfOption;
 import com.HendrikHoemberg.StudyHelper.dto.GeneratedFlashcard;
 import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
@@ -107,6 +108,19 @@ class FlashcardGenerationControllerTests {
 
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
         assertThat(model).containsKeys("pdfOptions", "deckTree", "folderTree", "destinations", "documentModes");
+    }
+
+    @Test
+    void showGenerator_WithSelectedPdf_PrefillsNewDeckNameFromPdfName() {
+        when(viewService.getPdfOptions(user)).thenReturn(List.of(
+            new FlashcardPdfOption(98L, "Other.pdf", 10L, "Algorithms", "#6366f1", 100L),
+            new FlashcardPdfOption(99L, "Chapter 1.pdf", 10L, "Algorithms", "#6366f1", 100L)
+        ));
+        ExtendedModelMap model = new ExtendedModelMap();
+
+        controller.showGenerator(99L, model, () -> "alice", "true");
+
+        assertThat(model.get("newDeckName")).isEqualTo("Chapter 1");
     }
 
     @Test

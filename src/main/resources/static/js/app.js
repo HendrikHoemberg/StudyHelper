@@ -433,6 +433,7 @@ document.addEventListener('change', (event) => {
         document.querySelectorAll('.sh-ai-pdf-row').forEach(row => row.classList.remove('is-selected'));
         const row = event.target.closest('.sh-ai-pdf-row');
         row?.classList.add('is-selected');
+        prefillAiNewDeckNameForPdf(row);
         preselectAiNewDeckFolderForPdf(row);
     }
     if (event.target.matches('input[name="destination"]')) {
@@ -520,8 +521,16 @@ function preselectAiNewDeckFolderForPdf(pdfRow) {
     folderRadio.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
+function prefillAiNewDeckNameForPdf(pdfRow) {
+    const deckNameInput = document.querySelector('.sh-ai-flashcard-form input[name="newDeckName"]');
+    const filename = pdfRow?.dataset?.deckName?.trim();
+    if (!deckNameInput || !filename) return;
+    deckNameInput.value = filename.replace(/\.pdf$/i, '');
+}
+
 function syncAiFolderSelectionWithSelectedPdf() {
     const selectedPdf = document.querySelector('.sh-ai-pdf-row input[name="fileId"]:checked')?.closest('.sh-ai-pdf-row');
     if (!selectedPdf) return;
+    prefillAiNewDeckNameForPdf(selectedPdf);
     preselectAiNewDeckFolderForPdf(selectedPdf);
 }

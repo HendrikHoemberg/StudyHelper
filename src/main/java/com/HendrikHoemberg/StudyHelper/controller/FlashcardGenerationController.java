@@ -3,6 +3,7 @@ package com.HendrikHoemberg.StudyHelper.controller;
 import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
 import com.HendrikHoemberg.StudyHelper.dto.DocumentMode;
 import com.HendrikHoemberg.StudyHelper.dto.FlashcardGenerationDestination;
+import com.HendrikHoemberg.StudyHelper.dto.FlashcardPdfOption;
 import com.HendrikHoemberg.StudyHelper.dto.GeneratedFlashcard;
 import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
@@ -65,8 +66,9 @@ public class FlashcardGenerationController {
                                 @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
-        prepareGeneratorModel(model, user);
+        List<FlashcardPdfOption> pdfOptions = prepareGeneratorModel(model, user);
         model.addAttribute("selectedFileId", fileId);
+        model.addAttribute("newDeckName", defaultDeckNameForSelectedPdf(pdfOptions, fileId));
         if (hxRequest != null) return "fragments/flashcard-generator :: generator";
         model.addAttribute("username", user.getUsername());
         model.addAttribute("sidebarTree", folderService.getSidebarTree(user));
@@ -148,12 +150,29 @@ public class FlashcardGenerationController {
         };
     }
 
-    private void prepareGeneratorModel(Model model, User user) {
-        model.addAttribute("pdfOptions", viewService.getPdfOptions(user));
+    private List<FlashcardPdfOption> prepareGeneratorModel(Model model, User user) {
+        List<FlashcardPdfOption> pdfOptions = viewService.getPdfOptions(user);
+        model.addAttribute("pdfOptions", pdfOptions);
         model.addAttribute("deckTree", folderService.getStudyFolderTree(user));
         model.addAttribute("folderTree", folderService.getFolderPickerTree(user));
         model.addAttribute("destinations", FlashcardGenerationDestination.values());
         model.addAttribute("documentModes", DocumentMode.values());
+        return pdfOptions;
+    }
+
+    private String defaultDeckNameForSelectedPdf(List<FlashcardPdfOption> pdfOptions, Long fileId) {
+        if (fileId == null || pdfOptions == null) return "";
+        return pdfOptions.stream()
+            .filter(pdf -> fileId.equals(pdf.id()))
+            .map(FlashcardPdfOption::filename)
+            .findFirst()
+            .map(this::deckNameFromPdfFilename)
+            .orElse("");
+    }
+
+    private String deckNameFromPdfFilename(String filename) {
+        if (filename == null) return "";
+        return filename.replaceFirst("(?i)\\.pdf$", "");
     }
 
     private boolean isPdf(FileEntry file) {
