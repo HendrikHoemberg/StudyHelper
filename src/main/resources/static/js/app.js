@@ -479,6 +479,30 @@ document.body.addEventListener('htmx:afterRequest', (event) => {
     if (modal) modal.style.display = 'none';
 });
 
+document.body.addEventListener('htmx:responseError', (event) => {
+    const source = event.detail.elt;
+    if (!source?.matches?.('form.sh-ai-flashcard-form, form.sh-study-setup-card')) return;
+
+    const modal = document.getElementById('ai-generating-modal');
+    if (modal) modal.style.display = 'none';
+
+    const text = extractAiGenerationError(event.detail.xhr?.responseText);
+    shAlert({
+        title: 'AI generation failed',
+        message: text || 'Please try again. If this keeps happening, reduce the selected sources or switch PDF mode.',
+        confirmText: 'Try again',
+        danger: true
+    });
+});
+
+function extractAiGenerationError(responseText) {
+    if (!responseText) return '';
+    const doc = new DOMParser().parseFromString(responseText, 'text/html');
+    const error = doc.querySelector('[data-ai-generation-error="true"] .sh-alert-body, .sh-alert-danger .sh-alert-body');
+    if (error?.textContent?.trim()) return error.textContent.trim();
+    return doc.body?.textContent?.replace(/^Error:\s*/i, '').trim() || '';
+}
+
 function updateAiFlashcardDestinationPanels() {
     const selected = document.querySelector('input[name="destination"]:checked')?.value || 'NEW_DECK';
     document.querySelectorAll('.sh-ai-destination-card').forEach(card => {

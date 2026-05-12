@@ -68,9 +68,7 @@ public class ExamController {
         List<Long> fileIds = normalizeIds(selectedFileIds);
 
         if (deckIds.isEmpty() && fileIds.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            // This would normally go back to setup with an error, but since we are stubbing for now:
-            return "<div>Error: Please select at least one source.</div>";
+            return renderGenerationError(model, response, "Please select at least one source.");
         }
 
         try {
@@ -127,9 +125,17 @@ public class ExamController {
             return "exam-page";
 
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return "<div>Error: " + e.getMessage() + "</div>";
+            return renderGenerationError(model, response, e.getMessage());
         }
+    }
+
+    private String renderGenerationError(Model model, HttpServletResponse response, String message) {
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        model.addAttribute("aiErrorTitle", "AI generation failed");
+        model.addAttribute("aiErrorMessage", message == null || message.isBlank()
+            ? "Please try again."
+            : message);
+        return "fragments/ai-generation-error :: aiGenerationError";
     }
 
     @PostMapping("/exam/answer")
