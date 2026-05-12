@@ -51,21 +51,31 @@ public class FlashcardGenerationPersistenceService {
         };
     }
 
-    private Deck persistToExistingDeck(List<GeneratedFlashcard> generatedCards, User user, Long deckId) {
+    @Transactional(readOnly = true)
+    public void validateDestination(FlashcardGenerationDestination destination,
+                                    Long existingDeckId,
+                                    Long newDeckFolderId,
+                                    String newDeckName,
+                                    User user) {
+        if (destination == null) {
+            throw new IllegalArgumentException("Destination is required.");
+        }
+
+        switch (destination) {
+            case EXISTING_DECK -> findValidatedExistingDeck(existingDeckId, user);
+            case NEW_DECK -> findValidatedNewDeckFolder(newDeckFolderId, newDeckName, user);
+        }
+    }
+
+    private Deck findValidatedExistingDeck(Long deckId, User user) {
         if (deckId == null) {
             throw new IllegalArgumentException("Existing deck id is required.");
         }
-
-        Deck deck = deckRepository.findByIdAndUser(deckId, user)
+        return deckRepository.findByIdAndUser(deckId, user)
             .orElseThrow(() -> new NoSuchElementException("Deck not found"));
-
-        List<Flashcard> cards = buildFlashcards(generatedCards, deck);
-        deck.getFlashcards().addAll(cards);
-        flashcardRepository.saveAll(cards);
-        return deck;
     }
 
-    private Deck persistToNewDeck(List<GeneratedFlashcard> generatedCards, User user, Long folderId, String deckName) {
+    private Folder findValidatedNewDeckFolder(Long folderId, String deckName, User user) {
         if (folderId == null) {
             throw new IllegalArgumentException("Destination folder id is required.");
         }
@@ -75,6 +85,27 @@ public class FlashcardGenerationPersistenceService {
 
         Folder folder = folderRepository.findByIdAndUser(folderId, user)
             .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+
+        String normalizedName = deckName.trim();
+        boolean duplicateName = deckRepository.findByUserAndFolder(user, folder).stream()
+            .anyMatch(deck -> normalizedName.equals(deck.getName()));
+        if (duplicateName) {
+            throw new IllegalArgumentException("A deck named \"" + normalizedName + "\" already exists in this folder.");
+        }
+        return folder;
+    }
+
+    private Deck persistToExistingDeck(List<GeneratedFlashcard> generatedCards, User user, Long deckId) {
+        Deck deck = findValidatedExistingDeck(deckId, user);
+
+        List<Flashcard> cards = buildFlashcards(generatedCards, deck);
+        deck.getFlashcards().addAll(cards);
+        flashcardRepository.saveAll(cards);
+        return deck;
+    }
+
+    private Deck persistToNewDeck(List<GeneratedFlashcard> generatedCards, User user, Long folderId, String deckName) {
+        Folder folder = findValidatedNewDeckFolder(folderId, deckName, user);
 
         Deck deck = new Deck();
         deck.setName(deckName.trim());

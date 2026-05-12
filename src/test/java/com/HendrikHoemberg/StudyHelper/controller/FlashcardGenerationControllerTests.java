@@ -35,6 +35,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -199,6 +200,36 @@ class FlashcardGenerationControllerTests {
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("generationError")).isEqualTo("Please select one PDF.");
+        verify(aiFlashcardService, never()).generate(any(DocumentInput.class));
+    }
+
+    @Test
+    void generate_NewDeckBlankName_ReturnsErrorBeforeCallingAi() throws Exception {
+        doThrow(new IllegalArgumentException("Deck name is required."))
+            .when(persistenceService).validateDestination(FlashcardGenerationDestination.NEW_DECK, null, 10L, "   ", user);
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.generate(99L, DocumentMode.TEXT, FlashcardGenerationDestination.NEW_DECK, null, 10L, "   ", model, () -> "alice", response, "true");
+
+        assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(model.get("generationError")).isEqualTo("Deck name is required.");
+        verify(aiFlashcardService, never()).generate(any(DocumentInput.class));
+    }
+
+    @Test
+    void generate_NewDeckDuplicateName_ReturnsErrorBeforeCallingAi() throws Exception {
+        doThrow(new IllegalArgumentException("A deck named \"lecture\" already exists in this folder."))
+            .when(persistenceService).validateDestination(FlashcardGenerationDestination.NEW_DECK, null, 10L, "lecture", user);
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.generate(99L, DocumentMode.TEXT, FlashcardGenerationDestination.NEW_DECK, null, 10L, "lecture", model, () -> "alice", response, "true");
+
+        assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(model.get("generationError")).isEqualTo("A deck named \"lecture\" already exists in this folder.");
         verify(aiFlashcardService, never()).generate(any(DocumentInput.class));
     }
 

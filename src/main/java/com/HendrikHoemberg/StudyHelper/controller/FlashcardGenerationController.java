@@ -91,6 +91,7 @@ public class FlashcardGenerationController {
         try {
             if (fileId == null) throw new IllegalArgumentException("Please select one PDF.");
             if (destination == null) throw new IllegalArgumentException("Please choose where to save the generated flashcards.");
+            persistenceService.validateDestination(destination, existingDeckId, newDeckFolderId, newDeckName, user);
 
             FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
             if (!isPdf(file) || !documentExtractionService.isSupported(file)) {

@@ -207,4 +207,34 @@ class FlashcardGenerationPersistenceServiceTests {
             .hasMessageContaining("folder id");
     }
 
+    @Test
+    void validateDestination_NewDeckDuplicateNameInFolderIsRejected() {
+        Folder folder = new Folder();
+        folder.setId(21L);
+        folder.setName("Root");
+        folder.setUser(user);
+
+        Deck existing = new Deck();
+        existing.setId(31L);
+        existing.setName("Lecture");
+        existing.setFolder(folder);
+        existing.setUser(user);
+
+        when(folderRepository.findByIdAndUser(21L, user)).thenReturn(java.util.Optional.of(folder));
+        when(deckRepository.findByUserAndFolder(user, folder)).thenReturn(List.of(existing));
+
+        assertThatThrownBy(() -> service.validateDestination(
+            FlashcardGenerationDestination.NEW_DECK,
+            null,
+            21L,
+            "Lecture",
+            user
+        ))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("A deck named \"Lecture\" already exists in this folder.");
+
+        verify(deckRepository, never()).save(any());
+        verify(flashcardRepository, never()).saveAll(any());
+    }
+
 }
