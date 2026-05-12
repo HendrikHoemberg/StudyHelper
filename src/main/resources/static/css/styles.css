@@ -1745,46 +1745,100 @@ textarea.sh-input {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .sh-view-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.2rem;
-    border: 1px solid var(--border-light);
-    border-radius: 10px;
-    background: var(--surface-muted);
+    gap: 0.35rem;
+    padding: 0.25rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface) 82%, var(--accent) 18%);
+    box-shadow: var(--shadow-sm);
 }
 
 .sh-view-toggle-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.35rem 0.6rem;
-    border-radius: 8px;
-    color: var(--text-secondary);
+    padding: 0.45rem 0.7rem;
+    border-radius: 9px;
+    border: 1px solid transparent;
+    color: color-mix(in srgb, var(--text-secondary) 82%, var(--accent) 18%);
     text-decoration: none;
     font-size: 0.75rem;
-    font-weight: 600;
-    transition: background var(--transition-fast), color var(--transition-fast);
+    font-weight: 700;
+    line-height: 1;
+    transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .sh-view-toggle-btn:hover {
-    color: var(--text);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    color: var(--accent);
 }
 
 .sh-view-toggle-btn.is-active {
-    background: var(--surface);
-    color: var(--accent);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
     box-shadow: var(--shadow-sm);
+}
+
+.sh-view-toggle-btn iconify-icon {
+    font-size: 0.95rem;
+}
+
+.sh-files-grid {
+    align-items: stretch;
+}
+
+.sh-file-tile {
+    min-height: 320px;
+}
+
+.sh-file-tile .sh-deck-title {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
 .sh-file-tile-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
-    margin-top: 0.25rem;
+    margin-top: auto;
+    padding-top: 0.35rem;
+}
+
+.sh-file-tile-actions .sh-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+}
+
+.sh-file-tile-actions .sh-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff !important;
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.sh-file-tile-actions .sh-btn[style*="danger"]:hover {
+    border-color: var(--danger);
+    background: var(--danger);
+    color: #fff !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.sh-file-tile-add {
+    min-height: 320px;
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+    background: color-mix(in srgb, var(--accent) 7%, var(--surface));
 }
 
 /* ============================================================

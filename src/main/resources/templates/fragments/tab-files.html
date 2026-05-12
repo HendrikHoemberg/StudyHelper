@@ -31,7 +31,7 @@
         </div>
     </div>
 
-    <div th:if="${#lists.isEmpty(view.files)}" class="sh-empty-state">
+    <div th:if="${#lists.isEmpty(view.files) && viewMode != 'grid'}" class="sh-empty-state">
         <iconify-icon icon="lucide:file-up" style="font-size:2rem;color:var(--text-muted);"></iconify-icon>
         <p class="sh-empty-text">No files yet.</p>
         <button class="sh-btn sh-btn-secondary sh-btn-sm"
@@ -41,7 +41,7 @@
         </button>
     </div>
 
-    <div th:if="${!#lists.isEmpty(view.files)}">
+    <div th:if="${!#lists.isEmpty(view.files) || viewMode == 'grid'}">
         <div id="files-table-container" th:if="${viewMode != 'grid'}">
             <table class="sh-file-table">
                 <thead>
@@ -105,9 +105,9 @@
             </table>
         </div>
 
-        <div th:if="${viewMode == 'grid'}" class="sh-deck-grid">
+        <div th:if="${viewMode == 'grid'}" class="sh-deck-grid sh-files-grid">
             <div th:each="file : ${view.files}"
-                 class="sh-deck-tile"
+                 class="sh-deck-tile sh-file-tile"
                  th:style="'--folder-color:' + ${view.folder.colorHex}">
                 <a th:href="@{/files/{id}/view(id=${file.id})}"
                    target="_blank"
@@ -150,6 +150,13 @@
                             hx-confirm="Delete this file?"
                             hx-target="#explorer-detail">Delete</button>
                 </div>
+            </div>
+
+            <div class="sh-deck-tile-add sh-file-tile-add"
+                 th:hx-get="@{/folders/{fid}/files/upload(fid=${view.folder.id})}"
+                 hx-target="#modal-placeholder">
+                <iconify-icon icon="lucide:upload"></iconify-icon>
+                <span>New File</span>
             </div>
         </div>
     </div>
