@@ -84,46 +84,47 @@
             <iconify-icon icon="lucide:menu"></iconify-icon>
         </button>
     </div>
-
-    <div class="topnav-mobile-menu" id="topnav-mobile-menu">
-        <a href="/dashboard" class="topnav-mobile-link"
-           hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
-            <iconify-icon icon="lucide:layout-dashboard"></iconify-icon>
-            Dashboard
-        </a>
-        <a href="/study/start" class="topnav-mobile-link"
-           hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
-            <iconify-icon icon="lucide:book-open"></iconify-icon>
-            Study Session
-        </a>
-        <a href="/flashcards/generate" class="topnav-mobile-link"
-           hx-get="/flashcards/generate" hx-target="#explorer-detail" hx-push-url="true">
-            <iconify-icon icon="lucide:sparkles"></iconify-icon>
-            AI Flashcards
-        </a>
-        <a href="/exams" class="topnav-mobile-link"
-           hx-get="/exams" hx-target="#explorer-detail" hx-push-url="true">
-            <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
-            Past Exams
-        </a>
-        <div class="topnav-mobile-divider"></div>
-        <span class="topnav-mobile-user">
-            <iconify-icon icon="lucide:user"></iconify-icon>
-            <span th:text="${username}">User</span>
-        </span>
-        <form th:action="@{/logout}" method="post">
-            <button type="submit" class="topnav-mobile-link">
-                <iconify-icon icon="lucide:log-out"></iconify-icon>
-                Sign out
-            </button>
-        </form>
-        <button class="topnav-mobile-link" type="button" onclick="toggleTheme()">
-            <iconify-icon icon="lucide:sun" class="theme-icon-light"></iconify-icon>
-            <iconify-icon icon="lucide:moon" class="theme-icon-dark"></iconify-icon>
-            Toggle theme
-        </button>
-    </div>
 </nav>
+
+<!-- Mobile side drawer for nav links (lives outside <nav> to escape its stacking context) -->
+<div th:fragment="topnav-drawer" class="topnav-mobile-menu" id="topnav-mobile-menu">
+    <a href="/dashboard" class="topnav-mobile-link"
+       hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
+        <iconify-icon icon="lucide:layout-dashboard"></iconify-icon>
+        Dashboard
+    </a>
+    <a href="/study/start" class="topnav-mobile-link"
+       hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
+        <iconify-icon icon="lucide:book-open"></iconify-icon>
+        Study Session
+    </a>
+    <a href="/flashcards/generate" class="topnav-mobile-link"
+       hx-get="/flashcards/generate" hx-target="#explorer-detail" hx-push-url="true">
+        <iconify-icon icon="lucide:sparkles"></iconify-icon>
+        AI Flashcards
+    </a>
+    <a href="/exams" class="topnav-mobile-link"
+       hx-get="/exams" hx-target="#explorer-detail" hx-push-url="true">
+        <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
+        Past Exams
+    </a>
+    <div class="topnav-mobile-divider"></div>
+    <span class="topnav-mobile-user">
+        <iconify-icon icon="lucide:user"></iconify-icon>
+        <span th:text="${username}">User</span>
+    </span>
+    <form th:action="@{/logout}" method="post">
+        <button type="submit" class="topnav-mobile-link">
+            <iconify-icon icon="lucide:log-out"></iconify-icon>
+            Sign out
+        </button>
+    </form>
+    <button class="topnav-mobile-link" type="button" onclick="toggleTheme()">
+        <iconify-icon icon="lucide:sun" class="theme-icon-light"></iconify-icon>
+        <iconify-icon icon="lucide:moon" class="theme-icon-dark"></iconify-icon>
+        Toggle theme
+    </button>
+</div>
 
 <!-- Layout fragment: scripts -->
 <div th:fragment="scripts">
@@ -141,6 +142,7 @@
     <div th:replace="~{fragments/exam-grading :: exam-grading-loader}"></div>
     <div th:replace="~{fragments/dialog :: dialog}"></div>
     <div id="sh-sidebar-backdrop" class="sh-sidebar-backdrop" aria-hidden="true"></div>
+    <div th:replace="~{fragments/layout :: topnav-drawer}"></div>
 </div>
 
 </html>

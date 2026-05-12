@@ -90,12 +90,36 @@ function initLucide() {
 function initTopnav() {
     const toggle = document.getElementById('topnav-menu-btn');
     const menu = document.getElementById('topnav-mobile-menu');
+    const backdrop = document.getElementById('sh-sidebar-backdrop');
     if (!toggle || !menu) return;
 
-    toggle.addEventListener('click', () => menu.classList.toggle('open'));
+    const closeMenu = () => {
+        if (!menu.classList.contains('open')) return;
+        menu.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('is-open');
+    };
+
+    const openMenu = () => {
+        // Close folders drawer if open so only one drawer is visible at a time
+        const sidebar = document.getElementById('sidebar-aside');
+        if (sidebar) sidebar.classList.remove('is-open');
+        menu.classList.add('open');
+        if (backdrop) backdrop.classList.add('is-open');
+    };
+
+    toggle.addEventListener('click', () => {
+        if (menu.classList.contains('open')) closeMenu();
+        else openMenu();
+    });
 
     menu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => menu.classList.remove('open'));
+        link.addEventListener('click', closeMenu);
+    });
+
+    if (backdrop) backdrop.addEventListener('click', closeMenu);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeMenu();
     });
 }
 
@@ -110,6 +134,9 @@ function initSidebarDrawer() {
     const open = () => {
         const sidebar = getSidebar();
         if (!sidebar) return;
+        // Close burger menu drawer if open so only one drawer is visible at a time
+        const menu = document.getElementById('topnav-mobile-menu');
+        if (menu) menu.classList.remove('open');
         sidebar.classList.add('is-open');
         backdrop.classList.add('is-open');
     };
@@ -143,6 +170,8 @@ function initSidebarDrawer() {
     // Close when an HTMX swap replaces the sidebar (e.g. OOB refresh after mutation)
     document.body.addEventListener('htmx:afterSwap', () => {
         backdrop.classList.remove('is-open');
+        const menu = document.getElementById('topnav-mobile-menu');
+        if (menu) menu.classList.remove('open');
     });
 }
 
