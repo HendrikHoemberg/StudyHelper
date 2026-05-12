@@ -39,7 +39,8 @@ public class AiFlashcardService {
         Media[] pdfMedia = buildPdfMedia(document);
 
         if (docContent.isBlank() && pdfMedia.length == 0) {
-            throw new IllegalArgumentException("Selected sources contain no usable text or PDFs. Pick a document with extractable content, or a PDF in full-document mode.");
+            throw new IllegalArgumentException(
+                    "Selected sources contain no usable text or PDFs. Pick a document with extractable content, or a PDF in full-document mode.");
         }
 
         String prompt = buildPrompt(docContent, pdfListing);
@@ -47,30 +48,33 @@ public class AiFlashcardService {
         FlashcardsResponse response;
         try {
             response = chatClient.prompt()
-                .options(GoogleGenAiChatOptions.builder()
-                    .responseMimeType("application/json")
-                    .responseSchema(responseSchema))
-                .user(u -> {
-                    u.text(prompt);
-                    if (pdfMedia.length > 0) u.media(pdfMedia);
-                })
-                .call()
-                .entity(FlashcardsResponse.class);
+                    .options(GoogleGenAiChatOptions.builder()
+                            .responseMimeType("application/json")
+                            .responseSchema(responseSchema))
+                    .user(u -> {
+                        u.text(prompt);
+                        if (pdfMedia.length > 0)
+                            u.media(pdfMedia);
+                    })
+                    .call()
+                    .entity(FlashcardsResponse.class);
         } catch (Exception e) {
-            throw new IllegalStateException("AI request failed, please retry with fewer or smaller PDFs.", e);
+            throw new IllegalStateException("AI request failed, please retry.", e);
         }
 
         try {
             List<GeneratedFlashcard> rawList = response == null || response.flashcards() == null
-                ? List.of()
-                : response.flashcards();
+                    ? List.of()
+                    : response.flashcards();
 
             List<GeneratedFlashcard> valid = new ArrayList<>();
             for (GeneratedFlashcard card : rawList) {
-                if (card == null) continue;
+                if (card == null)
+                    continue;
                 String front = card.frontText() == null ? null : card.frontText().trim();
                 String back = card.backText() == null ? null : card.backText().trim();
-                if (front == null || front.isBlank() || back == null || back.isBlank()) continue;
+                if (front == null || front.isBlank() || back == null || back.isBlank())
+                    continue;
                 valid.add(new GeneratedFlashcard(front, back));
             }
 
@@ -91,7 +95,7 @@ public class AiFlashcardService {
         StringBuilder sb = new StringBuilder();
         if (document instanceof TextDocument td && td.extractedText() != null && !td.extractedText().isBlank()) {
             sb.append("Document: ").append(td.filename()).append("\n")
-              .append(td.extractedText().trim()).append("\n\n");
+                    .append(td.extractedText().trim()).append("\n\n");
         }
         return sb.toString();
     }
@@ -105,7 +109,8 @@ public class AiFlashcardService {
     }
 
     private Media[] buildPdfMedia(DocumentInput document) {
-        if (!(document instanceof PdfDocument pd)) return new Media[0];
+        if (!(document instanceof PdfDocument pd))
+            return new Media[0];
         return new Media[] { new Media(new MimeType("application", "pdf"), pd.source()) };
     }
 
@@ -114,26 +119,25 @@ public class AiFlashcardService {
         String pdfSection = pdfListing.isBlank() ? "(none)" : pdfListing;
 
         return ("You are a study assistant. Generate flashcards based on the source material below.\n\n"
-            + "Maximum flashcards: %d\n\n"
-            + "LANGUAGE:\n"
-            + "Detect the dominant natural language of the supplied source material.\n"
-            + "Write every flashcard front and back in that same language. If sources mix\n"
-            + "languages, use the most-prevalent one. Do not translate proper nouns, code,\n"
-            + "or fixed technical terms.\n\n"
-            + "COVERAGE:\n"
-            + "Draw cards from across the full source material, not just the opening pages\n"
-            + "or first sections. Spread coverage across early, middle, and late portions\n"
-            + "of each source whenever content allows.\n\n"
-            + "GENERAL RULES:\n"
-            + "- First identify the dominant educational content of the source material.\n"
-            + "- Ignore metadata, headers, footers, page numbers, and incidental details.\n"
-            + "- Create concise front and back text for each flashcard.\n"
-            + "- Keep each card self-contained and avoid duplicate cards.\n"
-            + "- Use the attached PDF documents as primary source material when present.\n\n"
-            + "=== DOCUMENTS ===\n"
-            + "%s\n\n"
-            + "=== ATTACHED PDFs ===\n"
-            + "%s\n"
-        ).formatted(MAX_FLASHCARDS, docSection, pdfSection);
+                + "Maximum flashcards: %d\n\n"
+                + "LANGUAGE:\n"
+                + "Detect the dominant natural language of the supplied source material.\n"
+                + "Write every flashcard front and back in that same language. If sources mix\n"
+                + "languages, use the most-prevalent one. Do not translate proper nouns, code,\n"
+                + "or fixed technical terms.\n\n"
+                + "COVERAGE:\n"
+                + "Draw cards from across the full source material, not just the opening pages\n"
+                + "or first sections. Spread coverage across early, middle, and late portions\n"
+                + "of each source whenever content allows.\n\n"
+                + "GENERAL RULES:\n"
+                + "- First identify the dominant educational content of the source material.\n"
+                + "- Ignore metadata, headers, footers, page numbers, and incidental details.\n"
+                + "- Create concise front and back text for each flashcard.\n"
+                + "- Keep each card self-contained and avoid duplicate cards.\n"
+                + "- Use the attached PDF documents as primary source material when present.\n\n"
+                + "=== DOCUMENTS ===\n"
+                + "%s\n\n"
+                + "=== ATTACHED PDFs ===\n"
+                + "%s\n").formatted(MAX_FLASHCARDS, docSection, pdfSection);
     }
 }

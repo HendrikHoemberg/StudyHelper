@@ -484,19 +484,54 @@ document.body.addEventListener('htmx:afterRequest', (event) => {
     if (modal) modal.style.display = 'none';
 });
 
-document.body.addEventListener('htmx:responseError', (event) => {
-    const source = event.detail.elt;
-    if (!source?.matches?.('form.sh-ai-flashcard-form, form.sh-study-setup-card')) return;
-
+function hideAiGenerationModal() {
     const modal = document.getElementById('ai-generating-modal');
     if (modal) modal.style.display = 'none';
+}
 
-    const text = extractAiGenerationError(event.detail.xhr?.responseText);
+function isAiGenerationRequest(source) {
+    return source?.matches?.('form.sh-ai-flashcard-form, form.sh-study-setup-card');
+}
+
+function showAiGenerationFailure(message) {
+    hideAiGenerationModal();
     shAlert({
         title: 'AI generation failed',
-        message: text || 'Please try again. If this keeps happening, reduce the selected sources or switch PDF mode.',
+        message: message || 'Please try again. If this keeps happening, reduce the selected sources or switch PDF mode.',
         confirmText: 'Try again',
         danger: true
+    });
+}
+
+function handleAiGenerationFailure(event) {
+    const source = event.detail.elt;
+    if (!isAiGenerationRequest(source)) return;
+    const text = extractAiGenerationError(event.detail.xhr?.responseText);
+    showAiGenerationFailure(text);
+}
+
+document.body.addEventListener('htmx:responseError', handleAiGenerationFailure);
+
+document.body.addEventListener('htmx:sendError', (event) => {
+    const source = event.detail.elt;
+    if (!isAiGenerationRequest(source)) return;
+    showAiGenerationFailure('The AI request could not be sent. Please check your connection and try again.');
+});
+
+document.body.addEventListener('htmx:timeout', (event) => {
+    const source = event.detail.elt;
+    if (!isAiGenerationRequest(source)) return;
+    showAiGenerationFailure('The AI request timed out. Please retry with fewer or smaller sources.');
+});
+
+document.body.addEventListener('htmx:abort', (event) => {
+    const source = event.detail.elt;
+    if (!isAiGenerationRequest(source)) return;
+    hideAiGenerationModal();
+    shAlert({
+        title: 'AI generation cancelled',
+        message: 'The AI generation request was cancelled.',
+        confirmText: 'OK'
     });
 });
 
