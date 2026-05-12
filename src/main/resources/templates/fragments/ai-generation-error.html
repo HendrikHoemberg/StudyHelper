@@ -6,6 +6,7 @@
     <div>
         <strong th:text="${aiErrorTitle ?: 'AI generation failed'}">AI generation failed</strong>
         <div class="sh-alert-body" th:text="${aiErrorMessage ?: 'Please try again.'}">Please try again.</div>
+        <pre th:if="${aiErrorDetails}" class="sh-alert-details" data-ai-generation-details="true" th:text="${aiErrorDetails}" hidden></pre>
     </div>
     <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
         <iconify-icon icon="lucide:x"></iconify-icon>

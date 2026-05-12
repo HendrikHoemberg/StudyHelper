@@ -17,8 +17,9 @@
         </div>
     </div>
 
-    <div th:if="${generationError}" class="sh-alert sh-alert-danger">
+    <div th:if="${generationError}" class="sh-alert sh-alert-danger" data-ai-generation-error="true">
         <div class="sh-alert-body" th:text="${generationError}"></div>
+        <pre th:if="${generationDetails}" class="sh-alert-details" data-ai-generation-details="true" th:text="${generationDetails}" hidden></pre>
         <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
             <iconify-icon icon="lucide:x"></iconify-icon>
         </button>

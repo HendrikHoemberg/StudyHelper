@@ -194,7 +194,7 @@ public class StudyController {
                 session.setAttribute("studySessionState", state);
                 return delegateToFlashcards(model, user, state, hxRequest);
             } catch (Exception ex) {
-                return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex.getMessage(), model, user, session, response, hxRequest);
+                return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex, model, user, session, response, hxRequest);
             }
         } else if (mode == StudyMode.QUIZ) {
             try {
@@ -237,7 +237,7 @@ public class StudyController {
                 session.setAttribute("quizSessionState", state);
                 return delegateToQuiz(model, state, hxRequest);
             } catch (Exception ex) {
-                return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex.getMessage(), model, user, session, response, hxRequest);
+                return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex, model, user, session, response, hxRequest);
             }
         } else if (mode == StudyMode.EXAM) {
             return examController.createSession(selectedDeckIds, selectedFileIds, request, questionSize, count, timerMinutes, layout, model, principal, session, response, hxRequest);
@@ -296,14 +296,23 @@ public class StudyController {
     }
 
     private String handleError(StudyMode mode, List<Long> deckIds, List<Long> fileIds, Map<Long, DocumentMode> pdfMode,
-                               String error, Model model, User user, HttpSession session,
+                               Exception error, Model model, User user, HttpSession session,
                                HttpServletResponse response, String hxRequest) {
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         model.addAttribute("mode", mode);
-        prepareWizardModel(model, user, deckIds, fileIds, pdfMode, error, session);
+        prepareWizardModel(model, user, deckIds, fileIds, pdfMode, error.getMessage(), session);
+        model.addAttribute("aiErrorDetails", generationDetails(mode, error));
         if (hxRequest != null) return "fragments/study-setup :: studySetup";
         model.addAttribute("studyStateView", "setup");
         return "study-page";
+    }
+
+    private String generationDetails(StudyMode mode, Exception ex) {
+        if (ex instanceof AiGenerationException aiEx && aiEx.diagnostics() != null) {
+            return aiEx.diagnostics().toDisplayString();
+        }
+        String type = mode == null ? "STUDY" : mode.name();
+        return AiGenerationDiagnostics.fromException(type, "REQUEST_VALIDATION", ex).toDisplayString();
     }
 
     private String delegateToFlashcards(Model model, User user, StudySessionState state, String hxRequest) {

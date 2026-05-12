@@ -13,6 +13,8 @@ import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.AiFlashcardService;
+import com.HendrikHoemberg.StudyHelper.service.AiGenerationDiagnostics;
+import com.HendrikHoemberg.StudyHelper.service.AiGenerationException;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.DocumentExtractionService;
 import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
@@ -260,7 +262,10 @@ class FlashcardGenerationControllerTests {
         when(documentExtractionService.isSupported(pdf)).thenReturn(true);
         when(documentExtractionService.extractText(pdf)).thenReturn("Lecture text");
         when(aiFlashcardService.generate(any(DocumentInput.class)))
-            .thenThrow(new IllegalStateException("AI request failed, please retry with a smaller PDF or Text mode."));
+            .thenThrow(new AiGenerationException(
+                "AI request failed, please retry with a smaller PDF or Text mode.",
+                AiGenerationDiagnostics.fromException("FLASHCARDS", "PROVIDER_REQUEST", new RuntimeException("provider offline"))
+            ));
 
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -270,6 +275,11 @@ class FlashcardGenerationControllerTests {
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("generationError")).isEqualTo("AI request failed, please retry with a smaller PDF or Text mode.");
+        assertThat(model.get("generationDetails").toString())
+            .contains("Generation ID:")
+            .contains("Type: FLASHCARDS")
+            .contains("Stage: PROVIDER_REQUEST")
+            .contains("provider offline");
         verify(persistenceService, never()).saveGeneratedCards(any(), any(), any(), any(), any(), any());
     }
 }

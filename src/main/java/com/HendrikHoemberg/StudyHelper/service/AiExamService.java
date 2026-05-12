@@ -13,6 +13,8 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.content.Media;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
 
@@ -22,6 +24,8 @@ import java.util.Map;
 
 @Service
 public class AiExamService {
+
+    private static final Logger log = LoggerFactory.getLogger(AiExamService.class);
 
     private final ChatClient chatClient;
     private final String questionsResponseSchema;
@@ -63,7 +67,7 @@ public class AiExamService {
                     .call()
                     .entity(ExamQuestionsResponse.class);
         } catch (Exception e) {
-            throw new IllegalStateException("AI request failed, please retry with fewer or smaller PDFs.", e);
+            throw aiFailure("PROVIDER_REQUEST", "AI request failed, please retry with fewer or smaller PDFs.", e);
         }
 
         try {
@@ -78,7 +82,8 @@ public class AiExamService {
             }
 
             if (valid.size() < Math.max(1, questionCount / 2)) {
-                throw new IllegalStateException("AI returned too few valid questions; please retry.");
+                throw aiFailure("RESPONSE_VALIDATION", "AI returned too few valid questions; please retry.",
+                    new IllegalStateException("AI response contained " + valid.size() + " valid exam questions for requested count " + questionCount + "."));
             }
 
             return valid.stream().limit(questionCount).toList();
@@ -86,7 +91,7 @@ public class AiExamService {
         } catch (IllegalStateException | IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
-            throw new IllegalStateException("Could not parse the AI response. Please try again.", e);
+            throw aiFailure("RESPONSE_PARSE", "Could not parse the AI response. Please try again.", e);
         }
     }
 
@@ -110,6 +115,13 @@ public class AiExamService {
         } catch (Exception e) {
             throw new IllegalStateException("AI grading request failed. Please try again.", e);
         }
+    }
+
+    private AiGenerationException aiFailure(String stage, String message, Throwable cause) {
+        AiGenerationDiagnostics diagnostics = AiGenerationDiagnostics.fromException("EXAM", stage, cause);
+        log.error("AI generation failed generationId={} type={} stage={}",
+            diagnostics.generationId(), diagnostics.type(), diagnostics.stage(), cause);
+        return new AiGenerationException(message, diagnostics, cause);
     }
 
     private String buildCardContent(List<Flashcard> flashcards) {

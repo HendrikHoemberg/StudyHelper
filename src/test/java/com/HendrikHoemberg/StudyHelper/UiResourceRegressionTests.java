@@ -37,7 +37,26 @@ class UiResourceRegressionTests {
             .contains("htmx:sendError")
             .contains("htmx:timeout")
             .contains("htmx:abort")
-            .contains("handleAiGenerationFailure");
+            .contains("handleAiGenerationFailure")
+            .contains("extractAiGenerationDetails")
+            .contains("technicalDetails");
+    }
+
+    @Test
+    void aiErrorFragmentsExposeTechnicalDetailsForOptionalModalExpansion() throws IOException {
+        String flashcardTemplate = resource("templates/fragments/flashcard-generator.html");
+        String aiErrorTemplate = resource("templates/fragments/ai-generation-error.html");
+        String dialogTemplate = resource("templates/fragments/dialog.html");
+
+        assertThat(flashcardTemplate)
+            .contains("data-ai-generation-details=\"true\"")
+            .contains("generationDetails");
+        assertThat(aiErrorTemplate)
+            .contains("data-ai-generation-details=\"true\"")
+            .contains("aiErrorDetails");
+        assertThat(dialogTemplate)
+            .contains("sh-dialog-details-toggle")
+            .contains("sh-dialog-details");
     }
 
     private String file(String path) throws IOException {

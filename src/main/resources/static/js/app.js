@@ -306,6 +306,11 @@ function initShDialog() {
     dlg.addEventListener('click', (e) => {
         if (e.target.closest('[data-sh-dialog-cancel]')) {
             shDialogResolve(null);
+        } else if (e.target.id === 'sh-dialog-details-toggle') {
+            const details = document.getElementById('sh-dialog-details');
+            const expanded = details && details.style.display !== 'none';
+            if (details) details.style.display = expanded ? 'none' : '';
+            e.target.textContent = expanded ? 'Show technical details' : 'Hide technical details';
         } else if (e.target.id === 'sh-dialog-ok') {
             const input = document.getElementById('sh-dialog-input');
             const isPrompt = input && input.style.display !== 'none';
@@ -346,7 +351,7 @@ function shDialogResolve(value) {
     if (state) state.resolve(value);
 }
 
-function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText, danger, prompt, defaultValue, placeholder, hideCancel }) {
+function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText, danger, prompt, defaultValue, placeholder, hideCancel, technicalDetails }) {
     return new Promise((resolve) => {
         // If a previous dialog is open, dismiss it first.
         if (shDialogState) shDialogResolve(null);
@@ -365,6 +370,8 @@ function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText
         const okBtn = document.getElementById('sh-dialog-ok');
         const cancelBtn = document.getElementById('sh-dialog-cancel');
         const input = document.getElementById('sh-dialog-input');
+        const detailsToggle = document.getElementById('sh-dialog-details-toggle');
+        const detailsEl = document.getElementById('sh-dialog-details');
 
         titleEl.textContent = title || (prompt ? 'Enter a value' : (hideCancel ? 'Notice' : 'Confirm'));
         msgEl.textContent = message || '';
@@ -387,6 +394,14 @@ function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText
         } else {
             input.style.display = 'none';
             input.value = '';
+        }
+
+        if (detailsToggle && detailsEl) {
+            const hasDetails = !!technicalDetails;
+            detailsToggle.style.display = hasDetails ? '' : 'none';
+            detailsToggle.textContent = 'Show technical details';
+            detailsEl.style.display = 'none';
+            detailsEl.textContent = hasDetails ? technicalDetails : '';
         }
 
         dlg.classList.toggle('is-danger', !!danger);
@@ -493,11 +508,12 @@ function isAiGenerationRequest(source) {
     return source?.matches?.('form.sh-ai-flashcard-form, form.sh-study-setup-card');
 }
 
-function showAiGenerationFailure(message) {
+function showAiGenerationFailure(message, technicalDetails) {
     hideAiGenerationModal();
     shAlert({
         title: 'AI generation failed',
         message: message || 'Please try again. If this keeps happening, reduce the selected sources or switch PDF mode.',
+        technicalDetails,
         confirmText: 'Try again',
         danger: true
     });
@@ -507,7 +523,8 @@ function handleAiGenerationFailure(event) {
     const source = event.detail.elt;
     if (!isAiGenerationRequest(source)) return;
     const text = extractAiGenerationError(event.detail.xhr?.responseText);
-    showAiGenerationFailure(text);
+    const details = extractAiGenerationDetails(event.detail.xhr?.responseText);
+    showAiGenerationFailure(text, details);
 }
 
 document.body.addEventListener('htmx:responseError', handleAiGenerationFailure);
@@ -541,6 +558,13 @@ function extractAiGenerationError(responseText) {
     const error = doc.querySelector('[data-ai-generation-error="true"] .sh-alert-body, .sh-alert-danger .sh-alert-body');
     if (error?.textContent?.trim()) return error.textContent.trim();
     return doc.body?.textContent?.replace(/^Error:\s*/i, '').trim() || '';
+}
+
+function extractAiGenerationDetails(responseText) {
+    if (!responseText) return '';
+    const doc = new DOMParser().parseFromString(responseText, 'text/html');
+    const details = doc.querySelector('[data-ai-generation-details="true"]');
+    return details?.textContent?.trim() || '';
 }
 
 function updateAiFlashcardDestinationPanels() {

@@ -68,7 +68,7 @@ public class ExamController {
         List<Long> fileIds = normalizeIds(selectedFileIds);
 
         if (deckIds.isEmpty() && fileIds.isEmpty()) {
-            return renderGenerationError(model, response, "Please select at least one source.");
+            return renderGenerationError(model, response, new IllegalArgumentException("Please select at least one source."));
         }
 
         try {
@@ -125,17 +125,26 @@ public class ExamController {
             return "exam-page";
 
         } catch (Exception e) {
-            return renderGenerationError(model, response, e.getMessage());
+            return renderGenerationError(model, response, e);
         }
     }
 
-    private String renderGenerationError(Model model, HttpServletResponse response, String message) {
+    private String renderGenerationError(Model model, HttpServletResponse response, Exception exception) {
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         model.addAttribute("aiErrorTitle", "AI generation failed");
+        String message = exception == null ? null : exception.getMessage();
         model.addAttribute("aiErrorMessage", message == null || message.isBlank()
             ? "Please try again."
             : message);
+        model.addAttribute("aiErrorDetails", generationDetails(exception));
         return "fragments/ai-generation-error :: aiGenerationError";
+    }
+
+    private String generationDetails(Exception ex) {
+        if (ex instanceof AiGenerationException aiEx && aiEx.diagnostics() != null) {
+            return aiEx.diagnostics().toDisplayString();
+        }
+        return AiGenerationDiagnostics.fromException("EXAM", "REQUEST_VALIDATION", ex).toDisplayString();
     }
 
     @PostMapping("/exam/answer")

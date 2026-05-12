@@ -162,9 +162,18 @@ class AiFlashcardServiceTests {
         when(callSpec.entity(FlashcardsResponse.class)).thenThrow(new RuntimeException("provider offline"));
 
         assertThatThrownBy(() -> service.generate(new TextDocument("notes.txt", "topic")))
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(AiGenerationException.class)
             .hasMessage("AI request failed, please retry with fewer or smaller PDFs.")
-            .hasCauseInstanceOf(RuntimeException.class);
+            .hasCauseInstanceOf(RuntimeException.class)
+            .satisfies(ex -> {
+                AiGenerationException aiEx = (AiGenerationException) ex;
+                assertThat(aiEx.diagnostics().generationId()).isNotBlank();
+                assertThat(aiEx.diagnostics().type()).isEqualTo("FLASHCARDS");
+                assertThat(aiEx.diagnostics().stage()).isEqualTo("PROVIDER_REQUEST");
+                assertThat(aiEx.diagnostics().exceptionClass()).contains("RuntimeException");
+                assertThat(aiEx.diagnostics().exceptionMessage()).contains("provider offline");
+                assertThat(aiEx.diagnostics().stackTrace()).contains("provider offline");
+            });
     }
 
     @Test

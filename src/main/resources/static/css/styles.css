@@ -4228,6 +4228,38 @@ iconify-icon {
     margin-bottom: 1.25rem;
 }
 
+.sh-dialog-details-toggle {
+    display: inline-flex;
+    margin: 0 auto 1rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.sh-dialog-details-toggle:hover {
+    text-decoration: underline;
+}
+
+.sh-dialog-details {
+    max-height: 260px;
+    overflow: auto;
+    margin: 0 0 1.25rem;
+    padding: 0.85rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--surface-alt);
+    color: var(--text-main);
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font: 0.78rem/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
 .sh-dialog-actions {
     display: flex;
     gap: 0.6rem;

@@ -11,6 +11,8 @@ import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.AiFlashcardService;
+import com.HendrikHoemberg.StudyHelper.service.AiGenerationDiagnostics;
+import com.HendrikHoemberg.StudyHelper.service.AiGenerationException;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.DocumentExtractionService;
 import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
@@ -125,6 +127,7 @@ public class FlashcardGenerationController {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             prepareGeneratorModel(model, user);
             model.addAttribute("generationError", ex.getMessage());
+            model.addAttribute("generationDetails", generationDetails("FLASHCARDS", ex));
             model.addAttribute("selectedFileId", fileId);
             model.addAttribute("selectedDocumentMode", documentMode);
             model.addAttribute("selectedDestination", destination);
@@ -136,6 +139,13 @@ public class FlashcardGenerationController {
             model.addAttribute("sidebarTree", folderService.getSidebarTree(user));
             return "flashcard-generator-page";
         }
+    }
+
+    private String generationDetails(String type, Exception ex) {
+        if (ex instanceof AiGenerationException aiEx && aiEx.diagnostics() != null) {
+            return aiEx.diagnostics().toDisplayString();
+        }
+        return AiGenerationDiagnostics.fromException(type, "REQUEST_VALIDATION", ex).toDisplayString();
     }
 
     private DocumentInput buildDocumentInput(FileEntry file, DocumentMode mode) throws Exception {

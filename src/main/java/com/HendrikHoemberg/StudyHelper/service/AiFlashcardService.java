@@ -9,6 +9,8 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.content.Media;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
 import tools.jackson.databind.json.JsonMapper;
@@ -19,6 +21,7 @@ import java.util.List;
 @Service
 public class AiFlashcardService {
 
+    private static final Logger log = LoggerFactory.getLogger(AiFlashcardService.class);
     private static final int MAX_FLASHCARDS = 50;
 
     private final ChatClient chatClient;
@@ -59,7 +62,7 @@ public class AiFlashcardService {
                     .call()
                     .entity(FlashcardsResponse.class);
         } catch (Exception e) {
-            throw new IllegalStateException("AI request failed, please retry.", e);
+            throw aiFailure("PROVIDER_REQUEST", "AI request failed, please retry with fewer or smaller PDFs.", e);
         }
 
         try {
@@ -79,7 +82,8 @@ public class AiFlashcardService {
             }
 
             if (valid.isEmpty()) {
-                throw new IllegalStateException("AI returned no valid flashcards; please retry.");
+                throw aiFailure("RESPONSE_VALIDATION", "AI returned no valid flashcards; please retry.",
+                    new IllegalStateException("AI response contained no flashcards with both frontText and backText."));
             }
 
             return valid.stream().limit(MAX_FLASHCARDS).toList();
@@ -87,8 +91,15 @@ public class AiFlashcardService {
         } catch (IllegalStateException | IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
-            throw new IllegalStateException("Could not parse the AI response. Please try again.", e);
+            throw aiFailure("RESPONSE_PARSE", "Could not parse the AI response. Please try again.", e);
         }
+    }
+
+    private AiGenerationException aiFailure(String stage, String message, Throwable cause) {
+        AiGenerationDiagnostics diagnostics = AiGenerationDiagnostics.fromException("FLASHCARDS", stage, cause);
+        log.error("AI generation failed generationId={} type={} stage={}",
+            diagnostics.generationId(), diagnostics.type(), diagnostics.stage(), cause);
+        return new AiGenerationException(message, diagnostics, cause);
     }
 
     private String buildTextDocContent(DocumentInput document) {
