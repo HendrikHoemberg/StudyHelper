@@ -554,8 +554,8 @@ a {
     justify-content: center;
 }
 
-.sh-dashboard-search {
-    margin-top: -0.25rem;
+.sh-page-header > .sh-search-bar {
+    width: 100%;
 }
 
 .sh-search-bar-lg .sh-input {
@@ -1111,7 +1111,7 @@ textarea.sh-input {
     align-items: center;
     justify-content: space-between;
     gap: 1.25rem;
-    margin-bottom: 2rem;
+    margin-bottom: 0.75rem;
     flex-wrap: wrap;
     background: var(--surface);
     border: 1px solid var(--border-light);
@@ -3911,10 +3911,6 @@ iconify-icon {
 
     .sh-dashboard-shell {
         padding: 0.75rem;
-    }
-
-    .sh-dashboard-search {
-        margin-top: 0;
     }
 
     .sh-deck-grid {
