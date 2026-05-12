@@ -50,6 +50,7 @@
                                class="sh-ai-pdf-row"
                                th:classappend="${selectedFileId == pdf.id} ? ' is-selected' : ''"
                                th:data-name="${pdf.filename + ' ' + pdf.folderPath}"
+                               th:data-folder-id="${pdf.folderId}"
                                th:style="'--folder-color:' + ${pdf.folderColorHex}">
                             <input type="radio" name="fileId" th:value="${pdf.id}" th:checked="${selectedFileId == pdf.id}">
                             <span class="vb-file-icon"><iconify-icon icon="lucide:file-text"></iconify-icon></span>

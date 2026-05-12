@@ -407,7 +407,9 @@ document.addEventListener('input', (event) => {
 document.addEventListener('change', (event) => {
     if (event.target.matches('.sh-ai-pdf-row input[name="fileId"]')) {
         document.querySelectorAll('.sh-ai-pdf-row').forEach(row => row.classList.remove('is-selected'));
-        event.target.closest('.sh-ai-pdf-row')?.classList.add('is-selected');
+        const row = event.target.closest('.sh-ai-pdf-row');
+        row?.classList.add('is-selected');
+        preselectAiNewDeckFolderForPdf(row);
     }
     if (event.target.matches('input[name="destination"]')) {
         updateAiFlashcardDestinationPanels();
@@ -438,6 +440,7 @@ document.addEventListener('click', (event) => {
 
 document.body.addEventListener('htmx:afterSettle', () => {
     updateAiFlashcardDestinationPanels();
+    syncAiFolderSelectionWithSelectedPdf();
 });
 
 document.body.addEventListener('htmx:beforeRequest', (event) => {
@@ -458,4 +461,19 @@ function updateAiFlashcardDestinationPanels() {
         const radio = card.querySelector('.sh-ai-destination-head input[name="destination"]');
         card.classList.toggle('is-selected', radio?.value === selected);
     });
+}
+
+function preselectAiNewDeckFolderForPdf(pdfRow) {
+    const folderId = pdfRow?.dataset?.folderId;
+    if (!folderId) return;
+    const folderRadio = document.querySelector(`.sh-ai-tree input[name="newDeckFolderId"][value="${folderId}"]`);
+    if (!folderRadio || folderRadio.checked) return;
+    folderRadio.checked = true;
+    folderRadio.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function syncAiFolderSelectionWithSelectedPdf() {
+    const selectedPdf = document.querySelector('.sh-ai-pdf-row input[name="fileId"]:checked')?.closest('.sh-ai-pdf-row');
+    if (!selectedPdf) return;
+    preselectAiNewDeckFolderForPdf(selectedPdf);
 }

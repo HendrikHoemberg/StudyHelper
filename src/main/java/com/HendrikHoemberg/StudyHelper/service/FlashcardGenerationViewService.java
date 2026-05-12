@@ -33,6 +33,7 @@ public class FlashcardGenerationViewService {
             .map(file -> new FlashcardPdfOption(
                 file.getId(),
                 file.getOriginalFilename(),
+                file.getFolder().getId(),
                 buildFolderPath(file.getFolder()),
                 colorOf(file.getFolder()),
                 file.getFileSizeBytes()

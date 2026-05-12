@@ -50,6 +50,7 @@ class FlashcardGenerationViewServiceTests {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).id()).isEqualTo(1L);
         assertThat(result.get(0).filename()).isEqualTo("Lecture.pdf");
+        assertThat(result.get(0).folderId()).isEqualTo(11L);
         assertThat(result.get(0).folderPath()).isEqualTo("Computer Science / Algorithms");
         assertThat(result.get(0).folderColorHex()).isEqualTo("#abcdef");
     }
