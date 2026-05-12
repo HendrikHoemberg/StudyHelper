@@ -5,161 +5,72 @@
 <div th:fragment="tabContent" class="sh-tab-panel sh-fade-in" role="tabpanel">
     <div class="sh-tab-header">
         <h6 class="sh-tab-header-title">Files</h6>
-        <div class="sh-files-header-actions">
-            <div class="sh-view-toggle" role="group" aria-label="Files view mode">
-                <a class="sh-view-toggle-btn"
-                   th:classappend="${viewMode == 'list'} ? ' is-active' : ''"
-                   th:hx-get="@{/folders/{id}(id=${view.folder.id}, tab='files', sortBy=${sortBy}, direction=${direction}, viewMode='list')}"
-                   hx-target="#folder-tabs-section">
-                    <iconify-icon icon="lucide:list"></iconify-icon>
-                    List
-                </a>
-                <a class="sh-view-toggle-btn"
-                   th:classappend="${viewMode == 'grid'} ? ' is-active' : ''"
-                   th:hx-get="@{/folders/{id}(id=${view.folder.id}, tab='files', sortBy=${sortBy}, direction=${direction}, viewMode='grid')}"
-                   hx-target="#folder-tabs-section">
-                    <iconify-icon icon="lucide:grid-2x2"></iconify-icon>
-                    Grid
-                </a>
-            </div>
-            <button class="sh-btn sh-btn-primary sh-btn-sm"
-                    th:hx-get="@{/folders/{fid}/files/upload(fid=${view.folder.id})}"
-                    hx-target="#modal-placeholder">
-                <iconify-icon icon="lucide:upload"></iconify-icon>
-                Upload File
-            </button>
+    </div>
+
+    <div class="sh-tab-filterbar">
+        <div class="sh-search-bar sh-search-bar-sm">
+            <span class="sh-search-icon"><iconify-icon icon="lucide:search"></iconify-icon></span>
+            <input type="text" class="sh-input sh-tab-filter-input" placeholder="Filter files..."
+                   data-sh-tab-filter="#file-grid" autocomplete="off">
         </div>
     </div>
 
-    <div th:if="${#lists.isEmpty(view.files) && viewMode != 'grid'}" class="sh-empty-state">
-        <iconify-icon icon="lucide:file-up" style="font-size:2rem;color:var(--text-muted);"></iconify-icon>
-        <p class="sh-empty-text">No files yet.</p>
-        <button class="sh-btn sh-btn-secondary sh-btn-sm"
-                th:hx-get="@{/folders/{fid}/files/upload(fid=${view.folder.id})}"
-                hx-target="#modal-placeholder">
-            Upload your first file
-        </button>
-    </div>
-
-    <div th:if="${!#lists.isEmpty(view.files) || viewMode == 'grid'}">
-        <div id="files-table-container" th:if="${viewMode != 'grid'}">
-            <table class="sh-file-table">
-                <thead>
-                    <tr>
-                        <th hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, sortBy='name', direction=${sortBy == 'name' && direction == 'asc' ? 'desc' : 'asc'}, tab='files', viewMode=${viewMode})}"
-                            hx-target="#folder-tabs-section" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
-                            Name <span class="sort-indicator" th:text="${sortBy == 'name' ? (direction == 'asc' ? '▲' : '▼') : '▲'}">▲</span>
-                        </th>
-                        <th hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, sortBy='type', direction=${sortBy == 'type' && direction == 'asc' ? 'desc' : 'asc'}, tab='files', viewMode=${viewMode})}"
-                            hx-target="#folder-tabs-section" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
-                            Type <span class="sort-indicator" th:text="${sortBy == 'type' ? (direction == 'asc' ? '▲' : '▼') : '▲'}">▲</span>
-                        </th>
-                        <th hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, sortBy='size', direction=${sortBy == 'size' && direction == 'asc' ? 'desc' : 'asc'}, tab='files', viewMode=${viewMode})}"
-                            hx-target="#folder-tabs-section" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
-                            Size <span class="sort-indicator" th:text="${sortBy == 'size' ? (direction == 'asc' ? '▲' : '▼') : '▲'}">▲</span>
-                        </th>
-                        <th hx-get th:hx-get="@{/folders/{id}(id=${view.folder.id}, sortBy='date', direction=${sortBy == 'date' && direction == 'asc' ? 'desc' : 'asc'}, tab='files', viewMode=${viewMode})}"
-                            hx-target="#folder-tabs-section" hx-headers='{"HX-Request": "folder-files-table"}' class="cursor-pointer">
-                            Uploaded <span class="sort-indicator" th:text="${sortBy == 'date' ? (direction == 'asc' ? '▲' : '▼') : '▲'}">▲</span>
-                        </th>
-                        <th style="text-align:right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="file : ${view.files}">
-                        <td class="sh-file-name" th:text="${file.originalFilename}">filename.pdf</td>
-                        <td class="sh-file-meta" th:text="${file.mimeType}">application/pdf</td>
-                        <td class="sh-file-meta" th:data-size-bytes="${file.fileSizeBytes}"
-                            th:text="${#numbers.formatDecimal(file.fileSizeBytes / 1024.0, 1, 1) + ' KB'}">0 KB</td>
-                        <td class="sh-file-meta" th:data-timestamp="${file.uploadedAt}"
-                            th:text="${#temporals.format(file.uploadedAt, 'dd MMM yyyy HH:mm')}">01 Jan 2025</td>
-                        <td style="text-align:right; white-space:nowrap;">
-                            <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.txt') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.md')}"
-                               class="sh-btn sh-btn-ghost sh-btn-sm"
-                               style="color:var(--accent);"
-                               th:href="@{'/study/start'(mode='QUIZ', fileId=${file.id})}"
-                               hx-get="/study/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
-                               hx-target="#explorer-detail" hx-push-url="true">
-                                <iconify-icon icon="lucide:sparkles"></iconify-icon>
-                                Quiz
-                            </a>
-                            <button class="sh-btn sh-btn-ghost sh-btn-sm"
-                                    th:hx-get="@{/files/{id}/edit-options(id=${file.id})}"
-                                    hx-target="#modal-placeholder">
-                                <iconify-icon icon="lucide:pencil"></iconify-icon>
-                                Edit
-                            </button>
-                            <a th:href="@{/files/{id}/view(id=${file.id})}" target="_blank"
-                               th:classappend="${#strings.startsWith(file.mimeType, 'image/')} ? 'sh-lightbox-trigger' : ''"
-                               class="sh-btn sh-btn-ghost sh-btn-sm">View</a>
-                            <a th:href="@{/files/{id}/download(id=${file.id})}"
-                               class="sh-btn sh-btn-ghost sh-btn-sm">Download</a>
-                            <button class="sh-btn sh-btn-ghost sh-btn-sm"
-                                    style="color:var(--danger);"
-                                    th:hx-post="@{/files/{id}/delete(id=${file.id})}"
-                                    hx-confirm="Delete this file?"
-                                    hx-target="#explorer-detail">Delete</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    <div id="file-grid" class="sh-deck-grid sh-files-grid">
+        <div class="sh-deck-tile-add sh-file-tile-add"
+             th:hx-get="@{/folders/{fid}/files/upload(fid=${view.folder.id})}"
+             hx-target="#modal-placeholder">
+            <iconify-icon icon="lucide:upload"></iconify-icon>
+            <span>New File</span>
         </div>
 
-        <div th:if="${viewMode == 'grid'}" class="sh-deck-grid sh-files-grid">
-            <div th:each="file : ${view.files}"
-                 class="sh-deck-tile sh-file-tile"
-                 th:style="'--folder-color:' + ${view.folder.colorHex}">
-                <a th:href="@{/files/{id}/view(id=${file.id})}"
-                   target="_blank"
-                   th:classappend="${#strings.startsWith(file.mimeType, 'image/')} ? 'sh-lightbox-trigger' : ''"
-                   class="sh-deck-cover">
-                    <img th:if="${#strings.startsWith(file.mimeType, 'image/')}"
-                         th:src="@{/files/{id}/view(id=${file.id})}"
-                         class="sh-deck-cover-img" alt="Preview">
-                    <span th:unless="${#strings.startsWith(file.mimeType, 'image/')}" class="sh-deck-cover-icon">
-                        <iconify-icon icon="lucide:file"></iconify-icon>
-                    </span>
+        <div th:each="file : ${view.files}"
+             class="sh-deck-tile sh-file-tile"
+             th:data-filter-text="${file.originalFilename + ' ' + file.mimeType + ' ' + #temporals.format(file.uploadedAt, 'dd MMM yyyy HH:mm')}"
+             th:style="'--folder-color:' + ${view.folder.colorHex}">
+            <a th:href="@{/files/{id}/view(id=${file.id})}"
+               target="_blank"
+               th:classappend="${#strings.startsWith(file.mimeType, 'image/')} ? 'sh-lightbox-trigger' : ''"
+               class="sh-deck-cover">
+                <img th:if="${#strings.startsWith(file.mimeType, 'image/')}"
+                     th:src="@{/files/{id}/view(id=${file.id})}"
+                     class="sh-deck-cover-img" alt="Preview">
+                <span th:unless="${#strings.startsWith(file.mimeType, 'image/')}" class="sh-deck-cover-icon">
+                    <iconify-icon icon="lucide:file"></iconify-icon>
+                </span>
+            </a>
+            <div class="sh-deck-body">
+                <div class="sh-deck-title" th:text="${file.originalFilename}">filename.pdf</div>
+                <div class="sh-deck-meta" th:text="${file.mimeType}">application/pdf</div>
+                <div class="sh-deck-meta" th:text="${#numbers.formatDecimal(file.fileSizeBytes / 1024.0, 1, 1) + ' KB'}">0 KB</div>
+                <div class="sh-deck-meta" th:text="${#temporals.format(file.uploadedAt, 'dd MMM yyyy HH:mm')}">01 Jan 2025</div>
+            </div>
+            <div class="sh-file-tile-actions">
+                <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.txt') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.md')}"
+                   class="sh-btn sh-btn-ghost sh-btn-sm"
+                   style="color:var(--accent);"
+                   th:href="@{'/study/start'(mode='QUIZ', fileId=${file.id})}"
+                   hx-get="/study/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
+                   hx-target="#explorer-detail" hx-push-url="true">
+                    <iconify-icon icon="lucide:sparkles"></iconify-icon>
+                    Quiz
                 </a>
-                <div class="sh-deck-body">
-                    <div class="sh-deck-title" th:text="${file.originalFilename}">filename.pdf</div>
-                    <div class="sh-deck-meta" th:text="${file.mimeType}">application/pdf</div>
-                    <div class="sh-deck-meta" th:text="${#numbers.formatDecimal(file.fileSizeBytes / 1024.0, 1, 1) + ' KB'}">0 KB</div>
-                    <div class="sh-deck-meta" th:text="${#temporals.format(file.uploadedAt, 'dd MMM yyyy HH:mm')}">01 Jan 2025</div>
-                </div>
-                <div class="sh-file-tile-actions">
-                    <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.txt') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.md')}"
-                       class="sh-btn sh-btn-ghost sh-btn-sm"
-                       style="color:var(--accent);"
-                       th:href="@{'/study/start'(mode='QUIZ', fileId=${file.id})}"
-                       hx-get="/study/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
-                       hx-target="#explorer-detail" hx-push-url="true">
-                        <iconify-icon icon="lucide:sparkles"></iconify-icon>
-                        Quiz
-                    </a>
-                    <button class="sh-btn sh-btn-ghost sh-btn-sm"
-                            th:hx-get="@{/files/{id}/edit-options(id=${file.id})}"
-                            hx-target="#modal-placeholder">
-                        <iconify-icon icon="lucide:pencil"></iconify-icon>
-                        Edit
-                    </button>
-                    <a th:href="@{/files/{id}/download(id=${file.id})}"
-                       class="sh-btn sh-btn-ghost sh-btn-sm">Download</a>
-                    <button class="sh-btn sh-btn-ghost sh-btn-sm"
-                            style="color:var(--danger);"
-                            th:hx-post="@{/files/{id}/delete(id=${file.id})}"
-                            hx-confirm="Delete this file?"
-                            hx-target="#explorer-detail">Delete</button>
-                </div>
-            </div>
-
-            <div class="sh-deck-tile-add sh-file-tile-add"
-                 th:hx-get="@{/folders/{fid}/files/upload(fid=${view.folder.id})}"
-                 hx-target="#modal-placeholder">
-                <iconify-icon icon="lucide:upload"></iconify-icon>
-                <span>New File</span>
+                <button class="sh-btn sh-btn-ghost sh-btn-sm"
+                        th:hx-get="@{/files/{id}/edit-options(id=${file.id})}"
+                        hx-target="#modal-placeholder">
+                    <iconify-icon icon="lucide:pencil"></iconify-icon>
+                    Edit
+                </button>
+                <a th:href="@{/files/{id}/download(id=${file.id})}"
+                   class="sh-btn sh-btn-ghost sh-btn-sm">Download</a>
+                <button class="sh-btn sh-btn-ghost sh-btn-sm"
+                        style="color:var(--danger);"
+                        th:hx-post="@{/files/{id}/delete(id=${file.id})}"
+                        hx-confirm="Delete this file?"
+                        hx-target="#explorer-detail">Delete</button>
             </div>
         </div>
     </div>
+    <p class="sh-tab-filter-empty" data-sh-filter-empty-for="#file-grid" hidden>No matching files.</p>
 </div>
 
 </body>

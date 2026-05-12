@@ -5,17 +5,27 @@
 <div th:fragment="tabContent" class="sh-tab-panel sh-fade-in" role="tabpanel">
     <div class="sh-tab-header">
         <h6 class="sh-tab-header-title">Decks</h6>
-        <button class="sh-btn sh-btn-primary sh-btn-sm"
-                th:hx-get="@{/folders/{fid}/decks/new(fid=${view.folder.id})}"
-                hx-target="#modal-placeholder">
-            <iconify-icon icon="lucide:layers"></iconify-icon>
-            New Deck
-        </button>
     </div>
 
-    <div class="sh-deck-grid">
+    <div class="sh-tab-filterbar">
+        <div class="sh-search-bar sh-search-bar-sm">
+            <span class="sh-search-icon"><iconify-icon icon="lucide:search"></iconify-icon></span>
+            <input type="text" class="sh-input sh-tab-filter-input" placeholder="Filter decks..."
+                   data-sh-tab-filter="#deck-grid" autocomplete="off">
+        </div>
+    </div>
+
+    <div id="deck-grid" class="sh-deck-grid">
+        <div class="sh-deck-tile-add"
+             th:hx-get="@{/folders/{fid}/decks/new(fid=${view.folder.id})}"
+             hx-target="#modal-placeholder">
+            <iconify-icon icon="lucide:plus"></iconify-icon>
+            <span>New Deck</span>
+        </div>
+
         <div th:each="deck : ${view.decks}"
              class="sh-deck-tile"
+             th:data-filter-text="${deck.name + ' ' + deck.flashcards.size() + ' cards'}"
              th:style="'--folder-color:' + ${view.folder.colorHex}">
             <a th:href="@{/decks/{id}(id=${deck.id})}"
                class="sh-deck-cover"
@@ -35,14 +45,8 @@
                 <iconify-icon icon="lucide:pencil"></iconify-icon>
             </button>
         </div>
-
-        <div class="sh-deck-tile-add"
-             th:hx-get="@{/folders/{fid}/decks/new(fid=${view.folder.id})}"
-             hx-target="#modal-placeholder">
-            <iconify-icon icon="lucide:plus"></iconify-icon>
-            <span>New Deck</span>
-        </div>
     </div>
+    <p class="sh-tab-filter-empty" data-sh-filter-empty-for="#deck-grid" hidden>No matching decks.</p>
 </div>
 
 </body>

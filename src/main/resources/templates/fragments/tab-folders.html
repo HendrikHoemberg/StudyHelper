@@ -5,18 +5,28 @@
 <div th:fragment="tabContent" class="sh-tab-panel sh-fade-in" role="tabpanel">
     <div class="sh-tab-header">
         <h6 class="sh-tab-header-title">Subfolders</h6>
-        <button class="sh-btn sh-btn-primary sh-btn-sm"
-                th:hx-get="@{/folders/new(parentId=${view.folder.id})}"
-                hx-target="#modal-placeholder">
-            <iconify-icon icon="lucide:folder-plus"></iconify-icon>
-            Add Subfolder
-        </button>
     </div>
 
-    <div class="sh-card-grid">
+    <div class="sh-tab-filterbar">
+        <div class="sh-search-bar sh-search-bar-sm">
+            <span class="sh-search-icon"><iconify-icon icon="lucide:search"></iconify-icon></span>
+            <input type="text" class="sh-input sh-tab-filter-input" placeholder="Filter subfolders..."
+                   data-sh-tab-filter="#subfolder-grid" autocomplete="off">
+        </div>
+    </div>
+
+    <div id="subfolder-grid" class="sh-card-grid">
+        <div class="sh-d-pill-add"
+             th:hx-get="@{/folders/new(parentId=${view.folder.id})}"
+             hx-target="#modal-placeholder">
+            <iconify-icon icon="lucide:plus"></iconify-icon>
+            <span>New Subfolder</span>
+        </div>
+
         <a th:each="sub : ${view.subFolders}"
            th:href="@{/folders/{id}(id=${sub.id})}"
            class="sh-d-pill"
+           th:data-filter-text="${sub.name}"
            th:style="'--folder-color:' + ${sub.colorHex}"
            hx-get th:hx-get="@{/folders/{id}(id=${sub.id})}"
            hx-target="#explorer-detail" hx-push-url="true">
@@ -28,14 +38,8 @@
                 <span class="sh-d-pill-count" th:text="${sub.decks.size()}">0</span>
             </span>
         </a>
-
-        <div class="sh-d-pill-add"
-             th:hx-get="@{/folders/new(parentId=${view.folder.id})}"
-             hx-target="#modal-placeholder">
-            <iconify-icon icon="lucide:plus"></iconify-icon>
-            <span>Add Subfolder</span>
-        </div>
     </div>
+    <p class="sh-tab-filter-empty" data-sh-filter-empty-for="#subfolder-grid" hidden>No matching subfolders.</p>
 </div>
 
 </body>

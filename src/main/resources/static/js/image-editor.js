@@ -916,8 +916,8 @@
     // ── Reload library/files UI via GET with HTMX-style headers ────────
     function _reloadLibraryContainer(folderId) {
         var isDashboard = !!$id('library-grid-container');
-        var url      = isDashboard ? '/dashboard' : ('/folders/' + folderId);
-        var targetId = isDashboard ? 'library-grid-container' : 'files-table-container';
+        var url      = isDashboard ? '/dashboard' : ('/folders/' + folderId + '?tab=files');
+        var targetId = isDashboard ? 'library-grid-container' : 'folder-tabs-section';
 
         return fetch(url, {
             headers: {
@@ -930,9 +930,14 @@
         }).then(function(html) {
             var container = $id(targetId);
             if (!container) return;
-            container.innerHTML = html;
+            if (targetId === 'folder-tabs-section') {
+                container.outerHTML = html;
+                container = $id(targetId);
+            } else {
+                container.innerHTML = html;
+            }
             if (typeof initLucide === 'function') initLucide();
-            if (window.htmx) htmx.process(container);
+            if (window.htmx && container) htmx.process(container);
         });
     }
 

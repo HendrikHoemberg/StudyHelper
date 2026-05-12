@@ -271,6 +271,30 @@ function updateFolderPreview(modal) {
     preview.innerHTML = `<iconify-icon icon="${fullIconName}" style="font-size:22px;"></iconify-icon>`;
 }
 
+/* ---------- Folder tab filters ---------- */
+document.addEventListener('input', (event) => {
+    const input = event.target.closest('[data-sh-tab-filter]');
+    if (!input) return;
+
+    const targetSelector = input.dataset.shTabFilter;
+    const grid = document.querySelector(targetSelector);
+    if (!grid) return;
+
+    const query = input.value.trim().toLowerCase();
+    let visibleCount = 0;
+
+    grid.querySelectorAll('[data-filter-text]').forEach(item => {
+        const text = (item.dataset.filterText || item.textContent || '').toLowerCase();
+        const visible = query === '' || text.includes(query);
+        item.hidden = !visible;
+        if (visible) visibleCount += 1;
+    });
+
+    document.querySelectorAll(`[data-sh-filter-empty-for="${targetSelector}"]`).forEach(empty => {
+        empty.hidden = visibleCount > 0 || query === '';
+    });
+});
+
 /* ---------- Custom Dialog (replaces native confirm/alert/prompt) ---------- */
 
 let shDialogState = null;

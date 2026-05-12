@@ -2,11 +2,12 @@ package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.service.ActiveTab;
 import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
 import com.HendrikHoemberg.StudyHelper.service.FileStorageService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
-import com.HendrikHoemberg.StudyHelper.service.UserService;
 import com.HendrikHoemberg.StudyHelper.service.FolderView;
+import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -64,7 +65,7 @@ public class FileController {
         } catch (IOException e) {
             redirectAttributes.addFlashAttribute("error", "Upload failed: " + e.getMessage());
         }
-        return "redirect:/folders/" + folderId;
+        return "redirect:/folders/" + folderId + "?tab=files";
     }
 
     @GetMapping("/files/{id}/view")
@@ -98,11 +99,11 @@ public class FileController {
                                 Model model) throws IOException {
         User user = userService.getByUsername(principal.getName());
         Long folderId = fileEntryService.replaceContents(id, image, user);
-        FolderView view = folderService.getFolderView(folderId, user, null, "asc");
+        FolderView view = folderService.getFolderView(folderId, user, null, "asc", ActiveTab.FILES);
         model.addAttribute("view", view);
         model.addAttribute("sortBy", null);
         model.addAttribute("direction", "asc");
-        return "fragments/folder-detail :: filesTable";
+        return "fragments/folder-detail :: tabsSection";
     }
 
     @PostMapping("/files/{id}/rename")
@@ -118,7 +119,7 @@ public class FileController {
             return "redirect:" + currentUrl;
         }
         if (hxRequest != null) {
-            return "redirect:/folders/" + entry.getFolder().getId();
+            return "redirect:/folders/" + entry.getFolder().getId() + "?tab=files";
         }
         return "redirect:/dashboard";
     }
@@ -130,7 +131,7 @@ public class FileController {
         User user = userService.getByUsername(principal.getName());
         try {
             Long folderId = fileEntryService.deleteAndGetFolderId(id, user);
-            return "redirect:/folders/" + folderId;
+            return "redirect:/folders/" + folderId + "?tab=files";
         } catch (IOException e) {
             redirectAttributes.addFlashAttribute("error", "Could not delete file from disk.");
             return "redirect:/dashboard";
