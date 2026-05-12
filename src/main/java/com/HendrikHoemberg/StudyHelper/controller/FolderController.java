@@ -111,16 +111,19 @@ public class FolderController {
                              @RequestParam(required = false) String sortBy,
                              @RequestParam(required = false, defaultValue = "asc") String direction,
                              @RequestParam(required = false) String tab,
+                             @RequestParam(required = false, defaultValue = "list") String viewMode,
                              Model model, Principal principal,
                              @RequestHeader(value = "HX-Request", required = false) String hxRequest,
                              @RequestHeader(value = "HX-Target", required = false) String hxTarget) {
         User user = userService.getByUsername(principal.getName());
         ActiveTab activeTab = parseTab(tab);
+        String normalizedViewMode = "grid".equalsIgnoreCase(viewMode) ? "grid" : "list";
         FolderView view = folderService.getFolderView(id, user, sortBy, direction, activeTab);
         model.addAttribute("view", view);
         model.addAttribute("username", principal.getName());
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("direction", direction);
+        model.addAttribute("viewMode", normalizedViewMode);
 
         if (hxRequest != null) {
             if ("files-table-container".equals(hxTarget)) {

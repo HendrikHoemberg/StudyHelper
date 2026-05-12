@@ -1741,6 +1741,52 @@ textarea.sh-input {
     font-size: 0.8125rem;
 }
 
+.sh-files-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sh-view-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem;
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    background: var(--surface-muted);
+}
+
+.sh-view-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.sh-view-toggle-btn:hover {
+    color: var(--text);
+}
+
+.sh-view-toggle-btn.is-active {
+    background: var(--surface);
+    color: var(--accent);
+    box-shadow: var(--shadow-sm);
+}
+
+.sh-file-tile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.25rem;
+}
+
 /* ============================================================
    FLASHCARD GRID
    ============================================================ */
