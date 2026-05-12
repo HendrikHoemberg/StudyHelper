@@ -1,14 +1,16 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
+import com.HendrikHoemberg.StudyHelper.dto.FlashcardsResponse;
 import com.HendrikHoemberg.StudyHelper.dto.GeneratedFlashcard;
 import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.content.Media;
+import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
@@ -20,11 +22,11 @@ public class AiFlashcardService {
     private static final int MAX_FLASHCARDS = 50;
 
     private final ChatClient chatClient;
-    private final JsonMapper objectMapper;
+    private final String responseSchema;
 
     public AiFlashcardService(ChatClient.Builder builder, JsonMapper objectMapper) {
         this.chatClient = builder.build();
-        this.objectMapper = objectMapper;
+        this.responseSchema = new BeanOutputConverter<>(FlashcardsResponse.class, objectMapper).getJsonSchema();
     }
 
     public List<GeneratedFlashcard> generate(DocumentInput document) {
@@ -42,26 +44,26 @@ public class AiFlashcardService {
 
         String prompt = buildPrompt(docContent, pdfListing);
 
-        String response;
+        FlashcardsResponse response;
         try {
             response = chatClient.prompt()
+                .options(GoogleGenAiChatOptions.builder()
+                    .responseMimeType("application/json")
+                    .responseSchema(responseSchema))
                 .user(u -> {
                     u.text(prompt);
                     if (pdfMedia.length > 0) u.media(pdfMedia);
                 })
                 .call()
-                .content();
+                .entity(FlashcardsResponse.class);
         } catch (Exception e) {
             throw new IllegalStateException("AI request failed, please retry with fewer or smaller PDFs.", e);
         }
 
         try {
-            String json = extractJson(response);
-            JsonNode root = objectMapper.readTree(json);
-            JsonNode flashcardsNode = root.get("flashcards");
-            List<GeneratedFlashcard> rawList = flashcardsNode != null
-                ? objectMapper.<List<GeneratedFlashcard>>readerForListOf(GeneratedFlashcard.class).readValue(flashcardsNode)
-                : List.of();
+            List<GeneratedFlashcard> rawList = response == null || response.flashcards() == null
+                ? List.of()
+                : response.flashcards();
 
             List<GeneratedFlashcard> valid = new ArrayList<>();
             for (GeneratedFlashcard card : rawList) {
@@ -113,6 +115,15 @@ public class AiFlashcardService {
 
         return ("You are a study assistant. Generate flashcards based on the source material below.\n\n"
             + "Maximum flashcards: %d\n\n"
+            + "LANGUAGE:\n"
+            + "Detect the dominant natural language of the supplied source material.\n"
+            + "Write every flashcard front and back in that same language. If sources mix\n"
+            + "languages, use the most-prevalent one. Do not translate proper nouns, code,\n"
+            + "or fixed technical terms.\n\n"
+            + "COVERAGE:\n"
+            + "Draw cards from across the full source material, not just the opening pages\n"
+            + "or first sections. Spread coverage across early, middle, and late portions\n"
+            + "of each source whenever content allows.\n\n"
             + "GENERAL RULES:\n"
             + "- First identify the dominant educational content of the source material.\n"
             + "- Ignore metadata, headers, footers, page numbers, and incidental details.\n"
@@ -122,22 +133,7 @@ public class AiFlashcardService {
             + "=== DOCUMENTS ===\n"
             + "%s\n\n"
             + "=== ATTACHED PDFs ===\n"
-            + "%s\n\n"
-            + "Respond ONLY with valid JSON, no extra text. Schema:\n"
-            + "{\"flashcards\":[{\"frontText\":\"...\",\"backText\":\"...\"}]}"
+            + "%s\n"
         ).formatted(MAX_FLASHCARDS, docSection, pdfSection);
-    }
-
-    private String extractJson(String response) {
-        String s = response.trim();
-        if (s.startsWith("```")) {
-            s = s.replaceFirst("```(?:json)?\\s*\n?", "");
-            int codeEnd = s.lastIndexOf("```");
-            if (codeEnd > 0) s = s.substring(0, codeEnd).trim();
-        }
-        int start = s.indexOf('{');
-        int end = s.lastIndexOf('}');
-        if (start >= 0 && end > start) return s.substring(start, end + 1);
-        return s;
     }
 }

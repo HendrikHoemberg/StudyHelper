@@ -3,14 +3,16 @@ package com.HendrikHoemberg.StudyHelper.service;
 import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
 import com.HendrikHoemberg.StudyHelper.dto.ExamGradingResult;
 import com.HendrikHoemberg.StudyHelper.dto.ExamQuestion;
+import com.HendrikHoemberg.StudyHelper.dto.ExamQuestionsResponse;
 import com.HendrikHoemberg.StudyHelper.dto.ExamQuestionSize;
 import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.content.Media;
+import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
 
@@ -22,11 +24,13 @@ import java.util.Map;
 public class AiExamService {
 
     private final ChatClient chatClient;
-    private final JsonMapper objectMapper;
+    private final String questionsResponseSchema;
+    private final String gradingResponseSchema;
 
     public AiExamService(ChatClient.Builder builder, JsonMapper objectMapper) {
         this.chatClient = builder.build();
-        this.objectMapper = objectMapper;
+        this.questionsResponseSchema = new BeanOutputConverter<>(ExamQuestionsResponse.class, objectMapper).getJsonSchema();
+        this.gradingResponseSchema = new BeanOutputConverter<>(ExamGradingResult.class, objectMapper).getJsonSchema();
     }
 
     public List<ExamQuestion> generate(
@@ -46,26 +50,26 @@ public class AiExamService {
 
         String prompt = buildGenerationPrompt(cardContent, docContent, pdfListing, questionCount, size);
 
-        String response;
+        ExamQuestionsResponse response;
         try {
             response = chatClient.prompt()
+                    .options(GoogleGenAiChatOptions.builder()
+                            .responseMimeType("application/json")
+                            .responseSchema(questionsResponseSchema))
                     .user(u -> {
                         u.text(prompt);
                         if (pdfMedia.length > 0) u.media(pdfMedia);
                     })
                     .call()
-                    .content();
+                    .entity(ExamQuestionsResponse.class);
         } catch (Exception e) {
             throw new IllegalStateException("AI request failed, please retry with fewer or smaller PDFs.", e);
         }
 
         try {
-            String json = extractJson(response);
-            JsonNode root = objectMapper.readTree(json);
-            JsonNode questionsNode = root.get("questions");
-            List<ExamQuestion> rawList = questionsNode != null
-                    ? objectMapper.<List<ExamQuestion>>readerForListOf(ExamQuestion.class).readValue(questionsNode)
-                    : List.of();
+            List<ExamQuestion> rawList = response == null || response.questions() == null
+                    ? List.of()
+                    : response.questions();
 
             List<ExamQuestion> valid = new ArrayList<>();
             for (ExamQuestion q : rawList) {
@@ -91,23 +95,20 @@ public class AiExamService {
             Map<Integer, String> userAnswers,
             ExamQuestionSize size) {
 
-        String prompt = buildGradingPrompt(questions, userAnswers, size);
+        List<ExamQuestion> safeQuestions = questions == null ? List.of() : questions;
+        Map<Integer, String> safeUserAnswers = userAnswers == null ? Map.of() : userAnswers;
+        String prompt = buildGradingPrompt(safeQuestions, safeUserAnswers, size);
 
-        String response;
         try {
-            response = chatClient.prompt()
-                    .user(prompt)
+            return chatClient.prompt()
+                    .options(GoogleGenAiChatOptions.builder()
+                            .responseMimeType("application/json")
+                            .responseSchema(gradingResponseSchema))
+                    .user(u -> u.text(prompt))
                     .call()
-                    .content();
+                    .entity(ExamGradingResult.class);
         } catch (Exception e) {
             throw new IllegalStateException("AI grading request failed. Please try again.", e);
-        }
-
-        try {
-            String json = extractJson(response);
-            return objectMapper.readValue(json, ExamGradingResult.class);
-        } catch (Exception e) {
-            throw new IllegalStateException("Could not parse the AI grading response. Please try again.", e);
         }
     }
 
@@ -116,6 +117,7 @@ public class AiExamService {
         StringBuilder sb = new StringBuilder();
         int count = 0;
         for (Flashcard card : flashcards) {
+            if (card == null) continue;
             String front = card.getFrontText();
             String back = card.getBackText();
             boolean hasFront = front != null && !front.isBlank();
@@ -177,6 +179,11 @@ public class AiExamService {
         String pdfSection  = pdfListing.isBlank()  ? "(none)" : pdfListing;
 
         return ("You are a study assistant. Generate %d exam questions based on the source material below.\n\n"
+                + "LANGUAGE:\n"
+                + "Detect the dominant natural language of the supplied source material (flashcards,\n"
+                + "documents, and attached PDFs together). Write every output string — question text\n"
+                + "and expectedAnswerHints — in that same language. If sources mix languages, use the\n"
+                + "most-prevalent one. Do not translate technical terms, proper nouns, or code.\n\n"
                 + "QUESTION DEPTH:\n"
                 + "%s\n\n"
                 + "TOPIC FOCUS:\n"
@@ -184,6 +191,19 @@ public class AiExamService {
                 + "questions only about concepts that belong to that subject. Ignore incidental\n"
                 + "metadata such as author names, page numbers, publication dates, headers, footers,\n"
                 + "or off-topic asides.\n\n"
+                + "COVERAGE:\n"
+                + "Distribute the %d requested questions evenly across the entire source material.\n"
+                + "- Treat each attached PDF and each text document as a separate source.\n"
+                + "- Within each source, sample roughly equally from the early third, middle third,\n"
+                + "  and final third (by page count for PDFs, by length for text).\n"
+                + "- If multiple sources are supplied, allocate questions proportionally to source\n"
+                + "  length, but ensure every source contributes at least one question when N is\n"
+                + "  large enough.\n"
+                + "- Do not cluster on introductions, abstracts, tables of contents, or the first\n"
+                + "  few pages. Skip these unless they contain core subject matter.\n"
+                + "- Before writing questions, sketch a brief internal coverage plan (which\n"
+                + "  pages/sections each question will draw from). Do not include the plan in\n"
+                + "  the JSON output.\n\n"
                 + "SOME CARDS MAY HAVE MISSING CONTEXT:\n"
                 + "Some flashcards may have had images removed. If a card's text alone is\n"
                 + "insufficient to form a meaningful question (e.g. it references \"this diagram\"\n"
@@ -191,7 +211,7 @@ public class AiExamService {
                 + "GENERAL RULES:\n"
                 + "- Each question stands alone — do not reference \"the text\" or \"the document\".\n"
                 + "- Test understanding, not exact wording.\n"
-                + "- Use the attached PDF documents (including their figures, diagrams, and tables) as primary source material for question generation.\n"
+                + "- Use all supplied sources (flashcards, text documents, and attached PDFs) consistently with the coverage plan.\n"
                 + "- For each question, provide 'expectedAnswerHints' which is a 2–3 sentence rubric\n"
                 + "  describing what a perfect answer should contain. This rubric is never shown to the user.\n\n"
                 + "=== FLASHCARDS ===\n"
@@ -199,17 +219,18 @@ public class AiExamService {
                 + "=== DOCUMENTS ===\n"
                 + "%s\n\n"
                 + "=== ATTACHED PDFs ===\n"
-                + "%s\n\n"
-                + "Respond ONLY with valid JSON, no extra text. Schema:\n"
-                + "{\"questions\":[\n"
-                + "  {\"questionText\":\"...\",\"expectedAnswerHints\":\"...\"}\n"
-                + "]}"
-        ).formatted(count, sizeInstruction, cardSection, docSection, pdfSection);
+                + "%s\n"
+        ).formatted(count, sizeInstruction, count, cardSection, docSection, pdfSection);
     }
 
     private String buildGradingPrompt(List<ExamQuestion> questions, Map<Integer, String> userAnswers, ExamQuestionSize size) {
         StringBuilder sb = new StringBuilder();
         sb.append("You are an expert grader. Grade the following exam answers based on the provided questions and rubrics.\n\n");
+        sb.append("LANGUAGE:\n");
+        sb.append("Detect the dominant natural language of the questions and user answers below.\n");
+        sb.append("Write every output string — feedback, strengths, weaknesses, topicsToRevisit,\n");
+        sb.append("suggestedNextSteps — in that same language. Do not translate technical terms,\n");
+        sb.append("proper nouns, or code.\n\n");
         sb.append("GRADING RULES:\n");
         sb.append("- Score each answer 0–100 (integer).\n");
         sb.append("- Provide per-question feedback: 2–4 sentences. State what was correct, what was missing/incorrect, and what was expected.\n");
@@ -225,33 +246,6 @@ public class AiExamService {
             sb.append("User Answer: ").append(answer.isEmpty() ? "(EMPTY)" : answer).append("\n\n");
         }
 
-        sb.append("Respond ONLY with valid JSON. Schema:\n");
-        sb.append("{\n");
-        sb.append("  \"perQuestion\": [\n");
-        sb.append("    { \"scorePercent\": 85, \"feedback\": \"...\" }\n");
-        sb.append("  ],\n");
-        sb.append("  \"overall\": {\n");
-        sb.append("    \"scorePercent\": 76,\n");
-        sb.append("    \"strengths\": [\"...\", \"...\"],\n");
-        sb.append("    \"weaknesses\": [\"...\", \"...\"],\n");
-        sb.append("    \"topicsToRevisit\": [\"...\", \"...\"],\n");
-        sb.append("    \"suggestedNextSteps\": [\"...\", \"... \"]\n");
-        sb.append("  }\n");
-        sb.append("}");
-
         return sb.toString();
-    }
-
-    private String extractJson(String response) {
-        String s = response.trim();
-        if (s.startsWith("```")) {
-            s = s.replaceFirst("```(?:json)?\\s*\n?", "");
-            int codeEnd = s.lastIndexOf("```");
-            if (codeEnd > 0) s = s.substring(0, codeEnd).trim();
-        }
-        int start = s.indexOf('{');
-        int end = s.lastIndexOf('}');
-        if (start >= 0 && end > start) return s.substring(start, end + 1);
-        return s;
     }
 }

@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.dto.FlashcardsResponse;
 import com.HendrikHoemberg.StudyHelper.dto.GeneratedFlashcard;
 import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
@@ -7,6 +8,7 @@ import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.springframework.core.io.ByteArrayResource;
 
 import java.util.ArrayList;
@@ -28,11 +30,13 @@ class AiFlashcardServiceTests {
     private AiFlashcardService service;
     private final AtomicReference<String> capturedPrompt = new AtomicReference<>();
     private final List<org.springframework.ai.content.Media> capturedMedia = new ArrayList<>();
+    private final AtomicReference<org.springframework.ai.chat.prompt.ChatOptions.Builder> capturedOptionsBuilder = new AtomicReference<>();
 
     @BeforeEach
     void setUp() {
         capturedPrompt.set(null);
         capturedMedia.clear();
+        capturedOptionsBuilder.set(null);
 
         ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
         callSpec = mock(ChatClient.CallResponseSpec.class);
@@ -41,6 +45,12 @@ class AiFlashcardServiceTests {
 
         when(builder.build()).thenReturn(chatClient);
         when(chatClient.prompt()).thenReturn(requestSpec);
+
+        when(requestSpec.options(any(org.springframework.ai.chat.prompt.ChatOptions.Builder.class)))
+            .thenAnswer(invocation -> {
+                capturedOptionsBuilder.set(invocation.getArgument(0));
+                return requestSpec;
+            });
 
         when(requestSpec.user(any(Consumer.class))).thenAnswer(invocation -> {
             Consumer<ChatClient.PromptUserSpec> consumer = invocation.getArgument(0);
@@ -69,7 +79,10 @@ class AiFlashcardServiceTests {
 
     @Test
     void generate_TextDocument_buildsPromptWithoutMedia() {
-        when(callSpec.content()).thenReturn(validFlashcardsJson());
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("Front 1", "Back 1"),
+            new GeneratedFlashcard("Front 2", "Back 2")
+        ));
 
         var doc = new TextDocument("notes.txt", "Photosynthesis converts light energy.");
 
@@ -84,12 +97,17 @@ class AiFlashcardServiceTests {
         assertThat(capturedPrompt.get()).containsIgnoringCase("ignore metadata");
         assertThat(capturedPrompt.get()).containsIgnoringCase("avoid duplicate cards");
         assertThat(capturedPrompt.get()).containsIgnoringCase("self-contained");
+        assertThat(capturedPrompt.get()).contains("LANGUAGE:");
+        assertThat(capturedPrompt.get()).contains("COVERAGE:");
         assertThat(capturedMedia).isEmpty();
     }
 
     @Test
     void generate_PdfDocument_buildsPromptAndAttachesPdfMedia() {
-        when(callSpec.content()).thenReturn(validFlashcardsJson());
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("Front 1", "Back 1"),
+            new GeneratedFlashcard("Front 2", "Back 2")
+        ));
 
         var doc = new PdfDocument("chapter5.pdf", new ByteArrayResource(new byte[]{0x25, 0x50, 0x44, 0x46}));
 
@@ -105,13 +123,11 @@ class AiFlashcardServiceTests {
 
     @Test
     void generate_BlankCardsAreDroppedAndValuesAreTrimmed() {
-        when(callSpec.content()).thenReturn("""
-            {"flashcards":[
-              {"frontText":"  Front 1  ","backText":"  Back 1  "},
-              {"frontText":"   ","backText":"ignored"},
-              {"frontText":"Front 2","backText":"   "}
-            ]}
-            """);
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("  Front 1  ", "  Back 1  "),
+            new GeneratedFlashcard("   ", "ignored"),
+            new GeneratedFlashcard("Front 2", "   ")
+        ));
 
         List<GeneratedFlashcard> result = service.generate(new TextDocument("notes.txt", "topic"));
 
@@ -120,12 +136,10 @@ class AiFlashcardServiceTests {
 
     @Test
     void generate_AllCardsFilteredOut_ThrowsIllegalState() {
-        when(callSpec.content()).thenReturn("""
-            {"flashcards":[
-              {"frontText":"   ","backText":"   "},
-              {"frontText":"","backText":"ignored"}
-            ]}
-            """);
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("   ", "   "),
+            new GeneratedFlashcard("", "ignored")
+        ));
 
         assertThatThrownBy(() -> service.generate(new TextDocument("notes.txt", "topic")))
             .isInstanceOf(IllegalStateException.class)
@@ -134,7 +148,7 @@ class AiFlashcardServiceTests {
 
     @Test
     void generate_MoreThanFiftyCards_CapsAtFifty() {
-        when(callSpec.content()).thenReturn(manyFlashcardsJson(55));
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(manyFlashcards(55)));
 
         List<GeneratedFlashcard> result = service.generate(new TextDocument("notes.txt", "topic"));
 
@@ -145,7 +159,7 @@ class AiFlashcardServiceTests {
 
     @Test
     void generate_ProviderFailure_throwsStableRetryMessage() {
-        when(callSpec.content()).thenThrow(new RuntimeException("provider offline"));
+        when(callSpec.entity(FlashcardsResponse.class)).thenThrow(new RuntimeException("provider offline"));
 
         assertThatThrownBy(() -> service.generate(new TextDocument("notes.txt", "topic")))
             .isInstanceOf(IllegalStateException.class)
@@ -155,11 +169,11 @@ class AiFlashcardServiceTests {
 
     @Test
     void generate_ParseFailure_throwsStableRetryMessage() {
-        when(callSpec.content()).thenReturn("not json");
+        when(callSpec.entity(FlashcardsResponse.class)).thenThrow(new RuntimeException("parse failed"));
 
         assertThatThrownBy(() -> service.generate(new TextDocument("notes.txt", "topic")))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Could not parse the AI response. Please try again.");
+            .hasMessage("AI request failed, please retry with fewer or smaller PDFs.");
     }
 
     @Test
@@ -169,24 +183,45 @@ class AiFlashcardServiceTests {
             .hasMessageContaining("no usable");
     }
 
-    private String validFlashcardsJson() {
-        return """
-            {"flashcards":[
-              {"frontText":"Front 1","backText":"Back 1"},
-              {"frontText":"Front 2","backText":"Back 2"}
-            ]}
-            """;
+    @Test
+    void generate_ConfiguresStructuredOutputOptions() {
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("Front 1", "Back 1"),
+            new GeneratedFlashcard("Front 2", "Back 2")
+        ));
+
+        service.generate(new TextDocument("notes.txt", "topic"));
+
+        assertThat(capturedOptionsBuilder.get()).isNotNull();
+        var built = (GoogleGenAiChatOptions) capturedOptionsBuilder.get().build();
+        assertThat(built.getResponseMimeType()).isEqualTo("application/json");
+        assertThat(built.getResponseSchema()).isNotBlank();
     }
 
-    private String manyFlashcardsJson(int count) {
-        StringBuilder sb = new StringBuilder("{\"flashcards\":[");
+    @Test
+    void generate_PromptContainsLanguageAndCoverageBlocks() {
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("Front 1", "Back 1"),
+            new GeneratedFlashcard("Front 2", "Back 2")
+        ));
+
+        service.generate(new TextDocument("notes.txt", "topic"));
+
+        assertThat(capturedPrompt.get()).contains("LANGUAGE:");
+        assertThat(capturedPrompt.get()).contains("Detect the dominant natural language");
+        assertThat(capturedPrompt.get()).contains("COVERAGE:");
+        assertThat(capturedPrompt.get()).contains("across the full source material");
+    }
+
+    private FlashcardsResponse wrap(GeneratedFlashcard... cards) {
+        return new FlashcardsResponse(List.of(cards));
+    }
+
+    private GeneratedFlashcard[] manyFlashcards(int count) {
+        GeneratedFlashcard[] cards = new GeneratedFlashcard[count];
         for (int i = 1; i <= count; i++) {
-            if (i > 1) {
-                sb.append(',');
-            }
-            sb.append("{\"frontText\":\"Front ").append(i).append("\",\"backText\":\"Back ").append(i).append("\"}");
+            cards[i - 1] = new GeneratedFlashcard("Front " + i, "Back " + i);
         }
-        sb.append("]}");
-        return sb.toString();
+        return cards;
     }
 }

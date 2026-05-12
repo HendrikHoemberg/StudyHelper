@@ -264,6 +264,20 @@ class AiQuizServiceTests {
         assertThat(built.getResponseSchema()).isNotBlank();
     }
 
+    @Test
+    void generate_PromptContainsLanguageAndCoverageBlocks() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
+        ));
+
+        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
+
+        assertThat(capturedPrompt.get()).contains("LANGUAGE:");
+        assertThat(capturedPrompt.get()).contains("Detect the dominant natural language");
+        assertThat(capturedPrompt.get()).contains("COVERAGE:");
+        assertThat(capturedPrompt.get()).contains("early third, middle third");
+    }
+
     // --- helpers ---
 
     private QuizQuestionsResponse wrap(QuizQuestion... questions) {

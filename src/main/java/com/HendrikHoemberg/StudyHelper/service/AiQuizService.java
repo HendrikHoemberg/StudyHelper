@@ -197,7 +197,7 @@ public class AiQuizService {
             case MIXED -> """
                 - All MULTIPLE_CHOICE questions have exactly 4 options. Exactly one correct.
                 - All TRUE_FALSE questions: options must be exactly ["True","False"]. correctOptionIndex is 0 (True) or 1 (False).
-                - Approximately half each type as specified above.""";
+                - Generate exactly the requested split as specified above.""";
         };
 
         String cardSection = cardContent.isBlank() ? "(none)" : cardContent;
@@ -205,12 +205,30 @@ public class AiQuizService {
         String pdfSection  = pdfListing.isBlank()  ? "(none)" : pdfListing;
 
         return ("You are a study assistant. Generate %d %s based on the source material below.\n\n"
+            + "LANGUAGE:\n"
+            + "Detect the dominant natural language of the supplied source material (flashcards,\n"
+            + "documents, and attached PDFs together). Write every output string — question text,\n"
+            + "answer options, hints — in that same language. If sources mix languages, use the\n"
+            + "most-prevalent one. Do not translate technical terms, proper nouns, or code.\n\n"
             + "DIFFICULTY: %s\n\n"
             + "TOPIC FOCUS:\n"
             + "First identify the dominant subject matter of the supplied content. Generate\n"
             + "questions only about concepts that belong to that subject. Ignore incidental\n"
             + "metadata such as author names, page numbers, publication dates, headers, footers,\n"
             + "or off-topic asides.\n\n"
+            + "COVERAGE:\n"
+            + "Distribute the %d requested questions evenly across the entire source material.\n"
+            + "- Treat each attached PDF and each text document as a separate source.\n"
+            + "- Within each source, sample roughly equally from the early third, middle third,\n"
+            + "  and final third (by page count for PDFs, by length for text).\n"
+            + "- If multiple sources are supplied, allocate questions proportionally to source\n"
+            + "  length, but ensure every source contributes at least one question when N is\n"
+            + "  large enough.\n"
+            + "- Do not cluster on introductions, abstracts, tables of contents, or the first\n"
+            + "  few pages. Skip these unless they contain core subject matter.\n"
+            + "- Before writing questions, sketch a brief internal coverage plan (which\n"
+            + "  pages/sections each question will draw from). Do not include the plan in\n"
+            + "  the JSON output.\n\n"
             + "SOME CARDS MAY HAVE MISSING CONTEXT:\n"
             + "Some flashcards may have had images removed. If a card's text alone is\n"
             + "insufficient to form a meaningful question (e.g. it references \"this diagram\"\n"
@@ -229,6 +247,6 @@ public class AiQuizService {
             + "%s\n\n"
             + "=== ATTACHED PDFs ===\n"
             + "%s\n"
-        ).formatted(count, modeDescription, difficultyInstruction, typeRules, cardSection, docSection, pdfSection);
+        ).formatted(count, modeDescription, difficultyInstruction, count, typeRules, cardSection, docSection, pdfSection);
     }
 }
