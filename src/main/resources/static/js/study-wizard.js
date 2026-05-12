@@ -73,7 +73,7 @@
 
     function goToStep(step) {
         if (currentStep === step) return;
-        
+
         const activePanel = document.querySelector('.sh-wizard-panel.is-active');
         if (activePanel) {
             activePanel.classList.remove('is-active-fade');
@@ -81,11 +81,9 @@
             activePanel.classList.remove('is-active');
             setTimeout(() => {
                 activePanel.classList.remove('is-fading-out');
-                switchContent(step);
             }, 500);
-        } else {
-            switchContent(step);
         }
+        switchContent(step);
     }
 
     function switchContent(step) {

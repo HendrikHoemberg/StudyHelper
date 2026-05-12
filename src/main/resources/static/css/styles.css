@@ -3025,6 +3025,7 @@ textarea.sh-input {
     flex-direction: column;
     gap: 0;
     padding-bottom: 0;
+    position: relative;
 }
 
 .sh-wizard-panel {
@@ -3048,6 +3049,10 @@ textarea.sh-input {
     display: flex;
     opacity: 0;
     pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
 }
 
 .sh-wizard-footer {
