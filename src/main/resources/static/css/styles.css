@@ -4479,6 +4479,14 @@ iconify-icon {
     flex-shrink: 0;
 }
 
+.sh-ai-pdf-size-warning {
+    margin-bottom: 0.75rem;
+}
+
+.sh-ai-pdf-size-warning[hidden] {
+    display: none;
+}
+
 .sh-ai-destination-card {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);

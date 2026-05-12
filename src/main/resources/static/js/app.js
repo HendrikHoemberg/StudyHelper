@@ -419,6 +419,8 @@ function shPrompt(opts) {
 }
 
 /* ---------- AI Flashcard Generator ---------- */
+const AI_PDF_SLOW_WARNING_BYTES = 5 * 1024 * 1024;
+
 document.addEventListener('input', (event) => {
     if (!event.target.matches('#ai-pdf-search')) return;
     const q = event.target.value.toLowerCase();
@@ -435,6 +437,7 @@ document.addEventListener('change', (event) => {
         row?.classList.add('is-selected');
         prefillAiNewDeckNameForPdf(row);
         preselectAiNewDeckFolderForPdf(row);
+        updateAiPdfSizeWarning(row);
     }
     if (event.target.matches('input[name="destination"]')) {
         updateAiFlashcardDestinationPanels();
@@ -461,6 +464,7 @@ document.addEventListener('click', (event) => {
         option.classList.toggle('is-active', selected);
         option.setAttribute('aria-pressed', selected ? 'true' : 'false');
     });
+    updateAiPdfSizeWarning(group?.closest('.sh-ai-pdf-row'));
 });
 
 document.body.addEventListener('htmx:afterSettle', () => {
@@ -528,9 +532,20 @@ function prefillAiNewDeckNameForPdf(pdfRow) {
     deckNameInput.value = filename.replace(/\.pdf$/i, '');
 }
 
+function updateAiPdfSizeWarning(pdfRow) {
+    const warning = document.querySelector('.sh-ai-pdf-size-warning');
+    if (!warning) return;
+
+    const selectedPdf = pdfRow || document.querySelector('.sh-ai-pdf-row input[name="fileId"]:checked')?.closest('.sh-ai-pdf-row');
+    const fileSize = Number(selectedPdf?.dataset?.fileSize || 0);
+    const showWarning = fileSize >= AI_PDF_SLOW_WARNING_BYTES;
+    warning.hidden = !showWarning;
+}
+
 function syncAiFolderSelectionWithSelectedPdf() {
     const selectedPdf = document.querySelector('.sh-ai-pdf-row input[name="fileId"]:checked')?.closest('.sh-ai-pdf-row');
     if (!selectedPdf) return;
     prefillAiNewDeckNameForPdf(selectedPdf);
     preselectAiNewDeckFolderForPdf(selectedPdf);
+    updateAiPdfSizeWarning(selectedPdf);
 }
