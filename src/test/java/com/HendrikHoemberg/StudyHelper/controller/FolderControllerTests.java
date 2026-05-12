@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
+import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.ActiveTab;
@@ -16,13 +17,18 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -121,5 +127,42 @@ class FolderControllerTests {
                 .principal(() -> "alice"))
             .andExpect(status().isOk())
             .andExpect(view().name("fragments/folder-detail :: folderDetail"));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void viewFolder_FilesTab_RendersCompactIconOnlyFileCardsWithInfoModal() throws Exception {
+        FileEntry file = new FileEntry();
+        file.setId(7L);
+        file.setOriginalFilename("Docker für Anwendungsentwickler.pdf");
+        file.setStoredFilename("stored.pdf");
+        file.setMimeType("application/pdf");
+        file.setFileSizeBytes(1_265_971L);
+        file.setUploadedAt(LocalDateTime.of(2026, 5, 7, 15, 10));
+        file.setFolder(folder);
+        file.setUser(user);
+
+        FolderView filesView = new FolderView(
+            folder, Collections.emptyList(), Collections.emptyList(),
+            List.of(file), Collections.singletonList(folder), 0, ActiveTab.FILES, false
+        );
+        when(folderService.getFolderView(eq(42L), eq(user), any(), any(), eq(ActiveTab.FILES)))
+            .thenReturn(filesView);
+
+        mockMvc.perform(get("/folders/42")
+                .with(csrf())
+                .param("tab", "files")
+                .principal(() -> "alice"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("aria-label=\"File information\"")))
+            .andExpect(content().string(containsString("class=\"sh-file-info-modals\"")))
+            .andExpect(content().string(containsString("Details for Docker für Anwendungsentwickler.pdf")))
+            .andExpect(content().string(containsString("title=\"Generate flashcards\"")))
+            .andExpect(content().string(containsString("/flashcards/generate?fileId=7")))
+            .andExpect(content().string(not(containsString("<div class=\"sh-deck-meta\" th:text=\"${file.mimeType}\""))))
+            .andExpect(content().string(not(containsString(">Quiz</a>"))))
+            .andExpect(content().string(not(containsString(">Edit</button>"))))
+            .andExpect(content().string(not(containsString(">Download</a>"))))
+            .andExpect(content().string(not(containsString(">Delete</button>"))));
     }
 }

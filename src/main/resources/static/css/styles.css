@@ -1691,8 +1691,13 @@ textarea.sh-input {
     font-weight: 600;
 }
 
+.sh-file-tile,
+.sh-file-tile-add {
+    min-height: 236px;
+}
+
 .sh-file-tile {
-    min-height: 320px;
+    padding-bottom: 0.75rem;
 }
 
 .sh-file-tile .sh-deck-title {
@@ -1704,35 +1709,61 @@ textarea.sh-input {
 
 .sh-file-tile-actions {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
     gap: 0.4rem;
     margin-top: auto;
-    padding-top: 0.35rem;
 }
 
-.sh-file-tile-actions .sh-btn {
-    border: 1px solid var(--border);
-    background: var(--surface);
+.sh-file-tile-actions .sh-deck-edit-btn,
+.sh-file-tile-actions .sh-deck-test-btn {
+    position: static;
+    flex: 0 0 auto;
+}
+
+.sh-file-tile-actions .sh-deck-ai-flashcards-btn {
+    right: auto;
+}
+
+.sh-file-download-btn {
     color: var(--text-secondary);
-    box-shadow: var(--shadow-sm);
 }
 
-.sh-file-tile-actions .sh-btn:hover {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: #fff !important;
-    box-shadow: 0 0 0 3px var(--accent-glow);
+.sh-file-delete-btn {
+    color: var(--danger);
 }
 
-.sh-file-tile-actions .sh-btn[style*="danger"]:hover {
+.sh-file-delete-btn:hover {
     border-color: var(--danger);
     background: var(--danger);
-    color: #fff !important;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+    color: #fff;
+}
+
+.sh-file-info-modal-body {
+    gap: 0.65rem;
+}
+
+.sh-file-info-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.8125rem;
+}
+
+.sh-file-info-row span {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.sh-file-info-row strong {
+    color: var(--text);
+    font-weight: 700;
+    text-align: right;
+    overflow-wrap: anywhere;
 }
 
 .sh-file-tile-add {
-    min-height: 320px;
     border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
     background: color-mix(in srgb, var(--accent) 7%, var(--surface));
 }
