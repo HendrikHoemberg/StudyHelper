@@ -512,4 +512,19 @@
         }
     });
 
+// Per-PDF mode toggle in the source picker
+document.addEventListener('click', (event) => {
+    const btn = event.target.closest('.vb-pdf-mode-btn');
+    if (!btn) return;
+    const group = btn.closest('.vb-pdf-mode');
+    if (!group) return;
+    const mode = btn.dataset.mode;
+    const hidden = group.querySelector('input[type="hidden"][name^="pdfMode"]');
+    if (hidden) hidden.value = mode;
+    group.querySelectorAll('.vb-pdf-mode-btn').forEach(b => {
+        b.classList.toggle('is-active', b === btn);
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+    });
+});
+
 })();
