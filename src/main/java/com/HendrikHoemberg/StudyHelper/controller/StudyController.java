@@ -115,20 +115,27 @@ public class StudyController {
                               @RequestParam(required = false) Long removeId,
                               @RequestParam(required = false) Long removeFileId,
                               @RequestParam(required = false, defaultValue = "false") boolean clearAll,
+                              HttpServletRequest request,
                               Model model,
                               Principal principal,
                               HttpSession session) {
+        if (principal == null) {
+            return "redirect:/login";
+        }
         User user = userService.getByUsername(principal.getName());
         List<Long> decks = new ArrayList<>(normalizeIds(selectedDeckIds));
         List<Long> files = new ArrayList<>(normalizeIds(selectedFileIds));
+        Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
 
         if (clearAll) {
             decks.clear();
             files.clear();
+            pdfMode.clear();
         } else if (removeId != null) {
             decks.remove(removeId);
         } else if (removeFileId != null) {
             files.remove(removeFileId);
+            pdfMode.remove(removeFileId);
         } else if (toggledFolderId != null) {
             FolderService.FolderSources sources = folderService.getAllSourcesInFolder(toggledFolderId, user);
             List<Long> folderDecks = sources.deckIds();
@@ -140,6 +147,7 @@ public class StudyController {
             if (allSelected && (!folderDecks.isEmpty() || !folderFiles.isEmpty())) {
                 decks.removeAll(folderDecks);
                 files.removeAll(folderFiles);
+                folderFiles.forEach(pdfMode::remove);
             } else {
                 for (Long id : folderDecks) if (!decks.contains(id)) decks.add(id);
                 for (Long id : folderFiles) if (!files.contains(id)) files.add(id);
@@ -147,7 +155,7 @@ public class StudyController {
         }
 
         model.addAttribute("mode", mode);
-        prepareWizardModel(model, user, decks, files, null, session);
+        prepareWizardModel(model, user, decks, files, pdfMode, null, session);
         return "fragments/wizard-source-picker :: setupPicker";
     }
 
@@ -186,7 +194,7 @@ public class StudyController {
                 session.setAttribute("studySessionState", state);
                 return delegateToFlashcards(model, user, state, hxRequest);
             } catch (Exception ex) {
-                return handleError(mode, selectedDeckIds, selectedFileIds, ex.getMessage(), model, user, session, response, hxRequest);
+                return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex.getMessage(), model, user, session, response, hxRequest);
             }
         } else if (mode == StudyMode.QUIZ) {
             try {
@@ -229,7 +237,7 @@ public class StudyController {
                 session.setAttribute("quizSessionState", state);
                 return delegateToQuiz(model, state, hxRequest);
             } catch (Exception ex) {
-                return handleError(mode, selectedDeckIds, selectedFileIds, ex.getMessage(), model, user, session, response, hxRequest);
+                return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex.getMessage(), model, user, session, response, hxRequest);
             }
         } else if (mode == StudyMode.EXAM) {
             return examController.createSession(selectedDeckIds, selectedFileIds, request, questionSize, count, timerMinutes, layout, model, principal, session, response, hxRequest);
@@ -239,13 +247,20 @@ public class StudyController {
     }
 
     private void prepareWizardModel(Model model, User user, List<Long> deckIds, List<Long> fileIds, String error, HttpSession session) {
+        prepareWizardModel(model, user, deckIds, fileIds, Map.of(), error, session);
+    }
+
+    private void prepareWizardModel(Model model, User user, List<Long> deckIds, List<Long> fileIds,
+                                    Map<Long, DocumentMode> pdfMode, String error, HttpSession session) {
         List<Long> normalizedDecks = normalizeIds(deckIds);
         List<Long> normalizedFiles = normalizeIds(fileIds);
+        Map<Long, DocumentMode> safePdfMode = pdfMode == null ? Map.of() : pdfMode;
 
         model.addAttribute("deckGroups", folderService.getStudyFolderTree(user, normalizedDecks));
         model.addAttribute("quizSourceTree", folderService.getQuizSourceTree(user, normalizedDecks, normalizedFiles));
         model.addAttribute("preselectedDeckIds", normalizedDecks);
         model.addAttribute("preselectedFileIds", normalizedFiles);
+        model.addAttribute("pdfMode", safePdfMode);
         model.addAttribute("studyError", error);
         model.addAttribute("sessionModes", SessionMode.values());
         model.addAttribute("deckOrderModes", DeckOrderMode.values());
@@ -261,26 +276,31 @@ public class StudyController {
 
         long totalChars = 0;
         for (Long fileId : normalizedFiles) {
-            if (charCache.containsKey(fileId)) {
-                totalChars += charCache.get(fileId);
-            } else {
-                try {
-                    FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
+            try {
+                FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
+                if (DocumentModeResolver.resolve(file, safePdfMode) == DocumentMode.FULL_PDF) {
+                    continue;
+                }
+                if (charCache.containsKey(fileId)) {
+                    totalChars += charCache.get(fileId);
+                } else {
                     String text = documentExtractionService.extractText(file);
                     charCache.put(fileId, text.length());
                     totalChars += text.length();
-                } catch (Exception ignored) {}
-            }
+                }
+            } catch (Exception ignored) {}
         }
         model.addAttribute("selectionTotalChars", totalChars);
         model.addAttribute("selectionWarn", totalChars >= 50_000);
         model.addAttribute("selectionExceedsCap", totalChars > 150_000);
     }
 
-    private String handleError(StudyMode mode, List<Long> deckIds, List<Long> fileIds, String error, Model model, User user, HttpSession session, HttpServletResponse response, String hxRequest) {
+    private String handleError(StudyMode mode, List<Long> deckIds, List<Long> fileIds, Map<Long, DocumentMode> pdfMode,
+                               String error, Model model, User user, HttpSession session,
+                               HttpServletResponse response, String hxRequest) {
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         model.addAttribute("mode", mode);
-        prepareWizardModel(model, user, deckIds, fileIds, error, session);
+        prepareWizardModel(model, user, deckIds, fileIds, pdfMode, error, session);
         if (hxRequest != null) return "fragments/study-setup :: studySetup";
         model.addAttribute("studyStateView", "setup");
         return "study-page";

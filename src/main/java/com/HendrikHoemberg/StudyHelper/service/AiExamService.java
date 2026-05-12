@@ -46,13 +46,18 @@ public class AiExamService {
 
         String prompt = buildGenerationPrompt(cardContent, docContent, pdfListing, questionCount, size);
 
-        String response = chatClient.prompt()
-                .user(u -> {
-                    u.text(prompt);
-                    if (pdfMedia.length > 0) u.media(pdfMedia);
-                })
-                .call()
-                .content();
+        String response;
+        try {
+            response = chatClient.prompt()
+                    .user(u -> {
+                        u.text(prompt);
+                        if (pdfMedia.length > 0) u.media(pdfMedia);
+                    })
+                    .call()
+                    .content();
+        } catch (Exception e) {
+            throw new IllegalStateException("AI request failed, please retry with fewer or smaller PDFs.", e);
+        }
 
         try {
             String json = extractJson(response);
@@ -88,10 +93,15 @@ public class AiExamService {
 
         String prompt = buildGradingPrompt(questions, userAnswers, size);
 
-        String response = chatClient.prompt()
-                .user(prompt)
-                .call()
-                .content();
+        String response;
+        try {
+            response = chatClient.prompt()
+                    .user(prompt)
+                    .call()
+                    .content();
+        } catch (Exception e) {
+            throw new IllegalStateException("AI grading request failed. Please try again.", e);
+        }
 
         try {
             String json = extractJson(response);
@@ -102,6 +112,7 @@ public class AiExamService {
     }
 
     private String buildCardContent(List<Flashcard> flashcards) {
+        if (flashcards == null || flashcards.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
         int count = 0;
         for (Flashcard card : flashcards) {

@@ -50,13 +50,18 @@ public class AiQuizService {
 
         String prompt = buildPrompt(cardContent, docContent, pdfListing, count, mode, difficulty, mcqCount, tfCount);
 
-        String response = chatClient.prompt()
-            .user(u -> {
-                u.text(prompt);
-                if (pdfMedia.length > 0) u.media(pdfMedia);
-            })
-            .call()
-            .content();
+        String response;
+        try {
+            response = chatClient.prompt()
+                .user(u -> {
+                    u.text(prompt);
+                    if (pdfMedia.length > 0) u.media(pdfMedia);
+                })
+                .call()
+                .content();
+        } catch (Exception e) {
+            throw new IllegalStateException("AI request failed, please retry with fewer or smaller PDFs.", e);
+        }
 
         try {
             String json = extractJson(response);
@@ -118,6 +123,7 @@ public class AiQuizService {
     }
 
     private String buildCardContent(List<Flashcard> flashcards) {
+        if (flashcards == null || flashcards.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
         int count = 0;
         for (Flashcard card : flashcards) {

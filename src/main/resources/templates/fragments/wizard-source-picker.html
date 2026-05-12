@@ -4,18 +4,6 @@
 
 <div th:fragment="picker">
     <div class="sh-wizard-panel" data-step="3" id="wizard-panel-3">
-        <!-- Warning banners for Quiz/Exam -->
-        <div th:if="${#strings.toString(mode) == 'QUIZ' or #strings.toString(mode) == 'EXAM'}">
-            <div th:if="${selectionExceedsCap}" class="sh-quiz-error-banner">
-                <iconify-icon icon="lucide:x-circle"></iconify-icon>
-                <span>Selection too large. Deselect some sources to continue.</span>
-            </div>
-            <div th:if="${selectionWarn and !selectionExceedsCap}" class="sh-quiz-warn-banner">
-                <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
-                <span>Large selection — generation may be slow.</span>
-            </div>
-        </div>
-
         <div class="vb-picker-head">
             <div class="sh-section-title" style="margin:0">Which sources?</div>
             <button type="button" id="vb-select-all-btn" class="vb-select-all">
@@ -30,6 +18,7 @@
                    id="sh-source-search"
                    class="sh-study-search-input"
                    placeholder="Search decks &amp; files…"
+                   aria-label="Search sources"
                    autocomplete="off">
         </div>
 
@@ -41,6 +30,18 @@
 
         <!-- HTMX-swapped region -->
         <div th:fragment="setupPicker" id="setup-picker">
+            <!-- Warning banners for Quiz/Exam -->
+            <div th:if="${#strings.toString(mode) == 'QUIZ' or #strings.toString(mode) == 'EXAM'}">
+                <div th:if="${selectionExceedsCap}" class="sh-quiz-error-banner">
+                    <iconify-icon icon="lucide:x-circle"></iconify-icon>
+                    <span>Selection too large. Deselect some sources to continue.</span>
+                </div>
+                <div th:if="${selectionWarn and !selectionExceedsCap}" class="sh-quiz-warn-banner">
+                    <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
+                    <span>Large selection — generation may be slow.</span>
+                </div>
+            </div>
+
             <div class="vb-list">
                 <!-- Flashcards Mode: Decks Only -->
                 <th:block th:if="${#strings.toString(mode) == 'FLASHCARDS'}">
@@ -105,7 +106,7 @@
                         <div class="vb-group-body">
                             <label th:each="deck : ${group.decks}" class="vb-deck" th:classappend="${deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
                                 <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.usableCardCount == 0}"
-                                       hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds']" hx-swap="outerHTML">
+                                       hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds'], [name^='pdfMode']" hx-swap="outerHTML">
                                 <span class="vb-deck-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
                                 <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                 <span class="sh-badge sh-badge-primary" th:text="${deck.usableCardCount} + ' cards'"></span>
@@ -118,10 +119,14 @@
                                     <span class="vb-file-name" th:text="${file.filename}">file.pdf</span>
                                     <span class="sh-badge" th:text="${file.extension.toUpperCase()}"></span>
                                 </label>
-                                <div th:if="${#strings.toLowerCase(file.extension) == 'pdf'}" class="vb-pdf-mode" th:data-file-id="${file.fileId}">
-                                    <input type="hidden" th:name="'pdfMode[' + ${file.fileId} + ']'" value="TEXT">
-                                    <button type="button" class="vb-pdf-mode-btn is-active" data-mode="TEXT" aria-pressed="true">Text</button>
-                                    <button type="button" class="vb-pdf-mode-btn" data-mode="FULL_PDF" aria-pressed="false" title="Send the full PDF with figures, diagrams, and layout. Uses more tokens (~258 per page).">Full PDF</button>
+                                <div th:if="${#strings.toLowerCase(file.extension) == 'pdf'}"
+                                     class="vb-pdf-mode"
+                                     th:classappend="${!#lists.contains(preselectedFileIds, file.fileId) || !file.isSupported ? ' is-disabled' : ''}"
+                                     th:data-file-id="${file.fileId}"
+                                     th:with="currentMode=${pdfMode != null && pdfMode.containsKey(file.fileId) ? pdfMode.get(file.fileId).name() : 'TEXT'}">
+                                    <input type="hidden" th:name="'pdfMode[' + ${file.fileId} + ']'" th:value="${currentMode}">
+                                    <button type="button" class="vb-pdf-mode-btn" th:classappend="${currentMode == 'TEXT' ? ' is-active' : ''}" data-mode="TEXT" th:disabled="${!#lists.contains(preselectedFileIds, file.fileId) || !file.isSupported}" th:attr="aria-pressed=${currentMode == 'TEXT'}">Text</button>
+                                    <button type="button" class="vb-pdf-mode-btn" th:classappend="${currentMode == 'FULL_PDF' ? ' is-active' : ''}" data-mode="FULL_PDF" th:disabled="${!#lists.contains(preselectedFileIds, file.fileId) || !file.isSupported}" th:attr="aria-pressed=${currentMode == 'FULL_PDF'}" title="Send the full PDF with figures, diagrams, and layout. Uses more tokens (~258 per page).">Full PDF</button>
                                 </div>
                             </div>
                             <!-- Subfolders -->
@@ -137,7 +142,7 @@
                                 <div class="vb-subgroup-body">
                                     <label th:each="deck : ${sub.decks}" class="vb-deck" th:classappend="${deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
                                         <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.usableCardCount == 0}"
-                                               hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds']" hx-swap="outerHTML">
+                                               hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds'], [name^='pdfMode']" hx-swap="outerHTML">
                                         <span class="vb-deck-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
                                         <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                         <span class="sh-badge sh-badge-primary" th:text="${deck.usableCardCount} + ' cards'"></span>
@@ -150,10 +155,14 @@
                                             <span class="vb-file-name" th:text="${file.filename}">file.pdf</span>
                                             <span class="sh-badge" th:text="${file.extension.toUpperCase()}"></span>
                                         </label>
-                                        <div th:if="${#strings.toLowerCase(file.extension) == 'pdf'}" class="vb-pdf-mode" th:data-file-id="${file.fileId}">
-                                            <input type="hidden" th:name="'pdfMode[' + ${file.fileId} + ']'" value="TEXT">
-                                            <button type="button" class="vb-pdf-mode-btn is-active" data-mode="TEXT" aria-pressed="true">Text</button>
-                                            <button type="button" class="vb-pdf-mode-btn" data-mode="FULL_PDF" aria-pressed="false" title="Send the full PDF with figures, diagrams, and layout. Uses more tokens (~258 per page).">Full PDF</button>
+                                        <div th:if="${#strings.toLowerCase(file.extension) == 'pdf'}"
+                                             class="vb-pdf-mode"
+                                             th:classappend="${!#lists.contains(preselectedFileIds, file.fileId) || !file.isSupported ? ' is-disabled' : ''}"
+                                             th:data-file-id="${file.fileId}"
+                                             th:with="currentMode=${pdfMode != null && pdfMode.containsKey(file.fileId) ? pdfMode.get(file.fileId).name() : 'TEXT'}">
+                                            <input type="hidden" th:name="'pdfMode[' + ${file.fileId} + ']'" th:value="${currentMode}">
+                                            <button type="button" class="vb-pdf-mode-btn" th:classappend="${currentMode == 'TEXT' ? ' is-active' : ''}" data-mode="TEXT" th:disabled="${!#lists.contains(preselectedFileIds, file.fileId) || !file.isSupported}" th:attr="aria-pressed=${currentMode == 'TEXT'}">Text</button>
+                                            <button type="button" class="vb-pdf-mode-btn" th:classappend="${currentMode == 'FULL_PDF' ? ' is-active' : ''}" data-mode="FULL_PDF" th:disabled="${!#lists.contains(preselectedFileIds, file.fileId) || !file.isSupported}" th:attr="aria-pressed=${currentMode == 'FULL_PDF'}" title="Send the full PDF with figures, diagrams, and layout. Uses more tokens (~258 per page).">Full PDF</button>
                                         </div>
                                     </div>
                                 </div>

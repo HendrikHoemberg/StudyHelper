@@ -2489,6 +2489,11 @@ textarea.sh-input {
     background: var(--accent-light);
 }
 
+.vb-select-all:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 .vb-select-all.is-on {
     background: var(--accent);
     color: #fff;
@@ -3072,6 +3077,36 @@ textarea.sh-input {
 }
 
 .sh-test-error-banner i {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.sh-quiz-warn-banner,
+.sh-quiz-error-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius);
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.sh-quiz-warn-banner {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+}
+
+.sh-quiz-error-banner {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.sh-quiz-warn-banner iconify-icon,
+.sh-quiz-error-banner iconify-icon {
     width: 16px;
     height: 16px;
     flex-shrink: 0;
@@ -4336,11 +4371,21 @@ iconify-icon {
 .vb-pdf-mode-btn:hover {
     background: var(--surface-hover);
 }
+
+.vb-pdf-mode-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    position: relative;
+    z-index: 1;
+}
 .vb-pdf-mode-btn.is-active {
     background: var(--accent);
     color: white;
 }
-.vb-file.is-disabled .vb-pdf-mode-btn {
+.vb-file.is-disabled .vb-pdf-mode-btn,
+.vb-pdf-mode.is-disabled .vb-pdf-mode-btn,
+.vb-pdf-mode-btn:disabled {
     pointer-events: none;
     opacity: 0.4;
+    cursor: not-allowed;
 }

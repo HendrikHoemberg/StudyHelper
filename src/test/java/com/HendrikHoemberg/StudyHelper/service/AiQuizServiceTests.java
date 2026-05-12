@@ -240,6 +240,25 @@ class AiQuizServiceTests {
         assertThat(result).hasSize(3);
     }
 
+    @Test
+    void generate_ProviderFailure_throwsStableRetryMessage() {
+        when(callSpec.content()).thenThrow(new RuntimeException("provider offline"));
+
+        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("AI request failed, please retry with fewer or smaller PDFs.")
+            .hasCauseInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void generate_ParseFailure_stillUsesParseSpecificMessage() {
+        when(callSpec.content()).thenReturn("this is not json");
+
+        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Could not parse the AI response. Please try again.");
+    }
+
     private String threeQuestions() {
         return """
             {"questions":[

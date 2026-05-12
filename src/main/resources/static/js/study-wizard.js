@@ -323,17 +323,30 @@
         const checked = document.querySelectorAll('.sh-source-checkbox:checked');
         const text = btn.querySelector('.vb-select-all-text');
         
-        if (checkboxes.length > 0 && checked.length === checkboxes.length) {
+        const allSelected = checkboxes.length > 0 && checked.length === checkboxes.length;
+
+        if (allSelected) {
             text.textContent = 'Deselect all';
         } else {
             text.textContent = 'Select all';
         }
+        btn.classList.toggle('is-on', allSelected);
+        btn.setAttribute('aria-pressed', allSelected ? 'true' : 'false');
     };
+
+    function applyIndeterminateCheckboxes() {
+        document.querySelectorAll('input[type="checkbox"][data-indeterminate]').forEach(checkbox => {
+            const value = (checkbox.dataset.indeterminate || '').toLowerCase();
+            checkbox.indeterminate = value === 'true' || value === '1';
+        });
+    }
 
     // Core init — called on DOMContentLoaded AND after HTMX swaps
     window.initStudyWizard = function () {
         const wizardForm = document.querySelector('.sh-study-setup-card');
         if (!wizardForm) return;
+
+        applyIndeterminateCheckboxes();
 
         // If this specific form instance is already initialized, don't reset state.
         // This prevents HTMX partial updates (like source selection) from resetting the step.
@@ -346,7 +359,6 @@
 
         const nextBtn = document.getElementById('wizard-btn-next');
         const backBtn = document.getElementById('wizard-btn-back');
-        const searchInput = document.getElementById('sh-source-search');
 
         // Use replaceWith-safe pattern: remove old listeners by cloning
         if (nextBtn) {
@@ -367,12 +379,6 @@
                 if (!validateStep(currentStep)) e.preventDefault();
             });
         }
-        if (searchInput) {
-            const fresh = searchInput.cloneNode(true);
-            searchInput.parentNode.replaceChild(fresh, searchInput);
-            fresh.addEventListener('input', reapplySearch);
-        }
-
         // EXAM Step 2 logic: time estimation
         const TIMER_PER_Q = { SHORT: 2, MEDIUM: 5, LONG: 10, MIXED: 5 };
         const updateExamEstimate = () => {
@@ -467,7 +473,7 @@
     document.body.addEventListener('htmx:afterRequest', () => {
         if (timer) { clearInterval(timer); timer = null; }
         const modal = document.getElementById('ai-generating-modal');
-        if (modal) modal.style.display = '';
+        if (modal) modal.style.display = 'none';
     });
 
     // Abort AI generation when Cancel is clicked
@@ -483,11 +489,17 @@
     document.addEventListener('click', e => {
         if (e.target.closest('#vb-select-all-btn')) {
             const btn = e.target.closest('#vb-select-all-btn');
-            const text = btn.querySelector('.vb-select-all-text');
-            const isSelectAll = text.textContent === 'Select all';
+            const checkboxes = document.querySelectorAll('.sh-source-checkbox:not(:disabled)');
+            const checked = document.querySelectorAll('.sh-source-checkbox:checked');
+            const allSelected = checkboxes.length > 0 && checked.length === checkboxes.length;
+            const isSelectAll = !allSelected;
+
+            const pdfModeValues = {};
+            document.querySelectorAll('input[type="hidden"][name^="pdfMode["]').forEach(input => {
+                pdfModeValues[input.name] = input.value;
+            });
             
             if (isSelectAll) {
-                const checkboxes = document.querySelectorAll('.sh-source-checkbox:not(:disabled)');
                 checkboxes.forEach(cb => cb.checked = true);
                 
                 const selectedDeckIds = Array.from(document.querySelectorAll('input[name="selectedDeckIds"]:checked')).map(cb => cb.value);
@@ -495,29 +507,39 @@
 
                 htmx.ajax('POST', '/study/setup/update', {
                     target: '#setup-picker',
-                    values: { 
+                    values: {
                         selectedDeckIds: selectedDeckIds.length > 0 ? selectedDeckIds : null, 
                         selectedFileIds: selectedFileIds.length > 0 ? selectedFileIds : null,
-                        mode: currentMode 
+                        mode: currentMode,
+                        ...pdfModeValues
                     },
                     swap: 'outerHTML'
                 });
             } else {
                 htmx.ajax('POST', '/study/setup/update', {
                     target: '#setup-picker',
-                    values: { clearAll: true, mode: currentMode },
+                    values: { clearAll: true, mode: currentMode, ...pdfModeValues },
                     swap: 'outerHTML'
                 });
             }
         }
     });
 
+    // Keep source search filtering active across HTMX swaps
+    document.addEventListener('input', (event) => {
+        if (!event.target.matches('#sh-source-search')) return;
+        reapplySearch();
+    });
+
 // Per-PDF mode toggle in the source picker
 document.addEventListener('click', (event) => {
     const btn = event.target.closest('.vb-pdf-mode-btn');
     if (!btn) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (btn.disabled) return;
     const group = btn.closest('.vb-pdf-mode');
-    if (!group) return;
+    if (!group || group.classList.contains('is-disabled')) return;
     const mode = btn.dataset.mode;
     const hidden = group.querySelector('input[type="hidden"][name^="pdfMode"]');
     if (hidden) hidden.value = mode;
