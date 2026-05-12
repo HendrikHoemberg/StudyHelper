@@ -4,6 +4,8 @@ import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -40,6 +42,18 @@ public class DocumentExtractionService {
             text = Files.readString(path, StandardCharsets.UTF_8);
         }
         return text == null ? "" : text.strip();
+    }
+
+    public Resource loadResource(FileEntry file) {
+        String ext = extension(file.getOriginalFilename());
+        if (!"pdf".equals(ext)) {
+            throw new IllegalArgumentException("loadResource only supports pdf files, got: " + ext);
+        }
+        if (file.getFileSizeBytes() == null || file.getFileSizeBytes() > MAX_FILE_SIZE_BYTES) {
+            throw new IllegalArgumentException("File exceeds size limit or has unknown size");
+        }
+        Path path = fileStorageService.resolvePath(file.getStoredFilename());
+        return new FileSystemResource(path);
     }
 
     public boolean isSupported(FileEntry file) {

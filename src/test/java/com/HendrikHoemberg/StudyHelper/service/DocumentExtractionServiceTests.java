@@ -109,6 +109,48 @@ class DocumentExtractionServiceTests {
         return entry;
     }
 
+    @Test
+    void loadResource_pdfFile_returnsReadableFileSystemResource() throws IOException {
+        Path pdfPath = tempDir.resolve("doc.pdf");
+        writeTinyPdf(pdfPath, "hello");
+
+        FileEntry entry = fileEntry("doc.pdf", "stored.pdf", pdfPath.toFile().length());
+        when(fileStorageService.resolvePath("stored.pdf")).thenReturn(pdfPath);
+
+        org.springframework.core.io.Resource resource = service.loadResource(entry);
+        assertThat(resource.exists()).isTrue();
+        assertThat(resource.isReadable()).isTrue();
+        assertThat(resource.contentLength()).isEqualTo(pdfPath.toFile().length());
+    }
+
+    @Test
+    void loadResource_nonPdf_throwsIllegalArgumentException() {
+        FileEntry entry = fileEntry("notes.md", "stored.md", 100L);
+
+        assertThatThrownBy(() -> service.loadResource(entry))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("pdf");
+    }
+
+    @Test
+    void loadResource_oversizePdf_throwsIllegalArgumentException() {
+        FileEntry entry = fileEntry("big.pdf", "big.pdf",
+                DocumentExtractionService.MAX_FILE_SIZE_BYTES + 1);
+
+        assertThatThrownBy(() -> service.loadResource(entry))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("size");
+    }
+
+    @Test
+    void loadResource_nullSize_throwsIllegalArgumentException() {
+        FileEntry entry = fileEntry("doc.pdf", "stored.pdf", 0L);
+        entry.setFileSizeBytes(null);
+
+        assertThatThrownBy(() -> service.loadResource(entry))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
     private void writeTinyPdf(Path dest, String text) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage();
