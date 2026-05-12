@@ -7,6 +7,7 @@ import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.*;
 import com.HendrikHoemberg.StudyHelper.service.DocumentModeResolver;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -51,7 +52,7 @@ public class ExamController {
     public String createSession(
             @RequestParam(required = false) List<Long> selectedDeckIds,
             @RequestParam(required = false) List<Long> selectedFileIds,
-            @RequestParam(required = false) Map<Long, DocumentMode> pdfMode,
+            HttpServletRequest request,
             @RequestParam(defaultValue = "MEDIUM") ExamQuestionSize questionSize,
             @RequestParam(defaultValue = "5") int count,
             @RequestParam(required = false) Integer timerMinutes,
@@ -59,6 +60,7 @@ public class ExamController {
             Model model, Principal principal, HttpSession session, HttpServletResponse response,
             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
 
+        Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
         if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
 

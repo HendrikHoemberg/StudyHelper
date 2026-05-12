@@ -7,6 +7,7 @@ import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.*;
 import com.HendrikHoemberg.StudyHelper.service.DocumentModeResolver;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -154,7 +155,7 @@ public class StudyController {
     public String createSession(@RequestParam StudyMode mode,
                                 @RequestParam(required = false) List<Long> selectedDeckIds,
                                 @RequestParam(required = false) List<Long> selectedFileIds,
-                                @RequestParam(required = false) Map<Long, DocumentMode> pdfMode,
+                                HttpServletRequest request,
                                 // Flashcard params
                                 @RequestParam(defaultValue = "DECK_BY_DECK") SessionMode sessionMode,
                                 @RequestParam(defaultValue = "SELECTED_ORDER") DeckOrderMode deckOrderMode,
@@ -173,6 +174,7 @@ public class StudyController {
                                 HttpSession session,
                                 HttpServletResponse response,
                                 @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
         if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
 
@@ -230,7 +232,7 @@ public class StudyController {
                 return handleError(mode, selectedDeckIds, selectedFileIds, ex.getMessage(), model, user, session, response, hxRequest);
             }
         } else if (mode == StudyMode.EXAM) {
-            return examController.createSession(selectedDeckIds, selectedFileIds, pdfMode, questionSize, count, timerMinutes, layout, model, principal, session, response, hxRequest);
+            return examController.createSession(selectedDeckIds, selectedFileIds, request, questionSize, count, timerMinutes, layout, model, principal, session, response, hxRequest);
         }
 
         return "redirect:/study/start";
