@@ -6,12 +6,14 @@ import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.QuestionType;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionMode;
+import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionsResponse;
 import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.springframework.core.io.ByteArrayResource;
 
 import java.util.ArrayList;
@@ -34,11 +36,13 @@ class AiQuizServiceTests {
     private AiQuizService service;
     private final AtomicReference<String> capturedPrompt = new AtomicReference<>();
     private final List<org.springframework.ai.content.Media> capturedMedia = new ArrayList<>();
+    private final AtomicReference<org.springframework.ai.chat.prompt.ChatOptions.Builder> capturedOptionsBuilder = new AtomicReference<>();
 
     @BeforeEach
     void setUp() {
         capturedPrompt.set(null);
         capturedMedia.clear();
+        capturedOptionsBuilder.set(null);
 
         ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
         callSpec = mock(ChatClient.CallResponseSpec.class);
@@ -48,6 +52,12 @@ class AiQuizServiceTests {
         when(builder.build()).thenReturn(chatClient);
         when(chatClient.prompt()).thenReturn(requestSpec);
 
+        when(requestSpec.options(any(org.springframework.ai.chat.prompt.ChatOptions.Builder.class)))
+            .thenAnswer(invocation -> {
+                capturedOptionsBuilder.set(invocation.getArgument(0));
+                return requestSpec;
+            });
+
         when(requestSpec.user(any(Consumer.class))).thenAnswer(invocation -> {
             Consumer<ChatClient.PromptUserSpec> consumer = invocation.getArgument(0);
             ChatClient.PromptUserSpec userSpec = mock(ChatClient.PromptUserSpec.class);
@@ -56,7 +66,6 @@ class AiQuizServiceTests {
                 return userSpec;
             });
             when(userSpec.media(any(org.springframework.ai.content.Media.class))).thenAnswer(a -> {
-                // varargs: Mockito captures each element; collect all raw args
                 for (Object arg : a.getRawArguments()) {
                     if (arg instanceof org.springframework.ai.content.Media m) {
                         capturedMedia.add(m);
@@ -76,14 +85,9 @@ class AiQuizServiceTests {
 
     @Test
     void generate_McqOnly_ReturnsFiveMcqQuestions() {
-        when(callSpec.content()).thenReturn("""
-            {"questions":[
-              {"type":"MULTIPLE_CHOICE","questionText":"Q1","options":["a","b","c","d"],"correctOptionIndex":0},
-              {"type":"MULTIPLE_CHOICE","questionText":"Q2","options":["a","b","c","d"],"correctOptionIndex":1},
-              {"type":"MULTIPLE_CHOICE","questionText":"Q3","options":["a","b","c","d"],"correctOptionIndex":2},
-              {"type":"MULTIPLE_CHOICE","questionText":"Q4","options":["a","b","c","d"],"correctOptionIndex":3},
-              {"type":"MULTIPLE_CHOICE","questionText":"Q5","options":["a","b","c","d"],"correctOptionIndex":0}
-            ]}""");
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 1), mcq("Q3", 2), mcq("Q4", 3), mcq("Q5", 0)
+        ));
 
         List<QuizQuestion> result = service.generate(cards(3), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
 
@@ -94,12 +98,9 @@ class AiQuizServiceTests {
 
     @Test
     void generate_TfOnly_ReturnsTfQuestionsWithNormalizedOptions() {
-        when(callSpec.content()).thenReturn("""
-            {"questions":[
-              {"type":"TRUE_FALSE","questionText":"Q1","options":["True","False"],"correctOptionIndex":0},
-              {"type":"TRUE_FALSE","questionText":"Q2","options":["True","False"],"correctOptionIndex":1},
-              {"type":"TRUE_FALSE","questionText":"Q3","options":["True","False"],"correctOptionIndex":0}
-            ]}""");
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            tf("Q1", 0), tf("Q2", 1), tf("Q3", 0)
+        ));
 
         List<QuizQuestion> result = service.generate(cards(3), List.of(), 3, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
 
@@ -110,13 +111,9 @@ class AiQuizServiceTests {
 
     @Test
     void generate_Mixed_ReturnsBothTypes() {
-        when(callSpec.content()).thenReturn("""
-            {"questions":[
-              {"type":"MULTIPLE_CHOICE","questionText":"Q1","options":["a","b","c","d"],"correctOptionIndex":0},
-              {"type":"TRUE_FALSE","questionText":"Q2","options":["True","False"],"correctOptionIndex":1},
-              {"type":"MULTIPLE_CHOICE","questionText":"Q3","options":["a","b","c","d"],"correctOptionIndex":2},
-              {"type":"TRUE_FALSE","questionText":"Q4","options":["True","False"],"correctOptionIndex":0}
-            ]}""");
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), tf("Q2", 1), mcq("Q3", 2), tf("Q4", 0)
+        ));
 
         List<QuizQuestion> result = service.generate(cards(3), List.of(), 4, QuizQuestionMode.MIXED, Difficulty.MEDIUM);
 
@@ -127,11 +124,9 @@ class AiQuizServiceTests {
 
     @Test
     void generate_LowercaseTfOptions_NormalizedToTitleCase() {
-        when(callSpec.content()).thenReturn("""
-            {"questions":[
-              {"type":"TRUE_FALSE","questionText":"Q1","options":["true","false"],"correctOptionIndex":0},
-              {"type":"TRUE_FALSE","questionText":"Q2","options":["true","false"],"correctOptionIndex":1}
-            ]}""");
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            tfLower("Q1", 0), tfLower("Q2", 1)
+        ));
 
         List<QuizQuestion> result = service.generate(cards(2), List.of(), 2, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
 
@@ -141,11 +136,9 @@ class AiQuizServiceTests {
 
     @Test
     void generate_MissingTypeField_InferredFromOptionsShape() {
-        when(callSpec.content()).thenReturn("""
-            {"questions":[
-              {"questionText":"Q1","options":["a","b","c","d"],"correctOptionIndex":0},
-              {"questionText":"Q2","options":["True","False"],"correctOptionIndex":1}
-            ]}""");
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcqTypeless("Q1", 0), tfTypeless("Q2", 1)
+        ));
 
         List<QuizQuestion> result = service.generate(cards(2), List.of(), 2, QuizQuestionMode.MIXED, Difficulty.MEDIUM);
 
@@ -156,11 +149,10 @@ class AiQuizServiceTests {
 
     @Test
     void generate_MalformedEntriesDropped_TooFewThrowsIllegalState() {
-        when(callSpec.content()).thenReturn("""
-            {"questions":[
-              {"type":"MULTIPLE_CHOICE","questionText":"Q1","options":["only","two"],"correctOptionIndex":0},
-              {"type":"MULTIPLE_CHOICE","questionText":"Q2","options":["only","two"],"correctOptionIndex":0}
-            ]}""");
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            new QuizQuestion(QuestionType.MULTIPLE_CHOICE, "Q1", List.of("only", "two"), 0),
+            new QuizQuestion(QuestionType.MULTIPLE_CHOICE, "Q2", List.of("only", "two"), 0)
+        ));
 
         assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
             .isInstanceOf(IllegalStateException.class)
@@ -188,7 +180,9 @@ class AiQuizServiceTests {
 
     @Test
     void generate_TextDocument_includedInPromptDocumentsSection() {
-        when(callSpec.content()).thenReturn(threeQuestions());
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
+        ));
 
         var docs = List.<DocumentInput>of(new TextDocument("lecture.pdf", "photosynthesis is awesome"));
         service.generate(cards(2), docs, 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
@@ -201,7 +195,9 @@ class AiQuizServiceTests {
 
     @Test
     void generate_PdfDocument_attachedAsMediaAndListedInPrompt() {
-        when(callSpec.content()).thenReturn(threeQuestions());
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
+        ));
 
         var resource = new ByteArrayResource(new byte[]{0x25, 0x50, 0x44, 0x46});
         var docs = List.<DocumentInput>of(new PdfDocument("chapter5.pdf", resource));
@@ -215,7 +211,9 @@ class AiQuizServiceTests {
 
     @Test
     void generate_MixedTextAndPdfDocs_bothSectionsPopulated() {
-        when(callSpec.content()).thenReturn(threeQuestions());
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
+        ));
 
         var resource = new ByteArrayResource(new byte[]{0x25, 0x50, 0x44, 0x46});
         var docs = List.<DocumentInput>of(
@@ -231,7 +229,9 @@ class AiQuizServiceTests {
 
     @Test
     void generate_PdfOnly_NoFlashcardsNoText_DoesNotThrow() {
-        when(callSpec.content()).thenReturn(threeQuestions());
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
+        ));
 
         var resource = new ByteArrayResource(new byte[]{0x25, 0x50, 0x44, 0x46});
         var docs = List.<DocumentInput>of(new PdfDocument("only.pdf", resource));
@@ -242,7 +242,7 @@ class AiQuizServiceTests {
 
     @Test
     void generate_ProviderFailure_throwsStableRetryMessage() {
-        when(callSpec.content()).thenThrow(new RuntimeException("provider offline"));
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenThrow(new RuntimeException("provider offline"));
 
         assertThatThrownBy(() -> service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY))
             .isInstanceOf(IllegalStateException.class)
@@ -251,21 +251,46 @@ class AiQuizServiceTests {
     }
 
     @Test
-    void generate_ParseFailure_stillUsesParseSpecificMessage() {
-        when(callSpec.content()).thenReturn("this is not json");
+    void generate_ConfiguresStructuredOutputOptions() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
+        ));
 
-        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Could not parse the AI response. Please try again.");
+        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
+
+        assertThat(capturedOptionsBuilder.get()).isNotNull();
+        var built = (GoogleGenAiChatOptions) capturedOptionsBuilder.get().build();
+        assertThat(built.getResponseMimeType()).isEqualTo("application/json");
+        assertThat(built.getResponseSchema()).isNotBlank();
     }
 
-    private String threeQuestions() {
-        return """
-            {"questions":[
-              {"type":"MULTIPLE_CHOICE","questionText":"Q1","options":["a","b","c","d"],"correctOptionIndex":0},
-              {"type":"MULTIPLE_CHOICE","questionText":"Q2","options":["a","b","c","d"],"correctOptionIndex":0},
-              {"type":"MULTIPLE_CHOICE","questionText":"Q3","options":["a","b","c","d"],"correctOptionIndex":0}
-            ]}""";
+    // --- helpers ---
+
+    private QuizQuestionsResponse wrap(QuizQuestion... questions) {
+        return new QuizQuestionsResponse(List.of(questions));
+    }
+
+    private QuizQuestion mcq(String text, int correctIdx) {
+        return new QuizQuestion(QuestionType.MULTIPLE_CHOICE, text,
+            List.of("a", "b", "c", "d"), correctIdx);
+    }
+
+    private QuizQuestion tf(String text, int correctIdx) {
+        return new QuizQuestion(QuestionType.TRUE_FALSE, text,
+            List.of("True", "False"), correctIdx);
+    }
+
+    private QuizQuestion tfLower(String text, int correctIdx) {
+        return new QuizQuestion(QuestionType.TRUE_FALSE, text,
+            List.of("true", "false"), correctIdx);
+    }
+
+    private QuizQuestion mcqTypeless(String text, int correctIdx) {
+        return new QuizQuestion(null, text, List.of("a", "b", "c", "d"), correctIdx);
+    }
+
+    private QuizQuestion tfTypeless(String text, int correctIdx) {
+        return new QuizQuestion(null, text, List.of("True", "False"), correctIdx);
     }
 
     private List<Flashcard> cards(int n) {

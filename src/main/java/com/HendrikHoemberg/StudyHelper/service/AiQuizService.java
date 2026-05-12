@@ -6,14 +6,16 @@ import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.QuestionType;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionMode;
+import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionsResponse;
 import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.content.Media;
+import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,11 +24,11 @@ import java.util.List;
 public class AiQuizService {
 
     private final ChatClient chatClient;
-    private final JsonMapper objectMapper;
+    private final String responseSchema;
 
     public AiQuizService(ChatClient.Builder builder, JsonMapper objectMapper) {
         this.chatClient = builder.build();
-        this.objectMapper = objectMapper;
+        this.responseSchema = new BeanOutputConverter<>(QuizQuestionsResponse.class, objectMapper).getJsonSchema();
     }
 
     public List<QuizQuestion> generate(
@@ -50,26 +52,26 @@ public class AiQuizService {
 
         String prompt = buildPrompt(cardContent, docContent, pdfListing, count, mode, difficulty, mcqCount, tfCount);
 
-        String response;
+        QuizQuestionsResponse response;
         try {
             response = chatClient.prompt()
+                .options(GoogleGenAiChatOptions.builder()
+                    .responseMimeType("application/json")
+                    .responseSchema(responseSchema))
                 .user(u -> {
                     u.text(prompt);
                     if (pdfMedia.length > 0) u.media(pdfMedia);
                 })
                 .call()
-                .content();
+                .entity(QuizQuestionsResponse.class);
         } catch (Exception e) {
             throw new IllegalStateException("AI request failed, please retry with fewer or smaller PDFs.", e);
         }
 
         try {
-            String json = extractJson(response);
-            JsonNode root = objectMapper.readTree(json);
-            JsonNode questionsNode = root.get("questions");
-            List<QuizQuestion> rawList = questionsNode != null
-                ? objectMapper.<List<QuizQuestion>>readerForListOf(QuizQuestion.class).readValue(questionsNode)
-                : List.of();
+            List<QuizQuestion> rawList = response == null || response.questions() == null
+                ? List.of()
+                : response.questions();
 
             List<QuizQuestion> valid = new ArrayList<>();
             for (QuizQuestion q : rawList) {
@@ -226,25 +228,7 @@ public class AiQuizService {
             + "=== DOCUMENTS ===\n"
             + "%s\n\n"
             + "=== ATTACHED PDFs ===\n"
-            + "%s\n\n"
-            + "Respond ONLY with valid JSON, no extra text. Schema:\n"
-            + "{\"questions\":[\n"
-            + "  {\"type\":\"MULTIPLE_CHOICE\",\"questionText\":\"...\",\"options\":[\"a\",\"b\",\"c\",\"d\"],\"correctOptionIndex\":0},\n"
-            + "  {\"type\":\"TRUE_FALSE\",\"questionText\":\"...\",\"options\":[\"True\",\"False\"],\"correctOptionIndex\":0}\n"
-            + "]}"
+            + "%s\n"
         ).formatted(count, modeDescription, difficultyInstruction, typeRules, cardSection, docSection, pdfSection);
-    }
-
-    private String extractJson(String response) {
-        String s = response.trim();
-        if (s.startsWith("```")) {
-            s = s.replaceFirst("```(?:json)?\\s*\n?", "");
-            int codeEnd = s.lastIndexOf("```");
-            if (codeEnd > 0) s = s.substring(0, codeEnd).trim();
-        }
-        int start = s.indexOf('{');
-        int end = s.lastIndexOf('}');
-        if (start >= 0 && end > start) return s.substring(start, end + 1);
-        return s;
     }
 }
