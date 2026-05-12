@@ -106,7 +106,7 @@ class FlashcardGenerationControllerTests {
         String view = controller.showGenerator(null, model, () -> "alice", "true");
 
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
-        assertThat(model).containsKeys("pdfOptions", "deckOptions", "folderOptions", "destinations", "documentModes");
+        assertThat(model).containsKeys("pdfOptions", "deckTree", "folderTree", "destinations", "documentModes");
     }
 
     @Test

@@ -4452,28 +4452,32 @@ iconify-icon {
     flex-shrink: 0;
 }
 
-.sh-ai-destination-row {
+.sh-ai-destination-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--surface-color);
+    transition: border-color 0.15s, background 0.15s;
+    overflow: hidden;
+}
+
+.sh-ai-destination-card:hover {
+    border-color: var(--accent-color);
+}
+
+.sh-ai-destination-card.is-selected {
+    border-color: var(--accent-color);
+    background: rgba(var(--accent-rgb), 0.05);
+}
+
+.sh-ai-destination-head {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
     padding: 0.625rem 0.75rem;
-    background: var(--surface-color);
     cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
 }
 
-.sh-ai-destination-row:hover {
-    border-color: var(--accent-color);
-}
-
-.sh-ai-destination-row:has(input:checked) {
-    border-color: var(--accent-color);
-    background: rgba(var(--accent-rgb), 0.08);
-}
-
-.sh-ai-destination-row input[type="radio"] {
+.sh-ai-destination-head input[type="radio"] {
     margin: 0;
     flex-shrink: 0;
 }
@@ -4512,11 +4516,78 @@ iconify-icon {
     font-size: 0.8125rem;
 }
 
-.sh-ai-destination-panel {
+.sh-ai-destination-body {
+    padding: 0.25rem 0.75rem 0.75rem 2.4rem;
+    display: none;
+}
+
+.sh-ai-destination-card.is-selected .sh-ai-destination-body {
+    display: block;
+}
+
+.sh-ai-tree {
+    max-height: 320px;
+    overflow-y: auto;
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 0.75rem;
+    border-radius: var(--radius-md);
     background: var(--surface-muted);
+    padding: 0.5rem;
+}
+
+.sh-ai-tree .vb-group {
+    margin-bottom: 0.5rem;
+}
+
+.sh-ai-tree .vb-group:last-child {
+    margin-bottom: 0;
+}
+
+.sh-ai-tree-radio {
+    margin: 0 0.25rem 0 0;
+    flex-shrink: 0;
+}
+
+.sh-ai-tree-folder {
+    cursor: pointer;
+}
+
+.sh-ai-tree .vb-deck {
+    cursor: pointer;
+}
+
+/* Picker default: plain background. Folder color reserved for the selected item. */
+.sh-ai-tree .vb-group-head {
+    background: var(--surface);
+    border-bottom-color: var(--border-light);
+}
+
+.sh-ai-tree .vb-group-head:hover {
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 5%, var(--surface));
+}
+
+.sh-ai-tree .vb-subgroup-head {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 18%, transparent);
+}
+
+.sh-ai-tree .vb-subgroup-head:hover {
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 6%, transparent);
+}
+
+.sh-ai-tree .vb-deck:has(.sh-ai-tree-radio:checked) {
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 14%, var(--surface));
+    border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 50%, transparent);
+}
+
+.sh-ai-tree .vb-group-head:has(> .sh-ai-tree-radio:checked) {
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 14%, var(--surface));
+    border-bottom-color: color-mix(in srgb, var(--folder-color, var(--accent)) 30%, var(--border-light));
+}
+
+.sh-ai-tree .vb-subgroup-head:has(> .sh-ai-tree-radio:checked) {
+    background: color-mix(in srgb, var(--folder-color, var(--accent)) 14%, transparent);
+    border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 55%, transparent);
+    border-style: solid;
 }
 
 .sh-alert-success {

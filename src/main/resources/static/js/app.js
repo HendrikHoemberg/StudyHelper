@@ -412,6 +412,14 @@ document.addEventListener('change', (event) => {
     if (event.target.matches('input[name="destination"]')) {
         updateAiFlashcardDestinationPanels();
     }
+    if (event.target.matches('input[name="existingDeckId"]') || event.target.matches('input[name="newDeckFolderId"]')) {
+        const card = event.target.closest('.sh-ai-destination-card');
+        const head = card?.querySelector('.sh-ai-destination-head input[name="destination"]');
+        if (head && !head.checked) {
+            head.checked = true;
+            updateAiFlashcardDestinationPanels();
+        }
+    }
 });
 
 document.addEventListener('click', (event) => {
@@ -445,8 +453,9 @@ document.body.addEventListener('htmx:afterRequest', (event) => {
 });
 
 function updateAiFlashcardDestinationPanels() {
-    const selected = document.querySelector('input[name="destination"]:checked')?.value || 'EXISTING_DECK';
-    document.querySelectorAll('[data-destination-panel]').forEach(panel => {
-        panel.style.display = panel.dataset.destinationPanel === selected ? '' : 'none';
+    const selected = document.querySelector('input[name="destination"]:checked')?.value || 'NEW_DECK';
+    document.querySelectorAll('.sh-ai-destination-card').forEach(card => {
+        const radio = card.querySelector('.sh-ai-destination-head input[name="destination"]');
+        card.classList.toggle('is-selected', radio?.value === selected);
     });
 }

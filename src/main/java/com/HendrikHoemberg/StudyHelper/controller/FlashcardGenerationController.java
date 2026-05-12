@@ -150,8 +150,8 @@ public class FlashcardGenerationController {
 
     private void prepareGeneratorModel(Model model, User user) {
         model.addAttribute("pdfOptions", viewService.getPdfOptions(user));
-        model.addAttribute("deckOptions", deckService.getStudyDeckOptions(user));
-        model.addAttribute("folderOptions", viewService.getFolderOptions(user));
+        model.addAttribute("deckTree", folderService.getStudyFolderTree(user));
+        model.addAttribute("folderTree", folderService.getFolderPickerTree(user));
         model.addAttribute("destinations", FlashcardGenerationDestination.values());
         model.addAttribute("documentModes", DocumentMode.values());
     }

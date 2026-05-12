@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.dto.FolderPickerNode;
 import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckGroup;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
@@ -79,6 +80,23 @@ public class FolderService {
     @Transactional(readOnly = true)
     public List<SidebarFolderNode> getSidebarTree(User user) {
         return getSidebarTree(user, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FolderPickerNode> getFolderPickerTree(User user) {
+        List<Folder> roots = folderRepository.findByUserAndParentFolderIsNull(user);
+        return roots.stream()
+            .map(this::toFolderPickerNode)
+            .toList();
+    }
+
+    private FolderPickerNode toFolderPickerNode(Folder folder) {
+        List<FolderPickerNode> children = folder.getSubFolders().stream()
+            .map(this::toFolderPickerNode)
+            .toList();
+        String color = folder.getColorHex() != null && !folder.getColorHex().isBlank()
+            ? folder.getColorHex() : "#6366f1";
+        return new FolderPickerNode(folder.getId(), folder.getName(), color, iconOf(folder), children);
     }
 
     @Transactional(readOnly = true)
