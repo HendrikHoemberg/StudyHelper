@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div id="quota-desktop" hx-swap-oob="true" class="topnav-quotas" th:if="${userQuota != null}">
+    <div class="topnav-quota" th:title="'Storage: ' + ${userQuota.storageLabel()}">
+        <div class="topnav-quota-label">
+            <span>Storage</span>
+            <strong th:text="${userQuota.storageLabel()}">512 MB / 1.0 GB</strong>
+        </div>
+        <div class="topnav-quota-progress">
+            <div class="topnav-quota-bar"
+                 th:classappend="${userQuota.storageStateClass()}"
+                 th:style="'width:' + ${userQuota.storagePercent()} + '%'"></div>
+        </div>
+    </div>
+    <div class="topnav-quota" th:title="'AI today: ' + ${userQuota.aiLabel()}">
+        <div class="topnav-quota-label">
+            <span>AI</span>
+            <strong th:text="${userQuota.aiLabel()}">7 / 10</strong>
+        </div>
+        <div class="topnav-quota-progress">
+            <div class="topnav-quota-bar"
+                 th:classappend="${userQuota.aiStateClass()}"
+                 th:style="'width:' + ${userQuota.aiPercent()} + '%'"></div>
+        </div>
+    </div>
+</div>
+
+<div id="quota-mobile" hx-swap-oob="true" class="topnav-mobile-quotas" th:if="${userQuota != null}">
+    <div class="topnav-mobile-quota">
+        <div class="topnav-quota-label">
+            <span>Storage</span>
+            <strong th:text="${userQuota.storageLabel()}">512 MB / 1.0 GB</strong>
+        </div>
+        <div class="topnav-quota-progress">
+            <div class="topnav-quota-bar"
+                 th:classappend="${userQuota.storageStateClass()}"
+                 th:style="'width:' + ${userQuota.storagePercent()} + '%'"></div>
+        </div>
+    </div>
+    <div class="topnav-mobile-quota">
+        <div class="topnav-quota-label">
+            <span>AI today</span>
+            <strong th:text="${userQuota.aiLabel()}">7 / 10</strong>
+        </div>
+        <div class="topnav-quota-progress">
+            <div class="topnav-quota-bar"
+                 th:classappend="${userQuota.aiStateClass()}"
+                 th:style="'width:' + ${userQuota.aiPercent()} + '%'"></div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
