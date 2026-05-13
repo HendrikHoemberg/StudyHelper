@@ -191,6 +191,7 @@ public class StudyController {
     public String createSession(@RequestParam StudyMode mode,
                                 @RequestParam(required = false) List<Long> selectedDeckIds,
                                 @RequestParam(required = false) List<Long> selectedFileIds,
+                                @RequestParam(required = false) String additionalInstructions,
                                 HttpServletRequest request,
                                 // Flashcard params
                                 @RequestParam(defaultValue = "DECK_BY_DECK") SessionMode sessionMode,
@@ -232,31 +233,18 @@ public class StudyController {
                     throw new IllegalArgumentException("Please select at least one deck or document.");
                 }
 
-                List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(deckIds, user);
-                List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
-                List<DocumentInput> documents = new ArrayList<>();
-                long totalChars = 0;
-                for (Long fileId : fileIds) {
-                    FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-                    DocumentMode docMode = DocumentModeResolver.resolve(file, pdfMode);
-                    switch (docMode) {
-                        case TEXT -> {
-                            String text = documentExtractionService.extractText(file);
-                            documents.add(new TextDocument(file.getOriginalFilename(), text));
-                            totalChars += text.length();
-                        }
-                        case FULL_PDF -> {
-                            documents.add(new PdfDocument(file.getOriginalFilename(),
-                                    documentExtractionService.loadResource(file)));
-                        }
-                    }
-                }
-
-                if (totalChars > 150_000) throw new IllegalArgumentException("Selection too large — please deselect some sources.");
+                QuizGenerationInput input = validateQuizGenerationRequest(deckIds, fileIds, pdfMode, user);
 
                 int qCount = Math.max(1, Math.min(questionCount, 20));
                 requireQuotaService().checkAndRecord(user);
-                List<QuizQuestion> questions = aiQuizService.generate(flashcards, documents, qCount, quizQuestionMode, difficulty);
+                List<QuizQuestion> questions = aiQuizService.generate(
+                    input.flashcards(),
+                    input.documents(),
+                    qCount,
+                    quizQuestionMode,
+                    difficulty,
+                    additionalInstructions
+                );
 
                 QuizSessionState state = new QuizSessionState(
                     new QuizConfig(deckIds, fileIds, qCount, quizQuestionMode, difficulty),
@@ -269,10 +257,152 @@ public class StudyController {
                 return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex, model, user, session, response, hxRequest);
             }
         } else if (mode == StudyMode.EXAM) {
-            return examController.createSession(selectedDeckIds, selectedFileIds, request, questionSize, count, timerMinutes, layout, model, principal, session, response, hxRequest);
+            return examController.createSession(
+                selectedDeckIds,
+                selectedFileIds,
+                additionalInstructions,
+                request,
+                questionSize,
+                count,
+                timerMinutes,
+                layout,
+                model,
+                principal,
+                session,
+                response,
+                hxRequest
+            );
         }
 
         return "redirect:/study/start";
+    }
+
+    @PostMapping("/study/session/preflight")
+    public String preflightCreateSession(@RequestParam StudyMode mode,
+                                         @RequestParam(required = false) List<Long> selectedDeckIds,
+                                         @RequestParam(required = false) List<Long> selectedFileIds,
+                                         HttpServletRequest request,
+                                         @RequestParam(defaultValue = "MCQ_ONLY") QuizQuestionMode quizQuestionMode,
+                                         @RequestParam(defaultValue = "MEDIUM") Difficulty difficulty,
+                                         @RequestParam(defaultValue = "5") int questionCount,
+                                         @RequestParam(defaultValue = "MEDIUM") ExamQuestionSize questionSize,
+                                         @RequestParam(defaultValue = "5") int count,
+                                         @RequestParam(required = false) Integer timerMinutes,
+                                         @RequestParam(defaultValue = "PER_PAGE") ExamLayout layout,
+                                         Model model,
+                                         Principal principal,
+                                         HttpSession session,
+                                         HttpServletResponse response,
+                                         @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
+        if (principal == null) return "redirect:/login";
+        User user = userService.getByUsername(principal.getName());
+
+        try {
+            if (mode == StudyMode.QUIZ) {
+                validateQuizGenerationSetup(quizQuestionMode, difficulty, questionCount);
+                validateQuizGenerationRequest(normalizeIds(selectedDeckIds), normalizeIds(selectedFileIds), pdfMode, user);
+            } else if (mode == StudyMode.EXAM) {
+                examController.validateExamGenerationSetup(questionSize, count, timerMinutes, layout);
+                examController.validateExamGenerationRequest(
+                    normalizeIds(selectedDeckIds),
+                    normalizeIds(selectedFileIds),
+                    pdfMode,
+                    user
+                );
+            } else if (mode == StudyMode.FLASHCARDS) {
+                SessionMode sessionMode = parseSessionMode(request.getParameter("sessionMode"));
+                DeckOrderMode deckOrderMode = parseDeckOrderMode(request.getParameter("deckOrderMode"));
+                List<Long> orderedSelection = resolveOrderedSelection(
+                    selectedDeckIds,
+                    request.getParameter("orderedDeckIds"),
+                    sessionMode
+                );
+                StudySessionConfig config = new StudySessionConfig(orderedSelection, sessionMode, deckOrderMode);
+                studySessionService.buildSession(config, user);
+            }
+            response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            return null;
+        } catch (Exception ex) {
+            if (mode == StudyMode.EXAM) {
+                return examController.renderGenerationErrorFragment(model, response, ex);
+            }
+            return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex, model, user, session, response, hxRequest);
+        }
+    }
+
+    private QuizGenerationInput validateQuizGenerationRequest(List<Long> deckIds,
+                                                              List<Long> fileIds,
+                                                              Map<Long, DocumentMode> pdfMode,
+                                                              User user) throws Exception {
+        if (deckIds.isEmpty() && fileIds.isEmpty()) {
+            throw new IllegalArgumentException("Please select at least one deck or document.");
+        }
+
+        List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(deckIds, user);
+        List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
+        List<DocumentInput> documents = new ArrayList<>();
+
+        long totalChars = 0;
+        for (Long fileId : fileIds) {
+            FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
+            if (isPdf(file) && !documentExtractionService.isSupported(file)) {
+                throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
+            }
+            DocumentMode docMode = DocumentModeResolver.resolve(file, pdfMode);
+            switch (docMode) {
+                case TEXT -> {
+                    String text = requireExtractedText(file);
+                    documents.add(new TextDocument(file.getOriginalFilename(), text));
+                    totalChars += text.length();
+                }
+                case FULL_PDF -> documents.add(new PdfDocument(file.getOriginalFilename(),
+                    documentExtractionService.loadResource(file)));
+            }
+        }
+
+        if (totalChars > 150_000) throw new IllegalArgumentException("Selection too large — please deselect some sources.");
+        return new QuizGenerationInput(flashcards, documents);
+    }
+
+    private void validateQuizGenerationSetup(QuizQuestionMode quizQuestionMode,
+                                             Difficulty difficulty,
+                                             int questionCount) {
+        if (quizQuestionMode == null) {
+            throw new IllegalArgumentException("Please select a quiz mode.");
+        }
+        if (difficulty == null) {
+            throw new IllegalArgumentException("Please select a difficulty.");
+        }
+        normalizeQuestionCount(questionCount);
+    }
+
+    private int normalizeQuestionCount(int questionCount) {
+        return Math.max(1, Math.min(questionCount, 20));
+    }
+
+    private String requireExtractedText(FileEntry file) throws Exception {
+        String text = documentExtractionService.extractText(file);
+        if (text == null || text.isBlank()) {
+            throw new IllegalArgumentException("This PDF has no extractable text. Try Full PDF mode.");
+        }
+        return text;
+    }
+
+    private record QuizGenerationInput(List<Flashcard> flashcards, List<DocumentInput> documents) {}
+
+    private SessionMode parseSessionMode(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return SessionMode.DECK_BY_DECK;
+        }
+        return SessionMode.valueOf(raw);
+    }
+
+    private DeckOrderMode parseDeckOrderMode(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return DeckOrderMode.SELECTED_ORDER;
+        }
+        return DeckOrderMode.valueOf(raw);
     }
 
     private void prepareWizardModel(Model model, User user, List<Long> deckIds, List<Long> fileIds, String error, HttpSession session) {
@@ -313,7 +443,10 @@ public class StudyController {
                 if (charCache.containsKey(fileId)) {
                     totalChars += charCache.get(fileId);
                 } else {
-                    String text = documentExtractionService.extractText(file);
+                    if (isPdf(file) && !documentExtractionService.isSupported(file)) {
+                        throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
+                    }
+                    String text = requireExtractedText(file);
                     charCache.put(fileId, text.length());
                     totalChars += text.length();
                 }
@@ -380,6 +513,11 @@ public class StudyController {
     private List<Long> normalizeIds(List<Long> ids) {
         if (ids == null) return List.of();
         return ids.stream().filter(Objects::nonNull).distinct().toList();
+    }
+
+    private boolean isPdf(FileEntry file) {
+        String filename = file == null ? null : file.getOriginalFilename();
+        return filename != null && filename.toLowerCase().endsWith(".pdf");
     }
 
     private List<Long> resolveOrderedSelection(List<Long> selected, String ordered, SessionMode mode) {

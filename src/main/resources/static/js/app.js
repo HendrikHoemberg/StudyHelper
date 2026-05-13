@@ -343,8 +343,10 @@ function initShDialog() {
             e.target.textContent = expanded ? 'Show technical details' : 'Hide technical details';
         } else if (e.target.id === 'sh-dialog-ok') {
             const input = document.getElementById('sh-dialog-input');
-            const isPrompt = input && input.style.display !== 'none';
-            shDialogResolve(isPrompt ? input.value : true);
+            const textarea = document.getElementById('sh-dialog-textarea');
+            const isTextPrompt = input && input.style.display !== 'none';
+            const isTextareaPrompt = textarea && textarea.style.display !== 'none';
+            shDialogResolve(isTextPrompt ? input.value : (isTextareaPrompt ? textarea.value : true));
         }
     });
 
@@ -355,11 +357,14 @@ function initShDialog() {
             shDialogResolve(null);
         } else if (e.key === 'Enter') {
             const input = document.getElementById('sh-dialog-input');
+            const textarea = document.getElementById('sh-dialog-textarea');
             const isPrompt = input && input.style.display !== 'none';
+            const isTextareaPrompt = textarea && textarea.style.display !== 'none';
+            if (isTextareaPrompt && document.activeElement === textarea && !(e.ctrlKey || e.metaKey)) return;
             // For prompt, only submit on Enter when input is focused.
             if (isPrompt && document.activeElement !== input) return;
             e.preventDefault();
-            shDialogResolve(isPrompt ? input.value : true);
+            shDialogResolve(isTextareaPrompt ? textarea.value : (isPrompt ? input.value : true));
         }
     });
 
@@ -381,7 +386,7 @@ function shDialogResolve(value) {
     if (state) state.resolve(value);
 }
 
-function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText, danger, prompt, defaultValue, placeholder, hideCancel, technicalDetails }) {
+function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText, danger, prompt, textareaPrompt, defaultValue, placeholder, hideCancel, technicalDetails }) {
     return new Promise((resolve) => {
         // If a previous dialog is open, dismiss it first.
         if (shDialogState) shDialogResolve(null);
@@ -400,6 +405,7 @@ function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText
         const okBtn = document.getElementById('sh-dialog-ok');
         const cancelBtn = document.getElementById('sh-dialog-cancel');
         const input = document.getElementById('sh-dialog-input');
+        const textarea = document.getElementById('sh-dialog-textarea');
         const detailsToggle = document.getElementById('sh-dialog-details-toggle');
         const detailsEl = document.getElementById('sh-dialog-details');
 
@@ -421,9 +427,20 @@ function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText
             input.style.display = '';
             input.value = defaultValue || '';
             input.placeholder = placeholder || '';
+            textarea.style.display = 'none';
+            textarea.value = '';
+        } else if (textareaPrompt) {
+            input.style.display = 'none';
+            input.value = '';
+            textarea.style.display = '';
+            textarea.value = defaultValue || '';
+            textarea.placeholder = placeholder || '';
+            textarea.maxLength = 1000;
         } else {
             input.style.display = 'none';
             input.value = '';
+            textarea.style.display = 'none';
+            textarea.value = '';
         }
 
         if (detailsToggle && detailsEl) {
@@ -443,6 +460,7 @@ function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText
         // Focus management
         setTimeout(() => {
             if (prompt) input.focus();
+            else if (textareaPrompt) textarea.focus();
             else okBtn.focus();
         }, 0);
     });
@@ -461,6 +479,45 @@ function shAlert(opts) {
 function shPrompt(opts) {
     if (typeof opts === 'string') opts = { message: opts };
     return _shOpenDialog({ iconKind: 'edit', ...opts, prompt: true });
+}
+
+function shTextareaPrompt(opts) {
+    if (typeof opts === 'string') opts = { message: opts };
+    return _shOpenDialog({ iconKind: 'edit', ...opts, textareaPrompt: true });
+}
+
+function getCsrfHeaders() {
+    const headers = {};
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+    if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
+    return headers;
+}
+
+async function runAiPreflight(url, formEl) {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            ...getCsrfHeaders()
+        },
+        body: new URLSearchParams(new FormData(formEl))
+    });
+    if (response.ok) return true;
+    const responseText = await response.text();
+    const message = extractAiGenerationError(responseText);
+    const details = extractAiGenerationDetails(responseText);
+    showAiGenerationFailure(message, details);
+    return false;
+}
+
+function openInstructionDialog(defaultValue) {
+    return shTextareaPrompt({
+        title: 'Add generation instructions',
+        message: 'Optional: add extra guidance for the AI (focus areas, difficulty, formatting, exclusions, etc.).',
+        placeholder: 'Example: Focus on key definitions and include one practical example per topic.',
+        confirmText: 'Continue',
+        defaultValue: defaultValue || ''
+    });
 }
 
 /* ---------- AI Flashcard Generator ---------- */
@@ -517,6 +574,35 @@ document.body.addEventListener('click', (e) => {
         const form = document.querySelector('form.sh-ai-flashcard-form');
         if (form) htmx.trigger(form, 'htmx:abort');
     }
+    const withInstructionsBtn = e.target.closest('#ai-flashcard-submit-with-instructions');
+    if (withInstructionsBtn) {
+        e.preventDefault();
+        const form = withInstructionsBtn.closest('form.sh-ai-flashcard-form');
+        if (!form) return;
+        runAiPreflight('/flashcards/generate/preflight', form).then((ok) => {
+            if (!ok) return;
+            const hidden = form.querySelector('input[name="additionalInstructions"]');
+            openInstructionDialog('').then((instructions) => {
+                if (instructions === null) return;
+                const normalizedInstructions = typeof instructions === 'string' ? instructions.trim() : '';
+                if (hidden) hidden.value = normalizedInstructions;
+                form.dataset.instructionsSubmit = 'true';
+                form.requestSubmit();
+            });
+        });
+    }
+});
+
+document.body.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!form.matches?.('form.sh-ai-flashcard-form')) return;
+    const hidden = form.querySelector('input[name="additionalInstructions"]');
+    if (!hidden) return;
+    if (form.dataset.instructionsSubmit === 'true') {
+        delete form.dataset.instructionsSubmit;
+        return;
+    }
+    hidden.value = '';
 });
 
 document.body.addEventListener('htmx:afterSettle', () => {

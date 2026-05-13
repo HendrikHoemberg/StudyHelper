@@ -17,6 +17,7 @@ import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.springframework.core.io.ByteArrayResource;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -179,6 +180,45 @@ class AiQuizServiceTests {
     }
 
     @Test
+    void generate_NullFlashcardEntry_IsIgnored() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 1), mcq("Q3", 2)
+        ));
+
+        List<Flashcard> withNull = new ArrayList<>();
+        withNull.add(cards(1).get(0));
+        withNull.add(null);
+
+        List<QuizQuestion> result = service.generate(withNull, List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
+
+        assertThat(result).hasSize(3);
+    }
+
+    @Test
+    void generate_NullMcqOptionEntry_IsDroppedAndCanTriggerTooFewValid() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            new QuizQuestion(QuestionType.MULTIPLE_CHOICE, "Q1", Arrays.asList("a", null, "c", "d"), 0),
+            new QuizQuestion(QuestionType.MULTIPLE_CHOICE, "Q2", Arrays.asList("a", null, "c", "d"), 0)
+        ));
+
+        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("too few valid questions");
+    }
+
+    @Test
+    void generate_NullTfOptionEntry_IsDroppedAndCanTriggerTooFewValid() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            new QuizQuestion(QuestionType.TRUE_FALSE, "Q1", Arrays.asList("True", null), 0),
+            new QuizQuestion(QuestionType.TRUE_FALSE, "Q2", Arrays.asList(null, "False"), 1)
+        ));
+
+        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.TF_ONLY, Difficulty.EASY))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("too few valid questions");
+    }
+
+    @Test
     void generate_TextDocument_includedInPromptDocumentsSection() {
         when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
             mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
@@ -276,6 +316,29 @@ class AiQuizServiceTests {
         assertThat(capturedPrompt.get()).contains("Detect the dominant natural language");
         assertThat(capturedPrompt.get()).contains("COVERAGE:");
         assertThat(capturedPrompt.get()).contains("early third, middle third");
+    }
+
+    @Test
+    void generate_WithAdditionalInstructions_AppendsUserInstructionsSection() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
+        ));
+
+        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY, "focus on diagrams");
+
+        assertThat(capturedPrompt.get()).contains("USER INSTRUCTIONS:");
+        assertThat(capturedPrompt.get()).contains("focus on diagrams");
+    }
+
+    @Test
+    void generate_BlankAdditionalInstructions_OmitsUserInstructionsSection() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
+        ));
+
+        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY, "");
+
+        assertThat(capturedPrompt.get()).doesNotContain("USER INSTRUCTIONS:");
     }
 
     // --- helpers ---

@@ -15,20 +15,23 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class StudyControllerTests {
 
     private StudyController controller;
+    private StudySessionService studySessionService;
     private AiRequestQuotaService aiRequestQuotaService;
     private User user;
 
     @BeforeEach
     void setUp() {
-        StudySessionService studySessionService = mock(StudySessionService.class);
+        studySessionService = mock(StudySessionService.class);
         AiQuizService aiQuizService = mock(AiQuizService.class);
         AiExamService aiExamService = mock(AiExamService.class);
         ExamService examService = mock(ExamService.class);
@@ -83,6 +86,7 @@ class StudyControllerTests {
             StudyMode.QUIZ,
             List.of(1L),
             List.of(),
+            null,
             new MockHttpServletRequest(),
             SessionMode.DECK_BY_DECK,
             DeckOrderMode.SELECTED_ORDER,
@@ -105,5 +109,99 @@ class StudyControllerTests {
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("studyError")).isEqualTo("Daily AI request limit reached.");
         verify(aiRequestQuotaService).checkAndRecord(user);
+    }
+
+    @Test
+    void preflightCreateSession_QuizWithoutSources_ReturnsStudyErrorAndSkipsQuota() {
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.preflightCreateSession(
+            StudyMode.QUIZ,
+            List.of(),
+            List.of(),
+            new MockHttpServletRequest(),
+            QuizQuestionMode.MCQ_ONLY,
+            Difficulty.MEDIUM,
+            5,
+            ExamQuestionSize.MEDIUM,
+            5,
+            null,
+            ExamLayout.PER_PAGE,
+            model,
+            () -> "alice",
+            new MockHttpSession(),
+            response,
+            "true"
+        );
+
+        assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(model.get("studyError")).isEqualTo("Please select at least one deck or document.");
+        verify(aiRequestQuotaService, never()).checkAndRecord(any());
+    }
+
+    @Test
+    void preflightCreateSession_ExamWithoutSources_UsesExamErrorFragmentConvention() {
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.preflightCreateSession(
+            StudyMode.EXAM,
+            List.of(),
+            List.of(),
+            new MockHttpServletRequest(),
+            QuizQuestionMode.MCQ_ONLY,
+            Difficulty.MEDIUM,
+            5,
+            ExamQuestionSize.MEDIUM,
+            5,
+            null,
+            ExamLayout.PER_PAGE,
+            model,
+            () -> "alice",
+            new MockHttpSession(),
+            response,
+            "true"
+        );
+
+        assertThat(view).isEqualTo("fragments/ai-generation-error :: aiGenerationError");
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(model.get("aiErrorMessage")).isEqualTo("Please select at least one source.");
+        verify(aiRequestQuotaService, never()).checkAndRecord(any());
+    }
+
+    @Test
+    void preflightCreateSession_FlashcardsInvalidSelection_ValidatesStudySessionAndSkipsQuota() {
+        doThrow(new IllegalArgumentException("Please select at least one deck."))
+            .when(studySessionService).buildSession(any(StudySessionConfig.class), eq(user));
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.preflightCreateSession(
+            StudyMode.FLASHCARDS,
+            List.of(),
+            List.of(),
+            new MockHttpServletRequest(),
+            QuizQuestionMode.MCQ_ONLY,
+            Difficulty.MEDIUM,
+            5,
+            ExamQuestionSize.MEDIUM,
+            5,
+            null,
+            ExamLayout.PER_PAGE,
+            model,
+            () -> "alice",
+            new MockHttpSession(),
+            response,
+            "true"
+        );
+
+        assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(model.get("studyError")).isEqualTo("Please select at least one deck.");
+        verify(studySessionService).buildSession(any(StudySessionConfig.class), eq(user));
+        verify(aiRequestQuotaService, never()).checkAndRecord(any());
     }
 }

@@ -222,6 +222,45 @@ class AiFlashcardServiceTests {
         assertThat(capturedPrompt.get()).contains("across the full source material");
     }
 
+    @Test
+    void generate_WithAdditionalInstructions_AppendsUserInstructionsSection() {
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("Front 1", "Back 1"),
+            new GeneratedFlashcard("Front 2", "Back 2")
+        ));
+
+        service.generate(new TextDocument("notes.txt", "topic"), " focus on the HTML examples ");
+
+        assertThat(capturedPrompt.get()).contains("USER INSTRUCTIONS:");
+        assertThat(capturedPrompt.get()).contains("focus on the HTML examples");
+        assertThat(capturedPrompt.get()).contains("Follow them when they are compatible with the rules above");
+    }
+
+    @Test
+    void generate_BlankAdditionalInstructions_OmitsUserInstructionsSection() {
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("Front 1", "Back 1"),
+            new GeneratedFlashcard("Front 2", "Back 2")
+        ));
+
+        service.generate(new TextDocument("notes.txt", "topic"), "   ");
+
+        assertThat(capturedPrompt.get()).doesNotContain("USER INSTRUCTIONS:");
+    }
+
+    @Test
+    void generate_LongAdditionalInstructions_CapsUserInstructionsAtOneThousandCharacters() {
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("Front 1", "Back 1"),
+            new GeneratedFlashcard("Front 2", "Back 2")
+        ));
+
+        service.generate(new TextDocument("notes.txt", "topic"), "x".repeat(1100));
+
+        assertThat(capturedPrompt.get()).contains("x".repeat(1000));
+        assertThat(capturedPrompt.get()).doesNotContain("x".repeat(1001));
+    }
+
     private FlashcardsResponse wrap(GeneratedFlashcard... cards) {
         return new FlashcardsResponse(List.of(cards));
     }

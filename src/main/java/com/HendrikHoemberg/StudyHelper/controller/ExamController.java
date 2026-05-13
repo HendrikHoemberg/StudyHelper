@@ -76,6 +76,7 @@ public class ExamController {
     public String createSession(
             @RequestParam(required = false) List<Long> selectedDeckIds,
             @RequestParam(required = false) List<Long> selectedFileIds,
+            @RequestParam(required = false) String additionalInstructions,
             HttpServletRequest request,
             @RequestParam(defaultValue = "MEDIUM") ExamQuestionSize questionSize,
             @RequestParam(defaultValue = "5") int count,
@@ -96,39 +97,21 @@ public class ExamController {
         }
 
         try {
-            List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(deckIds, user);
-            List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
-            
-            List<DocumentInput> documents = new ArrayList<>();
-            List<String> sourceNames = new ArrayList<>();
-            decks.forEach(d -> sourceNames.add(d.getName()));
+            validateExamGenerationSetup(questionSize, count, timerMinutes, layout);
+            ExamGenerationInput input = validateExamGenerationRequestWithSources(deckIds, fileIds, pdfMode, user);
 
-            long totalChars = 0;
-            for (Long fileId : fileIds) {
-                com.HendrikHoemberg.StudyHelper.entity.FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-                DocumentMode docMode = DocumentModeResolver.resolve(file, pdfMode);
-                switch (docMode) {
-                    case TEXT -> {
-                        String text = documentExtractionService.extractText(file);
-                        documents.add(new TextDocument(file.getOriginalFilename(), text));
-                        totalChars += text.length();
-                    }
-                    case FULL_PDF -> documents.add(new PdfDocument(file.getOriginalFilename(),
-                            documentExtractionService.loadResource(file)));
-                }
-                sourceNames.add(file.getOriginalFilename());
-            }
-
-            if (totalChars > 150_000) {
-                throw new IllegalArgumentException("Selection too large — please deselect some sources.");
-            }
-
-            int qCount = Math.max(1, Math.min(count, 20));
+            int qCount = normalizeQuestionCount(count);
             requireQuotaService().checkAndRecord(user);
-            List<ExamQuestion> questions = aiExamService.generate(flashcards, documents, qCount, questionSize);
+            List<ExamQuestion> questions = aiExamService.generate(
+                input.flashcards(),
+                input.documents(),
+                qCount,
+                questionSize,
+                additionalInstructions
+            );
 
-            String sourceSummary = sourceNames.stream().limit(3).collect(Collectors.joining(", "));
-            if (sourceNames.size() > 3) sourceSummary += " + " + (sourceNames.size() - 3) + " more";
+            String sourceSummary = input.sourceNames().stream().limit(3).collect(Collectors.joining(", "));
+            if (input.sourceNames().size() > 3) sourceSummary += " + " + (input.sourceNames().size() - 3) + " more";
 
             ExamSessionState state = new ExamSessionState(
                 new ExamConfig(deckIds, fileIds, questionSize, qCount, timerMinutes, layout),
@@ -152,6 +135,116 @@ public class ExamController {
         } catch (Exception e) {
             return renderGenerationError(model, response, e);
         }
+    }
+
+    @PostMapping("/exam/session/preflight")
+    public String preflightCreateSession(
+            @RequestParam(required = false) List<Long> selectedDeckIds,
+            @RequestParam(required = false) List<Long> selectedFileIds,
+            HttpServletRequest request,
+            @RequestParam(defaultValue = "MEDIUM") ExamQuestionSize questionSize,
+            @RequestParam(defaultValue = "5") int count,
+            @RequestParam(required = false) Integer timerMinutes,
+            @RequestParam(defaultValue = "PER_PAGE") ExamLayout layout,
+            Model model, Principal principal, HttpSession session, HttpServletResponse response,
+            @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
+        if (principal == null) return "redirect:/login";
+        User user = userService.getByUsername(principal.getName());
+
+        List<Long> deckIds = normalizeIds(selectedDeckIds);
+        List<Long> fileIds = normalizeIds(selectedFileIds);
+        try {
+            validateExamGenerationSetup(questionSize, count, timerMinutes, layout);
+            validateExamGenerationRequest(deckIds, fileIds, pdfMode, user);
+            response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            return null;
+        } catch (Exception e) {
+            return renderGenerationError(model, response, e);
+        }
+    }
+
+    String renderGenerationErrorFragment(Model model, HttpServletResponse response, Exception exception) {
+        return renderGenerationError(model, response, exception);
+    }
+
+    void validateExamGenerationRequest(List<Long> deckIds,
+                                       List<Long> fileIds,
+                                       Map<Long, DocumentMode> pdfMode,
+                                       User user) throws Exception {
+        validateExamGenerationRequestWithSources(deckIds, fileIds, pdfMode, user);
+    }
+
+    void validateExamGenerationSetup(ExamQuestionSize questionSize,
+                                     int count,
+                                     Integer timerMinutes,
+                                     ExamLayout layout) {
+        if (questionSize == null) {
+            throw new IllegalArgumentException("Please select an exam question size.");
+        }
+        if (layout == null) {
+            throw new IllegalArgumentException("Please select an exam layout.");
+        }
+        normalizeQuestionCount(count);
+    }
+
+    int normalizeQuestionCount(int count) {
+        return Math.max(1, Math.min(count, 20));
+    }
+
+    private ExamGenerationInput validateExamGenerationRequestWithSources(List<Long> deckIds,
+                                                                         List<Long> fileIds,
+                                                                         Map<Long, DocumentMode> pdfMode,
+                                                                         User user) throws Exception {
+        if (deckIds.isEmpty() && fileIds.isEmpty()) {
+            throw new IllegalArgumentException("Please select at least one source.");
+        }
+
+        List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(deckIds, user);
+        List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
+        List<DocumentInput> documents = new ArrayList<>();
+        List<String> sourceNames = new ArrayList<>();
+        decks.forEach(d -> sourceNames.add(d.getName()));
+
+        long totalChars = 0;
+        for (Long fileId : fileIds) {
+            com.HendrikHoemberg.StudyHelper.entity.FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
+            if (isPdf(file) && !documentExtractionService.isSupported(file)) {
+                throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
+            }
+            DocumentMode docMode = DocumentModeResolver.resolve(file, pdfMode);
+            switch (docMode) {
+                case TEXT -> {
+                    String text = requireExtractedText(file);
+                    documents.add(new TextDocument(file.getOriginalFilename(), text));
+                    totalChars += text.length();
+                }
+                case FULL_PDF -> documents.add(new PdfDocument(file.getOriginalFilename(),
+                    documentExtractionService.loadResource(file)));
+            }
+            sourceNames.add(file.getOriginalFilename());
+        }
+
+        if (totalChars > 150_000) {
+            throw new IllegalArgumentException("Selection too large — please deselect some sources.");
+        }
+
+        return new ExamGenerationInput(flashcards, documents, sourceNames);
+    }
+
+    private record ExamGenerationInput(List<Flashcard> flashcards, List<DocumentInput> documents, List<String> sourceNames) {}
+
+    private String requireExtractedText(com.HendrikHoemberg.StudyHelper.entity.FileEntry file) throws Exception {
+        String text = documentExtractionService.extractText(file);
+        if (text == null || text.isBlank()) {
+            throw new IllegalArgumentException("This PDF has no extractable text. Try Full PDF mode.");
+        }
+        return text;
+    }
+
+    private boolean isPdf(com.HendrikHoemberg.StudyHelper.entity.FileEntry file) {
+        String filename = file == null ? null : file.getOriginalFilename();
+        return filename != null && filename.toLowerCase().endsWith(".pdf");
     }
 
     private String renderGenerationError(Model model, HttpServletResponse response, Exception exception) {

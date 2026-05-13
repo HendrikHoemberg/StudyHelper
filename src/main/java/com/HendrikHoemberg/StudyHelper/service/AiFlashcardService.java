@@ -33,6 +33,10 @@ public class AiFlashcardService {
     }
 
     public List<GeneratedFlashcard> generate(DocumentInput document) {
+        return generate(document, null);
+    }
+
+    public List<GeneratedFlashcard> generate(DocumentInput document, String additionalInstructions) {
         if (document == null) {
             throw new IllegalArgumentException("Flashcard generation requires one PDF input.");
         }
@@ -46,7 +50,7 @@ public class AiFlashcardService {
                     "Selected sources contain no usable text or PDFs. Pick a document with extractable content, or a PDF in full-document mode.");
         }
 
-        String prompt = buildPrompt(docContent, pdfListing);
+        String prompt = buildPrompt(docContent, pdfListing, additionalInstructions);
 
         FlashcardsResponse response;
         try {
@@ -125,7 +129,7 @@ public class AiFlashcardService {
         return new Media[] { new Media(new MimeType("application", "pdf"), pd.source()) };
     }
 
-    private String buildPrompt(String docContent, String pdfListing) {
+    private String buildPrompt(String docContent, String pdfListing, String additionalInstructions) {
         String docSection = docContent.isBlank() ? "(none)" : docContent;
         String pdfSection = pdfListing.isBlank() ? "(none)" : pdfListing;
 
@@ -149,6 +153,7 @@ public class AiFlashcardService {
                 + "=== DOCUMENTS ===\n"
                 + "%s\n\n"
                 + "=== ATTACHED PDFs ===\n"
-                + "%s\n").formatted(MAX_FLASHCARDS, docSection, pdfSection);
+                + "%s\n").formatted(MAX_FLASHCARDS, docSection, pdfSection)
+                + AiInstructionSupport.section(additionalInstructions);
     }
 }

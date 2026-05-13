@@ -155,11 +155,16 @@
         const backBtn = document.getElementById('wizard-btn-back');
         const nextBtn = document.getElementById('wizard-btn-next');
         const submitBtn = document.getElementById('wizard-btn-submit');
+        const submitWithInstructionsBtn = document.getElementById('wizard-btn-submit-with-instructions');
         const footer = document.querySelector('.sh-wizard-footer');
 
         if (backBtn) backBtn.style.display = currentStep > 1 ? '' : 'none';
         if (nextBtn) nextBtn.style.display = (isLast || currentStep === 1) ? 'none' : '';
         if (submitBtn) submitBtn.style.display = isLast ? '' : 'none';
+        if (submitWithInstructionsBtn) {
+            const visible = isLast && (currentMode === 'QUIZ' || currentMode === 'EXAM');
+            submitWithInstructionsBtn.style.display = visible ? '' : 'none';
+        }
         if (footer) footer.style.display = currentStep === 1 ? 'none' : '';
         
         if (submitBtn) {
@@ -175,6 +180,14 @@
             } else {
                 if (icon) icon.setAttribute('data-lucide', 'play');
                 if (text) text.textContent = ' Start Session';
+            }
+        }
+
+        if (submitWithInstructionsBtn) {
+            if (currentMode === 'QUIZ') {
+                submitWithInstructionsBtn.innerHTML = '<iconify-icon icon="lucide:message-square-text"></iconify-icon> Generate with instructions';
+            } else if (currentMode === 'EXAM') {
+                submitWithInstructionsBtn.innerHTML = '<iconify-icon icon="lucide:message-square-text"></iconify-icon> Start with instructions';
             }
         }
         
@@ -370,11 +383,31 @@
             fresh.addEventListener('click', () => goToStep(currentStep - 1));
         }
         const submitBtn = document.getElementById('wizard-btn-submit');
+        const submitWithInstructionsBtn = document.getElementById('wizard-btn-submit-with-instructions');
         if (submitBtn) {
             const fresh = submitBtn.cloneNode(true);
             submitBtn.parentNode.replaceChild(fresh, submitBtn);
             fresh.addEventListener('click', (e) => {
                 if (!validateStep(currentStep)) e.preventDefault();
+            });
+        }
+        if (submitWithInstructionsBtn) {
+            const fresh = submitWithInstructionsBtn.cloneNode(true);
+            submitWithInstructionsBtn.parentNode.replaceChild(fresh, submitWithInstructionsBtn);
+            fresh.addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (!validateStep(currentStep)) return;
+                const form = document.querySelector('.sh-study-setup-card');
+                if (!form) return;
+                const preflightOk = await runAiPreflight('/study/session/preflight', form);
+                if (!preflightOk) return;
+                const hidden = form.querySelector('input[name="additionalInstructions"]');
+                const instructions = await openInstructionDialog('');
+                if (instructions === null) return;
+                const normalizedInstructions = typeof instructions === 'string' ? instructions.trim() : '';
+                if (hidden) hidden.value = normalizedInstructions;
+                form.dataset.instructionsSubmit = 'true';
+                form.requestSubmit();
             });
         }
         // EXAM Step 2 logic: time estimation
@@ -445,6 +478,18 @@
         }
     });
 
+    document.body.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (!form.matches?.('form.sh-study-setup-card')) return;
+        const hidden = form.querySelector('input[name="additionalInstructions"]');
+        if (!hidden) return;
+        if (form.dataset.instructionsSubmit === 'true') {
+            delete form.dataset.instructionsSubmit;
+            return;
+        }
+        hidden.value = '';
+    });
+
     // Progress message cycler for AI generation (Quiz & Exam)
     const PROGRESS_MESSAGES = {
         QUIZ: ['Generating your quiz with AI…', 'Reading content...', 'Analyzing topics...', 'Asking Gemini...', 'Generating questions...'],
@@ -468,7 +513,8 @@
             modal.style.display = 'none';
         }
     });
-    document.body.addEventListener('htmx:afterRequest', () => {
+    document.body.addEventListener('htmx:afterRequest', (e) => {
+        if (!e.detail.elt?.matches || !e.detail.elt.matches('form.sh-study-setup-card')) return;
         if (timer) { clearInterval(timer); timer = null; }
         const modal = document.getElementById('ai-generating-modal');
         if (modal) modal.style.display = 'none';

@@ -198,6 +198,8 @@ class StudyControllerPdfModeTests {
         when(fileEntryService.getByIdAndUser(1L, user)).thenReturn(textPdf);
         when(fileEntryService.getByIdAndUser(2L, user)).thenReturn(fullPdf);
         when(fileEntryService.getByIdAndUser(3L, user)).thenReturn(md);
+        when(documentExtractionService.isSupported(textPdf)).thenReturn(true);
+        when(documentExtractionService.isSupported(fullPdf)).thenReturn(true);
         when(documentExtractionService.extractText(textPdf)).thenReturn("text pdf content");
         when(documentExtractionService.extractText(md)).thenReturn("markdown content");
         when(documentExtractionService.loadResource(fullPdf)).thenReturn(new ByteArrayResource(new byte[]{1, 2, 3}));
@@ -215,6 +217,7 @@ class StudyControllerPdfModeTests {
                 StudyMode.QUIZ,
                 List.of(),
                 List.of(1L, 2L, 3L),
+                "quiz instructions",
                 request,
                 SessionMode.DECK_BY_DECK,
                 DeckOrderMode.SELECTED_ORDER,
@@ -233,7 +236,7 @@ class StudyControllerPdfModeTests {
                 null);
 
         ArgumentCaptor<List<DocumentInput>> docsCaptor = ArgumentCaptor.captor();
-        verify(aiQuizService).generate(anyList(), docsCaptor.capture(), eq(3), eq(QuizQuestionMode.MCQ_ONLY), eq(Difficulty.MEDIUM));
+        verify(aiQuizService).generate(anyList(), docsCaptor.capture(), eq(3), eq(QuizQuestionMode.MCQ_ONLY), eq(Difficulty.MEDIUM), eq("quiz instructions"));
         List<DocumentInput> docs = docsCaptor.getValue();
         assertThat(docs).hasSize(3);
         assertThat(docs.get(0)).isInstanceOf(TextDocument.class);
@@ -253,6 +256,8 @@ class StudyControllerPdfModeTests {
         when(fileEntryService.getByIdAndUser(1L, user)).thenReturn(textPdf);
         when(fileEntryService.getByIdAndUser(2L, user)).thenReturn(fullPdf);
         when(fileEntryService.getByIdAndUser(3L, user)).thenReturn(md);
+        when(documentExtractionService.isSupported(textPdf)).thenReturn(true);
+        when(documentExtractionService.isSupported(fullPdf)).thenReturn(true);
         when(documentExtractionService.extractText(textPdf)).thenReturn("text pdf content");
         when(documentExtractionService.extractText(md)).thenReturn("markdown content");
         when(documentExtractionService.loadResource(fullPdf)).thenReturn(new ByteArrayResource(new byte[]{1, 2, 3}));
@@ -270,6 +275,7 @@ class StudyControllerPdfModeTests {
                 StudyMode.EXAM,
                 List.of(),
                 List.of(1L, 2L, 3L),
+                "exam instructions",
                 request,
                 SessionMode.DECK_BY_DECK,
                 DeckOrderMode.SELECTED_ORDER,
@@ -288,7 +294,7 @@ class StudyControllerPdfModeTests {
                 null);
 
         ArgumentCaptor<List<DocumentInput>> docsCaptor = ArgumentCaptor.captor();
-        verify(aiExamService).generate(anyList(), docsCaptor.capture(), eq(3), eq(ExamQuestionSize.MEDIUM));
+        verify(aiExamService).generate(anyList(), docsCaptor.capture(), eq(3), eq(ExamQuestionSize.MEDIUM), eq("exam instructions"));
         List<DocumentInput> docs = docsCaptor.getValue();
         assertThat(docs).hasSize(3);
         assertThat(docs.get(0)).isInstanceOf(TextDocument.class);
@@ -296,6 +302,166 @@ class StudyControllerPdfModeTests {
         assertThat(docs.get(2)).isInstanceOf(TextDocument.class);
         verify(documentExtractionService).loadResource(fullPdf);
         verify(documentExtractionService, never()).loadResource(md);
+    }
+
+    @Test
+    void preflightCreateSession_examValidRequest_DoesNotCallQuotaOrAi() throws Exception {
+        FileEntry file = file(1L, "text.pdf", "text.pdf");
+        when(fileEntryService.getByIdAndUser(1L, user)).thenReturn(file);
+        when(documentExtractionService.isSupported(file)).thenReturn(true);
+        when(documentExtractionService.extractText(file)).thenReturn("exam text");
+        when(deckService.getValidatedDecksInRequestedOrder(anyList(), eq(user))).thenReturn(List.of());
+        when(flashcardService.getFlashcardsFlattened(anyList())).thenReturn(List.of());
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter("pdfMode[1]", "TEXT");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.preflightCreateSession(
+                StudyMode.EXAM,
+                List.of(),
+                List.of(1L),
+                request,
+                QuizQuestionMode.MCQ_ONLY,
+                Difficulty.MEDIUM,
+                5,
+                ExamQuestionSize.MEDIUM,
+                5,
+                null,
+                ExamLayout.PER_PAGE,
+                new ExtendedModelMap(),
+                () -> "alice",
+                new MockHttpSession(),
+                response,
+                "true");
+
+        assertThat(view).isNull();
+        assertThat(response.getStatus()).isEqualTo(204);
+        verify(aiRequestQuotaService, never()).checkAndRecord(any());
+        verify(aiExamService, never()).generate(anyList(), anyList(), anyInt(), any(), any());
+    }
+
+    @Test
+    void preflightCreateSession_quizHighQuestionCount_UsesGenerationSemanticsAndSkipsQuotaAi() throws Exception {
+        FileEntry file = file(1L, "quiz.pdf", "quiz.pdf");
+        when(fileEntryService.getByIdAndUser(1L, user)).thenReturn(file);
+        when(documentExtractionService.isSupported(file)).thenReturn(true);
+        when(documentExtractionService.extractText(file)).thenReturn("quiz text");
+        when(deckService.getValidatedDecksInRequestedOrder(anyList(), eq(user))).thenReturn(List.of());
+        when(flashcardService.getFlashcardsFlattened(anyList())).thenReturn(List.of());
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter("pdfMode[1]", "TEXT");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.preflightCreateSession(
+                StudyMode.QUIZ,
+                List.of(),
+                List.of(1L),
+                request,
+                QuizQuestionMode.MCQ_ONLY,
+                Difficulty.MEDIUM,
+                999,
+                ExamQuestionSize.MEDIUM,
+                5,
+                null,
+                ExamLayout.PER_PAGE,
+                new ExtendedModelMap(),
+                () -> "alice",
+                new MockHttpSession(),
+                response,
+                "true");
+
+        assertThat(view).isNull();
+        assertThat(response.getStatus()).isEqualTo(204);
+        verify(aiRequestQuotaService, never()).checkAndRecord(any());
+        verify(aiQuizService, never()).generate(anyList(), anyList(), anyInt(), any(), any(), any());
+    }
+
+    @Test
+    void createSession_quizNullExtractedText_ReturnsValidationErrorWithoutQuotaOrAi() throws Exception {
+        FileEntry file = file(1L, "quiz.pdf", "quiz.pdf");
+        when(fileEntryService.getByIdAndUser(1L, user)).thenReturn(file);
+        when(documentExtractionService.isSupported(file)).thenReturn(true);
+        when(documentExtractionService.extractText(file)).thenReturn(null);
+        when(deckService.getValidatedDecksInRequestedOrder(anyList(), eq(user))).thenReturn(List.of());
+        when(flashcardService.getFlashcardsFlattened(anyList())).thenReturn(List.of());
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter("pdfMode[1]", "TEXT");
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.createSession(
+                StudyMode.QUIZ,
+                List.of(),
+                List.of(1L),
+                null,
+                request,
+                SessionMode.DECK_BY_DECK,
+                DeckOrderMode.SELECTED_ORDER,
+                null,
+                QuizQuestionMode.MCQ_ONLY,
+                Difficulty.MEDIUM,
+                5,
+                ExamQuestionSize.MEDIUM,
+                5,
+                null,
+                ExamLayout.PER_PAGE,
+                model,
+                () -> "alice",
+                new MockHttpSession(),
+                response,
+                "true");
+
+        assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(model.get("studyError")).isEqualTo("This PDF has no extractable text. Try Full PDF mode.");
+        verify(aiRequestQuotaService, never()).checkAndRecord(any());
+        verify(aiQuizService, never()).generate(anyList(), anyList(), anyInt(), any(), any(), any());
+    }
+
+    @Test
+    void createSession_examBlankExtractedText_ReturnsValidationErrorWithoutQuotaOrAi() throws Exception {
+        FileEntry file = file(1L, "exam.pdf", "exam.pdf");
+        when(fileEntryService.getByIdAndUser(1L, user)).thenReturn(file);
+        when(documentExtractionService.isSupported(file)).thenReturn(true);
+        when(documentExtractionService.extractText(file)).thenReturn("   ");
+        when(deckService.getValidatedDecksInRequestedOrder(anyList(), eq(user))).thenReturn(List.of());
+        when(flashcardService.getFlashcardsFlattened(anyList())).thenReturn(List.of());
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter("pdfMode[1]", "TEXT");
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.createSession(
+                StudyMode.EXAM,
+                List.of(),
+                List.of(1L),
+                null,
+                request,
+                SessionMode.DECK_BY_DECK,
+                DeckOrderMode.SELECTED_ORDER,
+                null,
+                QuizQuestionMode.MCQ_ONLY,
+                Difficulty.MEDIUM,
+                5,
+                ExamQuestionSize.MEDIUM,
+                5,
+                null,
+                ExamLayout.PER_PAGE,
+                model,
+                () -> "alice",
+                new MockHttpSession(),
+                response,
+                "true");
+
+        assertThat(view).isEqualTo("fragments/ai-generation-error :: aiGenerationError");
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(model.get("aiErrorMessage")).isEqualTo("This PDF has no extractable text. Try Full PDF mode.");
+        verify(aiRequestQuotaService, never()).checkAndRecord(any());
+        verify(aiExamService, never()).generate(anyList(), anyList(), anyInt(), any(), any());
     }
 
     private FileEntry file(Long id, String originalFilename, String storedFilename) {

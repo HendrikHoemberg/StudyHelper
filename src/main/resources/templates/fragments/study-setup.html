@@ -48,6 +48,7 @@
           hx-disinherit="hx-indicator hx-disabled-elt">
 
         <input type="hidden" name="mode" id="study-mode-input" th:value="${mode}">
+        <input type="hidden" name="additionalInstructions" id="study-additional-instructions" value="">
 
         <div class="sh-card-body sh-wizard-body">
 
@@ -104,6 +105,9 @@
                 <div style="display:flex;gap:0.75rem;margin-left:auto;">
                     <button type="button" class="sh-btn sh-btn-primary" id="wizard-btn-next">
                         Next <iconify-icon icon="lucide:arrow-right"></iconify-icon>
+                    </button>
+                    <button type="button" class="sh-btn sh-btn-secondary" id="wizard-btn-submit-with-instructions" style="display:none;">
+                        <iconify-icon icon="lucide:message-square-text"></iconify-icon> Generate with instructions
                     </button>
                     <button type="submit" class="sh-btn sh-btn-primary" id="wizard-btn-submit" style="display:none;">
                         <iconify-icon icon="lucide:play"></iconify-icon> Start

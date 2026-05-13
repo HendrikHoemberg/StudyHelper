@@ -4,6 +4,7 @@ import com.HendrikHoemberg.StudyHelper.dto.ExamLayout;
 import com.HendrikHoemberg.StudyHelper.dto.ExamQuestionSize;
 import com.HendrikHoemberg.StudyHelper.dto.ExamQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.ExamSessionState;
+import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.AiQuotaExceededException;
 import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
@@ -26,8 +27,12 @@ import java.util.HashMap;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,6 +42,8 @@ class ExamControllerTests {
     private UserService userService;
     private AiExamService aiExamService;
     private AiRequestQuotaService aiRequestQuotaService;
+    private DeckService deckService;
+    private FlashcardService flashcardService;
     private User user;
 
     @BeforeEach
@@ -44,8 +51,8 @@ class ExamControllerTests {
         aiExamService = mock(AiExamService.class);
         ExamService examService = mock(ExamService.class);
         userService = mock(UserService.class);
-        DeckService deckService = mock(DeckService.class);
-        FlashcardService flashcardService = mock(FlashcardService.class);
+        deckService = mock(DeckService.class);
+        flashcardService = mock(FlashcardService.class);
         FileEntryService fileEntryService = mock(FileEntryService.class);
         DocumentExtractionService documentExtractionService = mock(DocumentExtractionService.class);
         aiRequestQuotaService = mock(AiRequestQuotaService.class);
@@ -64,6 +71,8 @@ class ExamControllerTests {
         user.setId(1L);
         user.setUsername("alice");
         when(userService.getByUsername("alice")).thenReturn(user);
+        when(deckService.getValidatedDecksInRequestedOrder(anyList(), any())).thenReturn(List.of(new Deck()));
+        when(flashcardService.getFlashcardsFlattened(anyList())).thenReturn(List.of());
     }
 
     @Test
@@ -74,6 +83,7 @@ class ExamControllerTests {
         String view = controller.createSession(
             List.of(),
             List.of(),
+            null,
             new MockHttpServletRequest(),
             ExamQuestionSize.MEDIUM,
             5,
@@ -103,6 +113,7 @@ class ExamControllerTests {
         String view = controller.createSession(
             List.of(10L),
             List.of(),
+            null,
             new MockHttpServletRequest(),
             ExamQuestionSize.MEDIUM,
             5,
@@ -118,6 +129,32 @@ class ExamControllerTests {
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(view).isEqualTo("fragments/ai-generation-error :: aiGenerationError");
         assertThat(model.get("aiErrorMessage")).isEqualTo("Daily AI request limit reached.");
+    }
+
+    @Test
+    void preflightCreateSession_ValidRequest_DoesNotCallQuotaOrAi() {
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.preflightCreateSession(
+            List.of(10L),
+            List.of(),
+            new MockHttpServletRequest(),
+            ExamQuestionSize.MEDIUM,
+            5,
+            null,
+            ExamLayout.PER_PAGE,
+            model,
+            () -> "alice",
+            new MockHttpSession(),
+            response,
+            "true"
+        );
+
+        assertThat(view).isNull();
+        assertThat(response.getStatus()).isEqualTo(204);
+        verify(aiRequestQuotaService, never()).checkAndRecord(any());
+        verify(aiExamService, never()).generate(anyList(), anyList(), anyInt(), any(), any());
     }
 
     @Test

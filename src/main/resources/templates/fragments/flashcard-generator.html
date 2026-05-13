@@ -33,6 +33,7 @@
           hx-indicator="#ai-generating-modal"
           hx-sync="this:drop"
           hx-disabled-elt="#ai-flashcard-submit">
+        <input type="hidden" name="additionalInstructions" id="ai-flashcard-additional-instructions" value="">
         <div class="sh-card-body">
             <div class="sh-ai-flashcard-grid">
                 <section>
@@ -176,7 +177,11 @@
             </div>
         </div>
         <div class="sh-wizard-footer" style="display:flex;">
-            <button type="submit" id="ai-flashcard-submit" class="sh-btn sh-btn-primary" style="margin-left:auto;">
+            <button type="button" id="ai-flashcard-submit-with-instructions" class="sh-btn sh-btn-secondary" style="margin-left:auto;">
+                <iconify-icon icon="lucide:message-square-text"></iconify-icon>
+                Generate with instructions
+            </button>
+            <button type="submit" id="ai-flashcard-submit" class="sh-btn sh-btn-primary">
                 <iconify-icon icon="lucide:sparkles"></iconify-icon>
                 Generate flashcards
             </button>

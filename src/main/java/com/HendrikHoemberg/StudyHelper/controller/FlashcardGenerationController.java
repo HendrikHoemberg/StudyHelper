@@ -107,6 +107,7 @@ public class FlashcardGenerationController {
     @PostMapping("/flashcards/generate")
     public String generate(@RequestParam(required = false) Long fileId,
                            @RequestParam(defaultValue = "TEXT") DocumentMode documentMode,
+                           @RequestParam(required = false) String additionalInstructions,
                            @RequestParam(required = false) FlashcardGenerationDestination destination,
                            @RequestParam(required = false) Long existingDeckId,
                            @RequestParam(required = false) Long newDeckFolderId,
@@ -118,18 +119,9 @@ public class FlashcardGenerationController {
         if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
         try {
-            if (fileId == null) throw new IllegalArgumentException("Please select one PDF.");
-            if (destination == null) throw new IllegalArgumentException("Please choose where to save the generated flashcards.");
-            persistenceService.validateDestination(destination, existingDeckId, newDeckFolderId, newDeckName, user);
-
-            FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-            if (!isPdf(file) || !documentExtractionService.isSupported(file)) {
-                throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
-            }
-
-            DocumentInput input = buildDocumentInput(file, documentMode);
+            DocumentInput input = validateAndBuildInput(fileId, documentMode, destination, existingDeckId, newDeckFolderId, newDeckName, user);
             requireQuotaService().checkAndRecord(user);
-            List<GeneratedFlashcard> generated = aiFlashcardService.generate(input);
+            List<GeneratedFlashcard> generated = aiFlashcardService.generate(input, additionalInstructions);
             Deck savedDeck = persistenceService.saveGeneratedCards(
                 destination,
                 existingDeckId,
@@ -145,12 +137,48 @@ public class FlashcardGenerationController {
             model.addAttribute("username", principal.getName());
             model.addAttribute("refreshSidebar", true);
             model.addAttribute("sidebarTree", folderService.getSidebarTree(user, deck.getFolder().getId()));
-            model.addAttribute("successMessage", successMessage(generated.size(), file.getOriginalFilename()));
+            model.addAttribute("successMessage", successMessage(generated.size(), input.filename()));
             if (hxRequest != null) {
                 response.setHeader("HX-Push-Url", "/decks/" + deck.getId());
                 return "fragments/deck :: deckDetail";
             }
             return "redirect:/decks/" + deck.getId();
+        } catch (Exception ex) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            prepareGeneratorModel(model, user);
+            model.addAttribute("generationError", ex.getMessage());
+            model.addAttribute("generationDetails", generationDetails("FLASHCARDS", ex));
+            model.addAttribute("selectedFileId", fileId);
+            model.addAttribute("selectedDocumentMode", documentMode);
+            model.addAttribute("additionalInstructions", additionalInstructions);
+            model.addAttribute("selectedDestination", destination);
+            model.addAttribute("selectedExistingDeckId", existingDeckId);
+            model.addAttribute("selectedNewDeckFolderId", newDeckFolderId);
+            model.addAttribute("newDeckName", newDeckName);
+            if (hxRequest != null) return "fragments/flashcard-generator :: generator";
+            model.addAttribute("username", user.getUsername());
+            model.addAttribute("sidebarTree", folderService.getSidebarTree(user));
+            return "flashcard-generator-page";
+        }
+    }
+
+    @PostMapping("/flashcards/generate/preflight")
+    public String preflightGenerate(@RequestParam(required = false) Long fileId,
+                                    @RequestParam(defaultValue = "TEXT") DocumentMode documentMode,
+                                    @RequestParam(required = false) FlashcardGenerationDestination destination,
+                                    @RequestParam(required = false) Long existingDeckId,
+                                    @RequestParam(required = false) Long newDeckFolderId,
+                                    @RequestParam(required = false) String newDeckName,
+                                    Model model,
+                                    Principal principal,
+                                    HttpServletResponse response,
+                                    @RequestHeader(value = "HX-Request", required = false) String hxRequest) throws Exception {
+        if (principal == null) return "redirect:/login";
+        User user = userService.getByUsername(principal.getName());
+        try {
+            validateAndBuildInput(fileId, documentMode, destination, existingDeckId, newDeckFolderId, newDeckName, user);
+            response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            return null;
         } catch (Exception ex) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             prepareGeneratorModel(model, user);
@@ -167,6 +195,24 @@ public class FlashcardGenerationController {
             model.addAttribute("sidebarTree", folderService.getSidebarTree(user));
             return "flashcard-generator-page";
         }
+    }
+
+    private DocumentInput validateAndBuildInput(Long fileId,
+                                                DocumentMode documentMode,
+                                                FlashcardGenerationDestination destination,
+                                                Long existingDeckId,
+                                                Long newDeckFolderId,
+                                                String newDeckName,
+                                                User user) throws Exception {
+        if (fileId == null) throw new IllegalArgumentException("Please select one PDF.");
+        if (destination == null) throw new IllegalArgumentException("Please choose where to save the generated flashcards.");
+        persistenceService.validateDestination(destination, existingDeckId, newDeckFolderId, newDeckName, user);
+
+        FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
+        if (!isPdf(file) || !documentExtractionService.isSupported(file)) {
+            throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
+        }
+        return buildDocumentInput(file, documentMode);
     }
 
     private String generationDetails(String type, Exception ex) {

@@ -205,6 +205,16 @@ class AiExamServiceTests {
     }
 
     @Test
+    void generate_WithAdditionalInstructions_AppendsUserInstructionsSection() {
+        when(callSpec.entity(ExamQuestionsResponse.class)).thenReturn(threeExamQuestions());
+
+        service.generate(cards(2), List.of(), 3, ExamQuestionSize.MEDIUM, "focus on implementation tradeoffs");
+
+        assertThat(capturedPrompt.get()).contains("USER INSTRUCTIONS:");
+        assertThat(capturedPrompt.get()).contains("focus on implementation tradeoffs");
+    }
+
+    @Test
     void grade_ReturnsTypedResult() {
         var perQ = new ExamGradingResult.PerQuestion(90, "Good.");
         var overall = new ExamGradingResult.Overall(
@@ -265,6 +275,18 @@ class AiExamServiceTests {
         assertThat(capturedPrompt.get()).contains("LANGUAGE:");
         assertThat(capturedPrompt.get()).contains("language of the questions and user answers");
         assertThat(capturedPrompt.get()).doesNotContain("COVERAGE:");
+    }
+
+    @Test
+    void grade_DoesNotIncludeGenerationInstructionsSection() {
+        var perQ = new ExamGradingResult.PerQuestion(80, "OK.");
+        var overall = new ExamGradingResult.Overall(80, List.of(), List.of(), List.of(), List.of());
+        when(callSpec.entity(ExamGradingResult.class))
+            .thenReturn(new ExamGradingResult(List.of(perQ), overall));
+
+        service.grade(List.of(new ExamQuestion("Q1", "H1")), Map.of(0, "A1"), ExamQuestionSize.SHORT);
+
+        assertThat(capturedPrompt.get()).doesNotContain("USER INSTRUCTIONS:");
     }
 
     @Test

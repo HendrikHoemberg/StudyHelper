@@ -42,7 +42,15 @@ public class AiExamService {
             List<DocumentInput> documents,
             int questionCount,
             ExamQuestionSize size) {
+        return generate(flashcards, documents, questionCount, size, null);
+    }
 
+    public List<ExamQuestion> generate(
+            List<Flashcard> flashcards,
+            List<DocumentInput> documents,
+            int questionCount,
+            ExamQuestionSize size,
+            String additionalInstructions) {
         String cardContent = buildCardContent(flashcards);
         String docContent  = buildTextDocContent(documents);
         String pdfListing  = buildPdfListing(documents);
@@ -52,7 +60,7 @@ public class AiExamService {
             throw new IllegalArgumentException("Selected sources contain no usable text or PDFs. Pick a deck, a document with extractable content, or a PDF in full-document mode.");
         }
 
-        String prompt = buildGenerationPrompt(cardContent, docContent, pdfListing, questionCount, size);
+        String prompt = buildGenerationPrompt(cardContent, docContent, pdfListing, questionCount, size, additionalInstructions);
 
         ExamQuestionsResponse response;
         try {
@@ -178,7 +186,7 @@ public class AiExamService {
     }
 
     private String buildGenerationPrompt(String cardContent, String docContent, String pdfListing,
-                                         int count, ExamQuestionSize size) {
+                                         int count, ExamQuestionSize size, String additionalInstructions) {
         String sizeInstruction = switch (size) {
             case SHORT -> "Each question should require a brief recall or definition answer (1–2 sentences, ~50 words).";
             case MEDIUM -> "Each question should require an explanatory answer (~150 words). Test understanding, not just recall.";
@@ -232,7 +240,8 @@ public class AiExamService {
                 + "%s\n\n"
                 + "=== ATTACHED PDFs ===\n"
                 + "%s\n"
-        ).formatted(count, sizeInstruction, count, cardSection, docSection, pdfSection);
+        ).formatted(count, sizeInstruction, count, cardSection, docSection, pdfSection)
+            + AiInstructionSupport.section(additionalInstructions);
     }
 
     private String buildGradingPrompt(List<ExamQuestion> questions, Map<Integer, String> userAnswers, ExamQuestionSize size) {

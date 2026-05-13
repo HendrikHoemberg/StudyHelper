@@ -25,7 +25,9 @@ class UiResourceRegressionTests {
 
         assertThat(template)
             .contains("hx-post=\"/flashcards/generate\"")
-            .contains("hx-sync=\"this:drop\"");
+            .contains("hx-sync=\"this:drop\"")
+            .contains("name=\"additionalInstructions\"")
+            .contains("ai-flashcard-submit-with-instructions");
     }
 
     @Test
@@ -39,7 +41,11 @@ class UiResourceRegressionTests {
             .contains("htmx:abort")
             .contains("handleAiGenerationFailure")
             .contains("extractAiGenerationDetails")
-            .contains("technicalDetails");
+            .contains("technicalDetails")
+            .contains("runAiPreflight")
+            .contains("openInstructionDialog")
+            .contains("isTextareaPrompt && document.activeElement === textarea")
+            .contains("typeof instructions === 'string' ? instructions.trim() : ''");
     }
 
     @Test
@@ -56,7 +62,32 @@ class UiResourceRegressionTests {
             .contains("aiErrorDetails");
         assertThat(dialogTemplate)
             .contains("sh-dialog-details-toggle")
-            .contains("sh-dialog-details");
+            .contains("sh-dialog-details")
+            .contains("sh-dialog-textarea")
+            .contains("maxlength=\"1000\"");
+    }
+
+    @Test
+    void textareaDialogSupportsKeyboardSubmitWithoutHijackingPlainEnter() throws IOException {
+        String appJs = resource("static/js/app.js");
+
+        assertThat(appJs)
+            .contains("isTextareaPrompt && document.activeElement === textarea && !(e.ctrlKey || e.metaKey)")
+            .contains("shDialogResolve(isTextareaPrompt ? textarea.value : (isPrompt ? input.value : true))");
+    }
+
+    @Test
+    void studySetupIncludesInstructionSubmitHookForQuizAndExam() throws IOException {
+        String template = resource("templates/fragments/study-setup.html");
+        String wizardJs = resource("static/js/study-wizard.js");
+
+        assertThat(template)
+            .contains("name=\"additionalInstructions\"")
+            .contains("wizard-btn-submit-with-instructions");
+        assertThat(wizardJs)
+            .contains("typeof instructions === 'string' ? instructions.trim() : ''")
+            .contains("htmx:afterRequest")
+            .contains("form.sh-study-setup-card");
     }
 
     private String file(String path) throws IOException {

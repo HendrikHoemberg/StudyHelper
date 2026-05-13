@@ -21,6 +21,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class AiQuizService {
@@ -41,7 +42,16 @@ public class AiQuizService {
             int count,
             QuizQuestionMode mode,
             Difficulty difficulty) {
+        return generate(flashcards, documents, count, mode, difficulty, null);
+    }
 
+    public List<QuizQuestion> generate(
+            List<Flashcard> flashcards,
+            List<DocumentInput> documents,
+            int count,
+            QuizQuestionMode mode,
+            Difficulty difficulty,
+            String additionalInstructions) {
         String cardContent = buildCardContent(flashcards);
         String docContent  = buildTextDocContent(documents);
         String pdfListing  = buildPdfListing(documents);
@@ -54,7 +64,7 @@ public class AiQuizService {
         int mcqCount = count / 2;
         int tfCount = count - mcqCount;
 
-        String prompt = buildPrompt(cardContent, docContent, pdfListing, count, mode, difficulty, mcqCount, tfCount);
+        String prompt = buildPrompt(cardContent, docContent, pdfListing, count, mode, difficulty, mcqCount, tfCount, additionalInstructions);
 
         QuizQuestionsResponse response;
         try {
@@ -108,6 +118,7 @@ public class AiQuizService {
     private QuizQuestion normalizeQuestion(QuizQuestion q) {
         if (q.questionText() == null || q.questionText().isBlank()) return null;
         if (q.options() == null) return null;
+        if (q.options().stream().anyMatch(Objects::isNull)) return null;
 
         QuestionType type = q.type() != null ? q.type() : inferType(q.options());
 
@@ -127,8 +138,13 @@ public class AiQuizService {
 
     private QuestionType inferType(List<String> options) {
         if (options.size() == 2) {
-            String o0 = options.get(0).trim().toLowerCase();
-            String o1 = options.get(1).trim().toLowerCase();
+            String raw0 = options.get(0);
+            String raw1 = options.get(1);
+            if (raw0 == null || raw1 == null) {
+                return QuestionType.MULTIPLE_CHOICE;
+            }
+            String o0 = raw0.trim().toLowerCase();
+            String o1 = raw1.trim().toLowerCase();
             if ((o0.equals("true") || o0.equals("false")) && (o1.equals("true") || o1.equals("false"))) {
                 return QuestionType.TRUE_FALSE;
             }
@@ -141,6 +157,7 @@ public class AiQuizService {
         StringBuilder sb = new StringBuilder();
         int count = 0;
         for (Flashcard card : flashcards) {
+            if (card == null) continue;
             String front = card.getFrontText();
             String back = card.getBackText();
             boolean hasFront = front != null && !front.isBlank();
@@ -190,7 +207,7 @@ public class AiQuizService {
 
     private String buildPrompt(String cardContent, String docContent, String pdfListing,
                                 int count, QuizQuestionMode mode, Difficulty difficulty,
-                                int mcqCount, int tfCount) {
+                                int mcqCount, int tfCount, String additionalInstructions) {
         String modeDescription = switch (mode) {
             case MCQ_ONLY -> "multiple-choice questions";
             case TF_ONLY -> "true/false questions";
@@ -259,6 +276,7 @@ public class AiQuizService {
             + "%s\n\n"
             + "=== ATTACHED PDFs ===\n"
             + "%s\n"
-        ).formatted(count, modeDescription, difficultyInstruction, count, typeRules, cardSection, docSection, pdfSection);
+        ).formatted(count, modeDescription, difficultyInstruction, count, typeRules, cardSection, docSection, pdfSection)
+            + AiInstructionSupport.section(additionalInstructions);
     }
 }
