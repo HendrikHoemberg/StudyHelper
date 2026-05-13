@@ -42,7 +42,7 @@ public class User {
     @Column(nullable = false)
     private int dailyAiRequestLimit = DEFAULT_DAILY_AI_REQUEST_LIMIT;
 
-    @Column(nullable = false, updatable = false)
+    @Column(updatable = false)
     private Instant createdAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
