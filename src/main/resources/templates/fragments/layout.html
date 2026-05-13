@@ -63,7 +63,7 @@
         </div>
 
         <div class="topnav-right">
-            <div class="topnav-quotas" th:if="${userQuota != null}">
+            <div id="quota-desktop" class="topnav-quotas" th:if="${userQuota != null}">
                 <div class="topnav-quota" th:title="'Storage: ' + ${userQuota.storageLabel()}">
                     <div class="topnav-quota-label">
                         <span>Storage</span>
@@ -141,7 +141,7 @@
         Admin
     </a>
     <div class="topnav-mobile-divider"></div>
-    <div class="topnav-mobile-quotas" th:if="${userQuota != null}">
+    <div id="quota-mobile" class="topnav-mobile-quotas" th:if="${userQuota != null}">
         <div class="topnav-mobile-quota">
             <div class="topnav-quota-label">
                 <span>Storage</span>
