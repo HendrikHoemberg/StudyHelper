@@ -26,6 +26,7 @@ document.body.addEventListener('htmx:afterSettle', (e) => {
     }
 });
 
+
 /* ---------- Global Lightbox ---------- */
 function initLightbox() {
     const lb = document.getElementById('sh-lightbox');
