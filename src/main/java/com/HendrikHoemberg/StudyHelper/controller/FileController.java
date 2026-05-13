@@ -66,9 +66,15 @@ public class FileController {
         User user = userService.getByUsername(principal.getName());
         try {
             fileEntryService.upload(file, folderId, user);
-            response.addHeader("HX-Trigger", "refresh-quota");
+            if (hxRequest != null) {
+                response.addHeader("HX-Trigger", "refresh-quota");
+                response.addHeader("HX-Redirect", "/folders/" + folderId + "?tab=files");
+                return "fragments/quota";
+            }
+            return "redirect:/folders/" + folderId + "?tab=files";
         } catch (StorageQuotaExceededException e) {
             if (hxRequest != null) {
+                response.addHeader("HX-Trigger", "refresh-quota");
                 FolderView view = folderService.getFolderView(folderId, user, null, "asc", ActiveTab.FILES);
                 model.addAttribute("view", view);
                 model.addAttribute("sortBy", null);
@@ -176,7 +182,11 @@ public class FileController {
         User user = userService.getByUsername(principal.getName());
         try {
             Long folderId = fileEntryService.deleteAndGetFolderId(id, user);
-            response.addHeader("HX-Trigger", "refresh-quota");
+            if (hxRequest != null) {
+                response.addHeader("HX-Trigger", "refresh-quota");
+                response.addHeader("HX-Redirect", "/folders/" + folderId + "?tab=files");
+                return "fragments/quota";
+            }
             return "redirect:/folders/" + folderId + "?tab=files";
         } catch (IOException e) {
             redirectAttributes.addFlashAttribute("error", "Could not delete file from disk.");
