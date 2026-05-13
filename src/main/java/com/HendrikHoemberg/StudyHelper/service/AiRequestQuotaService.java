@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Service
 public class AiRequestQuotaService {
@@ -19,7 +20,7 @@ public class AiRequestQuotaService {
 
     @Autowired
     public AiRequestQuotaService(AiRequestUsageRepository aiRequestUsageRepository) {
-        this(aiRequestUsageRepository, Clock.systemDefaultZone());
+        this(aiRequestUsageRepository, Clock.system(ZoneId.of("America/Los_Angeles")));
     }
 
     AiRequestQuotaService(AiRequestUsageRepository aiRequestUsageRepository, Clock clock) {

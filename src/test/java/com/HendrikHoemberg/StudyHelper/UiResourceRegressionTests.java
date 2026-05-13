@@ -12,11 +12,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UiResourceRegressionTests {
 
     @Test
-    void applicationPropertiesCapsSpringAiRetryAttempts() throws IOException {
+    void applicationPropertiesDisablesSpringAiRetries() throws IOException {
         String properties = file("src/main/resources/application.properties");
 
         assertThat(properties)
-            .contains("spring.ai.retry.max-attempts=1");
+            .contains("spring.ai.retry.max-attempts=0");
     }
 
     @Test

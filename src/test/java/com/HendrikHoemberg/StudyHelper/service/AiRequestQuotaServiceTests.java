@@ -11,6 +11,7 @@ import jakarta.persistence.UniqueConstraint;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Optional;
 
@@ -49,6 +50,20 @@ class AiRequestQuotaServiceTests {
         when(aiRequestUsageRepository.findByUserAndUsageDate(user, today)).thenReturn(Optional.empty());
 
         assertThat(aiRequestQuotaService.todayUsed(user)).isZero();
+    }
+
+    @Test
+    void todayUsed_UsesGeminiPacificResetDay() {
+        Clock geminiResetClock = Clock.fixed(
+            Instant.parse("2026-05-13T06:30:00Z"),
+            ZoneId.of("America/Los_Angeles")
+        );
+        aiRequestQuotaService = new AiRequestQuotaService(aiRequestUsageRepository, geminiResetClock);
+        LocalDate geminiUsageDate = LocalDate.of(2026, 5, 12);
+        when(aiRequestUsageRepository.findByUserAndUsageDate(user, geminiUsageDate)).thenReturn(Optional.empty());
+
+        assertThat(aiRequestQuotaService.todayUsed(user)).isZero();
+        verify(aiRequestUsageRepository).findByUserAndUsageDate(user, geminiUsageDate);
     }
 
     @Test

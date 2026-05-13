@@ -223,6 +223,58 @@ a {
     margin-left: auto;
 }
 
+.topnav-quotas {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-right: 0.5rem;
+}
+
+.topnav-quota,
+.topnav-mobile-quota {
+    width: 128px;
+}
+
+.topnav-quota-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    line-height: 1.1;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.topnav-quota-label strong {
+    color: var(--text-secondary);
+    font-size: 0.6875rem;
+    font-weight: 600;
+}
+
+.topnav-quota-progress {
+    height: 4px;
+    margin-top: 0.25rem;
+    border-radius: 999px;
+    background: var(--border-light);
+    overflow: hidden;
+}
+
+.topnav-quota-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--accent);
+    transition: width 0.3s ease;
+}
+
+.topnav-quota-bar.is-warn {
+    background: #f59e0b;
+}
+
+.topnav-quota-bar.is-danger {
+    background: var(--danger);
+}
+
 .topnav-user {
     display: inline-flex;
     align-items: center;
@@ -345,6 +397,16 @@ a {
     height: 1px;
     background: var(--border-light);
     margin: 0.25rem 0;
+}
+
+.topnav-mobile-quotas {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.topnav-mobile-quota {
+    width: 100%;
 }
 
 /* ---------- Main Content ---------- */
@@ -3855,6 +3917,20 @@ iconify-icon {
 
     .sh-dashboard-aside {
         width: 100%;
+    }
+}
+
+@media (max-width: 1100px) {
+    .topnav-quotas {
+        gap: 0.5rem;
+    }
+
+    .topnav-quota {
+        width: 104px;
+    }
+
+    .topnav-quota-label span {
+        display: none;
     }
 }
 
