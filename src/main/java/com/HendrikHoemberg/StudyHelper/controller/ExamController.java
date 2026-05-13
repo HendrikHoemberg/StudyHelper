@@ -102,6 +102,7 @@ public class ExamController {
 
             int qCount = normalizeQuestionCount(count);
             requireQuotaService().checkAndRecord(user);
+            response.addHeader("HX-Trigger", "refresh-quota");
             List<ExamQuestion> questions = aiExamService.generate(
                 input.flashcards(),
                 input.documents(),
@@ -334,6 +335,7 @@ public class ExamController {
 
         try {
             requireQuotaService().checkAndRecord(user);
+            response.addHeader("HX-Trigger", "refresh-quota");
             ExamGradingResult grading = aiExamService.grade(state.questions(), finalAnswers, state.config().size());
             
             // Create a new state with final answers for saving

@@ -8,6 +8,7 @@ import com.HendrikHoemberg.StudyHelper.service.FileStorageService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaExceededException;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -54,6 +55,7 @@ public class FlashcardController {
                                   @RequestParam(required = false) MultipartFile backImage,
                                   Model model, Principal principal,
                                   RedirectAttributes redirectAttributes,
+                                  HttpServletResponse response,
                                   @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         try {
@@ -66,6 +68,7 @@ public class FlashcardController {
             return "redirect:/decks/" + deckId;
         }
 
+        response.addHeader("HX-Trigger", "refresh-quota");
         if (hxRequest != null) {
             Deck deck = deckService.getDeck(deckId, user);
             model.addAttribute("deck", deck);
@@ -103,6 +106,7 @@ public class FlashcardController {
                                 @RequestParam Long deckId,
                                 Model model, Principal principal,
                                 RedirectAttributes redirectAttributes,
+                                HttpServletResponse response,
                                 @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         try {
@@ -116,6 +120,7 @@ public class FlashcardController {
             return "redirect:/decks/" + deckId;
         }
 
+        response.addHeader("HX-Trigger", "refresh-quota");
         if (hxRequest != null) {
             Deck deck = deckService.getDeck(deckId, user);
             model.addAttribute("deck", deck);
@@ -128,9 +133,11 @@ public class FlashcardController {
     @PostMapping("/flashcards/{id}/delete")
     public String deleteFlashcard(@PathVariable Long id,
                                   Model model, Principal principal,
+                                  HttpServletResponse response,
                                   @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         Long deckId = flashcardService.deleteFlashcard(id, principal.getName());
+        response.addHeader("HX-Trigger", "refresh-quota");
 
         if (hxRequest != null) {
             Deck deck = deckService.getDeck(deckId, user);
@@ -155,7 +162,7 @@ public class FlashcardController {
         } catch (StorageQuotaExceededException e) {
             return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(e.getMessage());
         }
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).header("HX-Trigger", "refresh-quota").build();
     }
 
     @GetMapping("/flashcards/{id}/images/{side}")

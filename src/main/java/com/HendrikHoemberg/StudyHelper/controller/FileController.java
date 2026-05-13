@@ -9,6 +9,7 @@ import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.FolderView;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaExceededException;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -60,10 +61,12 @@ public class FileController {
                          Principal principal,
                          Model model,
                          RedirectAttributes redirectAttributes,
+                         HttpServletResponse response,
                          @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         try {
             fileEntryService.upload(file, folderId, user);
+            response.addHeader("HX-Trigger", "refresh-quota");
         } catch (StorageQuotaExceededException e) {
             if (hxRequest != null) {
                 FolderView view = folderService.getFolderView(folderId, user, null, "asc", ActiveTab.FILES);
@@ -116,7 +119,8 @@ public class FileController {
     public String editOverwrite(@PathVariable Long id,
                                 @RequestParam("image") MultipartFile image,
                                 Principal principal,
-                                Model model) {
+                                Model model,
+                                HttpServletResponse response) {
         User user = userService.getByUsername(principal.getName());
         Long folderId;
         try {
@@ -139,6 +143,7 @@ public class FileController {
             return "fragments/folder-detail :: tabsSection";
         }
         FolderView view = folderService.getFolderView(folderId, user, null, "asc", ActiveTab.FILES);
+        response.addHeader("HX-Trigger", "refresh-quota");
         model.addAttribute("view", view);
         model.addAttribute("sortBy", null);
         model.addAttribute("direction", "asc");
@@ -166,10 +171,12 @@ public class FileController {
     @PostMapping("/files/{id}/delete")
     public String delete(@PathVariable Long id, Principal principal,
                          RedirectAttributes redirectAttributes,
+                         HttpServletResponse response,
                          @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         try {
             Long folderId = fileEntryService.deleteAndGetFolderId(id, user);
+            response.addHeader("HX-Trigger", "refresh-quota");
             return "redirect:/folders/" + folderId + "?tab=files";
         } catch (IOException e) {
             redirectAttributes.addFlashAttribute("error", "Could not delete file from disk.");

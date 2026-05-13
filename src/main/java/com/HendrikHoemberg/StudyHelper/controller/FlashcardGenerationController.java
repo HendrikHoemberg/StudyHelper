@@ -121,6 +121,7 @@ public class FlashcardGenerationController {
         try {
             DocumentInput input = validateAndBuildInput(fileId, documentMode, destination, existingDeckId, newDeckFolderId, newDeckName, user);
             requireQuotaService().checkAndRecord(user);
+            response.addHeader("HX-Trigger", "refresh-quota");
             List<GeneratedFlashcard> generated = aiFlashcardService.generate(input, additionalInstructions);
             Deck savedDeck = persistenceService.saveGeneratedCards(
                 destination,

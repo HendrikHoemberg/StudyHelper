@@ -237,6 +237,7 @@ public class StudyController {
 
                 int qCount = Math.max(1, Math.min(questionCount, 20));
                 requireQuotaService().checkAndRecord(user);
+                response.addHeader("HX-Trigger", "refresh-quota");
                 List<QuizQuestion> questions = aiQuizService.generate(
                     input.flashcards(),
                     input.documents(),
