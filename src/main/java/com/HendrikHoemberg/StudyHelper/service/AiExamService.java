@@ -15,6 +15,7 @@ import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
 
@@ -30,6 +31,12 @@ public class AiExamService {
     private final ChatClient chatClient;
     private final String questionsResponseSchema;
     private final String gradingResponseSchema;
+
+    @Value("${app.ai.model.pdf}")
+    private String pdfModel;
+
+    @Value("${app.ai.model.text}")
+    private String textModel;
 
     public AiExamService(ChatClient.Builder builder, JsonMapper objectMapper) {
         this.chatClient = builder.build();
@@ -62,10 +69,13 @@ public class AiExamService {
 
         String prompt = buildGenerationPrompt(cardContent, docContent, pdfListing, questionCount, size, additionalInstructions);
 
+        String model = pdfMedia.length > 0 ? pdfModel : textModel;
+
         ExamQuestionsResponse response;
         try {
             response = chatClient.prompt()
                     .options(GoogleGenAiChatOptions.builder()
+                            .model(model)
                             .responseMimeType("application/json")
                             .responseSchema(questionsResponseSchema))
                     .user(u -> {
@@ -115,6 +125,7 @@ public class AiExamService {
         try {
             return chatClient.prompt()
                     .options(GoogleGenAiChatOptions.builder()
+                            .model(textModel)
                             .responseMimeType("application/json")
                             .responseSchema(gradingResponseSchema))
                     .user(u -> u.text(prompt))

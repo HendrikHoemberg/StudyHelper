@@ -11,6 +11,7 @@ import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
 import tools.jackson.databind.json.JsonMapper;
@@ -26,6 +27,12 @@ public class AiFlashcardService {
 
     private final ChatClient chatClient;
     private final String responseSchema;
+
+    @Value("${app.ai.model.pdf}")
+    private String pdfModel;
+
+    @Value("${app.ai.model.text}")
+    private String textModel;
 
     public AiFlashcardService(ChatClient.Builder builder, JsonMapper objectMapper) {
         this.chatClient = builder.build();
@@ -52,10 +59,13 @@ public class AiFlashcardService {
 
         String prompt = buildPrompt(docContent, pdfListing, additionalInstructions);
 
+        String model = pdfMedia.length > 0 ? pdfModel : textModel;
+
         FlashcardsResponse response;
         try {
             response = chatClient.prompt()
                     .options(GoogleGenAiChatOptions.builder()
+                            .model(model)
                             .responseMimeType("application/json")
                             .responseSchema(responseSchema))
                     .user(u -> {
