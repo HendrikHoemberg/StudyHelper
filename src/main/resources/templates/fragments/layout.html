@@ -198,6 +198,10 @@
     <div th:replace="~{fragments/lightbox :: lightbox}"></div>
     <div th:replace="~{fragments/exam-grading :: exam-grading-loader}"></div>
     <div th:replace="~{fragments/dialog :: dialog}"></div>
+    <div class="refresh-quota-trigger"
+         hx-get="/api/quota"
+         hx-trigger="refresh-quota from:body"
+         hx-swap="none"></div>
     <div id="sh-sidebar-backdrop" class="sh-sidebar-backdrop" aria-hidden="true"></div>
     <div th:replace="~{fragments/layout :: topnav-drawer}"></div>
 </div>
