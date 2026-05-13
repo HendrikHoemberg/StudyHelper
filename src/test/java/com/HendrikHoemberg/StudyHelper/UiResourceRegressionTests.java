@@ -90,6 +90,19 @@ class UiResourceRegressionTests {
             .contains("form.sh-study-setup-card");
     }
 
+    @Test
+    void studyWizardPrimarySubmitUsesStableTextSpanForDynamicLabels() throws IOException {
+        String template = resource("templates/fragments/study-setup.html");
+        String wizardJs = resource("static/js/study-wizard.js");
+
+        assertThat(template)
+            .contains("id=\"wizard-btn-submit\"")
+            .contains("class=\"sh-btn-text\">Start</span>");
+        assertThat(wizardJs)
+            .contains("submitBtn.querySelector('.sh-btn-text')")
+            .doesNotContain("submitBtn.childNodes[1]");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }

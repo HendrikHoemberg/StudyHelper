@@ -168,18 +168,18 @@
         if (footer) footer.style.display = currentStep === 1 ? 'none' : '';
         
         if (submitBtn) {
-            const icon = submitBtn.querySelector('i');
-            const text = submitBtn.querySelector('.sh-btn-text') || submitBtn.childNodes[1];
+            const icon = submitBtn.querySelector('iconify-icon');
+            const text = submitBtn.querySelector('.sh-btn-text');
             
             if (currentMode === 'QUIZ') {
-                if (icon) icon.setAttribute('data-lucide', 'sparkles');
-                if (text) text.textContent = ' Generate Quiz';
+                if (icon) icon.setAttribute('icon', 'lucide:sparkles');
+                if (text) text.textContent = 'Generate Quiz';
             } else if (currentMode === 'EXAM') {
-                if (icon) icon.setAttribute('data-lucide', 'pencil-line');
-                if (text) text.textContent = ' Start Exam';
+                if (icon) icon.setAttribute('icon', 'lucide:pencil-line');
+                if (text) text.textContent = 'Start Exam';
             } else {
-                if (icon) icon.setAttribute('data-lucide', 'play');
-                if (text) text.textContent = ' Start Session';
+                if (icon) icon.setAttribute('icon', 'lucide:play');
+                if (text) text.textContent = 'Start Session';
             }
         }
 
