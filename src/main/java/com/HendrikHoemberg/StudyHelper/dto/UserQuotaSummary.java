@@ -6,7 +6,8 @@ public record UserQuotaSummary(
     int aiUsedToday,
     int aiDailyLimit
 ) {
-    private static final long MiB = 1024L * 1024L;
+    private static final long KiB = 1024L;
+    private static final long MiB = 1024L * KiB;
     private static final long GiB = 1024L * MiB;
 
     public int storagePercent() {
@@ -52,6 +53,7 @@ public record UserQuotaSummary(
     private static String formatBytes(long bytes) {
         if (bytes >= GiB) return String.format("%.1f GB", (double) bytes / GiB);
         if (bytes >= MiB) return String.format("%.0f MB", (double) bytes / MiB);
+        if (bytes >= KiB) return String.format("%.0f KB", (double) bytes / KiB);
         return bytes + " B";
     }
 }

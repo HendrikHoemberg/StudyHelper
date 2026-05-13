@@ -25,4 +25,11 @@ class UserQuotaSummaryTests {
         assertThat(quota.storagePercent()).isEqualTo(100);
         assertThat(quota.aiPercent()).isEqualTo(100);
     }
+
+    @Test
+    void formatsKilobytes() {
+        UserQuotaSummary quota = new UserQuotaSummary(512 * 1024, 1024 * 1024, 0, 10);
+        assertThat(quota.formattedStorageUsed()).isEqualTo("512 KB");
+        assertThat(quota.formattedStorageQuota()).isEqualTo("1 MB");
+    }
 }
