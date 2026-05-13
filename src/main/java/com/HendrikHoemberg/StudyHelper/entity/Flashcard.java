@@ -28,6 +28,12 @@ public class Flashcard {
     @Column(name = "back_image_filename")
     private String backImageFilename;
 
+    @Column(name = "front_image_size_bytes")
+    private Long frontImageSizeBytes;
+
+    @Column(name = "back_image_size_bytes")
+    private Long backImageSizeBytes;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deck_id", nullable = false)
     private Deck deck;

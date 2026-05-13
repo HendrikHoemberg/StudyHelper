@@ -56,6 +56,10 @@
                 <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
                 Past Exams
             </a>
+            <a th:if="${isAdmin}" href="/admin" class="topnav-link">
+                <iconify-icon icon="lucide:shield"></iconify-icon>
+                Admin
+            </a>
         </div>
 
         <div class="topnav-right">
@@ -107,6 +111,10 @@
        hx-get="/exams" hx-target="#explorer-detail" hx-push-url="true">
         <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
         Past Exams
+    </a>
+    <a th:if="${isAdmin}" href="/admin" class="topnav-mobile-link">
+        <iconify-icon icon="lucide:shield"></iconify-icon>
+        Admin
     </a>
     <div class="topnav-mobile-divider"></div>
     <span class="topnav-mobile-user">

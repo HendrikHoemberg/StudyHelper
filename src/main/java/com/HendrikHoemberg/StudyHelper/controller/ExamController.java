@@ -10,6 +10,7 @@ import com.HendrikHoemberg.StudyHelper.service.DocumentModeResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,26 @@ public class ExamController {
     private final FlashcardService flashcardService;
     private final FileEntryService fileEntryService;
     private final DocumentExtractionService documentExtractionService;
+    private final AiRequestQuotaService aiRequestQuotaService;
+
+    @Autowired
+    public ExamController(AiExamService aiExamService,
+                          ExamService examService,
+                          UserService userService,
+                          DeckService deckService,
+                          FlashcardService flashcardService,
+                          FileEntryService fileEntryService,
+                          DocumentExtractionService documentExtractionService,
+                          AiRequestQuotaService aiRequestQuotaService) {
+        this.aiExamService = aiExamService;
+        this.examService = examService;
+        this.userService = userService;
+        this.deckService = deckService;
+        this.flashcardService = flashcardService;
+        this.fileEntryService = fileEntryService;
+        this.documentExtractionService = documentExtractionService;
+        this.aiRequestQuotaService = aiRequestQuotaService;
+    }
 
     public ExamController(AiExamService aiExamService,
                           ExamService examService,
@@ -39,13 +60,16 @@ public class ExamController {
                           FlashcardService flashcardService,
                           FileEntryService fileEntryService,
                           DocumentExtractionService documentExtractionService) {
-        this.aiExamService = aiExamService;
-        this.examService = examService;
-        this.userService = userService;
-        this.deckService = deckService;
-        this.flashcardService = flashcardService;
-        this.fileEntryService = fileEntryService;
-        this.documentExtractionService = documentExtractionService;
+        this(
+            aiExamService,
+            examService,
+            userService,
+            deckService,
+            flashcardService,
+            fileEntryService,
+            documentExtractionService,
+            null
+        );
     }
 
     @PostMapping("/exam/session")
@@ -100,6 +124,7 @@ public class ExamController {
             }
 
             int qCount = Math.max(1, Math.min(count, 20));
+            requireQuotaService().checkAndRecord(user);
             List<ExamQuestion> questions = aiExamService.generate(flashcards, documents, qCount, questionSize);
 
             String sourceSummary = sourceNames.stream().limit(3).collect(Collectors.joining(", "));
@@ -215,6 +240,7 @@ public class ExamController {
         }
 
         try {
+            requireQuotaService().checkAndRecord(user);
             ExamGradingResult grading = aiExamService.grade(state.questions(), finalAnswers, state.config().size());
             
             // Create a new state with final answers for saving
@@ -228,6 +254,9 @@ public class ExamController {
             model.addAttribute("exam", saved);
             model.addAttribute("report", grading.overall());
             return "fragments/exam-result :: exam-result";
+        } catch (AiQuotaExceededException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return "<div>Grading failed: " + e.getMessage() + "</div>";
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return "<div>Grading failed: " + e.getMessage() + "</div>";
@@ -310,5 +339,12 @@ public class ExamController {
     private List<Long> normalizeIds(List<Long> ids) {
         if (ids == null) return List.of();
         return ids.stream().filter(Objects::nonNull).distinct().toList();
+    }
+
+    private AiRequestQuotaService requireQuotaService() {
+        if (aiRequestQuotaService == null) {
+            throw new IllegalStateException("AI quota service is not configured.");
+        }
+        return aiRequestQuotaService;
     }
 }

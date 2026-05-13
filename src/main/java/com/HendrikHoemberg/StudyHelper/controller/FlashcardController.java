@@ -6,15 +6,19 @@ import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FileStorageService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
+import com.HendrikHoemberg.StudyHelper.service.StorageQuotaExceededException;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 
@@ -49,9 +53,18 @@ public class FlashcardController {
                                   @RequestParam(required = false) MultipartFile frontImage,
                                   @RequestParam(required = false) MultipartFile backImage,
                                   Model model, Principal principal,
+                                  RedirectAttributes redirectAttributes,
                                   @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
-        flashcardService.createFlashcard(frontText, backText, deckId, user, frontImage, backImage);
+        try {
+            flashcardService.createFlashcard(frontText, backText, deckId, user, frontImage, backImage);
+        } catch (StorageQuotaExceededException e) {
+            if (hxRequest != null) {
+                throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, e.getMessage(), e);
+            }
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/decks/" + deckId;
+        }
 
         if (hxRequest != null) {
             Deck deck = deckService.getDeck(deckId, user);
@@ -89,10 +102,19 @@ public class FlashcardController {
                                 @RequestParam(defaultValue = "false") boolean removeBackImage,
                                 @RequestParam Long deckId,
                                 Model model, Principal principal,
+                                RedirectAttributes redirectAttributes,
                                 @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
-        flashcardService.updateFlashcard(id, frontText, backText, principal.getName(),
+        try {
+            flashcardService.updateFlashcard(id, frontText, backText, principal.getName(),
                 frontImage, removeFrontImage, backImage, removeBackImage);
+        } catch (StorageQuotaExceededException e) {
+            if (hxRequest != null) {
+                throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, e.getMessage(), e);
+            }
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/decks/" + deckId;
+        }
 
         if (hxRequest != null) {
             Deck deck = deckService.getDeck(deckId, user);
@@ -120,16 +142,20 @@ public class FlashcardController {
     }
 
     @PostMapping(value = "/flashcards/{id}/images/{side}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> replaceImage(@PathVariable Long id,
-                                             @PathVariable String side,
-                                             @RequestParam("image") MultipartFile image,
-                                             Principal principal) {
+    public ResponseEntity<String> replaceImage(@PathVariable Long id,
+                                               @PathVariable String side,
+                                               @RequestParam("image") MultipartFile image,
+                                               Principal principal) {
         if (!"front".equals(side) && !"back".equals(side)) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body("Invalid flashcard side.");
         }
         User user = userService.getByUsername(principal.getName());
-        flashcardService.replaceImage(id, side, image, user);
-        return ResponseEntity.noContent().build();
+        try {
+            flashcardService.replaceImage(id, side, image, user);
+        } catch (StorageQuotaExceededException e) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(e.getMessage());
+        }
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @GetMapping("/flashcards/{id}/images/{side}")

@@ -4680,6 +4680,64 @@ iconify-icon {
     color: #166534;
 }
 
+.sh-admin-page {
+    padding: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.sh-admin-section {
+    margin-top: 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+}
+
+.sh-admin-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.sh-admin-table-wrap {
+    overflow-x: auto;
+}
+
+.sh-admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.sh-admin-table th,
+.sh-admin-table td {
+    border-bottom: 1px solid var(--border-light);
+    text-align: left;
+    padding: 0.5rem;
+    vertical-align: middle;
+}
+
+.sh-admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+
+.sh-admin-quotas-form {
+    display: flex;
+    gap: 0.375rem;
+    align-items: center;
+}
+
+.sh-input-sm {
+    height: 34px;
+    min-width: 120px;
+    padding: 0 0.5rem;
+}
+
 @media (max-width: 900px) {
     .sh-ai-flashcard-grid {
         grid-template-columns: 1fr;

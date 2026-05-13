@@ -516,6 +516,14 @@ public class FolderService {
     private List<String> collectStoredFilenames(Folder folder) {
         List<String> names = new ArrayList<>();
         folder.getFiles().forEach(f -> names.add(f.getStoredFilename()));
+        folder.getDecks().forEach(deck -> deck.getFlashcards().forEach(card -> {
+            if (card.getFrontImageFilename() != null) {
+                names.add(card.getFrontImageFilename());
+            }
+            if (card.getBackImageFilename() != null) {
+                names.add(card.getBackImageFilename());
+            }
+        }));
         folder.getSubFolders().forEach(sub -> names.addAll(collectStoredFilenames(sub)));
         return names;
     }

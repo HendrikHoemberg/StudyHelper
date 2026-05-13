@@ -30,5 +30,6 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         userService.createIfNotExists(user1Name, user1Password);
         userService.createIfNotExists(user2Name, user2Password);
+        userService.promoteToAdminIfPresent(user1Name);
     }
 }

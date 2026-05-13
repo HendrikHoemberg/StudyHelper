@@ -13,6 +13,7 @@ import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.AiFlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.AiGenerationDiagnostics;
 import com.HendrikHoemberg.StudyHelper.service.AiGenerationException;
+import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.DocumentExtractionService;
 import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
@@ -21,6 +22,7 @@ import com.HendrikHoemberg.StudyHelper.service.FlashcardGenerationViewService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,6 +44,28 @@ public class FlashcardGenerationController {
     private final DocumentExtractionService documentExtractionService;
     private final DeckService deckService;
     private final FolderService folderService;
+    private final AiRequestQuotaService aiRequestQuotaService;
+
+    @Autowired
+    public FlashcardGenerationController(AiFlashcardService aiFlashcardService,
+                                         FlashcardGenerationPersistenceService persistenceService,
+                                         FlashcardGenerationViewService viewService,
+                                         UserService userService,
+                                         FileEntryService fileEntryService,
+                                         DocumentExtractionService documentExtractionService,
+                                         DeckService deckService,
+                                         FolderService folderService,
+                                         AiRequestQuotaService aiRequestQuotaService) {
+        this.aiFlashcardService = aiFlashcardService;
+        this.persistenceService = persistenceService;
+        this.viewService = viewService;
+        this.userService = userService;
+        this.fileEntryService = fileEntryService;
+        this.documentExtractionService = documentExtractionService;
+        this.deckService = deckService;
+        this.folderService = folderService;
+        this.aiRequestQuotaService = aiRequestQuotaService;
+    }
 
     public FlashcardGenerationController(AiFlashcardService aiFlashcardService,
                                          FlashcardGenerationPersistenceService persistenceService,
@@ -51,14 +75,17 @@ public class FlashcardGenerationController {
                                          DocumentExtractionService documentExtractionService,
                                          DeckService deckService,
                                          FolderService folderService) {
-        this.aiFlashcardService = aiFlashcardService;
-        this.persistenceService = persistenceService;
-        this.viewService = viewService;
-        this.userService = userService;
-        this.fileEntryService = fileEntryService;
-        this.documentExtractionService = documentExtractionService;
-        this.deckService = deckService;
-        this.folderService = folderService;
+        this(
+            aiFlashcardService,
+            persistenceService,
+            viewService,
+            userService,
+            fileEntryService,
+            documentExtractionService,
+            deckService,
+            folderService,
+            null
+        );
     }
 
     @GetMapping("/flashcards/generate")
@@ -101,6 +128,7 @@ public class FlashcardGenerationController {
             }
 
             DocumentInput input = buildDocumentInput(file, documentMode);
+            requireQuotaService().checkAndRecord(user);
             List<GeneratedFlashcard> generated = aiFlashcardService.generate(input);
             Deck savedDeck = persistenceService.saveGeneratedCards(
                 destination,
@@ -193,5 +221,12 @@ public class FlashcardGenerationController {
 
     private String successMessage(int count, String filename) {
         return "Generated " + count + " flashcard" + (count == 1 ? "" : "s") + " from " + filename + ".";
+    }
+
+    private AiRequestQuotaService requireQuotaService() {
+        if (aiRequestQuotaService == null) {
+            throw new IllegalStateException("AI quota service is not configured.");
+        }
+        return aiRequestQuotaService;
     }
 }

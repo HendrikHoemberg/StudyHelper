@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface ExamRepository extends JpaRepository<Exam, Long> {
     List<Exam> findAllByUserOrderByCreatedAtDesc(User user);
+    void deleteAllByUser(User user);
 }

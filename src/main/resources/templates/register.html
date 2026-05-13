@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sign In — StudyHelper</title>
-    <meta name="description" content="Sign in to StudyHelper to access your flashcard decks and study materials.">
+    <title>Register — StudyHelper</title>
+    <meta name="description" content="Create your StudyHelper account with an invite code.">
     <link href="/css/styles.css" rel="stylesheet">
     <script>
         (function() {
@@ -23,41 +23,37 @@
             </svg>
         </div>
         <h1 class="sh-login-brand">StudyHelper</h1>
-        <p class="sh-login-subtitle">Sign in to your account</p>
+        <p class="sh-login-subtitle">Create your account</p>
 
-        <div th:if="${param.error}" class="sh-alert sh-alert-danger">
-            <div class="sh-alert-body">Invalid username or password.</div>
-        </div>
-        <div th:if="${param.logout}" class="sh-alert sh-alert-info">
-            <div class="sh-alert-body">You have been signed out.</div>
-        </div>
-        <div th:if="${param.disabled}" class="sh-alert sh-alert-danger">
-            <div class="sh-alert-body">Your account has been disabled. Contact an administrator.</div>
-        </div>
-        <div th:if="${successMessage}" class="sh-alert sh-alert-success">
-            <div class="sh-alert-body" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="sh-alert sh-alert-danger">
+            <div class="sh-alert-body" th:text="${errorMessage}"></div>
         </div>
 
-        <form th:action="@{/login}" method="post">
+        <form th:action="@{/register}" method="post">
+            <div class="sh-login-field">
+                <label for="code" class="sh-label">Invite code</label>
+                <input type="text" id="code" name="code" class="sh-input" required
+                       autocomplete="off" placeholder="Enter your invite code" th:value="${code}">
+            </div>
             <div class="sh-login-field">
                 <label for="username" class="sh-label">Username</label>
-                <input type="text" id="username" name="username" class="sh-input"
-                       autocomplete="username" required autofocus placeholder="Enter your username">
+                <input type="text" id="username" name="username" class="sh-input" required
+                       autocomplete="username" placeholder="Choose a username" th:value="${username}">
             </div>
             <div class="sh-login-field">
                 <label for="password" class="sh-label">Password</label>
-                <input type="password" id="password" name="password" class="sh-input"
-                       autocomplete="current-password" required placeholder="Enter your password">
+                <input type="password" id="password" name="password" class="sh-input" required
+                       autocomplete="new-password" placeholder="Choose a password">
             </div>
             <div class="sh-login-submit">
                 <button type="submit" class="sh-btn sh-btn-primary w-full justify-center">
-                    Sign in
+                    Create account
                 </button>
             </div>
         </form>
-        <div class="sh-login-submit">
-            <a href="/register" class="sh-btn sh-btn-secondary w-full justify-center">Register with invite code</a>
-        </div>
+        <p class="sh-login-subtitle" style="margin-top:1rem;">
+            <a th:href="@{/login}">Back to sign in</a>
+        </p>
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>

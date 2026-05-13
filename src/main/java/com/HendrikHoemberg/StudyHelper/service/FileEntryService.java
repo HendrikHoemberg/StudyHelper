@@ -22,13 +22,16 @@ public class FileEntryService {
     private final FileEntryRepository fileEntryRepository;
     private final FolderRepository folderRepository;
     private final FileStorageService fileStorageService;
+    private final StorageQuotaService storageQuotaService;
 
     public FileEntryService(FileEntryRepository fileEntryRepository,
                             FolderRepository folderRepository,
-                            FileStorageService fileStorageService) {
+                            FileStorageService fileStorageService,
+                            StorageQuotaService storageQuotaService) {
         this.fileEntryRepository = fileEntryRepository;
         this.folderRepository = folderRepository;
         this.fileStorageService = fileStorageService;
+        this.storageQuotaService = storageQuotaService;
     }
 
     @Transactional
@@ -36,6 +39,7 @@ public class FileEntryService {
         Folder folder = folderRepository.findByIdAndUser(folderId, user)
             .orElseThrow(() -> new NoSuchElementException("Folder not found"));
 
+        storageQuotaService.assertWithinQuota(user, 0L, file.getSize());
         String storedFilename = fileStorageService.store(file);
 
         FileEntry entry = new FileEntry();
@@ -91,6 +95,8 @@ public class FileEntryService {
         FileEntry entry = fileEntryRepository.findByIdAndUser(id, user)
             .orElseThrow(() -> new NoSuchElementException("File not found"));
 
+        long existingBytes = entry.getFileSizeBytes() == null ? 0L : entry.getFileSizeBytes();
+        storageQuotaService.assertWithinQuota(user, existingBytes, image.getSize());
         fileStorageService.replaceContents(entry.getStoredFilename(), image);
         entry.setMimeType(image.getContentType() != null ? image.getContentType() : "application/octet-stream");
         entry.setFileSizeBytes(image.getSize());

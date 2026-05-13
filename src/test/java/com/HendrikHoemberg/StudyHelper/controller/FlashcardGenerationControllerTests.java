@@ -15,6 +15,8 @@ import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.AiFlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.AiGenerationDiagnostics;
 import com.HendrikHoemberg.StudyHelper.service.AiGenerationException;
+import com.HendrikHoemberg.StudyHelper.service.AiQuotaExceededException;
+import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.DocumentExtractionService;
 import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
@@ -51,6 +53,7 @@ class FlashcardGenerationControllerTests {
     private DocumentExtractionService documentExtractionService;
     private DeckService deckService;
     private FolderService folderService;
+    private AiRequestQuotaService aiRequestQuotaService;
     private FlashcardGenerationController controller;
     private User user;
     private FileEntry pdf;
@@ -67,6 +70,7 @@ class FlashcardGenerationControllerTests {
         documentExtractionService = mock(DocumentExtractionService.class);
         deckService = mock(DeckService.class);
         folderService = mock(FolderService.class);
+        aiRequestQuotaService = mock(AiRequestQuotaService.class);
         controller = new FlashcardGenerationController(
             aiFlashcardService,
             persistenceService,
@@ -75,7 +79,8 @@ class FlashcardGenerationControllerTests {
             fileEntryService,
             documentExtractionService,
             deckService,
-            folderService
+            folderService,
+            aiRequestQuotaService
         );
 
         user = new User();
@@ -281,5 +286,35 @@ class FlashcardGenerationControllerTests {
             .contains("Stage: PROVIDER_REQUEST")
             .contains("provider offline");
         verify(persistenceService, never()).saveGeneratedCards(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void generate_QuotaExceeded_ReturnsGeneratorErrorWithoutCallingAi() throws Exception {
+        when(fileEntryService.getByIdAndUser(99L, user)).thenReturn(pdf);
+        when(documentExtractionService.isSupported(pdf)).thenReturn(true);
+        when(documentExtractionService.extractText(pdf)).thenReturn("Lecture text");
+        doThrow(new AiQuotaExceededException("Daily AI request limit reached."))
+            .when(aiRequestQuotaService).checkAndRecord(user);
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.generate(
+            99L,
+            DocumentMode.TEXT,
+            FlashcardGenerationDestination.EXISTING_DECK,
+            20L,
+            null,
+            null,
+            model,
+            () -> "alice",
+            response,
+            "true"
+        );
+
+        assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(model.get("generationError")).isEqualTo("Daily AI request limit reached.");
+        verify(aiFlashcardService, never()).generate(any(DocumentInput.class));
     }
 }

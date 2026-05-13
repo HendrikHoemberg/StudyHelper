@@ -7,6 +7,7 @@ import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
 import com.HendrikHoemberg.StudyHelper.service.FileStorageService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.FolderView;
+import com.HendrikHoemberg.StudyHelper.service.StorageQuotaExceededException;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -57,12 +58,31 @@ public class FileController {
     public String upload(@PathVariable Long folderId,
                          @RequestParam("file") MultipartFile file,
                          Principal principal,
+                         Model model,
                          RedirectAttributes redirectAttributes,
                          @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         try {
             fileEntryService.upload(file, folderId, user);
+        } catch (StorageQuotaExceededException e) {
+            if (hxRequest != null) {
+                FolderView view = folderService.getFolderView(folderId, user, null, "asc", ActiveTab.FILES);
+                model.addAttribute("view", view);
+                model.addAttribute("sortBy", null);
+                model.addAttribute("direction", "asc");
+                model.addAttribute("error", e.getMessage());
+                return "fragments/folder-detail :: tabsSection";
+            }
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         } catch (IOException e) {
+            if (hxRequest != null) {
+                FolderView view = folderService.getFolderView(folderId, user, null, "asc", ActiveTab.FILES);
+                model.addAttribute("view", view);
+                model.addAttribute("sortBy", null);
+                model.addAttribute("direction", "asc");
+                model.addAttribute("error", "Upload failed: " + e.getMessage());
+                return "fragments/folder-detail :: tabsSection";
+            }
             redirectAttributes.addFlashAttribute("error", "Upload failed: " + e.getMessage());
         }
         return "redirect:/folders/" + folderId + "?tab=files";
@@ -96,9 +116,28 @@ public class FileController {
     public String editOverwrite(@PathVariable Long id,
                                 @RequestParam("image") MultipartFile image,
                                 Principal principal,
-                                Model model) throws IOException {
+                                Model model) {
         User user = userService.getByUsername(principal.getName());
-        Long folderId = fileEntryService.replaceContents(id, image, user);
+        Long folderId;
+        try {
+            folderId = fileEntryService.replaceContents(id, image, user);
+        } catch (StorageQuotaExceededException e) {
+            FileEntry entry = fileEntryService.getFile(id, user);
+            FolderView view = folderService.getFolderView(entry.getFolder().getId(), user, null, "asc", ActiveTab.FILES);
+            model.addAttribute("view", view);
+            model.addAttribute("sortBy", null);
+            model.addAttribute("direction", "asc");
+            model.addAttribute("error", e.getMessage());
+            return "fragments/folder-detail :: tabsSection";
+        } catch (IOException e) {
+            FileEntry entry = fileEntryService.getFile(id, user);
+            FolderView view = folderService.getFolderView(entry.getFolder().getId(), user, null, "asc", ActiveTab.FILES);
+            model.addAttribute("view", view);
+            model.addAttribute("sortBy", null);
+            model.addAttribute("direction", "asc");
+            model.addAttribute("error", "Upload failed: " + e.getMessage());
+            return "fragments/folder-detail :: tabsSection";
+        }
         FolderView view = folderService.getFolderView(folderId, user, null, "asc", ActiveTab.FILES);
         model.addAttribute("view", view);
         model.addAttribute("sortBy", null);

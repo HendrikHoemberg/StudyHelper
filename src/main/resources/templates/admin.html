@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Admin')}"></head>
+<body>
+<div class="app-layout">
+    <nav th:replace="~{fragments/layout :: topnav}"></nav>
+    <main class="app-main-content">
+        <div class="sh-admin-page">
+            <h1 class="sh-page-title">Admin Panel</h1>
+
+            <div th:if="${success}" class="sh-alert sh-alert-success">
+                <div class="sh-alert-body" th:text="${success}"></div>
+            </div>
+            <div th:if="${error}" class="sh-alert sh-alert-danger">
+                <div class="sh-alert-body" th:text="${error}"></div>
+            </div>
+
+            <section class="sh-admin-section">
+                <div class="sh-admin-section-head">
+                    <h2 class="sh-section-title">Invite Codes</h2>
+                    <form th:action="@{/admin/codes}" method="post">
+                        <button type="submit" class="sh-btn sh-btn-primary sh-btn-sm">Generate Code</button>
+                    </form>
+                </div>
+                <div class="sh-admin-table-wrap">
+                    <table class="sh-admin-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th>Created By</th>
+                            <th>Used By</th>
+                            <th>Expires</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="code : ${registrationCodes}">
+                            <td th:text="${code.id()}"></td>
+                            <td th:text="${code.status()}"></td>
+                            <td th:text="${code.createdBy()} ?: '-'"></td>
+                            <td th:text="${code.usedBy()} ?: '-'"></td>
+                            <td th:text="${code.expiresAt() != null ? #temporals.format(T(java.time.ZonedDateTime).ofInstant(code.expiresAt(), T(java.time.ZoneId).systemDefault()), 'yyyy-MM-dd HH:mm') : '-'}"></td>
+                            <td>
+                                <form th:if="${code.status() == 'Unused'}" th:action="@{/admin/codes/{id}/revoke(id=${code.id()})}" method="post">
+                                    <button type="submit" class="sh-btn sh-btn-secondary sh-btn-sm">Revoke</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="sh-admin-section">
+                <h2 class="sh-section-title">Users</h2>
+                <div class="sh-admin-table-wrap">
+                    <table class="sh-admin-table">
+                        <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Storage</th>
+                            <th>AI Today</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="u : ${users}">
+                            <td th:text="${u.username()}"></td>
+                            <td th:text="${u.role()}"></td>
+                            <td th:text="${u.enabled()} ? 'Enabled' : 'Disabled'"></td>
+                            <td th:text="|${u.storageUsedBytes()} / ${u.storageQuotaBytes()} bytes|"></td>
+                            <td th:text="|${u.aiUsedToday()} / ${u.aiDailyLimit()}|"></td>
+                            <td th:text="${u.createdAt() != null ? #temporals.format(T(java.time.ZonedDateTime).ofInstant(u.createdAt(), T(java.time.ZoneId).systemDefault()), 'yyyy-MM-dd HH:mm') : '-'}"></td>
+                            <td class="sh-admin-actions">
+                                <form th:action="@{/admin/users/{id}/quotas(id=${u.id()})}" method="post" class="sh-admin-quotas-form">
+                                    <input class="sh-input sh-input-sm" type="number" min="0" name="storageQuotaBytes" th:value="${u.storageQuotaBytes()}" required>
+                                    <input class="sh-input sh-input-sm" type="number" min="0" name="dailyAiLimit" th:value="${u.aiDailyLimit()}" required>
+                                    <button type="submit" class="sh-btn sh-btn-secondary sh-btn-sm">Save</button>
+                                </form>
+                                <form th:if="${u.enabled()}" th:action="@{/admin/users/{id}/disable(id=${u.id()})}" method="post">
+                                    <button type="submit" class="sh-btn sh-btn-danger sh-btn-sm">Disable</button>
+                                </form>
+                                <form th:if="${!u.enabled()}" th:action="@{/admin/users/{id}/enable(id=${u.id()})}" method="post">
+                                    <button type="submit" class="sh-btn sh-btn-secondary sh-btn-sm">Enable</button>
+                                </form>
+                                <form th:if="${!u.enabled()}" th:action="@{/admin/users/{id}/delete(id=${u.id()})}" method="post">
+                                    <button type="submit" class="sh-btn sh-btn-danger sh-btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

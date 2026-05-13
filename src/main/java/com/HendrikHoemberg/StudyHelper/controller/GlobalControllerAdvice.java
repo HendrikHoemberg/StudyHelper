@@ -2,6 +2,7 @@ package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.entity.UserRole;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
@@ -55,5 +56,14 @@ public class GlobalControllerAdvice {
         }
 
         return folderService.getSidebarTree(user, activeFolderId);
+    }
+
+    @ModelAttribute("isAdmin")
+    public boolean addIsAdmin(Principal principal) {
+        if (principal == null) {
+            return false;
+        }
+        User user = userService.getByUsername(principal.getName());
+        return user.getRole() == UserRole.ADMIN;
     }
 }

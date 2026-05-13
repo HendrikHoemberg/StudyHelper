@@ -3,17 +3,21 @@ package com.HendrikHoemberg.StudyHelper.service;
 import com.HendrikHoemberg.StudyHelper.dto.QuizSourceGroup;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
+import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.repository.FolderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class FolderServiceTests {
@@ -75,5 +79,33 @@ class FolderServiceTests {
         assertThat(group.files()).hasSize(1);
         assertThat(group.files().get(0).filename()).isEqualTo("test.pdf");
         assertThat(group.totalSourceCount()).isEqualTo(2); // 1 deck + 1 pdf
+    }
+
+    @Test
+    void deleteFolder_IncludesFlashcardFrontAndBackImageFilesInStorageDeletion() throws Exception {
+        Folder folder = new Folder();
+        folder.setId(1L);
+        folder.setUser(user);
+        folder.setSubFolders(List.of());
+
+        FileEntry fileEntry = new FileEntry();
+        fileEntry.setStoredFilename("uploaded.pdf");
+        folder.setFiles(List.of(fileEntry));
+
+        Flashcard flashcard = new Flashcard();
+        flashcard.setFrontImageFilename("front-image.png");
+        flashcard.setBackImageFilename("back-image.png");
+
+        Deck deck = new Deck();
+        deck.setFlashcards(List.of(flashcard));
+        folder.setDecks(List.of(deck));
+
+        when(folderRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(folder));
+
+        folderService.deleteFolder(1L, user);
+
+        verify(fileStorageService, times(1)).delete("uploaded.pdf");
+        verify(fileStorageService, times(1)).delete("front-image.png");
+        verify(fileStorageService, times(1)).delete("back-image.png");
     }
 }

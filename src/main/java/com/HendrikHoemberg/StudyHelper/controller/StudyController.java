@@ -10,6 +10,7 @@ import com.HendrikHoemberg.StudyHelper.service.DocumentModeResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +33,30 @@ public class StudyController {
     private final DocumentExtractionService documentExtractionService;
     private final FileEntryService fileEntryService;
     private final ExamController examController;
+    private final AiRequestQuotaService aiRequestQuotaService;
+
+    @Autowired
+    public StudyController(StudySessionService studySessionService,
+                           AiQuizService aiQuizService,
+                           DeckService deckService,
+                           FlashcardService flashcardService,
+                           FolderService folderService,
+                           UserService userService,
+                           DocumentExtractionService documentExtractionService,
+                           FileEntryService fileEntryService,
+                           ExamController examController,
+                           AiRequestQuotaService aiRequestQuotaService) {
+        this.studySessionService = studySessionService;
+        this.aiQuizService = aiQuizService;
+        this.deckService = deckService;
+        this.flashcardService = flashcardService;
+        this.folderService = folderService;
+        this.userService = userService;
+        this.documentExtractionService = documentExtractionService;
+        this.fileEntryService = fileEntryService;
+        this.examController = examController;
+        this.aiRequestQuotaService = aiRequestQuotaService;
+    }
 
     public StudyController(StudySessionService studySessionService,
                            AiQuizService aiQuizService,
@@ -42,15 +67,18 @@ public class StudyController {
                            DocumentExtractionService documentExtractionService,
                            FileEntryService fileEntryService,
                            ExamController examController) {
-        this.studySessionService = studySessionService;
-        this.aiQuizService = aiQuizService;
-        this.deckService = deckService;
-        this.flashcardService = flashcardService;
-        this.folderService = folderService;
-        this.userService = userService;
-        this.documentExtractionService = documentExtractionService;
-        this.fileEntryService = fileEntryService;
-        this.examController = examController;
+        this(
+            studySessionService,
+            aiQuizService,
+            deckService,
+            flashcardService,
+            folderService,
+            userService,
+            documentExtractionService,
+            fileEntryService,
+            examController,
+            null
+        );
     }
 
     @GetMapping("/study/start")
@@ -227,6 +255,7 @@ public class StudyController {
                 if (totalChars > 150_000) throw new IllegalArgumentException("Selection too large — please deselect some sources.");
 
                 int qCount = Math.max(1, Math.min(questionCount, 20));
+                requireQuotaService().checkAndRecord(user);
                 List<QuizQuestion> questions = aiQuizService.generate(flashcards, documents, qCount, quizQuestionMode, difficulty);
 
                 QuizSessionState state = new QuizSessionState(
@@ -360,5 +389,12 @@ public class StudyController {
         List<Long> resolved = new ArrayList<>(manual.stream().filter(normalized::contains).toList());
         normalized.stream().filter(id -> !resolved.contains(id)).forEach(resolved::add);
         return resolved;
+    }
+
+    private AiRequestQuotaService requireQuotaService() {
+        if (aiRequestQuotaService == null) {
+            throw new IllegalStateException("AI quota service is not configured.");
+        }
+        return aiRequestQuotaService;
     }
 }

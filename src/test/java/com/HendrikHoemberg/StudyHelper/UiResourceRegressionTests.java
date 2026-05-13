@@ -16,7 +16,7 @@ class UiResourceRegressionTests {
         String properties = file("src/main/resources/application.properties");
 
         assertThat(properties)
-            .contains("spring.ai.retry.max-attempts=2");
+            .contains("spring.ai.retry.max-attempts=1");
     }
 
     @Test

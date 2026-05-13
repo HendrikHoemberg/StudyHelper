@@ -32,6 +32,7 @@ class StudyControllerPdfModeTests {
     private UserService userService;
     private DocumentExtractionService documentExtractionService;
     private FileEntryService fileEntryService;
+    private AiRequestQuotaService aiRequestQuotaService;
     private StudyController controller;
     private User user;
 
@@ -47,17 +48,19 @@ class StudyControllerPdfModeTests {
         userService = mock(UserService.class);
         documentExtractionService = mock(DocumentExtractionService.class);
         fileEntryService = mock(FileEntryService.class);
+        aiRequestQuotaService = mock(AiRequestQuotaService.class);
 
         ExamController examController = new ExamController(
                 aiExamService, examService, userService, deckService, flashcardService,
-                fileEntryService, documentExtractionService);
+                fileEntryService, documentExtractionService, aiRequestQuotaService);
         controller = new StudyController(
                 studySessionService, aiQuizService, deckService, flashcardService, folderService,
-                userService, documentExtractionService, fileEntryService, examController);
+                userService, documentExtractionService, fileEntryService, examController, aiRequestQuotaService);
 
         user = new User();
         user.setId(1L);
         user.setUsername("alice");
+        user.setDailyAiRequestLimit(100);
         when(userService.getByUsername("alice")).thenReturn(user);
         when(folderService.getStudyFolderTree(eq(user), anyList())).thenReturn(List.of());
         when(folderService.getQuizSourceTree(eq(user), anyList(), anyList())).thenReturn(List.of());
