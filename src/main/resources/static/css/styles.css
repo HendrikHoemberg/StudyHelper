@@ -4681,9 +4681,13 @@ iconify-icon {
 }
 
 .sh-admin-page {
-    padding: 1.5rem;
-    max-width: 1400px;
+    padding: 2rem 1.5rem;
+    max-width: 1200px; /* Slightly tighter for better focus */
+    width: 100%;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 .sh-admin-section {
@@ -4702,9 +4706,6 @@ iconify-icon {
     margin-bottom: 0.75rem;
 }
 
-.sh-admin-table-wrap {
-    overflow-x: auto;
-}
 
 .sh-admin-table {
     width: 100%;
@@ -4769,13 +4770,78 @@ iconify-icon {
     font-size: 1.1rem;
 }
 
-/* Tab bar tweaks for admin */
+/* Redesigned Tab System: Segmented Control Style */
 .sh-admin-tabs {
-    margin-top: 0;
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface-alt, #f3f4f6);
+    padding: 0.35rem;
+    border-radius: var(--radius-lg);
+    gap: 0.25rem;
+    width: fit-content;
+    margin: 0 auto 2rem auto; /* Center the tabs */
+    border: 1px solid var(--border-light);
 }
 
+[data-theme="dark"] .sh-admin-tabs {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.sh-admin-tabs .sh-tab-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius-md);
+    border: none;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.sh-admin-tabs .sh-tab-link:hover {
+    color: var(--text);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .sh-admin-tabs .sh-tab-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sh-admin-tabs .sh-tab-link.is-active {
+    background: var(--surface);
+    color: var(--accent);
+    box-shadow: var(--shadow-sm), 0 0 0 1px var(--border-light);
+    font-weight: 600;
+}
+
+/* Content Area: Card Style */
 .sh-admin-tab-content {
     margin-top: 0;
+    border: none;
+    background: var(--surface);
+    width: 100%;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+    min-height: 400px;
+}
+
+.sh-admin-tab-content .sh-tab-panel {
+    width: 100%;
+    padding: 1.5rem;
+}
+
+.sh-admin-table-wrap {
+    overflow-x: auto;
+    border: none; /* Border is now on the card container */
+    background: transparent;
+    padding: 0;
 }
 
 /* ---- Badge Pills ---- */
