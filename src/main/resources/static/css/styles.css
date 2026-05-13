@@ -4610,12 +4610,20 @@ iconify-icon {
 }
 
 .sh-ai-tree {
-    max-height: 320px;
+    max-height: 280px; /* Slightly reduced to fit better in common viewports */
     overflow-y: auto;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background: var(--surface-muted);
     padding: 0.5rem;
+}
+
+.sh-ai-tree .vb-group,
+.sh-ai-tree .vb-subgroup,
+.sh-ai-tree .vb-deck,
+.sh-ai-tree .vb-group-head,
+.sh-ai-tree .vb-subgroup-head {
+    flex-shrink: 0;
 }
 
 .sh-ai-tree .vb-group {
