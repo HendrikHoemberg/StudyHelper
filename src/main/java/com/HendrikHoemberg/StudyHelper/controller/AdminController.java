@@ -30,11 +30,13 @@ public class AdminController {
     }
 
     @GetMapping("/admin")
-    public String adminDashboard(Model model, Principal principal) {
+    public String adminDashboard(Model model, Principal principal,
+                                  @RequestParam(value = "tab", defaultValue = "users") String tab) {
         User admin = userService.getByUsername(principal.getName());
         model.addAttribute("username", admin.getUsername());
         model.addAttribute("users", adminService.listUsers());
         model.addAttribute("registrationCodes", registrationCodeService.listSummaries());
+        model.addAttribute("activeTab", tab);
         return "admin";
     }
 
@@ -43,11 +45,12 @@ public class AdminController {
         try {
             User admin = userService.getByUsername(principal.getName());
             String code = registrationCodeService.generateCode(admin);
-            redirectAttributes.addFlashAttribute("success", "Invite code generated: " + code);
+            redirectAttributes.addFlashAttribute("generatedCode", code);
+            redirectAttributes.addFlashAttribute("success", "Invite code generated successfully.");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
-        return "redirect:/admin";
+        return "redirect:/admin?tab=codes";
     }
 
     @PostMapping("/admin/codes/{id}/revoke")
@@ -58,15 +61,16 @@ public class AdminController {
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
-        return "redirect:/admin";
+        return "redirect:/admin?tab=codes";
     }
 
     @PostMapping("/admin/users/{id}/quotas")
     public String updateQuotas(@PathVariable Long id,
-                               @RequestParam("storageQuotaBytes") long storageQuotaBytes,
+                               @RequestParam("storageQuotaGib") long storageQuotaGib,
                                @RequestParam("dailyAiLimit") int dailyAiLimit,
                                RedirectAttributes redirectAttributes) {
         try {
+            long storageQuotaBytes = storageQuotaGib * 1024L * 1024L * 1024L;
             adminService.updateQuotas(id, storageQuotaBytes, dailyAiLimit);
             redirectAttributes.addFlashAttribute("success", "Quotas updated.");
         } catch (Exception ex) {

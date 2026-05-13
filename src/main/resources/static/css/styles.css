@@ -4738,6 +4738,253 @@ iconify-icon {
     padding: 0 0.5rem;
 }
 
+/* ============================================================
+   ADMIN PAGE — IMPROVED
+   ============================================================ */
+
+/* Page header */
+.sh-admin-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.sh-admin-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+/* Alert with icon */
+.sh-admin-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-bottom: 1rem;
+}
+
+.sh-alert-icon {
+    flex-shrink: 0;
+    font-size: 1.1rem;
+}
+
+/* Tab bar tweaks for admin */
+.sh-admin-tabs {
+    margin-top: 0;
+}
+
+.sh-admin-tab-content {
+    margin-top: 0;
+}
+
+/* ---- Badge Pills ---- */
+.sh-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.sh-badge-success {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+}
+
+[data-theme="dark"] .sh-badge-success {
+    background: rgba(16, 185, 129, 0.18);
+    color: #34d399;
+}
+
+.sh-badge-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.sh-badge-warn {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+}
+
+[data-theme="dark"] .sh-badge-warn {
+    background: rgba(245, 158, 11, 0.18);
+    color: #fbbf24;
+}
+
+.sh-badge-muted {
+    background: var(--border-light);
+    color: var(--text-muted);
+}
+
+.sh-badge-accent {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+/* ---- Storage / AI progress bar ---- */
+.sh-admin-progress {
+    margin-top: 0.3rem;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--border-light);
+    overflow: hidden;
+    min-width: 80px;
+}
+
+.sh-admin-progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--accent);
+    transition: width 0.3s ease;
+}
+
+.sh-admin-progress-bar.is-warn {
+    background: #f59e0b;
+}
+
+.sh-admin-progress-bar.is-danger {
+    background: var(--danger);
+}
+
+/* ---- Quota label text ---- */
+.sh-admin-quota-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* ---- User avatar initials ---- */
+.sh-admin-cell-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sh-admin-user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+/* ---- Disabled row ---- */
+.sh-admin-row-disabled td {
+    opacity: 0.6;
+}
+
+/* ---- Quota field (used in quota modal) ---- */
+.sh-admin-quota-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+/* Actions column */
+.sh-admin-col-actions {
+    min-width: 200px;
+}
+
+/* ---- Filled danger button variant ---- */
+.sh-btn-filled-danger {
+    background: var(--danger) !important;
+    color: #fff !important;
+    border-color: var(--danger) !important;
+}
+
+.sh-btn-filled-danger:hover {
+    filter: brightness(1.08);
+}
+
+/* ---- Column width hints ---- */
+.sh-admin-cell-storage,
+.sh-admin-cell-ai {
+    min-width: 120px;
+}
+
+.sh-admin-cell-date {
+    white-space: nowrap;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* ---- Codes tab header ---- */
+.sh-admin-codes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.sh-admin-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+}
+
+/* ---- Generated code reveal ---- */
+.sh-admin-code-reveal {
+    margin-bottom: 1.25rem;
+    padding: 1rem 1.25rem;
+    border: 1.5px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+    border-radius: var(--radius);
+    background: var(--accent-light);
+    animation: sh-fade-in-fast 0.2s ease;
+}
+
+.sh-admin-code-reveal-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.sh-admin-code-reveal-body {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.625rem;
+}
+
+.sh-admin-code-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    background: var(--surface);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+    user-select: all;
+}
+
+.sh-admin-code-reveal-warn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
 @media (max-width: 900px) {
     .sh-ai-flashcard-grid {
         grid-template-columns: 1fr;
@@ -4764,5 +5011,9 @@ iconify-icon {
     .sh-ai-pdf-name {
         white-space: normal;
         word-break: break-word;
+    }
+
+    .sh-admin-col-actions {
+        min-width: unset;
     }
 }

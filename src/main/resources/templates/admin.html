@@ -6,99 +6,413 @@
     <nav th:replace="~{fragments/layout :: topnav}"></nav>
     <main class="app-main-content">
         <div class="sh-admin-page">
-            <h1 class="sh-page-title">Admin Panel</h1>
 
-            <div th:if="${success}" class="sh-alert sh-alert-success">
+            <!-- Page header -->
+            <div class="sh-admin-header">
+                <h1 class="sh-page-title">Admin Panel</h1>
+                <span class="sh-admin-subtitle" th:text="'Logged in as ' + ${username}"></span>
+            </div>
+
+            <!-- Global alerts -->
+            <div th:if="${success}" class="sh-alert sh-alert-success sh-admin-alert" role="alert">
+                <iconify-icon icon="lucide:check-circle-2" class="sh-alert-icon"></iconify-icon>
                 <div class="sh-alert-body" th:text="${success}"></div>
             </div>
-            <div th:if="${error}" class="sh-alert sh-alert-danger">
+            <div th:if="${error}" class="sh-alert sh-alert-danger sh-admin-alert" role="alert">
+                <iconify-icon icon="lucide:alert-circle" class="sh-alert-icon"></iconify-icon>
                 <div class="sh-alert-body" th:text="${error}"></div>
             </div>
 
-            <section class="sh-admin-section">
-                <div class="sh-admin-section-head">
-                    <h2 class="sh-section-title">Invite Codes</h2>
-                    <form th:action="@{/admin/codes}" method="post">
-                        <button type="submit" class="sh-btn sh-btn-primary sh-btn-sm">Generate Code</button>
-                    </form>
+            <!-- Generated code reveal block -->
+            <div th:if="${generatedCode}" class="sh-admin-code-reveal" id="admin-code-reveal">
+                <div class="sh-admin-code-reveal-head">
+                    <iconify-icon icon="lucide:key-round"></iconify-icon>
+                    <strong>New Invite Code — Save this now, it won't be shown again</strong>
                 </div>
-                <div class="sh-admin-table-wrap">
-                    <table class="sh-admin-table">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Status</th>
-                            <th>Created By</th>
-                            <th>Used By</th>
-                            <th>Expires</th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="code : ${registrationCodes}">
-                            <td th:text="${code.id()}"></td>
-                            <td th:text="${code.status()}"></td>
-                            <td th:text="${code.createdBy()} ?: '-'"></td>
-                            <td th:text="${code.usedBy()} ?: '-'"></td>
-                            <td th:text="${code.expiresAt() != null ? #temporals.format(T(java.time.ZonedDateTime).ofInstant(code.expiresAt(), T(java.time.ZoneId).systemDefault()), 'yyyy-MM-dd HH:mm') : '-'}"></td>
-                            <td>
-                                <form th:if="${code.status() == 'Unused'}" th:action="@{/admin/codes/{id}/revoke(id=${code.id()})}" method="post">
-                                    <button type="submit" class="sh-btn sh-btn-secondary sh-btn-sm">Revoke</button>
-                                </form>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                <div class="sh-admin-code-reveal-body">
+                    <code class="sh-admin-code-value" id="admin-generated-code" th:text="${generatedCode}"></code>
+                    <button type="button" class="sh-btn sh-btn-secondary sh-btn-sm" id="admin-copy-code-btn"
+                            onclick="adminCopyCode()">
+                        <iconify-icon icon="lucide:copy"></iconify-icon>
+                        Copy
+                    </button>
                 </div>
-            </section>
+                <p class="sh-admin-code-reveal-warn">
+                    <iconify-icon icon="lucide:triangle-alert"></iconify-icon>
+                    This code expires in 3 days and can only be used once.
+                </p>
+            </div>
 
-            <section class="sh-admin-section">
-                <h2 class="sh-section-title">Users</h2>
-                <div class="sh-admin-table-wrap">
-                    <table class="sh-admin-table">
-                        <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Storage</th>
-                            <th>AI Today</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="u : ${users}">
-                            <td th:text="${u.username()}"></td>
-                            <td th:text="${u.role()}"></td>
-                            <td th:text="${u.enabled()} ? 'Enabled' : 'Disabled'"></td>
-                            <td th:text="|${u.storageUsedBytes()} / ${u.storageQuotaBytes()} bytes|"></td>
-                            <td th:text="|${u.aiUsedToday()} / ${u.aiDailyLimit()}|"></td>
-                            <td th:text="${u.createdAt() != null ? #temporals.format(T(java.time.ZonedDateTime).ofInstant(u.createdAt(), T(java.time.ZoneId).systemDefault()), 'yyyy-MM-dd HH:mm') : '-'}"></td>
-                            <td class="sh-admin-actions">
-                                <form th:action="@{/admin/users/{id}/quotas(id=${u.id()})}" method="post" class="sh-admin-quotas-form">
-                                    <input class="sh-input sh-input-sm" type="number" min="0" name="storageQuotaBytes" th:value="${u.storageQuotaBytes()}" required>
-                                    <input class="sh-input sh-input-sm" type="number" min="0" name="dailyAiLimit" th:value="${u.aiDailyLimit()}" required>
-                                    <button type="submit" class="sh-btn sh-btn-secondary sh-btn-sm">Save</button>
-                                </form>
-                                <form th:if="${u.enabled()}" th:action="@{/admin/users/{id}/disable(id=${u.id()})}" method="post">
-                                    <button type="submit" class="sh-btn sh-btn-danger sh-btn-sm">Disable</button>
-                                </form>
-                                <form th:if="${!u.enabled()}" th:action="@{/admin/users/{id}/enable(id=${u.id()})}" method="post">
-                                    <button type="submit" class="sh-btn sh-btn-secondary sh-btn-sm">Enable</button>
-                                </form>
-                                <form th:if="${!u.enabled()}" th:action="@{/admin/users/{id}/delete(id=${u.id()})}" method="post">
-                                    <button type="submit" class="sh-btn sh-btn-danger sh-btn-sm">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+            <!-- Tab bar -->
+            <div class="sh-tab-bar sh-admin-tabs" id="admin-tab-bar">
+                <button type="button" class="sh-tab-link"
+                        th:classappend="${activeTab == 'users'} ? 'is-active'"
+                        id="admin-tab-users"
+                        onclick="adminSwitchTab('users')">
+                    <iconify-icon icon="lucide:users"></iconify-icon>
+                    Users
+                    <span class="sh-tab-badge" th:text="${#lists.size(users)}"></span>
+                </button>
+                <button type="button" class="sh-tab-link"
+                        th:classappend="${activeTab == 'codes'} ? 'is-active'"
+                        id="admin-tab-codes"
+                        onclick="adminSwitchTab('codes')">
+                    <iconify-icon icon="lucide:ticket"></iconify-icon>
+                    Invite Codes
+                    <span class="sh-tab-badge"
+                          th:text="${#lists.size(registrationCodes.?[status == 'Unused'])} + ' active'"></span>
+                </button>
+            </div>
+
+            <div class="sh-tab-content-area sh-admin-tab-content">
+
+                <!-- ================================================
+                     TAB: USERS
+                     ================================================ -->
+                <div class="sh-tab-panel" id="admin-panel-users"
+                     th:style="${activeTab != 'users'} ? 'display:none'">
+
+                    <div th:if="${#lists.isEmpty(users)}" class="sh-empty-state">
+                        <iconify-icon icon="lucide:users" style="font-size:2.5rem"></iconify-icon>
+                        <p>No users found.</p>
+                    </div>
+
+                    <div th:unless="${#lists.isEmpty(users)}" class="sh-admin-table-wrap">
+                        <table class="sh-admin-table" id="admin-users-table">
+                            <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Storage</th>
+                                <th>AI Today</th>
+                                <th>Joined</th>
+                                <th class="sh-admin-col-actions">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="u : ${users}"
+                                th:id="'admin-user-row-' + ${u.id()}"
+                                th:classappend="${!u.enabled()} ? 'sh-admin-row-disabled'">
+
+                                <!-- Username -->
+                                <td class="sh-admin-cell-user">
+                                    <div class="sh-admin-user-avatar"
+                                         th:text="${#strings.toUpperCase(#strings.substring(u.username(), 0, 1))}"></div>
+                                    <span th:text="${u.username()}"></span>
+                                </td>
+
+                                <!-- Role badge -->
+                                <td>
+                                    <span th:if="${u.role() == 'ADMIN'}" class="sh-badge sh-badge-accent">ADMIN</span>
+                                    <span th:unless="${u.role() == 'ADMIN'}" class="sh-badge sh-badge-muted">USER</span>
+                                </td>
+
+                                <!-- Enabled / Disabled badge -->
+                                <td>
+                                    <span th:if="${u.enabled()}" class="sh-badge sh-badge-success">Enabled</span>
+                                    <span th:unless="${u.enabled()}" class="sh-badge sh-badge-danger">Disabled</span>
+                                </td>
+
+                                <!-- Storage with progress bar -->
+                                <td class="sh-admin-cell-storage">
+                                    <div class="sh-admin-quota-label"
+                                         th:text="${u.formattedStorageUsed()} + ' / ' + ${u.formattedStorageQuota()}"></div>
+                                    <div class="sh-admin-progress">
+                                        <div class="sh-admin-progress-bar"
+                                             th:classappend="${u.storagePercent() >= 90} ? 'is-danger' : (${u.storagePercent() >= 75} ? 'is-warn' : '')"
+                                             th:style="'width:' + ${u.storagePercent()} + '%'"></div>
+                                    </div>
+                                </td>
+
+                                <!-- AI usage -->
+                                <td class="sh-admin-cell-ai">
+                                    <span th:text="${u.aiUsedToday()} + ' / ' + ${u.aiDailyLimit()}"></span>
+                                    <div class="sh-admin-progress">
+                                        <div class="sh-admin-progress-bar"
+                                             th:with="pct=${u.aiDailyLimit() > 0 ? T(java.lang.Math).min(100, u.aiUsedToday() * 100 / u.aiDailyLimit()) : 100}"
+                                             th:classappend="${pct >= 90} ? 'is-danger' : (${pct >= 75} ? 'is-warn' : '')"
+                                             th:style="'width:' + ${u.aiDailyLimit() > 0 ? T(java.lang.Math).min(100, u.aiUsedToday() * 100 / u.aiDailyLimit()) : 100} + '%'"></div>
+                                    </div>
+                                </td>
+
+                                <!-- Created at -->
+                                <td class="sh-admin-cell-date">
+                                    <span th:if="${u.createdAt() != null}"
+                                          th:text="${#temporals.format(T(java.time.ZonedDateTime).ofInstant(u.createdAt(), T(java.time.ZoneId).systemDefault()), 'dd MMM yyyy')}"></span>
+                                    <span th:unless="${u.createdAt() != null}">—</span>
+                                </td>
+
+                                <!-- Actions column — use data-* to avoid JS string escaping issues -->
+                                <td class="sh-admin-col-actions">
+                                    <div class="sh-admin-actions">
+
+                                        <!-- Edit quotas → opens shared modal via data attributes -->
+                                        <button type="button" class="sh-btn sh-btn-secondary sh-btn-sm admin-quota-btn"
+                                                th:data-user-id="${u.id()}"
+                                                th:data-username="${u.username()}"
+                                                th:data-storage-gib="${u.storageQuotaGib()}"
+                                                th:data-ai-limit="${u.aiDailyLimit()}"
+                                                onclick="adminOpenQuotaModal(this)">
+                                            <iconify-icon icon="lucide:sliders-horizontal"></iconify-icon>
+                                            Quotas
+                                        </button>
+
+                                        <!-- Enable / Disable -->
+                                        <form th:if="${u.enabled()}"
+                                              th:action="@{/admin/users/{id}/disable(id=${u.id()})}" method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                            <button type="button" class="sh-btn sh-btn-danger sh-btn-sm admin-disable-btn"
+                                                    th:data-username="${u.username()}"
+                                                    onclick="adminConfirmDisable(this)">
+                                                <iconify-icon icon="lucide:ban"></iconify-icon>
+                                                Disable
+                                            </button>
+                                        </form>
+                                        <form th:unless="${u.enabled()}"
+                                              th:action="@{/admin/users/{id}/enable(id=${u.id()})}" method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                            <button type="submit" class="sh-btn sh-btn-secondary sh-btn-sm">
+                                                <iconify-icon icon="lucide:circle-check"></iconify-icon>
+                                                Enable
+                                            </button>
+                                        </form>
+
+                                        <!-- Hard delete (only when disabled) -->
+                                        <form th:if="${!u.enabled()}"
+                                              th:action="@{/admin/users/{id}/delete(id=${u.id()})}" method="post">
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                            <button type="button" class="sh-btn sh-btn-danger sh-btn-sm sh-btn-filled-danger admin-delete-btn"
+                                                    th:data-username="${u.username()}"
+                                                    onclick="adminConfirmDelete(this)">
+                                                <iconify-icon icon="lucide:trash-2"></iconify-icon>
+                                                Delete
+                                            </button>
+                                        </form>
+
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </section>
-        </div>
+
+                <!-- ================================================
+                     TAB: INVITE CODES
+                     ================================================ -->
+                <div class="sh-tab-panel" id="admin-panel-codes"
+                     th:style="${activeTab != 'codes'} ? 'display:none'">
+
+                    <div class="sh-admin-codes-header">
+                        <h2 class="sh-admin-section-title">Invite Codes</h2>
+                        <form th:action="@{/admin/codes}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="sh-btn sh-btn-primary sh-btn-sm" id="admin-generate-code-btn">
+                                <iconify-icon icon="lucide:plus"></iconify-icon>
+                                Generate Code
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Empty state -->
+                    <div th:if="${#lists.isEmpty(registrationCodes)}" class="sh-empty-state">
+                        <iconify-icon icon="lucide:ticket" style="font-size:2.5rem"></iconify-icon>
+                        <p>No invite codes yet. Generate one to invite a user.</p>
+                    </div>
+
+                    <div th:unless="${#lists.isEmpty(registrationCodes)}" class="sh-admin-table-wrap">
+                        <table class="sh-admin-table" id="admin-codes-table">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Status</th>
+                                <th>Created by</th>
+                                <th>Used by</th>
+                                <th>Expires</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="code : ${registrationCodes}">
+                                <td th:text="${code.id()}"></td>
+                                <td>
+                                    <span th:if="${code.status() == 'Unused'}"  class="sh-badge sh-badge-success">Unused</span>
+                                    <span th:if="${code.status() == 'Used'}"    class="sh-badge sh-badge-muted">Used</span>
+                                    <span th:if="${code.status() == 'Revoked'}" class="sh-badge sh-badge-warn">Revoked</span>
+                                    <span th:if="${code.status() == 'Expired'}" class="sh-badge sh-badge-muted">Expired</span>
+                                </td>
+                                <td th:text="${code.createdBy()} ?: '—'"></td>
+                                <td th:text="${code.usedBy()} ?: '—'"></td>
+                                <td>
+                                    <span th:if="${code.expiresAt() != null}"
+                                          th:text="${#temporals.format(T(java.time.ZonedDateTime).ofInstant(code.expiresAt(), T(java.time.ZoneId).systemDefault()), 'dd MMM yyyy HH:mm')}"></span>
+                                    <span th:unless="${code.expiresAt() != null}">—</span>
+                                </td>
+                                <td>
+                                    <form th:if="${code.status() == 'Unused'}"
+                                          th:action="@{/admin/codes/{id}/revoke(id=${code.id()})}" method="post">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="button" class="sh-btn sh-btn-secondary sh-btn-sm admin-revoke-btn"
+                                                onclick="adminConfirmRevoke(this)">
+                                            <iconify-icon icon="lucide:x-circle"></iconify-icon>
+                                            Revoke
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div><!-- /sh-tab-content-area -->
+        </div><!-- /sh-admin-page -->
     </main>
 </div>
+
+<!-- ================================================
+     QUOTA EDIT MODAL (shared, populated by JS)
+     ================================================ -->
+<div class="sh-modal" id="admin-quota-modal" aria-modal="true" role="dialog" aria-labelledby="admin-quota-modal-title">
+    <div class="sh-modal-backdrop" onclick="adminCloseQuotaModal()"></div>
+    <div class="sh-modal-dialog sh-modal-dialog-sm">
+        <div class="sh-modal-content">
+            <div class="sh-modal-header">
+                <h5 class="sh-modal-title" id="admin-quota-modal-title">Edit Quotas</h5>
+                <button type="button" class="sh-modal-close" onclick="adminCloseQuotaModal()" aria-label="Close">
+                    <iconify-icon icon="lucide:x"></iconify-icon>
+                </button>
+            </div>
+            <form id="admin-quota-form" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="sh-modal-body">
+                    <div class="sh-admin-quota-field">
+                        <label class="sh-label" for="admin-quota-storage">Storage quota (GB)</label>
+                        <input class="sh-input" type="number" min="0" step="1"
+                               name="storageQuotaGib" id="admin-quota-storage" required>
+                    </div>
+                    <div class="sh-admin-quota-field">
+                        <label class="sh-label" for="admin-quota-ai">Daily AI request limit</label>
+                        <input class="sh-input" type="number" min="0" step="1"
+                               name="dailyAiLimit" id="admin-quota-ai" required>
+                    </div>
+                </div>
+                <div class="sh-modal-footer">
+                    <button type="button" class="sh-btn sh-btn-secondary" onclick="adminCloseQuotaModal()">Cancel</button>
+                    <button type="submit" class="sh-btn sh-btn-primary">
+                        <iconify-icon icon="lucide:save"></iconify-icon>
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Admin page scripts — plain <script>, no th:inline, placed before the layout scripts fragment
+     so functions are in global scope when app.js and HTMX finish loading. -->
+<script>
+    /* ---- Tab switching ---- */
+    function adminSwitchTab(tab) {
+        ['users', 'codes'].forEach(function(t) {
+            var btn   = document.getElementById('admin-tab-' + t);
+            var panel = document.getElementById('admin-panel-' + t);
+            var active = t === tab;
+            if (btn)   btn.classList.toggle('is-active', active);
+            if (panel) panel.style.display = active ? '' : 'none';
+        });
+        var url = new URL(window.location.href);
+        url.searchParams.set('tab', tab);
+        window.history.replaceState(null, '', url);
+    }
+
+    /* ---- Quota modal — reads values from data-* attrs on the button ---- */
+    function adminOpenQuotaModal(btn) {
+        var modal      = document.getElementById('admin-quota-modal');
+        var form       = document.getElementById('admin-quota-form');
+        var title      = document.getElementById('admin-quota-modal-title');
+        var storageIn  = document.getElementById('admin-quota-storage');
+        var aiIn       = document.getElementById('admin-quota-ai');
+
+        var userId      = btn.dataset.userId;
+        var username    = btn.dataset.username;
+        var storageGib  = btn.dataset.storageGib;
+        var aiLimit     = btn.dataset.aiLimit;
+
+        title.textContent = 'Edit Quotas — ' + username;
+        form.action = '/admin/users/' + userId + '/quotas';
+        storageIn.value = storageGib;
+        aiIn.value = aiLimit;
+
+        modal.classList.add('is-open');
+        storageIn.focus();
+        document.addEventListener('keydown', adminQuotaEsc);
+    }
+
+    function adminCloseQuotaModal() {
+        var modal = document.getElementById('admin-quota-modal');
+        if (modal) modal.classList.remove('is-open');
+        document.removeEventListener('keydown', adminQuotaEsc);
+    }
+
+    function adminQuotaEsc(e) {
+        if (e.key === 'Escape') adminCloseQuotaModal();
+    }
+
+    /* ---- Confirm: Disable user ---- */
+    function adminConfirmDisable(btn) {
+        var username = btn.dataset.username;
+        var form = btn.closest('form');
+        shConfirm({
+            title: 'Disable ' + username + '?',
+            message: username + ' will be unable to log in. You can re-enable them at any time.',
+            confirmText: 'Disable',
+            cancelText: 'Cancel',
+            danger: true
+        }).then(function(ok) { if (ok) form.submit(); });
+    }
+
+    /* ---- Confirm: Delete user ---- */
+    function adminConfirmDelete(btn) {
+        var username = btn.dataset.username;
+        var form = btn.closest('form');
+        shConfirm({
+            title: 'Permanently delete ' + username + '?',
+            message: 'This will remove the account, all folders, decks, flashcards, exams, and uploaded files. This cannot be undone.',
+            confirmText: 'Delete permanently',
+            cancelText: 'Cancel',
+            danger: true
+        }).then(function(ok) { if (ok) form.submit(); });
+    }
+
+    /* ---- Confirm: Revoke code ---- */
+    function adminConfirmRevoke(btn) {
+        var form = btn.closest('form');
+        shConfirm({
+            title: 'Revoke invite code?',
+            message: 'This code will no longer be usable. This cannot be undone.',
+            confirmText: 'Revoke',
+            cancelText: 'Cancel',
+            danger: false
+        }).then(function(ok) { if (ok) form.submit(); });
+    }
+
+    /* ---- Copy generated code ---- */
+    function adminCopyCode() {
+        var code = document.getElementById('admin-generated-code');
+        if (!code) return;
+        navigator.clipboard.writeText(code.textContent.trim()).then(function() {
+            var btn = document.getElementById('admin-copy-code-btn');
+            if (!btn) return;
+            var orig = btn.innerHTML;
+            btn.innerHTML = '<iconify-icon icon="lucide:check"></iconify-icon> Copied!';
+            btn.disabled = true;
+            setTimeout(function() { btn.innerHTML = orig; btn.disabled = false; }, 2000);
+        });
+    }
+</script>
+
 <div th:replace="~{fragments/layout :: scripts}"></div>
 </body>
 </html>
