@@ -226,6 +226,8 @@ public class StudySessionService {
                     deck.getId(),
                     deck.getName(),
                     buildFolderPath(deck.getFolder()),
+                    deck.getColorHex(),
+                    deck.getIconName(),
                     card.getFrontImageFilename() != null ? "/flashcards/" + card.getId() + "/images/front" : null,
                     card.getBackImageFilename() != null ? "/flashcards/" + card.getId() + "/images/back" : null
                 ))
