@@ -104,6 +104,16 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void studyWizardDoesNotRenderStandalonePageHeader() throws IOException {
+        String template = resource("templates/fragments/study-setup.html");
+
+        assertThat(template)
+            .doesNotContain("class=\"sh-page-header\"")
+            .doesNotContain("Start Studying")
+            .doesNotContain("Back to Dashboard");
+    }
+
+    @Test
     void studyWizardSourceTreeIsScrollableAndCollapsible() throws IOException {
         String template = resource("templates/fragments/wizard-source-picker.html");
         String styles = resource("static/css/styles.css");
