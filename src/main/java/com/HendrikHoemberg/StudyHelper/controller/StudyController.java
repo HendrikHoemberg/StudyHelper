@@ -246,11 +246,12 @@ public class StudyController {
             }
         } else if (mode == StudyMode.EXAM) {
             try {
+                Runnable refreshQuota = () -> response.addHeader("HX-Trigger", "refresh-quota");
                 ExamSessionService.ExamSessionResult result = examSessionService.createSession(
                     selectedDeckIds, selectedFileIds, additionalInstructions, request,
-                    questionSize, count, timerMinutes, layout, user
+                    questionSize, count, timerMinutes, layout, user,
+                    refreshQuota
                 );
-                response.addHeader("HX-Trigger", "refresh-quota");
                 session.setAttribute("examSession", result.state());
                 model.addAttribute("mode", mode);
                 if (hxRequest != null) {

@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -67,7 +68,7 @@ class ExamControllerTests {
         doThrow(new IllegalArgumentException("Please select at least one source."))
             .when(examSessionService).createSession(
                 anyList(), anyList(), any(), any(),
-                any(), anyInt(), any(), any(), any()
+                any(), anyInt(), any(), any(), any(), any(Runnable.class)
             );
 
         ExtendedModelMap model = new ExtendedModelMap();
@@ -96,7 +97,7 @@ class ExamControllerTests {
         assertThat(model.get("aiErrorMessage")).isEqualTo("Please select at least one source.");
         verify(examSessionService).createSession(
             anyList(), anyList(), any(), any(),
-            any(), anyInt(), any(), any(), any()
+            any(), anyInt(), any(), any(), any(), any(Runnable.class)
         );
     }
 
@@ -105,7 +106,7 @@ class ExamControllerTests {
         doThrow(new AiQuotaExceededException("Daily AI request limit reached."))
             .when(examSessionService).createSession(
                 anyList(), anyList(), any(), any(),
-                any(), anyInt(), any(), any(), any()
+                any(), anyInt(), any(), any(), any(), any(Runnable.class)
             );
 
         ExtendedModelMap model = new ExtendedModelMap();
@@ -133,8 +134,44 @@ class ExamControllerTests {
         assertThat(model.get("aiErrorMessage")).isEqualTo("Daily AI request limit reached.");
         verify(examSessionService).createSession(
             anyList(), anyList(), any(), any(),
-            any(), anyInt(), any(), any(), any()
+            any(), anyInt(), any(), any(), any(), any(Runnable.class)
         );
+    }
+
+    @Test
+    void createSession_ProviderFailureAfterQuotaRefreshesQuota() throws Exception {
+        doAnswer(invocation -> {
+                invocation.<Runnable>getArgument(9).run();
+                throw new RuntimeException("provider unavailable");
+            })
+            .when(examSessionService).createSession(
+                anyList(), anyList(), any(), any(),
+                any(), anyInt(), any(), any(), any(), any(Runnable.class)
+            );
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.createSession(
+            List.of(10L),
+            List.of(),
+            null,
+            new MockHttpServletRequest(),
+            ExamQuestionSize.MEDIUM,
+            5,
+            null,
+            ExamLayout.PER_PAGE,
+            model,
+            () -> "alice",
+            new MockHttpSession(),
+            response,
+            "true"
+        );
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(response.getHeader("HX-Trigger")).isEqualTo("refresh-quota");
+        assertThat(view).isEqualTo("fragments/ai-generation-error :: aiGenerationError");
+        assertThat(model.get("aiErrorMessage")).isEqualTo("provider unavailable");
     }
 
     @Test

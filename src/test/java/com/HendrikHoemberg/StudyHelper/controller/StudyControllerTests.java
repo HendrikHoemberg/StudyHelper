@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -77,17 +78,22 @@ class StudyControllerTests {
             Instant.now(),
             "source"
         );
-        when(examSessionService.createSession(
-            eq(List.of(10L)),
-            eq(List.of()),
-            eq("exam instructions"),
-            any(MockHttpServletRequest.class),
-            eq(ExamQuestionSize.MEDIUM),
-            eq(5),
-            eq(null),
-            eq(ExamLayout.PER_PAGE),
-            eq(user)
-        )).thenReturn(new ExamSessionService.ExamSessionResult(state, ExamLayout.PER_PAGE));
+        doAnswer(invocation -> {
+                invocation.<Runnable>getArgument(9).run();
+                return new ExamSessionService.ExamSessionResult(state, ExamLayout.PER_PAGE);
+            })
+            .when(examSessionService).createSession(
+                eq(List.of(10L)),
+                eq(List.of()),
+                eq("exam instructions"),
+                any(MockHttpServletRequest.class),
+                eq(ExamQuestionSize.MEDIUM),
+                eq(5),
+                eq(null),
+                eq(ExamLayout.PER_PAGE),
+                eq(user),
+                any(Runnable.class)
+            );
 
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpSession session = new MockHttpSession();
@@ -128,7 +134,8 @@ class StudyControllerTests {
             eq(5),
             eq(null),
             eq(ExamLayout.PER_PAGE),
-            eq(user)
+            eq(user),
+            any(Runnable.class)
         );
     }
 

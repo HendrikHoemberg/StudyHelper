@@ -466,6 +466,98 @@ class StudyControllerPdfModeTests {
         verify(aiExamService, never()).generate(anyList(), anyList(), anyInt(), any(), any());
     }
 
+    @Test
+    void createSession_examProviderFailureAfterQuotaRefreshesQuota() throws Exception {
+        FileEntry file = file(1L, "exam.pdf", "exam.pdf");
+        when(fileEntryService.getByIdAndUser(1L, user)).thenReturn(file);
+        when(documentExtractionService.isSupported(file)).thenReturn(true);
+        when(documentExtractionService.extractText(file)).thenReturn("exam text");
+        when(deckService.getValidatedDecksInRequestedOrder(anyList(), eq(user))).thenReturn(List.of());
+        when(flashcardService.getFlashcardsFlattened(anyList())).thenReturn(List.of());
+        when(aiExamService.generate(anyList(), anyList(), anyInt(), any(), any()))
+                .thenThrow(new RuntimeException("provider unavailable"));
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter("pdfMode[1]", "TEXT");
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.createSession(
+                StudyMode.EXAM,
+                List.of(),
+                List.of(1L),
+                null,
+                request,
+                SessionMode.DECK_BY_DECK,
+                DeckOrderMode.SELECTED_ORDER,
+                null,
+                QuizQuestionMode.MCQ_ONLY,
+                Difficulty.MEDIUM,
+                5,
+                ExamQuestionSize.MEDIUM,
+                5,
+                null,
+                ExamLayout.PER_PAGE,
+                model,
+                () -> "alice",
+                new MockHttpSession(),
+                response,
+                "true");
+
+        assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(response.getHeader("HX-Trigger")).isEqualTo("refresh-quota");
+        assertThat(model.get("studyError")).isEqualTo("provider unavailable");
+        verify(aiRequestQuotaService).checkAndRecord(user);
+        verify(aiExamService).generate(anyList(), anyList(), eq(5), eq(ExamQuestionSize.MEDIUM), isNull());
+    }
+
+    @Test
+    void createSession_examQuotaExceededReturnsErrorWithoutRefreshQuota() throws Exception {
+        FileEntry file = file(1L, "exam.pdf", "exam.pdf");
+        when(fileEntryService.getByIdAndUser(1L, user)).thenReturn(file);
+        when(documentExtractionService.isSupported(file)).thenReturn(true);
+        when(documentExtractionService.extractText(file)).thenReturn("exam text");
+        when(deckService.getValidatedDecksInRequestedOrder(anyList(), eq(user))).thenReturn(List.of());
+        when(flashcardService.getFlashcardsFlattened(anyList())).thenReturn(List.of());
+        doThrow(new AiQuotaExceededException("Daily AI request limit reached."))
+                .when(aiRequestQuotaService).checkAndRecord(user);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter("pdfMode[1]", "TEXT");
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.createSession(
+                StudyMode.EXAM,
+                List.of(),
+                List.of(1L),
+                null,
+                request,
+                SessionMode.DECK_BY_DECK,
+                DeckOrderMode.SELECTED_ORDER,
+                null,
+                QuizQuestionMode.MCQ_ONLY,
+                Difficulty.MEDIUM,
+                5,
+                ExamQuestionSize.MEDIUM,
+                5,
+                null,
+                ExamLayout.PER_PAGE,
+                model,
+                () -> "alice",
+                new MockHttpSession(),
+                response,
+                "true");
+
+        assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(response.getHeader("HX-Trigger")).isNull();
+        assertThat(model.get("studyError")).isEqualTo("Daily AI request limit reached.");
+        verify(aiRequestQuotaService).checkAndRecord(user);
+        verify(aiExamService, never()).generate(anyList(), anyList(), anyInt(), any(), any());
+    }
+
     private FileEntry file(Long id, String originalFilename, String storedFilename) {
         FileEntry file = new FileEntry();
         file.setId(id);

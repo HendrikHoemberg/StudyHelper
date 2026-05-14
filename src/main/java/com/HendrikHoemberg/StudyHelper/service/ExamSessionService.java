@@ -66,6 +66,22 @@ public class ExamSessionService {
                                            Integer timerMinutes,
                                            ExamLayout layout,
                                            User user) throws Exception {
+        return createSession(
+            selectedDeckIds, selectedFileIds, additionalInstructions, request,
+            questionSize, count, timerMinutes, layout, user, () -> {}
+        );
+    }
+
+    public ExamSessionResult createSession(List<Long> selectedDeckIds,
+                                           List<Long> selectedFileIds,
+                                           String additionalInstructions,
+                                           HttpServletRequest request,
+                                           ExamQuestionSize questionSize,
+                                           int count,
+                                           Integer timerMinutes,
+                                           ExamLayout layout,
+                                           User user,
+                                           Runnable afterQuotaRecorded) throws Exception {
         List<Long> deckIds = normalizeIds(selectedDeckIds);
         List<Long> fileIds = normalizeIds(selectedFileIds);
         validateSetup(questionSize, count, timerMinutes, layout);
@@ -74,6 +90,9 @@ public class ExamSessionService {
 
         int qCount = normalizeQuestionCount(count);
         requireQuotaService().checkAndRecord(user);
+        if (afterQuotaRecorded != null) {
+            afterQuotaRecorded.run();
+        }
 
         List<ExamQuestion> questions = aiExamService.generate(
             input.flashcards(),

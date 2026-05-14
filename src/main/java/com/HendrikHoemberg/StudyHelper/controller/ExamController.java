@@ -58,9 +58,9 @@ public class ExamController {
         try {
             ExamSessionService.ExamSessionResult result = examSessionService.createSession(
                 selectedDeckIds, selectedFileIds, additionalInstructions, request,
-                questionSize, count, timerMinutes, layout, user
+                questionSize, count, timerMinutes, layout, user,
+                () -> response.addHeader("HX-Trigger", "refresh-quota")
             );
-            response.addHeader("HX-Trigger", "refresh-quota");
             session.setAttribute(SESSION_KEY, result.state());
 
             if ("true".equals(hxRequest)) {
