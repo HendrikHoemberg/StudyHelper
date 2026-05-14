@@ -23,15 +23,18 @@ public class FileEntryService {
     private final FolderRepository folderRepository;
     private final FileStorageService fileStorageService;
     private final StorageQuotaService storageQuotaService;
+    private final UploadValidator uploadValidator;
 
     public FileEntryService(FileEntryRepository fileEntryRepository,
                             FolderRepository folderRepository,
                             FileStorageService fileStorageService,
-                            StorageQuotaService storageQuotaService) {
+                            StorageQuotaService storageQuotaService,
+                            UploadValidator uploadValidator) {
         this.fileEntryRepository = fileEntryRepository;
         this.folderRepository = folderRepository;
         this.fileStorageService = fileStorageService;
         this.storageQuotaService = storageQuotaService;
+        this.uploadValidator = uploadValidator;
     }
 
     @Transactional
@@ -39,13 +42,14 @@ public class FileEntryService {
         Folder folder = folderRepository.findByIdAndUser(folderId, user)
             .orElseThrow(() -> new NoSuchElementException("Folder not found"));
 
+        String validatedMime = uploadValidator.validateDocument(file);
         storageQuotaService.assertWithinQuota(user, 0L, file.getSize());
         String storedFilename = fileStorageService.store(file);
 
         FileEntry entry = new FileEntry();
         entry.setOriginalFilename(file.getOriginalFilename());
         entry.setStoredFilename(storedFilename);
-        entry.setMimeType(file.getContentType() != null ? file.getContentType() : "application/octet-stream");
+        entry.setMimeType(validatedMime);
         entry.setFileSizeBytes(file.getSize());
         entry.setFolder(folder);
         entry.setUser(user);
@@ -95,10 +99,11 @@ public class FileEntryService {
         FileEntry entry = fileEntryRepository.findByIdAndUser(id, user)
             .orElseThrow(() -> new NoSuchElementException("File not found"));
 
+        String validatedMime = uploadValidator.validateImage(image);
         long existingBytes = entry.getFileSizeBytes() == null ? 0L : entry.getFileSizeBytes();
         storageQuotaService.assertWithinQuota(user, existingBytes, image.getSize());
         fileStorageService.replaceContents(entry.getStoredFilename(), image);
-        entry.setMimeType(image.getContentType() != null ? image.getContentType() : "application/octet-stream");
+        entry.setMimeType(validatedMime);
         entry.setFileSizeBytes(image.getSize());
 
         fileEntryRepository.save(entry);

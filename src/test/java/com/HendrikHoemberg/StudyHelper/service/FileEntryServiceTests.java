@@ -25,6 +25,7 @@ class FileEntryServiceTests {
     private FolderRepository folderRepository;
     private FileStorageService fileStorageService;
     private StorageQuotaService storageQuotaService;
+    private UploadValidator uploadValidator;
     private FileEntryService fileEntryService;
 
     @BeforeEach
@@ -33,11 +34,13 @@ class FileEntryServiceTests {
         folderRepository = mock(FolderRepository.class);
         fileStorageService = mock(FileStorageService.class);
         storageQuotaService = mock(StorageQuotaService.class);
+        uploadValidator = mock(UploadValidator.class);
         fileEntryService = new FileEntryService(
             fileEntryRepository,
             folderRepository,
             fileStorageService,
-            storageQuotaService
+            storageQuotaService,
+            uploadValidator
         );
     }
 
@@ -51,6 +54,7 @@ class FileEntryServiceTests {
         MultipartFile file = new MockMultipartFile("file", "notes.pdf", "application/pdf", new byte[250]);
 
         when(folderRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(folder));
+        when(uploadValidator.validateDocument(file)).thenReturn("application/pdf");
         when(fileStorageService.store(file)).thenReturn("stored-notes.pdf");
         when(fileEntryRepository.save(any(FileEntry.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -76,6 +80,7 @@ class FileEntryServiceTests {
         MultipartFile replacement = new MockMultipartFile("image", "new.png", "image/png", new byte[300]);
 
         when(fileEntryRepository.findByIdAndUser(10L, user)).thenReturn(Optional.of(existing));
+        when(uploadValidator.validateImage(replacement)).thenReturn("image/png");
 
         fileEntryService.replaceContents(10L, replacement, user);
 

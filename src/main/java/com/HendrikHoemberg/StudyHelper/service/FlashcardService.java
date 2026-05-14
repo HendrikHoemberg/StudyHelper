@@ -15,29 +15,28 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 @Service
 public class FlashcardService {
 
-    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
-        "image/jpeg", "image/png", "image/webp", "image/gif"
-    );
     private static final long MAX_IMAGE_BYTES = 10L * 1024 * 1024;
 
     private final FlashcardRepository flashcardRepository;
     private final DeckRepository deckRepository;
     private final FileStorageService fileStorageService;
     private final StorageQuotaService storageQuotaService;
+    private final UploadValidator uploadValidator;
 
     public FlashcardService(FlashcardRepository flashcardRepository,
                             DeckRepository deckRepository,
                             FileStorageService fileStorageService,
-                            StorageQuotaService storageQuotaService) {
+                            StorageQuotaService storageQuotaService,
+                            UploadValidator uploadValidator) {
         this.flashcardRepository = flashcardRepository;
         this.deckRepository = deckRepository;
         this.fileStorageService = fileStorageService;
         this.storageQuotaService = storageQuotaService;
+        this.uploadValidator = uploadValidator;
     }
 
     @Transactional
@@ -177,13 +176,10 @@ public class FlashcardService {
 
     private String storeImage(MultipartFile file) {
         if (file == null || file.isEmpty()) return null;
-        String mime = file.getContentType();
-        if (mime == null || !ALLOWED_IMAGE_TYPES.contains(mime)) {
-            throw new IllegalArgumentException("Unsupported image type. Use JPEG, PNG, WebP, or GIF.");
-        }
         if (file.getSize() > MAX_IMAGE_BYTES) {
             throw new IllegalArgumentException("Image exceeds the 10 MB limit.");
         }
+        uploadValidator.validateImage(file);
         try {
             return fileStorageService.store(file);
         } catch (IOException e) {

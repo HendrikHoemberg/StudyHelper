@@ -26,6 +26,7 @@ class FlashcardServiceTests {
     private DeckRepository deckRepository;
     private FileStorageService fileStorageService;
     private StorageQuotaService storageQuotaService;
+    private UploadValidator uploadValidator;
     private FlashcardService flashcardService;
 
     @BeforeEach
@@ -34,11 +35,13 @@ class FlashcardServiceTests {
         deckRepository = mock(DeckRepository.class);
         fileStorageService = mock(FileStorageService.class);
         storageQuotaService = mock(StorageQuotaService.class);
+        uploadValidator = mock(UploadValidator.class);
         flashcardService = new FlashcardService(
             flashcardRepository,
             deckRepository,
             fileStorageService,
-            storageQuotaService
+            storageQuotaService,
+            uploadValidator
         );
     }
 
