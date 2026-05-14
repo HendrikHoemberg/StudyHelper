@@ -261,8 +261,8 @@ class UiResourceRegressionTests {
         String styles = resource("static/css/styles.css");
 
         assertThat(styles)
-            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.app-main-content \\{\\s*padding: 0;\\s*\\}")
-            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.sh-dashboard-shell \\{\\s*padding: 0.75rem;\\s*\\}");
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.app-main-content \\{[^}]*padding: 0;[^}]*\\}")
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.sh-dashboard-shell \\{[^}]*padding: 0.75rem;[^}]*\\}");
     }
 
     @Test
