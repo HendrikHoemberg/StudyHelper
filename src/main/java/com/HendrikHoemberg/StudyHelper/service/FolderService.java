@@ -40,7 +40,7 @@ public class FolderService {
 
     @Transactional(readOnly = true)
     public List<int[]> getRootFolderCardCounts(User user) {
-        List<Folder> folders = folderRepository.findByUserAndParentFolderIsNull(user);
+        List<Folder> folders = folderRepository.findRootsWithSubtreeByUser(user);
         return folders.stream()
             .map(f -> new int[]{getAggregatedCardCount(f)})
             .toList();
@@ -48,7 +48,7 @@ public class FolderService {
 
     @Transactional(readOnly = true)
     public List<SidebarFolderNode> getSidebarTree(User user, Long activeFolderId) {
-        List<Folder> roots = folderRepository.findByUserAndParentFolderIsNull(user);
+        List<Folder> roots = folderRepository.findRootsWithSubtreeByUser(user);
         List<SidebarFolderNode> nodes = new ArrayList<>(roots.size());
         for (Folder root : roots) {
             List<SidebarFolderNode> childNodes = new ArrayList<>();
@@ -84,7 +84,7 @@ public class FolderService {
 
     @Transactional(readOnly = true)
     public List<FolderPickerNode> getFolderPickerTree(User user) {
-        List<Folder> roots = folderRepository.findByUserAndParentFolderIsNull(user);
+        List<Folder> roots = folderRepository.findRootsWithSubtreeByUser(user);
         return roots.stream()
             .map(this::toFolderPickerNode)
             .toList();
@@ -101,7 +101,7 @@ public class FolderService {
 
     @Transactional(readOnly = true)
     public List<StudyDeckGroup> getStudyFolderTree(User user, List<Long> selectedDeckIds) {
-        List<Folder> roots = folderRepository.findByUserAndParentFolderIsNull(user);
+        List<Folder> roots = folderRepository.findRootsWithSubtreeByUser(user);
         return roots.stream()
             .map(f -> toStudyDeckGroup(f, selectedDeckIds))
             .filter(g -> !g.decks().isEmpty() || !g.subGroups().isEmpty())
@@ -117,7 +117,7 @@ public class FolderService {
 
     @Transactional(readOnly = true)
     public FolderSources getAllSourcesInFolder(Long folderId, User user) {
-        Folder folder = folderRepository.findByIdAndUser(folderId, user)
+        Folder folder = folderRepository.findByIdAndUserWithSubtree(folderId, user)
             .orElseThrow(() -> new NoSuchElementException("Folder not found"));
         List<Long> deckIds = new ArrayList<>();
         List<Long> fileIds = new ArrayList<>();
@@ -148,7 +148,7 @@ public class FolderService {
 
     @Transactional(readOnly = true)
     public List<StudyDeckOption> getAllDecksInFolder(Long folderId, User user) {
-        Folder folder = folderRepository.findByIdAndUser(folderId, user)
+        Folder folder = folderRepository.findByIdAndUserWithSubtree(folderId, user)
             .orElseThrow(() -> new NoSuchElementException("Folder not found"));
         List<StudyDeckOption> options = new ArrayList<>();
         collectDecksRecursively(folder, options);
@@ -157,7 +157,7 @@ public class FolderService {
 
     @Transactional(readOnly = true)
     public List<QuizSourceGroup> getQuizSourceTree(User user, List<Long> selectedDeckIds, List<Long> selectedFileIds) {
-        List<Folder> roots = folderRepository.findByUserAndParentFolderIsNull(user);
+        List<Folder> roots = folderRepository.findRootsWithSubtreeByUser(user);
         return roots.stream()
             .map(f -> toQuizSourceGroup(f, selectedDeckIds, selectedFileIds))
             .filter(g -> !g.decks().isEmpty() || !g.files().isEmpty() || !g.subGroups().isEmpty())
@@ -440,11 +440,12 @@ public class FolderService {
 
     @Transactional(readOnly = true)
     public FolderView getFolderView(Long id, User user, String sortBy, String direction) {
-        Folder folder = folderRepository.findByIdAndUser(id, user)
+        Folder folder = folderRepository.findByIdAndUserWithSubtree(id, user)
             .orElseThrow(() -> new NoSuchElementException("Folder not found"));
 
         List<Folder> subFolders = new ArrayList<>(folder.getSubFolders());
         List<Deck> decks = new ArrayList<>(folder.getDecks());
+        // Materialize flashcards in one batch for the visible deck list.
         decks.forEach(d -> d.getFlashcards().size());
         
         List<FileEntry> files = new ArrayList<>(folder.getFiles());
@@ -487,7 +488,7 @@ public class FolderService {
 
     @Transactional
     public void deleteFolder(Long id, User user) throws IOException {
-        Folder folder = folderRepository.findByIdAndUser(id, user)
+        Folder folder = folderRepository.findByIdAndUserWithSubtree(id, user)
             .orElseThrow(() -> new NoSuchElementException("Folder not found"));
 
         List<String> storedFilenames = collectStoredFilenames(folder);
