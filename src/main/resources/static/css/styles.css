@@ -4075,7 +4075,7 @@ iconify-icon {
     }
 
     .app-main-content {
-        padding: 1rem;
+        padding: 0;
     }
 
     .sh-dashboard-shell {

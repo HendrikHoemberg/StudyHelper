@@ -150,6 +150,15 @@ class UiResourceRegressionTests {
             .contains("max-height: min(44vh, 28rem)");
     }
 
+    @Test
+    void mobileDashboardRemovesOuterMainContentPadding() throws IOException {
+        String styles = resource("static/css/styles.css");
+
+        assertThat(styles)
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.app-main-content \\{\\s*padding: 0;\\s*\\}")
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.sh-dashboard-shell \\{\\s*padding: 0.75rem;\\s*\\}");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }
