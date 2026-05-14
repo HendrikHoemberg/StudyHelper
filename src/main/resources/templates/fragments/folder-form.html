@@ -1,87 +1,93 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <body>
 
-<div th:fragment="folderFields(name, colorHex, iconName, prefix)" class="sh-form-group-stack">
-    <!-- Preview & Name Row -->
-    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
-        <div class="sh-edit-preview" th:id="${prefix + 'FolderPreview'}" th:style="'--preview-color:' + ${colorHex}">
-            <iconify-icon th:attr="icon=${iconName.contains(':') ? iconName : 'lucide:' + (iconName ?: 'folder')}" style="font-size:22px;"></iconify-icon>
-        </div>
-        <div style="flex:1;">
-            <label class="sh-label">Name</label>
-            <input type="text" name="name" th:id="${prefix + 'FolderName'}" class="sh-input" required 
-                   th:value="${name}" placeholder="e.g. Mathematics">
-        </div>
-    </div>
-
-    <!-- Color -->
-    <div>
-        <label class="sh-label">Color</label>
-        <button type="button" class="sh-color-trigger" data-color-picker
-                th:attr="data-target=${prefix + 'FolderColor'}" data-palette-key="folder">
-            <span class="sh-color-swatch" th:style="'background:' + ${colorHex ?: '#6366f1'}"></span>
-            <span class="sh-color-hex" th:text="${colorHex != null ? #strings.toUpperCase(colorHex) : '#6366F1'}"></span>
-        </button>
-        <input type="hidden" name="colorHex"
-               th:id="${prefix + 'FolderColor'}" th:value="${colorHex ?: '#6366f1'}">
-    </div>
-
-    <!-- Icon Selection -->
-    <div>
-        <div class="sh-icon-picker-header">
-            <label class="sh-label mb-0">Icon</label>
-            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">Iconify Extended Set</span>
-        </div>
-
-        <div class="sh-search-bar sh-search-bar-sm mb-3">
-            <span class="sh-search-icon"><iconify-icon icon="lucide:search"></iconify-icon></span>
-            <input type="text" class="sh-input sh-icon-search" placeholder="Search for square icons…"
-                   oninput="handleIconSearch(this)">
-        </div>
-        
-        <!-- Hidden checkbox to maintain logic -->
-        <input type="checkbox" id="iconify-square-only" checked style="display:none;">
-        
-        <div class="sh-icon-grid" th:id="${prefix + 'IconGrid'}">
-            <!-- Icons rendered by JS -->
-        </div>
-        
-        <input type="hidden" name="iconName" th:id="${prefix + 'FolderIcon'}"
-               th:value="${iconName ?: 'folder'}">
-    </div>
-</div>
-
-<div th:fragment="folderModal" class="sh-modal is-open">
-    <div class="sh-modal-backdrop" onclick="this.closest('.sh-modal').remove()"></div>
-    <div class="sh-modal-dialog">
-        <div class="sh-modal-content">
-            <div class="sh-modal-header">
-                <h5 class="sh-modal-title" th:text="${title}">Folder</h5>
-                <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').remove()">
-                    <iconify-icon icon="lucide:x"></iconify-icon>
-                </button>
+    <div th:fragment="folderFields(name, colorHex, iconName, prefix)" class="sh-form-group-stack">
+        <!-- Preview & Name Row -->
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
+            <div class="sh-edit-preview" th:id="${prefix + 'FolderPreview'}"
+                th:style="'--preview-color:' + ${colorHex}">
+                <iconify-icon th:attr="icon=${iconName.contains(':') ? iconName : 'lucide:' + (iconName ?: 'folder')}"
+                    style="font-size:22px;"></iconify-icon>
             </div>
-            <form th:action="${action}" method="post">
-                <div class="sh-modal-body">
-                    <div th:replace="~{fragments/folder-form :: folderFields(${folder.name}, ${folder.colorHex ?: '#6366f1'}, ${folder.iconName ?: 'folder'}, 'modal')}"></div>
-                </div>
-                <div class="sh-modal-footer">
-                    <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()">Cancel</button>
-                    <button type="submit" class="sh-btn sh-btn-primary" th:text="${folder.id == null ? 'Create' : 'Save'}">Save</button>
-                </div>
-            </form>
+            <div style="flex:1;">
+                <label class="sh-label">Name</label>
+                <input type="text" name="name" th:id="${prefix + 'FolderName'}" class="sh-input" required
+                    th:value="${name}" placeholder="e.g. Mathematics">
+            </div>
+        </div>
+
+        <!-- Color -->
+        <div>
+            <label class="sh-label">Color</label>
+            <button type="button" class="sh-color-trigger" data-color-picker
+                th:attr="data-target=${prefix + 'FolderColor'}" data-palette-key="folder">
+                <span class="sh-color-swatch" th:style="'background:' + ${colorHex ?: '#6366f1'}"></span>
+                <span class="sh-color-hex"
+                    th:text="${colorHex != null ? #strings.toUpperCase(colorHex) : '#6366F1'}"></span>
+            </button>
+            <input type="hidden" name="colorHex" th:id="${prefix + 'FolderColor'}" th:value="${colorHex ?: '#6366f1'}">
+        </div>
+
+        <!-- Icon Selection -->
+        <div>
+            <div class="sh-icon-picker-header">
+                <label class="sh-label mb-0">Icon</label>
+                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">Iconify Extended Set</span>
+            </div>
+
+            <div class="sh-search-bar sh-search-bar-sm mb-3">
+                <span class="sh-search-icon"><iconify-icon icon="lucide:search"></iconify-icon></span>
+                <input type="text" class="sh-input sh-icon-search" placeholder="Search for icons…"
+                    oninput="handleIconSearch(this)">
+            </div>
+
+            <!-- Hidden checkbox to maintain logic -->
+            <input type="checkbox" id="iconify-square-only" checked style="display:none;">
+
+            <div class="sh-icon-grid" th:id="${prefix + 'IconGrid'}">
+                <!-- Icons rendered by JS -->
+            </div>
+
+            <input type="hidden" name="iconName" th:id="${prefix + 'FolderIcon'}" th:value="${iconName ?: 'folder'}">
         </div>
     </div>
-    <!-- Script to re-init Lucide and Icon Grid after swap -->
-    <script>
-        (function() {
-            var modal = document.querySelector('.sh-modal.is-open');
-            if (modal) {
-                initLucide();
-                var iconVal = modal.querySelector('input[name="iconName"]')?.value || 'folder';
-                renderIconGrid(modal, iconVal);
-            }
-        })();
-    </script>
-</div>
+
+    <div th:fragment="folderModal" class="sh-modal is-open">
+        <div class="sh-modal-backdrop" onclick="this.closest('.sh-modal').remove()"></div>
+        <div class="sh-modal-dialog">
+            <div class="sh-modal-content">
+                <div class="sh-modal-header">
+                    <h5 class="sh-modal-title" th:text="${title}">Folder</h5>
+                    <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').remove()">
+                        <iconify-icon icon="lucide:x"></iconify-icon>
+                    </button>
+                </div>
+                <form th:action="${action}" method="post">
+                    <div class="sh-modal-body">
+                        <div
+                            th:replace="~{fragments/folder-form :: folderFields(${folder.name}, ${folder.colorHex ?: '#6366f1'}, ${folder.iconName ?: 'folder'}, 'modal')}">
+                        </div>
+                    </div>
+                    <div class="sh-modal-footer">
+                        <button type="button" class="sh-btn sh-btn-secondary"
+                            onclick="this.closest('.sh-modal').remove()">Cancel</button>
+                        <button type="submit" class="sh-btn sh-btn-primary"
+                            th:text="${folder.id == null ? 'Create' : 'Save'}">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Script to re-init Lucide and Icon Grid after swap -->
+        <script>
+            (function () {
+                var modal = document.querySelector('.sh-modal.is-open');
+                if (modal) {
+                    initLucide();
+                    var iconVal = modal.querySelector('input[name="iconName"]')?.value || 'folder';
+                    renderIconGrid(modal, iconVal);
+                }
+            })();
+        </script>
+    </div>

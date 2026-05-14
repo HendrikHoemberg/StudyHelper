@@ -1,105 +1,108 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <body>
 
-<div th:fragment="deckFields(name, colorHex, iconName, prefix)" class="sh-form-group-stack">
-    <!-- Preview & Name Row -->
-    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
-        <div class="sh-edit-preview" th:id="${prefix + 'DeckPreview'}" th:style="'--preview-color:' + ${colorHex}">
-            <iconify-icon th:attr="icon=${iconName.contains(':') ? iconName : 'lucide:' + (iconName ?: 'layers')}" style="font-size:22px;"></iconify-icon>
-        </div>
-        <div style="flex:1;">
-            <label class="sh-label">Name</label>
-            <input type="text" name="name" th:id="${prefix + 'DeckName'}" class="sh-input" required
-                   th:value="${name}" placeholder="e.g. Vocabulary">
-        </div>
-    </div>
-
-    <!-- Color -->
-    <div>
-        <label class="sh-label">Color</label>
-        <button type="button" class="sh-color-trigger" data-color-picker
-                th:attr="data-target=${prefix + 'DeckColor'}" data-palette-key="deck">
-            <span class="sh-color-swatch" th:style="'background:' + ${colorHex ?: '#6366f1'}"></span>
-            <span class="sh-color-hex" th:text="${colorHex != null ? #strings.toUpperCase(colorHex) : '#6366F1'}"></span>
-        </button>
-        <input type="hidden" name="colorHex"
-               th:id="${prefix + 'DeckColor'}" th:value="${colorHex ?: '#6366f1'}">
-    </div>
-
-    <!-- Icon Selection -->
-    <div>
-        <div class="sh-icon-picker-header">
-            <label class="sh-label mb-0">Icon</label>
-            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">Iconify Extended Set</span>
-        </div>
-
-        <div class="sh-search-bar sh-search-bar-sm mb-3">
-            <span class="sh-search-icon"><iconify-icon icon="lucide:search"></iconify-icon></span>
-            <input type="text" class="sh-input sh-icon-search" placeholder="Search for square icons…"
-                   oninput="handleIconSearch(this)">
-        </div>
-
-        <input type="checkbox" id="iconify-square-only" checked style="display:none;">
-
-        <div class="sh-icon-grid" th:id="${prefix + 'IconGrid'}">
-            <!-- Icons rendered by JS -->
-        </div>
-
-        <input type="hidden" name="iconName" th:id="${prefix + 'DeckIcon'}"
-               th:value="${iconName ?: 'layers'}">
-    </div>
-</div>
-
-<div th:fragment="deckModal" class="sh-modal is-open">
-    <div class="sh-modal-backdrop" onclick="this.closest('.sh-modal').remove()"></div>
-    <div class="sh-modal-dialog">
-        <div class="sh-modal-content">
-            <div class="sh-modal-header">
-                <h5 class="sh-modal-title" th:text="${title}">Deck</h5>
-                <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').remove()">
-                    <iconify-icon icon="lucide:x"></iconify-icon>
-                </button>
+    <div th:fragment="deckFields(name, colorHex, iconName, prefix)" class="sh-form-group-stack">
+        <!-- Preview & Name Row -->
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
+            <div class="sh-edit-preview" th:id="${prefix + 'DeckPreview'}" th:style="'--preview-color:' + ${colorHex}">
+                <iconify-icon th:attr="icon=${iconName.contains(':') ? iconName : 'lucide:' + (iconName ?: 'layers')}"
+                    style="font-size:22px;"></iconify-icon>
             </div>
-            <form th:action="${action}" method="post"
-                  hx-post th:hx-post="${action}"
-                  hx-target="#explorer-detail"
-                  hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
-                <div class="sh-modal-body">
-                    <div th:replace="~{fragments/deck-form :: deckFields(${deck?.name}, ${deck?.colorHex ?: '#6366f1'}, ${deck?.iconName ?: 'layers'}, 'modal')}"></div>
+            <div style="flex:1;">
+                <label class="sh-label">Name</label>
+                <input type="text" name="name" th:id="${prefix + 'DeckName'}" class="sh-input" required
+                    th:value="${name}" placeholder="e.g. Vocabulary">
+            </div>
+        </div>
+
+        <!-- Color -->
+        <div>
+            <label class="sh-label">Color</label>
+            <button type="button" class="sh-color-trigger" data-color-picker
+                th:attr="data-target=${prefix + 'DeckColor'}" data-palette-key="deck">
+                <span class="sh-color-swatch" th:style="'background:' + ${colorHex ?: '#6366f1'}"></span>
+                <span class="sh-color-hex"
+                    th:text="${colorHex != null ? #strings.toUpperCase(colorHex) : '#6366F1'}"></span>
+            </button>
+            <input type="hidden" name="colorHex" th:id="${prefix + 'DeckColor'}" th:value="${colorHex ?: '#6366f1'}">
+        </div>
+
+        <!-- Icon Selection -->
+        <div>
+            <div class="sh-icon-picker-header">
+                <label class="sh-label mb-0">Icon</label>
+                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">Iconify Extended Set</span>
+            </div>
+
+            <div class="sh-search-bar sh-search-bar-sm mb-3">
+                <span class="sh-search-icon"><iconify-icon icon="lucide:search"></iconify-icon></span>
+                <input type="text" class="sh-input sh-icon-search" placeholder="Search for icons…"
+                    oninput="handleIconSearch(this)">
+            </div>
+
+            <input type="checkbox" id="iconify-square-only" checked style="display:none;">
+
+            <div class="sh-icon-grid" th:id="${prefix + 'IconGrid'}">
+                <!-- Icons rendered by JS -->
+            </div>
+
+            <input type="hidden" name="iconName" th:id="${prefix + 'DeckIcon'}" th:value="${iconName ?: 'layers'}">
+        </div>
+    </div>
+
+    <div th:fragment="deckModal" class="sh-modal is-open">
+        <div class="sh-modal-backdrop" onclick="this.closest('.sh-modal').remove()"></div>
+        <div class="sh-modal-dialog">
+            <div class="sh-modal-content">
+                <div class="sh-modal-header">
+                    <h5 class="sh-modal-title" th:text="${title}">Deck</h5>
+                    <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').remove()">
+                        <iconify-icon icon="lucide:x"></iconify-icon>
+                    </button>
                 </div>
-                <div class="sh-modal-footer" th:classappend="${deck?.id != null} ? ' flex justify-between items-center' : ''">
-                    <button th:if="${deck?.id != null}"
-                            type="button" class="sh-btn sh-btn-danger"
-                            hx-post th:hx-post="@{/decks/{id}/delete(id=${deck.id})}"
-                            hx-target="#explorer-detail"
+                <form th:action="${action}" method="post" hx-post th:hx-post="${action}" hx-target="#explorer-detail"
+                    hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
+                    <div class="sh-modal-body">
+                        <div
+                            th:replace="~{fragments/deck-form :: deckFields(${deck?.name}, ${deck?.colorHex ?: '#6366f1'}, ${deck?.iconName ?: 'layers'}, 'modal')}">
+                        </div>
+                    </div>
+                    <div class="sh-modal-footer"
+                        th:classappend="${deck?.id != null} ? ' flex justify-between items-center' : ''">
+                        <button th:if="${deck?.id != null}" type="button" class="sh-btn sh-btn-danger" hx-post
+                            th:hx-post="@{/decks/{id}/delete(id=${deck.id})}" hx-target="#explorer-detail"
                             hx-confirm="Delete this deck and all its flashcards? This action cannot be undone."
                             hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
-                        <iconify-icon icon="lucide:trash-2"></iconify-icon>
-                        Delete
-                    </button>
-                    <div style="display:flex; gap:0.5rem;">
-                        <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()">Cancel</button>
-                        <button type="submit" class="sh-btn sh-btn-primary" th:text="${deck?.id == null ? 'Create' : 'Save'}">Save</button>
+                            <iconify-icon icon="lucide:trash-2"></iconify-icon>
+                            Delete
+                        </button>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button type="button" class="sh-btn sh-btn-secondary"
+                                onclick="this.closest('.sh-modal').remove()">Cancel</button>
+                            <button type="submit" class="sh-btn sh-btn-primary"
+                                th:text="${deck?.id == null ? 'Create' : 'Save'}">Save</button>
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
+        <!-- Script to re-init Lucide and Icon Grid after swap -->
+        <script>
+            (function () {
+                var modal = document.querySelector('.sh-modal.is-open');
+                if (modal) {
+                    initLucide();
+                    var iconVal = modal.querySelector('input[name="iconName"]')?.value || 'layers';
+                    renderIconGrid(modal, iconVal);
+                    var input = modal.querySelector('input[name="name"]');
+                    if (input) input.focus();
+                }
+            })();
+        </script>
     </div>
-    <!-- Script to re-init Lucide and Icon Grid after swap -->
-    <script>
-        (function() {
-            var modal = document.querySelector('.sh-modal.is-open');
-            if (modal) {
-                initLucide();
-                var iconVal = modal.querySelector('input[name="iconName"]')?.value || 'layers';
-                renderIconGrid(modal, iconVal);
-                var input = modal.querySelector('input[name="name"]');
-                if (input) input.focus();
-            }
-        })();
-    </script>
-</div>
 
 </body>
+
 </html>
