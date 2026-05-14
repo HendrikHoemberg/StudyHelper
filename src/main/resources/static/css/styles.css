@@ -482,6 +482,23 @@ a {
     display: none;
 }
 
+@media (min-width: 769px) {
+    .sh-explorer-shell:has(.sh-study-setup-card) {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .sh-explorer-shell:has(.sh-study-setup-card) .sh-dashboard-sidebar {
+        display: none;
+    }
+
+    .sh-explorer-detail:has(.sh-study-setup-card) {
+        width: 100%;
+        max-width: 70%;
+        margin-inline: auto;
+    }
+}
+
 .sh-explorer-detail {
     min-width: 0;
     display: flex;
@@ -3324,6 +3341,12 @@ textarea.sh-input {
     flex-direction: column;
     gap: 0.875rem;
     max-width: 44rem;
+}
+
+.sh-wizard-panel[data-mode="QUIZ"] .sh-settings-grid,
+.sh-wizard-panel[data-mode="EXAM"] .sh-settings-grid {
+    width: 100%;
+    margin-inline: auto;
 }
 
 .sh-setting-row {
