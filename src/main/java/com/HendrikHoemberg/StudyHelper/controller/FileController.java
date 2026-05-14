@@ -178,16 +178,18 @@ public class FileController {
     public String delete(@PathVariable Long id, Principal principal,
                          RedirectAttributes redirectAttributes,
                          HttpServletResponse response,
-                         @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+                         @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                         @RequestHeader(value = "HX-Current-URL", required = false) String currentUrl) {
         User user = userService.getByUsername(principal.getName());
         try {
             Long folderId = fileEntryService.deleteAndGetFolderId(id, user);
+            String fallback = "/folders/" + folderId + "?tab=files";
             if (hxRequest != null) {
                 response.addHeader("HX-Trigger", "refresh-quota");
-                response.addHeader("HX-Redirect", "/folders/" + folderId + "?tab=files");
+                response.addHeader("HX-Redirect", currentUrl != null ? currentUrl : fallback);
                 return "fragments/quota";
             }
-            return "redirect:/folders/" + folderId + "?tab=files";
+            return "redirect:" + fallback;
         } catch (IOException e) {
             redirectAttributes.addFlashAttribute("error", "Could not delete file from disk.");
             return "redirect:/dashboard";
