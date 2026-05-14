@@ -30,8 +30,10 @@ services:
       APP_USER1_PASSWORD: ${APP_USER1_PASSWORD}
       APP_USER2_NAME: ${APP_USER2_NAME}
       APP_USER2_PASSWORD: ${APP_USER2_PASSWORD}
+    # Uploads live OUTSIDE the repo so user data can never be committed.
+    # Host-side migration from a previous ./uploads mount is documented in Step 2.7.
     volumes:
-      - ./uploads:/app/uploads
+      - /srv/studyhelper/uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy

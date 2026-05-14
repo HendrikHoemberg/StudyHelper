@@ -40,5 +40,8 @@ security_review.md
 # Local data and backups
 uploads/
 backups/
+
+# User-uploaded content (must never be committed)
+/uploads/
 .superpowers/
 docs/
