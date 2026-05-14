@@ -114,25 +114,35 @@
                         <div class="sh-deck-meta"
                              th:text="${#numbers.formatDecimal(file.fileSizeBytes / 1024.0, 1, 1) + ' KB'}">0 KB</div>
                     </div>
-                    <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.txt') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.md')}"
-                       class="sh-deck-test-btn" title="Quiz this"
-                       th:href="@{'/study/start'(mode='QUIZ', fileId=${file.id})}"
-                       hx-get="/study/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
-                       hx-target="#explorer-detail" hx-push-url="true">
-                        <iconify-icon icon="lucide:sparkles"></iconify-icon>
-                    </a>
-                    <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf')}"
-                       class="sh-deck-test-btn sh-deck-ai-flashcards-btn" title="Generate flashcards"
-                       th:href="@{'/flashcards/generate'(fileId=${file.id})}"
-                       hx-get="/flashcards/generate" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
-                       hx-target="#explorer-detail" hx-push-url="true">
-                        <iconify-icon icon="lucide:badge-plus"></iconify-icon>
-                    </a>
-                    <button class="sh-deck-edit-btn" title="Edit Options"
-                            th:hx-get="@{/files/{id}/edit-options(id=${file.id})}"
-                            hx-target="#modal-placeholder">
-                        <iconify-icon icon="lucide:pencil"></iconify-icon>
-                    </button>
+                    <div class="sh-file-tile-actions">
+                        <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.txt') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.md')}"
+                           class="sh-deck-test-btn" title="Quiz this"
+                           th:href="@{'/study/start'(mode='QUIZ', fileId=${file.id})}"
+                           hx-get="/study/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
+                           hx-target="#explorer-detail" hx-push-url="true">
+                            <iconify-icon icon="lucide:sparkles"></iconify-icon>
+                        </a>
+                        <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf')}"
+                           class="sh-deck-test-btn sh-deck-ai-flashcards-btn" title="Generate flashcards"
+                           th:href="@{'/flashcards/generate'(fileId=${file.id})}"
+                           hx-get="/flashcards/generate" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
+                           hx-target="#explorer-detail" hx-push-url="true">
+                            <iconify-icon icon="lucide:badge-plus"></iconify-icon>
+                        </a>
+                        <button class="sh-deck-edit-btn" title="Edit Options"
+                                th:hx-get="@{/files/{id}/edit-options(id=${file.id})}"
+                                hx-target="#modal-placeholder">
+                            <iconify-icon icon="lucide:pencil"></iconify-icon>
+                        </button>
+                        <button class="sh-deck-edit-btn sh-file-delete-btn"
+                                title="Delete"
+                                aria-label="Delete file"
+                                th:hx-post="@{/files/{id}/delete(id=${file.id})}"
+                                hx-confirm="Delete this file?"
+                                hx-target="#explorer-detail">
+                            <iconify-icon icon="lucide:trash-2"></iconify-icon>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
