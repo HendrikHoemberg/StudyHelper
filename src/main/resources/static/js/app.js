@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTopnav();
     initSidebarDrawer();
     initSidebarFolderExpand();
+    initFolderToggleButtons();
     initCsrf();
     initLightbox();
     initShDialog();
@@ -190,6 +191,21 @@ function initSidebarFolderExpand() {
         e.stopImmediatePropagation();
         folder.classList.add('is-open');
     }, true);
+}
+
+/* ---------- Folder toggle buttons (sidebar cap + explorer tree headers) ---------- */
+function initFolderToggleButtons() {
+    document.addEventListener('click', (e) => {
+        const cap = e.target.closest('button.sh-d-pill-cap');
+        if (cap) {
+            cap.closest('.sh-d-folder')?.classList.toggle('is-open');
+            return;
+        }
+        const header = e.target.closest('.sh-tree-header');
+        if (header) {
+            header.closest('.sh-tree-item')?.classList.toggle('expanded');
+        }
+    });
 }
 
 /* ---------- Color Picker Hex Sync ---------- */

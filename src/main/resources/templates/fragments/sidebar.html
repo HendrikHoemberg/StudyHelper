@@ -22,7 +22,6 @@
                 <div class="sh-d-pill">
                     <button type="button" class="sh-d-pill-cap"
                             th:if="${!#lists.isEmpty(folder.children)}"
-                            hx-on:click="this.closest('.sh-d-folder').classList.toggle('is-open')"
                             title="Expand / collapse">
                         <iconify-icon th:attr="icon=${folder.iconName.contains(':') ? folder.iconName : 'lucide:' + (folder.iconName ?: 'folder')}" class="sh-d-cap-icon-closed"></iconify-icon>
                         <iconify-icon th:attr="icon=${folder.iconName.contains(':') ? folder.iconName : 'lucide:' + (folder.iconName ?: 'folder')}" class="sh-d-cap-icon-open"></iconify-icon>

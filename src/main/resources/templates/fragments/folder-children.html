@@ -11,7 +11,7 @@
          th:data-name="${sub.name}"
          th:style="'--folder-color:' + ${sub.colorHex}"
          style="margin-bottom: 0.25rem;">
-        <div class="sh-tree-header" hx-on:click="this.closest('.sh-tree-item').classList.toggle('expanded')">
+        <div class="sh-tree-header">
             <span class="sh-tree-toggle">
                 <iconify-icon icon="lucide:chevron-right"></iconify-icon>
             </span>
