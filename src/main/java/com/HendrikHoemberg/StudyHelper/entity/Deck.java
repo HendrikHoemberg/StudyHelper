@@ -23,6 +23,12 @@ public class Deck {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "color_hex", length = 7)
+    private String colorHex;
+
+    @Column(name = "icon_name", length = 64)
+    private String iconName;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
