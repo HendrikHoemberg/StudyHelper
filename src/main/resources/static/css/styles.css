@@ -494,7 +494,14 @@ a {
 
     .sh-explorer-detail:has(.sh-study-setup-card) {
         width: 100%;
-        max-width: 70%;
+        max-width: min(70%, 80rem);
+        margin-inline: auto;
+    }
+
+    .sh-explorer-detail:has(#quiz-session-content),
+    .sh-explorer-detail:has(#exam-runtime-wrapper) {
+        width: 100%;
+        max-width: 80rem;
         margin-inline: auto;
     }
 }

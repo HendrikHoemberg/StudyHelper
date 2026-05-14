@@ -194,9 +194,20 @@ class UiResourceRegressionTests {
         assertThat(styles)
             .containsPattern("(?s)@media \\(min-width: 769px\\).*\\.sh-explorer-shell:has\\(\\.sh-study-setup-card\\) \\{\\s*grid-template-columns: 1fr;")
             .contains(".sh-explorer-shell:has(.sh-study-setup-card) .sh-dashboard-sidebar")
-            .contains("max-width: 70%")
+            .contains("max-width: min(70%, 80rem)")
             .contains(".sh-wizard-panel[data-mode=\"QUIZ\"] .sh-settings-grid")
             .contains(".sh-wizard-panel[data-mode=\"EXAM\"] .sh-settings-grid")
+            .contains("margin-inline: auto");
+    }
+
+    @Test
+    void liveQuizAndExamSessionsAreConstrainedOnDesktop() throws IOException {
+        String styles = resource("static/css/styles.css");
+
+        assertThat(styles)
+            .containsPattern("(?s)@media \\(min-width: 769px\\).*\\.sh-explorer-detail:has\\(#quiz-session-content\\)")
+            .contains(".sh-explorer-detail:has(#exam-runtime-wrapper)")
+            .contains("max-width: 80rem")
             .contains("margin-inline: auto");
     }
 
