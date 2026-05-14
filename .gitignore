@@ -38,10 +38,8 @@ deployment_guide.md
 security_review.md
 
 # Local data and backups
-uploads/
-backups/
-
 # User-uploaded content (must never be committed)
 /uploads/
+backups/
 .superpowers/
 docs/
