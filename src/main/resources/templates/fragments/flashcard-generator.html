@@ -145,7 +145,9 @@
                                             <label th:each="deck : ${group.decks}" class="vb-deck"
                                                    th:classappend="${selectedExistingDeckId == deck.deckId ? ' is-selected' : ''}">
                                                 <input class="sh-ai-tree-radio" type="radio" name="existingDeckId" th:value="${deck.deckId}" th:checked="${selectedExistingDeckId == deck.deckId}">
-                                                <span class="vb-deck-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
+                                                <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
+                                    <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
+                                </span>
                                                 <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                                 <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
                                             </label>
@@ -160,7 +162,9 @@
                                                     <label th:each="deck : ${sub.decks}" class="vb-deck"
                                                            th:classappend="${selectedExistingDeckId == deck.deckId ? ' is-selected' : ''}">
                                                         <input class="sh-ai-tree-radio" type="radio" name="existingDeckId" th:value="${deck.deckId}" th:checked="${selectedExistingDeckId == deck.deckId}">
-                                                        <span class="vb-deck-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
+                                                        <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
+                                    <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
+                                </span>
                                                         <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                                         <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
                                                     </label>
