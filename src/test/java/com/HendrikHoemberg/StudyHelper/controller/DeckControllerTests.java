@@ -21,6 +21,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = DeckController.class)
@@ -112,11 +114,55 @@ class DeckControllerTests {
 
     @Test
     @WithMockUser(username = "alice")
-    void deleteDeckRedirectsToFolder() throws Exception {
+    void deleteDeckWithoutHtmxRedirectsToFolderDecksTab() throws Exception {
         mockMvc.perform(post("/decks/7/delete")
                 .with(csrf())
                 .principal(() -> "alice"))
-            .andExpect(status().is3xxRedirection());
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/folders/42?tab=decks"));
+
+        verify(deckService).deleteDeck(7L, user);
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void deleteDeckFromHtmxStaysOnCurrentUrl() throws Exception {
+        mockMvc.perform(post("/decks/7/delete")
+                .with(csrf())
+                .principal(() -> "alice")
+                .header("HX-Request", "true")
+                .header("HX-Current-URL", "http://localhost:8080/folders/42?tab=decks"))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("http://localhost:8080/folders/42?tab=decks"));
+
+        verify(deckService).deleteDeck(7L, user);
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void deleteDeckFromHtmxOnDashboardStaysOnDashboard() throws Exception {
+        mockMvc.perform(post("/decks/7/delete")
+                .with(csrf())
+                .principal(() -> "alice")
+                .header("HX-Request", "true")
+                .header("HX-Current-URL", "http://localhost:8080/dashboard"))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("http://localhost:8080/dashboard"));
+
+        verify(deckService).deleteDeck(7L, user);
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void deleteDeckFromHtmxOnDeletedDeckPagePushesParentFolder() throws Exception {
+        mockMvc.perform(post("/decks/7/delete")
+                .with(csrf())
+                .principal(() -> "alice")
+                .header("HX-Request", "true")
+                .header("HX-Current-URL", "http://localhost:8080/decks/7"))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/folders/42?tab=decks"))
+            .andExpect(header().string("HX-Push-Url", "/folders/42?tab=decks"));
 
         verify(deckService).deleteDeck(7L, user);
     }

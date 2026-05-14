@@ -18,8 +18,8 @@
             <span class="sh-tree-folder-icon">
                 <iconify-icon th:attr="icon=${sub.iconName != null && sub.iconName.contains(':') ? sub.iconName : 'lucide:' + (sub.iconName ?: 'folder')}"></iconify-icon>
             </span>
-            <a th:href="@{/folders/{id}(id=${sub.id})}" class="sh-folder-name flex-1"
-               hx-get th:hx-get="@{/folders/{id}(id=${sub.id})}"
+            <a th:href="@{/folders/{id}(id=${sub.id}, tab='folders')}" class="sh-folder-name flex-1"
+               hx-get th:hx-get="@{/folders/{id}(id=${sub.id}, tab='folders')}"
                hx-target="#explorer-detail" hx-push-url="true"
                hx-on:click="event.stopPropagation();"
                th:text="${sub.name}">Subfolder</a>

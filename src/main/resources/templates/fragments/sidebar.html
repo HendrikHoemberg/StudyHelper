@@ -30,9 +30,9 @@
                     <span th:if="${#lists.isEmpty(folder.children)}" class="sh-d-pill-cap sh-d-pill-cap-static">
                         <iconify-icon th:attr="icon=${folder.iconName.contains(':') ? folder.iconName : 'lucide:' + (folder.iconName ?: 'folder')}"></iconify-icon>
                     </span>
-                    <a th:href="@{/folders/{id}(id=${folder.id})}"
+                    <a th:href="@{/folders/{id}(id=${folder.id}, tab='folders')}"
                        class="sh-d-pill-name"
-                       hx-get th:hx-get="@{/folders/{id}(id=${folder.id})}"
+                       hx-get th:hx-get="@{/folders/{id}(id=${folder.id}, tab='folders')}"
                        hx-target="#explorer-detail" hx-push-url="true">
                         <span class="sh-d-pill-text" th:text="${folder.name}">Folder</span>
                         <span class="sh-d-pill-count" th:text="${folder.deckCount}">0</span>
@@ -41,12 +41,12 @@
                 <div th:if="${!#lists.isEmpty(folder.children)}" class="sh-d-children">
                     <span class="sh-d-rail"></span>
                     <a th:each="child : ${folder.children}"
-                       th:href="@{/folders/{id}(id=${child.id})}"
+                       th:href="@{/folders/{id}(id=${child.id}, tab='folders')}"
                        class="sh-d-row"
                        th:classappend="${child.isActive} ? 'is-active' : ''"
                        th:data-folder-id="${child.id}"
                        th:style="'--folder-color:' + ${child.colorHex}"
-                       hx-get th:hx-get="@{/folders/{id}(id=${child.id})}"
+                       hx-get th:hx-get="@{/folders/{id}(id=${child.id}, tab='folders')}"
                        hx-target="#explorer-detail" hx-push-url="true">
                         <span class="sh-d-row-dot"></span>
                         <span class="sh-d-row-name" th:text="${child.name}">Subfolder</span>

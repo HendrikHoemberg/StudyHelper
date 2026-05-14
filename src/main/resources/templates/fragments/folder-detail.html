@@ -27,8 +27,8 @@
         <th:block th:each="crumb, stat : ${view.breadcrumb}">
             <li class="sh-breadcrumb-sep">/</li>
             <li th:if="!${stat.last}">
-                <a th:href="@{/folders/{id}(id=${crumb.id})}"
-                   hx-get th:hx-get="@{/folders/{id}(id=${crumb.id})}"
+                <a th:href="@{/folders/{id}(id=${crumb.id}, tab='folders')}"
+                   hx-get th:hx-get="@{/folders/{id}(id=${crumb.id}, tab='folders')}"
                    hx-target="#explorer-detail" hx-push-url="true"
                    th:text="${crumb.name}">Crumb</a>
             </li>

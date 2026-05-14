@@ -162,9 +162,9 @@ public class FolderController {
         folderService.createFolder(name, colorHex, iconName, id, user);
 
         if (hxRequest != null) {
-            return "redirect:/folders/" + id;
+            return "redirect:/folders/" + id + "?tab=folders";
         }
-        return "redirect:/folders/" + id;
+        return "redirect:/folders/" + id + "?tab=folders";
     }
 
     @PostMapping("/folders/{id}/edit")
@@ -175,7 +175,7 @@ public class FolderController {
                              Principal principal) {
         User user = userService.getByUsername(principal.getName());
         folderService.updateFolder(id, name, colorHex, iconName, user);
-        return "redirect:/folders/" + id;
+        return "redirect:/folders/" + id + "?tab=folders";
     }
 
     @PostMapping("/folders/{id}/color")
@@ -187,9 +187,9 @@ public class FolderController {
         folderService.updateFolderColor(id, colorHex, user);
 
         if (hxRequest != null) {
-            return "redirect:/folders/" + id;
+            return "redirect:/folders/" + id + "?tab=folders";
         }
-        return "redirect:/folders/" + id;
+        return "redirect:/folders/" + id + "?tab=folders";
     }
 
     @PostMapping("/folders/{id}/delete")

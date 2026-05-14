@@ -5,7 +5,6 @@ import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
-import com.HendrikHoemberg.StudyHelper.service.FolderView;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -116,21 +115,28 @@ public class DeckController {
     @PostMapping("/decks/{id}/delete")
     public String deleteDeck(@PathVariable Long id,
                              Principal principal,
-                             Model model,
                              @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                             @RequestHeader(value = "HX-Current-URL", required = false) String currentUrl,
                              HttpServletResponse response) {
         User user = userService.getByUsername(principal.getName());
         Long folderId = deckService.deleteDeck(id, user);
+        String fallback = "/folders/" + folderId + "?tab=decks";
 
-        if (hxRequest != null) {
-            response.setHeader("HX-Push-Url", "/folders/" + folderId);
-            FolderView view = folderService.getFolderView(folderId, user, null, "asc");
-            model.addAttribute("view", view);
-            model.addAttribute("username", principal.getName());
-            model.addAttribute("refreshSidebar", true);
-            model.addAttribute("sidebarTree", folderService.getSidebarTree(user, folderId));
-            return "fragments/folder-detail :: folderDetail";
+        if (hxRequest != null && currentUrl != null && !isDeletedDeckPage(currentUrl, id)) {
+            return "redirect:" + currentUrl;
         }
-        return "redirect:/folders/" + folderId;
+        if (hxRequest != null) {
+            response.setHeader("HX-Push-Url", fallback);
+        }
+        return "redirect:" + fallback;
+    }
+
+    private static boolean isDeletedDeckPage(String currentUrl, Long id) {
+        try {
+            String path = java.net.URI.create(currentUrl).getPath();
+            return path != null && path.equals("/decks/" + id);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }

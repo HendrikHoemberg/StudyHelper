@@ -24,8 +24,8 @@
         </li>
         <li class="sh-breadcrumb-sep">/</li>
         <li>
-                <a th:href="@{/folders/{id}(id=${deck.folder.id})}"
-                    hx-get th:hx-get="@{/folders/{id}(id=${deck.folder.id})}"
+                <a th:href="@{/folders/{id}(id=${deck.folder.id}, tab='folders')}"
+                    hx-get th:hx-get="@{/folders/{id}(id=${deck.folder.id}, tab='folders')}"
                     hx-target="#explorer-detail" hx-push-url="true"
                     th:text="${deck.folder.name}">Parent Folder</a>
         </li>
