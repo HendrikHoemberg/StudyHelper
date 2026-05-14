@@ -15,8 +15,12 @@
     <div class="sh-study-progress-wrap mb-4">
         <div class="sh-study-progress-label">
             Card <span th:text="${currentCardNumber}">1</span> of <span th:text="${totalCards}">10</span>
-            <span th:if="${isDeckByDeck}" style="margin-left:0.5rem;">
-                — <span th:text="${currentCard.deckName}" style="color:var(--accent);font-weight:600;">Deck</span>
+            <span th:if="${isDeckByDeck}" style="margin-left:0.5rem;display:inline-flex;align-items:center;gap:0.35rem;">
+                —
+                <iconify-icon th:attr="icon=${(currentCard.deckIconName ?: 'layers').contains(':') ? (currentCard.deckIconName ?: 'layers') : 'lucide:' + (currentCard.deckIconName ?: 'layers')}"
+                              th:style="'color:' + ${currentCard.deckColorHex != null ? currentCard.deckColorHex : 'var(--accent)'}"></iconify-icon>
+                <span th:text="${currentCard.deckName}"
+                      th:style="'color:' + ${currentCard.deckColorHex != null ? currentCard.deckColorHex : 'var(--accent)'} + ';font-weight:600;'">Deck</span>
             </span>
         </div>
         <div class="sh-study-progress-bar-bg">
