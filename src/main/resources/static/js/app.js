@@ -64,6 +64,16 @@ function initLightbox() {
     });
 }
 
+/* ---------- Re-init on history restore ---------- */
+// HTMX history restoration replaces body.innerHTML, destroying event listeners
+// on child elements. This re-binds component-specific listeners after restore.
+document.body.addEventListener('htmx:historyRestore', () => {
+    setTimeout(() => {
+        initTopnav();
+        initSidebarDrawer();
+    }, 0);
+});
+
 /* ---------- CSRF ---------- */
 function initCsrf() {
     document.body.addEventListener('htmx:configRequest', (evt) => {
