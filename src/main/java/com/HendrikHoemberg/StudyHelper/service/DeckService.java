@@ -30,12 +30,14 @@ public class DeckService {
     }
 
     @Transactional
-    public Deck createDeck(String name, Long folderId, User user) {
+    public Deck createDeck(String name, String colorHex, String iconName, Long folderId, User user) {
         Folder folder = folderRepository.findByIdAndUser(folderId, user)
             .orElseThrow(() -> new NoSuchElementException("Folder not found"));
 
         Deck deck = new Deck();
         deck.setName(name);
+        deck.setColorHex(colorHex != null && !colorHex.isBlank() ? colorHex : folder.getColorHex());
+        deck.setIconName(iconName != null && !iconName.isBlank() ? iconName : "layers");
         deck.setFolder(folder);
         deck.setUser(user);
         return deckRepository.save(deck);
@@ -52,10 +54,16 @@ public class DeckService {
     }
 
     @Transactional
-    public Deck renameDeck(Long id, String newName, User user) {
+    public Deck updateDeck(Long id, String newName, String colorHex, String iconName, User user) {
         Deck deck = deckRepository.findByIdAndUser(id, user)
             .orElseThrow(() -> new NoSuchElementException("Deck not found"));
-        deck.setName(newName);
+        if (newName != null && !newName.isBlank()) {
+            deck.setName(newName);
+        }
+        if (colorHex != null && !colorHex.isBlank()) {
+            deck.setColorHex(colorHex);
+        }
+        deck.setIconName(iconName != null && !iconName.isBlank() ? iconName : "layers");
         return deckRepository.save(deck);
     }
 
@@ -102,6 +110,8 @@ public class DeckService {
                     deck.getFolder().getId(),
                     buildFolderPath(deck.getFolder()),
                     deck.getFolder().getColorHex(),
+                    deck.getColorHex(),
+                    deck.getIconName(),
                     total,
                     usable
                 );
