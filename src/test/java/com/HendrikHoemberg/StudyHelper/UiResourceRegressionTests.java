@@ -175,6 +175,51 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void studyWizardAdvancesImmediatelyFromEveryStepTwoModeChoice() throws IOException {
+        String flashcardsTemplate = resource("templates/fragments/wizard-flashcards.html");
+        String quizTemplate = resource("templates/fragments/wizard-quiz.html");
+        String examTemplate = resource("templates/fragments/wizard-exam.html");
+        String wizardJs = resource("static/js/study-wizard.js");
+
+        assertThat(flashcardsTemplate)
+            .contains("name=\"sessionMode\"");
+        assertThat(quizTemplate)
+            .contains("name=\"quizQuestionMode\"");
+        assertThat(examTemplate)
+            .contains("name=\"questionSize\"");
+        assertThat(wizardJs)
+            .contains("initInstantStepTwoChoices")
+            .contains("input[name=\"sessionMode\"], input[name=\"quizQuestionMode\"], input[name=\"questionSize\"]")
+            .contains("input.addEventListener('change'")
+            .contains("if (input.disabled || !input.checked || currentStep !== 2) return;")
+            .doesNotContain("setTimeout(() => wizardNext(), 0)");
+    }
+
+    @Test
+    void studyWizardStepTwoStartsUnselectedAndDoesNotShowNextButton() throws IOException {
+        String flashcardsTemplate = resource("templates/fragments/wizard-flashcards.html");
+        String quizTemplate = resource("templates/fragments/wizard-quiz.html");
+        String examTemplate = resource("templates/fragments/wizard-exam.html");
+        String wizardJs = resource("static/js/study-wizard.js");
+
+        assertThat(flashcardsTemplate)
+            .doesNotContain("name=\"sessionMode\" value=\"DECK_BY_DECK\" checked")
+            .doesNotContain("name=\"sessionMode\" value=\"SHUFFLED\" checked");
+        assertThat(quizTemplate)
+            .doesNotContain("name=\"quizQuestionMode\" value=\"MCQ_ONLY\" checked")
+            .doesNotContain("name=\"quizQuestionMode\" value=\"TF_ONLY\" checked")
+            .doesNotContain("name=\"quizQuestionMode\" value=\"MIXED\" checked");
+        assertThat(examTemplate)
+            .doesNotContain("name=\"questionSize\" value=\"SHORT\" checked")
+            .doesNotContain("name=\"questionSize\" value=\"MEDIUM\" checked")
+            .doesNotContain("name=\"questionSize\" value=\"LONG\" checked")
+            .doesNotContain("name=\"questionSize\" value=\"MIXED\" checked");
+        assertThat(wizardJs)
+            .contains("currentStep === 2")
+            .contains("if (nextBtn) nextBtn.style.display = (isLast || currentStep === 1 || currentStep === 2) ? 'none' : '';");
+    }
+
+    @Test
     void studyWizardMobileFooterWrapsActionsAndConstrainsSourceTree() throws IOException {
         String styles = resource("static/css/styles.css");
 

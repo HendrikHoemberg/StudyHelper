@@ -166,7 +166,7 @@
         const footer = document.querySelector('.sh-wizard-footer');
 
         if (backBtn) backBtn.style.display = currentStep > 1 ? '' : 'none';
-        if (nextBtn) nextBtn.style.display = (isLast || currentStep === 1) ? 'none' : '';
+        if (nextBtn) nextBtn.style.display = (isLast || currentStep === 1 || currentStep === 2) ? 'none' : '';
         if (submitBtn) submitBtn.style.display = isLast ? '' : 'none';
         if (submitWithInstructionsBtn) {
             const visible = isLast && (currentMode === 'QUIZ' || currentMode === 'EXAM');
@@ -492,6 +492,18 @@
         });
     }
 
+    function initInstantStepTwoChoices(root = document) {
+        root.querySelectorAll('input[name="sessionMode"], input[name="quizQuestionMode"], input[name="questionSize"]').forEach(input => {
+            const choice = input.closest('.sh-wizard-panel[data-step="2"] .sh-study-choice');
+            if (!choice || input.dataset.instantStepTwoInitialized === 'true') return;
+            input.dataset.instantStepTwoInitialized = 'true';
+            input.addEventListener('change', () => {
+                if (input.disabled || !input.checked || currentStep !== 2) return;
+                wizardNext();
+            });
+        });
+    }
+
     // Core init — called on DOMContentLoaded AND after HTMX swaps
     window.initStudyWizard = function () {
         const wizardForm = document.querySelector('.sh-study-setup-card');
@@ -500,6 +512,7 @@
         applyIndeterminateCheckboxes();
         initSourceFolderTree();
         initCustomSteppers(wizardForm);
+        initInstantStepTwoChoices(wizardForm);
 
         // If this specific form instance is already initialized, don't reset state.
         // This prevents HTMX partial updates (like source selection) from resetting the step.
