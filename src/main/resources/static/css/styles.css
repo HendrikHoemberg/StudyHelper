@@ -3318,6 +3318,150 @@ textarea.sh-input {
     height: 0;
 }
 
+/* ---- Wizard settings + number steppers ---- */
+.sh-settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    max-width: 44rem;
+}
+
+.sh-setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.sh-setting-label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.sh-setting-hint {
+    margin-top: 0.2rem;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
+.sh-number-stepper {
+    display: inline-grid;
+    grid-template-columns: 2.25rem 4.25rem 2.25rem;
+    align-items: center;
+    height: 2.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
+}
+
+.sh-stepper-btn {
+    width: 2.25rem;
+    height: 2.5rem;
+    border: 0;
+    background: var(--surface);
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.sh-stepper-btn:hover:not(:disabled) {
+    background: var(--surface-hover);
+    color: var(--accent);
+}
+
+.sh-stepper-btn:disabled {
+    cursor: not-allowed;
+    color: var(--text-muted);
+    opacity: 0.45;
+}
+
+.sh-stepper-btn iconify-icon,
+.sh-stepper-btn svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.sh-stepper-input {
+    width: 4.25rem;
+    height: 2.5rem;
+    border: 0;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    background: var(--surface-raised);
+    color: var(--text);
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.sh-stepper-input::-webkit-outer-spin-button,
+.sh-stepper-input::-webkit-inner-spin-button {
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.sh-stepper-input:focus {
+    outline: 2px solid var(--accent-light);
+    outline-offset: -2px;
+}
+
+.sh-timer-setting {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.sh-setting-unit {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.sh-estimate-label {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    color: var(--accent);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    background: var(--accent-light);
+    padding: 0.45rem 0.75rem;
+    border-radius: 999px;
+}
+
+@media (max-width: 640px) {
+    .sh-setting-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.875rem;
+    }
+
+    .sh-setting-row .sh-segmented-control {
+        width: 100%;
+    }
+
+    .sh-setting-row .sh-segmented-option {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
 .sh-study-search-wrap {
     position: relative;
     margin-bottom: 0.75rem;

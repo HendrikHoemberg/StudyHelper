@@ -33,9 +33,18 @@
             </label>
         </div>
 
-        <div style="display:flex;align-items:center;gap:1.5rem;margin-top:1.5rem;flex-wrap:wrap;">
-            <div style="display:flex;align-items:center;gap:0.75rem;">
-                <span style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);">Difficulty</span>
+    </div>
+
+    <!-- Panel 3: Quiz Settings -->
+    <div class="sh-wizard-panel" data-step="3" data-mode="QUIZ">
+        <div class="sh-section-title">Quiz Settings</div>
+
+        <div class="sh-settings-grid">
+            <div class="sh-setting-row">
+                <div>
+                    <div class="sh-setting-label">Difficulty</div>
+                    <div class="sh-setting-hint">Controls how directly the questions test the source material.</div>
+                </div>
                 <div class="sh-segmented-control">
                     <label th:each="diff : ${difficulties}" class="sh-segmented-option">
                         <input type="radio" name="difficulty" th:value="${diff}" th:checked="${diff.name() == 'MEDIUM'}">
@@ -44,10 +53,19 @@
                 </div>
             </div>
 
-            <div style="display:flex;align-items:center;gap:0.75rem;">
-                <span style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);">Count</span>
-                <div class="sh-quiz-count-wrap" style="margin:0">
-                    <input type="number" name="questionCount" class="sh-quiz-count-input" value="5" min="1" max="20" style="width:70px">
+            <div class="sh-setting-row">
+                <div>
+                    <div class="sh-setting-label">Question Count</div>
+                    <div class="sh-setting-hint">Choose between 1 and 20 generated questions.</div>
+                </div>
+                <div class="sh-number-stepper" data-stepper>
+                    <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" aria-label="Decrease question count">
+                        <iconify-icon icon="lucide:minus"></iconify-icon>
+                    </button>
+                    <input type="number" name="questionCount" class="sh-stepper-input" value="5" min="1" max="20">
+                    <button type="button" class="sh-stepper-btn" data-stepper-action="increment" aria-label="Increase question count">
+                        <iconify-icon icon="lucide:plus"></iconify-icon>
+                    </button>
                 </div>
             </div>
         </div>

@@ -3,12 +3,11 @@
 <body>
 
 <div th:fragment="panels">
-    <!-- Panel 2: Exam Setup -->
+    <!-- Panel 2: Exam Depth -->
     <div class="sh-wizard-panel" data-step="2" data-mode="EXAM">
-        <div class="sh-section-title">Exam Setup</div>
+        <div class="sh-section-title">Question Depth</div>
         
         <div class="sh-field-group">
-            <label class="sh-field-label">Question Depth</label>
             <div class="sh-study-mode-grid sh-grid-4">
                 <label class="sh-study-choice">
                     <input type="radio" name="questionSize" value="SHORT">
@@ -36,36 +35,58 @@
                 </label>
             </div>
         </div>
+    </div>
 
-        <div style="display:flex;align-items:center;gap:2rem;margin-top:2rem;flex-wrap:wrap;">
-            <div style="display:flex;align-items:center;gap:0.75rem;">
-                <span style="font-size:0.875rem;font-weight:600;color:var(--text-secondary);">Questions</span>
-                <div class="sh-quiz-count-wrap" style="margin:0">
-                    <input type="number" name="count" id="exam-count-input" class="sh-quiz-count-input" value="5" min="1" max="20" style="width:70px">
+    <!-- Panel 3: Exam Settings -->
+    <div class="sh-wizard-panel" data-step="3" data-mode="EXAM">
+        <div class="sh-section-title">Exam Settings</div>
+
+        <div class="sh-settings-grid">
+            <div class="sh-setting-row">
+                <div>
+                    <div class="sh-setting-label">Questions</div>
+                    <div class="sh-setting-hint">Choose between 1 and 20 written-answer prompts.</div>
+                </div>
+                <div class="sh-number-stepper" data-stepper>
+                    <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" aria-label="Decrease question count">
+                        <iconify-icon icon="lucide:minus"></iconify-icon>
+                    </button>
+                    <input type="number" name="count" id="exam-count-input" class="sh-stepper-input" value="5" min="1" max="20">
+                    <button type="button" class="sh-stepper-btn" data-stepper-action="increment" aria-label="Increase question count">
+                        <iconify-icon icon="lucide:plus"></iconify-icon>
+                    </button>
                 </div>
             </div>
 
-            <div style="display:flex;align-items:center;gap:1rem;">
+            <div class="sh-setting-row">
                 <label class="sh-checkbox-container" style="margin:0">
                     <input type="checkbox" name="timerEnabled" id="exam-timer-toggle" checked>
                     <span class="sh-checkbox-checkmark"></span>
                     <span class="sh-checkbox-label">Enable Timer</span>
                 </label>
-                <div id="exam-timer-input-wrap" style="display:flex;align-items:center;gap:0.5rem;">
-                    <input type="number" name="timerMinutes" id="exam-timer-input" class="sh-quiz-count-input" value="25" min="1" max="240" style="width:70px">
-                    <span style="font-size:0.8125rem;color:var(--text-tertiary);">minutes</span>
+                <div id="exam-timer-input-wrap" class="sh-timer-setting">
+                    <div class="sh-number-stepper" data-stepper>
+                        <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" aria-label="Decrease timer minutes">
+                            <iconify-icon icon="lucide:minus"></iconify-icon>
+                        </button>
+                        <input type="number" name="timerMinutes" id="exam-timer-input" class="sh-stepper-input" value="25" min="1" max="240">
+                        <button type="button" class="sh-stepper-btn" data-stepper-action="increment" aria-label="Increase timer minutes">
+                            <iconify-icon icon="lucide:plus"></iconify-icon>
+                        </button>
+                    </div>
+                    <span class="sh-setting-unit">minutes</span>
                 </div>
             </div>
 
-            <div id="exam-estimate-label" style="margin-left:auto; font-size:0.8125rem; color:var(--accent-color); font-weight:600; background:rgba(var(--accent-rgb), 0.1); padding:0.4rem 0.75rem; border-radius:100px;">
+            <div id="exam-estimate-label" class="sh-estimate-label">
                 <iconify-icon icon="lucide:clock" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></iconify-icon>
                 Estimated time: ~25 minutes
             </div>
         </div>
     </div>
 
-    <!-- Panel 4: Exam Layout -->
-    <div class="sh-wizard-panel" data-step="4" data-mode="EXAM">
+    <!-- Panel 5: Exam Layout -->
+    <div class="sh-wizard-panel" data-step="5" data-mode="EXAM">
         <div class="sh-section-title">Exam Layout</div>
         <div class="sh-study-mode-grid">
             <label class="sh-study-choice">

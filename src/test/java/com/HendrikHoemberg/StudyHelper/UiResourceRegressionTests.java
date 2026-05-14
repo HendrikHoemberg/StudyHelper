@@ -138,6 +138,43 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void studyWizardSeparatesQuizAndExamSettingsIntoDedicatedStepperSteps() throws IOException {
+        String quizTemplate = resource("templates/fragments/wizard-quiz.html");
+        String examTemplate = resource("templates/fragments/wizard-exam.html");
+        String sourceTemplate = resource("templates/fragments/wizard-source-picker.html");
+        String styles = resource("static/css/styles.css");
+        String wizardJs = resource("static/js/study-wizard.js");
+
+        assertThat(wizardJs)
+            .contains("QUIZ:       [\"Mode\", \"Format\", \"Settings\", \"Sources\"]")
+            .contains("EXAM:       [\"Mode\", \"Depth\", \"Settings\", \"Sources\", \"Layout\"]")
+            .contains("sourceStep()")
+            .contains("initCustomSteppers")
+            .contains("data-stepper-action");
+
+        assertThat(quizTemplate)
+            .contains("data-step=\"3\" data-mode=\"QUIZ\"")
+            .contains("Quiz Settings")
+            .contains("class=\"sh-number-stepper\"")
+            .contains("name=\"questionCount\"");
+
+        assertThat(examTemplate)
+            .contains("data-step=\"3\" data-mode=\"EXAM\"")
+            .contains("Exam Settings")
+            .contains("class=\"sh-number-stepper\"")
+            .contains("name=\"count\"")
+            .contains("name=\"timerMinutes\"");
+
+        assertThat(sourceTemplate)
+            .contains("data-source-step=\"true\"");
+
+        assertThat(styles)
+            .contains(".sh-number-stepper")
+            .contains(".sh-stepper-btn")
+            .contains("appearance: textfield");
+    }
+
+    @Test
     void studyWizardMobileFooterWrapsActionsAndConstrainsSourceTree() throws IOException {
         String styles = resource("static/css/styles.css");
 

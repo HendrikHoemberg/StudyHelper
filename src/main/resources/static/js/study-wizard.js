@@ -4,8 +4,8 @@
 
     const STEP_LABELS = {
         FLASHCARDS: ["Mode", "Type", "Decks", "Order"],
-        QUIZ:       ["Mode", "Format", "Sources"],
-        EXAM:       ["Mode", "Setup", "Sources", "Layout"],
+        QUIZ:       ["Mode", "Format", "Settings", "Sources"],
+        EXAM:       ["Mode", "Depth", "Settings", "Sources", "Layout"],
     };
 
     function maxSteps() {
@@ -14,8 +14,13 @@
             return type === 'SHUFFLED' ? 3 : 4;
         }
         if (currentMode === 'EXAM') {
-            return 4;
+            return 5;
         }
+        return 4;
+    }
+
+    function sourceStep() {
+        if (currentMode === 'QUIZ' || currentMode === 'EXAM') return 4;
         return 3;
     }
 
@@ -91,7 +96,9 @@
         
         // Toggle visibility of panels based on step AND mode
         document.querySelectorAll('.sh-wizard-panel').forEach(panel => {
-            const panelStep = parseInt(panel.dataset.step);
+            const panelStep = panel.dataset.sourceStep === 'true'
+                ? sourceStep()
+                : parseInt(panel.dataset.step);
             const panelMode = panel.dataset.mode;
             
             let isTarget = false;
@@ -211,15 +218,31 @@
                 }
             }
             if (currentMode === 'EXAM') {
-                const countInput = document.getElementById('exam-count-input');
-                const timerToggle = document.getElementById('exam-timer-toggle');
-                const timerInput = document.getElementById('exam-timer-input');
-                
+                const selected = document.querySelector('input[name="questionSize"]:checked');
+                if (!selected) {
+                    shAlert({ title: 'Missing selection', message: 'Please select an exam question depth.' });
+                    return false;
+                }
+            }
+        }
+        if (step === 3) {
+            if (currentMode === 'QUIZ') {
+                const countInput = document.querySelector('input[name="questionCount"]');
                 if (countInput && (parseInt(countInput.value) < 1 || parseInt(countInput.value) > 20)) {
                     shAlert({ title: 'Invalid value', message: 'Please enter a question count between 1 and 20.' });
                     return false;
                 }
-                
+            }
+            if (currentMode === 'EXAM') {
+                const countInput = document.getElementById('exam-count-input');
+                const timerToggle = document.getElementById('exam-timer-toggle');
+                const timerInput = document.getElementById('exam-timer-input');
+
+                if (countInput && (parseInt(countInput.value) < 1 || parseInt(countInput.value) > 20)) {
+                    shAlert({ title: 'Invalid value', message: 'Please enter a question count between 1 and 20.' });
+                    return false;
+                }
+
                 if (timerToggle && timerToggle.checked && timerInput) {
                     if (parseInt(timerInput.value) < 1 || parseInt(timerInput.value) > 240) {
                         shAlert({ title: 'Invalid value', message: 'Please enter a timer duration between 1 and 240 minutes.' });
@@ -228,14 +251,14 @@
                 }
             }
         }
-        if (step === 3) {
+        if (step === sourceStep()) {
             const checked = document.querySelectorAll('.sh-source-checkbox:checked');
             if (checked.length === 0) {
                 shAlert({ title: 'Missing source', message: 'Please select at least one source.' });
                 return false;
             }
         }
-        if (step === 4) {
+        if (step === 5) {
             if (currentMode === 'EXAM') {
                 const selected = document.querySelector('input[name="layout"]:checked');
                 if (!selected) {
@@ -250,7 +273,7 @@
     function wizardNext() {
         if (!validateStep(currentStep)) return;
         
-        if (currentStep === 3) {
+        if (currentStep === sourceStep()) {
             const form = document.querySelector('.sh-study-setup-card');
             if (currentMode === 'FLASHCARDS' && document.querySelector('input[name="sessionMode"]:checked').value === 'SHUFFLED') {
                 form.requestSubmit();
@@ -420,6 +443,55 @@
         });
     };
 
+    function clampStepperValue(input) {
+        const min = parseInt(input.min || '0', 10);
+        const max = parseInt(input.max || '999', 10);
+        const parsed = parseInt(input.value, 10);
+        const value = Number.isNaN(parsed) ? min : Math.min(max, Math.max(min, parsed));
+        input.value = value;
+        return value;
+    }
+
+    function syncStepperButtons(stepper) {
+        const input = stepper.querySelector('input[type="number"]');
+        if (!input) return;
+        const value = clampStepperValue(input);
+        const min = parseInt(input.min || '0', 10);
+        const max = parseInt(input.max || '999', 10);
+        const decrement = stepper.querySelector('[data-stepper-action="decrement"]');
+        const increment = stepper.querySelector('[data-stepper-action="increment"]');
+        if (decrement) decrement.disabled = value <= min || input.disabled;
+        if (increment) increment.disabled = value >= max || input.disabled;
+    }
+
+    function initCustomSteppers(root = document) {
+        root.querySelectorAll('[data-stepper]').forEach(stepper => {
+            if (stepper.dataset.initialized === 'true') {
+                syncStepperButtons(stepper);
+                return;
+            }
+            stepper.dataset.initialized = 'true';
+            const input = stepper.querySelector('input[type="number"]');
+            if (!input) return;
+
+            stepper.addEventListener('click', event => {
+                const btn = event.target.closest('[data-stepper-action]');
+                if (!btn || btn.disabled || input.disabled) return;
+                const direction = btn.dataset.stepperAction === 'increment' ? 1 : -1;
+                const step = parseInt(input.step || '1', 10) || 1;
+                input.value = (parseInt(input.value, 10) || 0) + direction * step;
+                clampStepperValue(input);
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                syncStepperButtons(stepper);
+            });
+
+            input.addEventListener('input', () => syncStepperButtons(stepper));
+            input.addEventListener('change', () => syncStepperButtons(stepper));
+            syncStepperButtons(stepper);
+        });
+    }
+
     // Core init — called on DOMContentLoaded AND after HTMX swaps
     window.initStudyWizard = function () {
         const wizardForm = document.querySelector('.sh-study-setup-card');
@@ -427,6 +499,7 @@
 
         applyIndeterminateCheckboxes();
         initSourceFolderTree();
+        initCustomSteppers(wizardForm);
 
         // If this specific form instance is already initialized, don't reset state.
         // This prevents HTMX partial updates (like source selection) from resetting the step.
@@ -495,6 +568,8 @@
             const timerInput = document.getElementById('exam-timer-input');
             if (timerInput && !timerInput.hasAttribute('data-user-overridden')) {
                 timerInput.value = estimate;
+                const timerStepper = timerInput.closest('[data-stepper]');
+                if (timerStepper) syncStepperButtons(timerStepper);
             }
         };
 
@@ -507,6 +582,8 @@
                 if (examTimerInput) {
                     examTimerInput.disabled = !examTimerToggle.checked;
                     examTimerInput.closest('#exam-timer-input-wrap').style.opacity = examTimerToggle.checked ? '1' : '0.5';
+                    const timerStepper = examTimerInput.closest('[data-stepper]');
+                    if (timerStepper) syncStepperButtons(timerStepper);
                 }
             });
         }
