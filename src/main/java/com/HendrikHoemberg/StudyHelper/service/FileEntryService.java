@@ -42,7 +42,7 @@ public class FileEntryService {
         Folder folder = folderRepository.findByIdAndUser(folderId, user)
             .orElseThrow(() -> new NoSuchElementException("Folder not found"));
 
-        String validatedMime = uploadValidator.validateDocument(file);
+        String validatedMime = uploadValidator.validateUpload(file);
         storageQuotaService.assertWithinQuota(user, 0L, file.getSize());
         String storedFilename = fileStorageService.store(file);
 

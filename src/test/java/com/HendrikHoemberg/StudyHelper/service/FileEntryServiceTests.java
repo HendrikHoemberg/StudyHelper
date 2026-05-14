@@ -13,7 +13,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -54,12 +56,16 @@ class FileEntryServiceTests {
         MultipartFile file = new MockMultipartFile("file", "notes.pdf", "application/pdf", new byte[250]);
 
         when(folderRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(folder));
-        when(uploadValidator.validateDocument(file)).thenReturn("application/pdf");
+        when(uploadValidator.validateUpload(file)).thenReturn("application/pdf");
         when(fileStorageService.store(file)).thenReturn("stored-notes.pdf");
         when(fileEntryRepository.save(any(FileEntry.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         fileEntryService.upload(file, 1L, user);
 
+        var entryCaptor = forClass(FileEntry.class);
+        verify(fileEntryRepository).save(entryCaptor.capture());
+        assertThat(entryCaptor.getValue().getMimeType()).isEqualTo("application/pdf");
+        verify(uploadValidator, times(1)).validateUpload(file);
         verify(storageQuotaService, times(1)).assertWithinQuota(user, 0L, 250L);
     }
 

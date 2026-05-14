@@ -21,9 +21,31 @@ public class UploadValidator {
     private static final Set<String> IMAGE_EXTENSIONS = Set.of(".png", ".jpg", ".jpeg", ".gif", ".webp");
     private static final int SNIFF_BYTES = 16;
 
+    public String validateUpload(MultipartFile file) {
+        byte[] head = preflight(file);
+        String ext = safeExtension(file.getOriginalFilename());
+        if (DOC_EXTENSIONS.contains(ext)) {
+            return validateDocumentContent(file, head, ext);
+        }
+        if (IMAGE_EXTENSIONS.contains(ext)) {
+            return validateImageContent(head, ext);
+        }
+        throw new IllegalArgumentException("File type not allowed: " + (ext.isEmpty() ? "<no extension>" : ext));
+    }
+
     public String validateDocument(MultipartFile file) {
         byte[] head = preflight(file);
         String ext = requireWhitelistedExtension(file, DOC_EXTENSIONS);
+        return validateDocumentContent(file, head, ext);
+    }
+
+    public String validateImage(MultipartFile file) {
+        byte[] head = preflight(file);
+        String ext = requireWhitelistedExtension(file, IMAGE_EXTENSIONS);
+        return validateImageContent(head, ext);
+    }
+
+    private String validateDocumentContent(MultipartFile file, byte[] head, String ext) {
         return switch (ext) {
             case ".pdf" -> matchOrReject(head, "application/pdf", isPdf(head), ext);
             case ".txt", ".md" -> validateUtf8(file);
@@ -31,9 +53,7 @@ public class UploadValidator {
         };
     }
 
-    public String validateImage(MultipartFile file) {
-        byte[] head = preflight(file);
-        String ext = requireWhitelistedExtension(file, IMAGE_EXTENSIONS);
+    private String validateImageContent(byte[] head, String ext) {
         return switch (ext) {
             case ".png" -> matchOrReject(head, "image/png", isPng(head), ext);
             case ".jpg", ".jpeg" -> matchOrReject(head, "image/jpeg", isJpeg(head), ext);

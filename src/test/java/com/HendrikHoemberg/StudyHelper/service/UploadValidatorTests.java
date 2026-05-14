@@ -68,6 +68,12 @@ class UploadValidatorTests {
     }
 
     @Test
+    void acceptsPngForGeneralFileUpload() {
+        var file = new MockMultipartFile("file", "diagram.png", "image/png", PNG_MAGIC);
+        assertThat(validator.validateUpload(file)).isEqualTo("image/png");
+    }
+
+    @Test
     void rejectsTxtWithBinaryGarbage() {
         byte[] garbage = new byte[] { 0x00, 0x01, 0x02, (byte) 0xFF, (byte) 0xFE };
         var file = new MockMultipartFile("file", "notes.txt", "text/plain", garbage);
