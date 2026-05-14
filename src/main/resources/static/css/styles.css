@@ -132,9 +132,11 @@ a {
 .app-topnav {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    position: sticky;
+    position: fixed;
     top: 0;
     z-index: 100;
+    width: 100%;
+    left: 0;
 }
 
 .topnav-inner {
@@ -422,6 +424,7 @@ a {
 .app-main-content {
     flex: 1;
     padding: 0;
+    padding-top: 53px;
     background: var(--bg);
     overflow-y: auto;
     display: flex;
@@ -4265,6 +4268,7 @@ iconify-icon {
 
     .app-main-content {
         padding: 0;
+        padding-top: 53px;
     }
 
     .sh-dashboard-shell {
