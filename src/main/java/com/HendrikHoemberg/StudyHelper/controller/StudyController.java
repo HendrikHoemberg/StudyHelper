@@ -36,7 +36,7 @@ public class StudyController {
     private final UserService userService;
     private final DocumentExtractionService documentExtractionService;
     private final FileEntryService fileEntryService;
-    private final ExamController examController;
+    private final ExamSessionService examSessionService;
     private final AiRequestQuotaService aiRequestQuotaService;
 
     @Autowired
@@ -48,7 +48,7 @@ public class StudyController {
                            UserService userService,
                            DocumentExtractionService documentExtractionService,
                            FileEntryService fileEntryService,
-                           ExamController examController,
+                           ExamSessionService examSessionService,
                            AiRequestQuotaService aiRequestQuotaService) {
         this.studySessionService = studySessionService;
         this.aiQuizService = aiQuizService;
@@ -58,31 +58,8 @@ public class StudyController {
         this.userService = userService;
         this.documentExtractionService = documentExtractionService;
         this.fileEntryService = fileEntryService;
-        this.examController = examController;
+        this.examSessionService = examSessionService;
         this.aiRequestQuotaService = aiRequestQuotaService;
-    }
-
-    public StudyController(StudySessionService studySessionService,
-                           AiQuizService aiQuizService,
-                           DeckService deckService,
-                           FlashcardService flashcardService,
-                           FolderService folderService,
-                           UserService userService,
-                           DocumentExtractionService documentExtractionService,
-                           FileEntryService fileEntryService,
-                           ExamController examController) {
-        this(
-            studySessionService,
-            aiQuizService,
-            deckService,
-            flashcardService,
-            folderService,
-            userService,
-            documentExtractionService,
-            fileEntryService,
-            examController,
-            null
-        );
     }
 
     @GetMapping("/study/start")
@@ -268,21 +245,26 @@ public class StudyController {
                 return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex, model, user, session, response, hxRequest);
             }
         } else if (mode == StudyMode.EXAM) {
-            return examController.createSession(
-                selectedDeckIds,
-                selectedFileIds,
-                additionalInstructions,
-                request,
-                questionSize,
-                count,
-                timerMinutes,
-                layout,
-                model,
-                principal,
-                session,
-                response,
-                hxRequest
-            );
+            try {
+                ExamSessionService.ExamSessionResult result = examSessionService.createSession(
+                    selectedDeckIds, selectedFileIds, additionalInstructions, request,
+                    questionSize, count, timerMinutes, layout, user
+                );
+                response.addHeader("HX-Trigger", "refresh-quota");
+                session.setAttribute("examSession", result.state());
+                model.addAttribute("mode", mode);
+                if (hxRequest != null) {
+                    model.addAttribute("state", result.state());
+                    model.addAttribute("currentIndex", 0);
+                    return result.layout() == ExamLayout.PER_PAGE
+                        ? "fragments/exam-question :: exam-question"
+                        : "fragments/exam-single-page :: exam-single-page";
+                }
+                model.addAttribute("studyStateView", "exam");
+                return "exam-page";
+            } catch (Exception ex) {
+                return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex, model, user, session, response, hxRequest);
+            }
         }
 
         return "redirect:/study/start";
@@ -314,12 +296,9 @@ public class StudyController {
                 validateQuizGenerationSetup(quizQuestionMode, difficulty, questionCount);
                 validateQuizGenerationRequest(normalizeIds(selectedDeckIds), normalizeIds(selectedFileIds), pdfMode, user);
             } else if (mode == StudyMode.EXAM) {
-                examController.validateExamGenerationSetup(questionSize, count, timerMinutes, layout);
-                examController.validateExamGenerationRequest(
-                    normalizeIds(selectedDeckIds),
-                    normalizeIds(selectedFileIds),
-                    pdfMode,
-                    user
+                examSessionService.validateForPreflight(
+                    selectedDeckIds, selectedFileIds, request,
+                    questionSize, count, timerMinutes, layout, user
                 );
             } else if (mode == StudyMode.FLASHCARDS) {
                 SessionMode sessionMode = parseSessionMode(request.getParameter("sessionMode"));
@@ -335,9 +314,6 @@ public class StudyController {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             return null;
         } catch (Exception ex) {
-            if (mode == StudyMode.EXAM) {
-                return examController.renderGenerationErrorFragment(model, response, ex);
-            }
             return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex, model, user, session, response, hxRequest);
         }
     }

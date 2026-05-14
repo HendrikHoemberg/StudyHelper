@@ -50,12 +50,12 @@ class StudyControllerPdfModeTests {
         fileEntryService = mock(FileEntryService.class);
         aiRequestQuotaService = mock(AiRequestQuotaService.class);
 
-        ExamController examController = new ExamController(
-                aiExamService, examService, userService, deckService, flashcardService,
-                fileEntryService, documentExtractionService, aiRequestQuotaService);
+        ExamSessionService examSessionService = new ExamSessionService(
+                aiExamService, deckService, flashcardService, fileEntryService,
+                documentExtractionService, aiRequestQuotaService);
         controller = new StudyController(
                 studySessionService, aiQuizService, deckService, flashcardService, folderService,
-                userService, documentExtractionService, fileEntryService, examController, aiRequestQuotaService);
+                userService, documentExtractionService, fileEntryService, examSessionService, aiRequestQuotaService);
 
         user = new User();
         user.setId(1L);
@@ -416,6 +416,7 @@ class StudyControllerPdfModeTests {
 
         assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
         assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(response.getHeader("HX-Trigger")).isNull();
         assertThat(model.get("studyError")).isEqualTo("This PDF has no extractable text. Try Full PDF mode.");
         verify(aiRequestQuotaService, never()).checkAndRecord(any());
         verify(aiQuizService, never()).generate(anyList(), anyList(), anyInt(), any(), any(), any());
@@ -457,9 +458,10 @@ class StudyControllerPdfModeTests {
                 response,
                 "true");
 
-        assertThat(view).isEqualTo("fragments/ai-generation-error :: aiGenerationError");
+        assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
         assertThat(response.getStatus()).isEqualTo(400);
-        assertThat(model.get("aiErrorMessage")).isEqualTo("This PDF has no extractable text. Try Full PDF mode.");
+        assertThat(response.getHeader("HX-Trigger")).isNull();
+        assertThat(model.get("studyError")).isEqualTo("This PDF has no extractable text. Try Full PDF mode.");
         verify(aiRequestQuotaService, never()).checkAndRecord(any());
         verify(aiExamService, never()).generate(anyList(), anyList(), anyInt(), any(), any());
     }

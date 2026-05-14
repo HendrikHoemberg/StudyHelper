@@ -1,12 +1,9 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
-import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Exam;
-import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.*;
-import com.HendrikHoemberg.StudyHelper.service.DocumentModeResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -16,60 +13,30 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Controller
 public class ExamController {
 
     private static final String SESSION_KEY = "examSession";
-    
-    private final AiExamService aiExamService;
+
+    private final ExamSessionService examSessionService;
     private final ExamService examService;
     private final UserService userService;
-    private final DeckService deckService;
-    private final FlashcardService flashcardService;
-    private final FileEntryService fileEntryService;
-    private final DocumentExtractionService documentExtractionService;
+    private final AiExamService aiExamService;
     private final AiRequestQuotaService aiRequestQuotaService;
 
     @Autowired
-    public ExamController(AiExamService aiExamService,
+    public ExamController(ExamSessionService examSessionService,
                           ExamService examService,
                           UserService userService,
-                          DeckService deckService,
-                          FlashcardService flashcardService,
-                          FileEntryService fileEntryService,
-                          DocumentExtractionService documentExtractionService,
+                          AiExamService aiExamService,
                           AiRequestQuotaService aiRequestQuotaService) {
-        this.aiExamService = aiExamService;
+        this.examSessionService = examSessionService;
         this.examService = examService;
         this.userService = userService;
-        this.deckService = deckService;
-        this.flashcardService = flashcardService;
-        this.fileEntryService = fileEntryService;
-        this.documentExtractionService = documentExtractionService;
+        this.aiExamService = aiExamService;
         this.aiRequestQuotaService = aiRequestQuotaService;
-    }
-
-    public ExamController(AiExamService aiExamService,
-                          ExamService examService,
-                          UserService userService,
-                          DeckService deckService,
-                          FlashcardService flashcardService,
-                          FileEntryService fileEntryService,
-                          DocumentExtractionService documentExtractionService) {
-        this(
-            aiExamService,
-            examService,
-            userService,
-            deckService,
-            flashcardService,
-            fileEntryService,
-            documentExtractionService,
-            null
-        );
     }
 
     @PostMapping("/exam/session")
@@ -85,52 +52,24 @@ public class ExamController {
             Model model, Principal principal, HttpSession session, HttpServletResponse response,
             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
 
-        Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
         if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
 
-        List<Long> deckIds = normalizeIds(selectedDeckIds);
-        List<Long> fileIds = normalizeIds(selectedFileIds);
-
-        if (deckIds.isEmpty() && fileIds.isEmpty()) {
-            return renderGenerationError(model, response, new IllegalArgumentException("Please select at least one source."));
-        }
-
         try {
-            validateExamGenerationSetup(questionSize, count, timerMinutes, layout);
-            ExamGenerationInput input = validateExamGenerationRequestWithSources(deckIds, fileIds, pdfMode, user);
-
-            int qCount = normalizeQuestionCount(count);
-            requireQuotaService().checkAndRecord(user);
+            ExamSessionService.ExamSessionResult result = examSessionService.createSession(
+                selectedDeckIds, selectedFileIds, additionalInstructions, request,
+                questionSize, count, timerMinutes, layout, user
+            );
             response.addHeader("HX-Trigger", "refresh-quota");
-            List<ExamQuestion> questions = aiExamService.generate(
-                input.flashcards(),
-                input.documents(),
-                qCount,
-                questionSize,
-                additionalInstructions
-            );
+            session.setAttribute(SESSION_KEY, result.state());
 
-            String sourceSummary = input.sourceNames().stream().limit(3).collect(Collectors.joining(", "));
-            if (input.sourceNames().size() > 3) sourceSummary += " + " + (input.sourceNames().size() - 3) + " more";
-
-            ExamSessionState state = new ExamSessionState(
-                new ExamConfig(deckIds, fileIds, questionSize, qCount, timerMinutes, layout),
-                questions, new HashMap<>(), Instant.now(), sourceSummary
-            );
-
-            session.setAttribute(SESSION_KEY, state);
-            
             if ("true".equals(hxRequest)) {
-                model.addAttribute("state", state);
+                model.addAttribute("state", result.state());
                 model.addAttribute("currentIndex", 0);
-                if (layout == ExamLayout.PER_PAGE) {
-                    return "fragments/exam-question :: exam-question";
-                } else {
-                    return "fragments/exam-single-page :: exam-single-page";
-                }
+                return result.layout() == ExamLayout.PER_PAGE
+                    ? "fragments/exam-question :: exam-question"
+                    : "fragments/exam-single-page :: exam-single-page";
             }
-
             return "exam-page";
 
         } catch (Exception e) {
@@ -149,103 +88,19 @@ public class ExamController {
             @RequestParam(defaultValue = "PER_PAGE") ExamLayout layout,
             Model model, Principal principal, HttpSession session, HttpServletResponse response,
             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
         if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
 
-        List<Long> deckIds = normalizeIds(selectedDeckIds);
-        List<Long> fileIds = normalizeIds(selectedFileIds);
         try {
-            validateExamGenerationSetup(questionSize, count, timerMinutes, layout);
-            validateExamGenerationRequest(deckIds, fileIds, pdfMode, user);
+            examSessionService.validateForPreflight(
+                selectedDeckIds, selectedFileIds, request,
+                questionSize, count, timerMinutes, layout, user
+            );
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             return null;
         } catch (Exception e) {
             return renderGenerationError(model, response, e);
         }
-    }
-
-    String renderGenerationErrorFragment(Model model, HttpServletResponse response, Exception exception) {
-        return renderGenerationError(model, response, exception);
-    }
-
-    void validateExamGenerationRequest(List<Long> deckIds,
-                                       List<Long> fileIds,
-                                       Map<Long, DocumentMode> pdfMode,
-                                       User user) throws Exception {
-        validateExamGenerationRequestWithSources(deckIds, fileIds, pdfMode, user);
-    }
-
-    void validateExamGenerationSetup(ExamQuestionSize questionSize,
-                                     int count,
-                                     Integer timerMinutes,
-                                     ExamLayout layout) {
-        if (questionSize == null) {
-            throw new IllegalArgumentException("Please select an exam question size.");
-        }
-        if (layout == null) {
-            throw new IllegalArgumentException("Please select an exam layout.");
-        }
-        normalizeQuestionCount(count);
-    }
-
-    int normalizeQuestionCount(int count) {
-        return Math.max(1, Math.min(count, 20));
-    }
-
-    private ExamGenerationInput validateExamGenerationRequestWithSources(List<Long> deckIds,
-                                                                         List<Long> fileIds,
-                                                                         Map<Long, DocumentMode> pdfMode,
-                                                                         User user) throws Exception {
-        if (deckIds.isEmpty() && fileIds.isEmpty()) {
-            throw new IllegalArgumentException("Please select at least one source.");
-        }
-
-        List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(deckIds, user);
-        List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
-        List<DocumentInput> documents = new ArrayList<>();
-        List<String> sourceNames = new ArrayList<>();
-        decks.forEach(d -> sourceNames.add(d.getName()));
-
-        long totalChars = 0;
-        for (Long fileId : fileIds) {
-            com.HendrikHoemberg.StudyHelper.entity.FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-            if (isPdf(file) && !documentExtractionService.isSupported(file)) {
-                throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
-            }
-            DocumentMode docMode = DocumentModeResolver.resolve(file, pdfMode);
-            switch (docMode) {
-                case TEXT -> {
-                    String text = requireExtractedText(file);
-                    documents.add(new TextDocument(file.getOriginalFilename(), text));
-                    totalChars += text.length();
-                }
-                case FULL_PDF -> documents.add(new PdfDocument(file.getOriginalFilename(),
-                    documentExtractionService.loadResource(file)));
-            }
-            sourceNames.add(file.getOriginalFilename());
-        }
-
-        if (totalChars > 150_000) {
-            throw new IllegalArgumentException("Selection too large — please deselect some sources.");
-        }
-
-        return new ExamGenerationInput(flashcards, documents, sourceNames);
-    }
-
-    private record ExamGenerationInput(List<Flashcard> flashcards, List<DocumentInput> documents, List<String> sourceNames) {}
-
-    private String requireExtractedText(com.HendrikHoemberg.StudyHelper.entity.FileEntry file) throws Exception {
-        String text = documentExtractionService.extractText(file);
-        if (text == null || text.isBlank()) {
-            throw new IllegalArgumentException("This PDF has no extractable text. Try Full PDF mode.");
-        }
-        return text;
-    }
-
-    private boolean isPdf(com.HendrikHoemberg.StudyHelper.entity.FileEntry file) {
-        String filename = file == null ? null : file.getOriginalFilename();
-        return filename != null && filename.toLowerCase().endsWith(".pdf");
     }
 
     private String renderGenerationError(Model model, HttpServletResponse response, Exception exception) {
@@ -267,20 +122,20 @@ public class ExamController {
     }
 
     @PostMapping("/exam/answer")
-    public String saveAnswer(@RequestParam int index, 
-                             @RequestParam String answer, 
+    public String saveAnswer(@RequestParam int index,
+                             @RequestParam String answer,
                              HttpSession session, Model model) {
         ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
         if (state == null) return "redirect:/study/start";
 
         Map<Integer, String> newAnswers = new HashMap<>(state.answers());
         newAnswers.put(index, answer);
-        
+
         ExamSessionState newState = new ExamSessionState(
             state.config(), state.questions(), newAnswers, state.startedAt(), state.sourceSummary()
         );
         session.setAttribute(SESSION_KEY, newState);
-        
+
         model.addAttribute("state", newState);
         model.addAttribute("currentIndex", index + 1);
         return "fragments/exam-question :: exam-question";
@@ -290,7 +145,7 @@ public class ExamController {
     public String next(@RequestParam int currentIndex, HttpSession session, Model model) {
         ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
         if (state == null) return "redirect:/study/start";
-        
+
         model.addAttribute("state", state);
         model.addAttribute("currentIndex", currentIndex + 1);
         return "fragments/exam-question :: exam-question";
@@ -300,7 +155,7 @@ public class ExamController {
     public String prev(@RequestParam int currentIndex, HttpSession session, Model model) {
         ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
         if (state == null) return "redirect:/study/start";
-        
+
         model.addAttribute("state", state);
         model.addAttribute("currentIndex", currentIndex - 1);
         return "fragments/exam-question :: exam-question";
@@ -313,7 +168,7 @@ public class ExamController {
                          Model model, Principal principal, HttpSession session, HttpServletResponse response) {
         if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
-        
+
         ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
         if (state == null) return "<div>Session expired</div>";
 
@@ -337,15 +192,15 @@ public class ExamController {
             requireQuotaService().checkAndRecord(user);
             response.addHeader("HX-Trigger", "refresh-quota");
             ExamGradingResult grading = aiExamService.grade(state.questions(), finalAnswers, state.config().size());
-            
+
             // Create a new state with final answers for saving
             ExamSessionState finalState = new ExamSessionState(
                 state.config(), state.questions(), finalAnswers, state.startedAt(), state.sourceSummary()
             );
-            
+
             Exam saved = examService.saveCompleted(user, finalState, grading);
             session.removeAttribute(SESSION_KEY);
-            
+
             model.addAttribute("exam", saved);
             model.addAttribute("report", grading.overall());
             return "fragments/exam-result :: exam-result";
@@ -365,7 +220,7 @@ public class ExamController {
         User user = userService.getByUsername(principal.getName());
         List<Exam> exams = examService.listForUser(user);
         model.addAttribute("exams", exams);
-        
+
         if ("true".equals(hxRequest)) {
             model.addAttribute("refreshSidebar", true);
             return "fragments/exams-list :: exams-list";
@@ -383,16 +238,16 @@ public class ExamController {
             ExamReport report = examService.deserializeReport(exam.getReportJson());
             model.addAttribute("exam", exam);
             model.addAttribute("report", report);
-            
+
             if ("true".equals(hxRequest)) {
                 model.addAttribute("refreshSidebar", true);
                 return "fragments/exam-detail :: exam-detail";
             }
             return "exams-page";
         } catch (NoSuchElementException e) {
-            // Plan says ownership errors -> 404. 
+            // Plan says ownership errors -> 404.
             // In a real app we'd use @ResponseStatus(HttpStatus.NOT_FOUND) or throw a custom exception.
-            return "redirect:/exams"; 
+            return "redirect:/exams";
         }
     }
 
@@ -418,22 +273,17 @@ public class ExamController {
         User user = userService.getByUsername(principal.getName());
         try {
             examService.deleteOwned(user, id);
-            
+
             // If coming from detail page, redirect to list.
             // HX-Target will usually be 'explorer-detail' (or similar) when in detail view.
             if ("explorer-detail".equals(hxTarget)) {
                 response.setHeader("HX-Redirect", "/exams");
             }
-            
+
             return ""; // Empty body for card removal in list view
         } catch (NoSuchElementException e) {
             return "Error";
         }
-    }
-
-    private List<Long> normalizeIds(List<Long> ids) {
-        if (ids == null) return List.of();
-        return ids.stream().filter(Objects::nonNull).distinct().toList();
     }
 
     private AiRequestQuotaService requireQuotaService() {

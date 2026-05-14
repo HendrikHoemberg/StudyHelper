@@ -4,16 +4,12 @@ import com.HendrikHoemberg.StudyHelper.dto.ExamLayout;
 import com.HendrikHoemberg.StudyHelper.dto.ExamQuestionSize;
 import com.HendrikHoemberg.StudyHelper.dto.ExamQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.ExamSessionState;
-import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.AiQuotaExceededException;
 import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.AiExamService;
-import com.HendrikHoemberg.StudyHelper.service.DeckService;
-import com.HendrikHoemberg.StudyHelper.service.DocumentExtractionService;
 import com.HendrikHoemberg.StudyHelper.service.ExamService;
-import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
-import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
+import com.HendrikHoemberg.StudyHelper.service.ExamSessionService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,9 +37,8 @@ class ExamControllerTests {
     private ExamController controller;
     private UserService userService;
     private AiExamService aiExamService;
+    private ExamSessionService examSessionService;
     private AiRequestQuotaService aiRequestQuotaService;
-    private DeckService deckService;
-    private FlashcardService flashcardService;
     private User user;
 
     @BeforeEach
@@ -51,19 +46,13 @@ class ExamControllerTests {
         aiExamService = mock(AiExamService.class);
         ExamService examService = mock(ExamService.class);
         userService = mock(UserService.class);
-        deckService = mock(DeckService.class);
-        flashcardService = mock(FlashcardService.class);
-        FileEntryService fileEntryService = mock(FileEntryService.class);
-        DocumentExtractionService documentExtractionService = mock(DocumentExtractionService.class);
+        examSessionService = mock(ExamSessionService.class);
         aiRequestQuotaService = mock(AiRequestQuotaService.class);
         controller = new ExamController(
-            aiExamService,
+            examSessionService,
             examService,
             userService,
-            deckService,
-            flashcardService,
-            fileEntryService,
-            documentExtractionService,
+            aiExamService,
             aiRequestQuotaService
         );
 
@@ -71,12 +60,16 @@ class ExamControllerTests {
         user.setId(1L);
         user.setUsername("alice");
         when(userService.getByUsername("alice")).thenReturn(user);
-        when(deckService.getValidatedDecksInRequestedOrder(anyList(), any())).thenReturn(List.of(new Deck()));
-        when(flashcardService.getFlashcardsFlattened(anyList())).thenReturn(List.of());
     }
 
     @Test
-    void createSession_HtmxWithoutSources_ReturnsAiGenerationErrorFragment() {
+    void createSession_HtmxWithoutSources_ReturnsAiGenerationErrorFragment() throws Exception {
+        doThrow(new IllegalArgumentException("Please select at least one source."))
+            .when(examSessionService).createSession(
+                anyList(), anyList(), any(), any(),
+                any(), anyInt(), any(), any(), any()
+            );
+
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -97,15 +90,23 @@ class ExamControllerTests {
         );
 
         assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(response.getHeader("HX-Trigger")).isNull();
         assertThat(view).isEqualTo("fragments/ai-generation-error :: aiGenerationError");
         assertThat(model.get("aiErrorTitle")).isEqualTo("AI generation failed");
         assertThat(model.get("aiErrorMessage")).isEqualTo("Please select at least one source.");
+        verify(examSessionService).createSession(
+            anyList(), anyList(), any(), any(),
+            any(), anyInt(), any(), any(), any()
+        );
     }
 
     @Test
-    void createSession_QuotaExceeded_RendersAiGenerationErrorFragment() {
+    void createSession_QuotaExceeded_RendersAiGenerationErrorFragment() throws Exception {
         doThrow(new AiQuotaExceededException("Daily AI request limit reached."))
-            .when(aiRequestQuotaService).checkAndRecord(user);
+            .when(examSessionService).createSession(
+                anyList(), anyList(), any(), any(),
+                any(), anyInt(), any(), any(), any()
+            );
 
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -127,12 +128,17 @@ class ExamControllerTests {
         );
 
         assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(response.getHeader("HX-Trigger")).isNull();
         assertThat(view).isEqualTo("fragments/ai-generation-error :: aiGenerationError");
         assertThat(model.get("aiErrorMessage")).isEqualTo("Daily AI request limit reached.");
+        verify(examSessionService).createSession(
+            anyList(), anyList(), any(), any(),
+            any(), anyInt(), any(), any(), any()
+        );
     }
 
     @Test
-    void preflightCreateSession_ValidRequest_DoesNotCallQuotaOrAi() {
+    void preflightCreateSession_ValidRequest_DoesNotCallQuotaOrAi() throws Exception {
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -153,6 +159,10 @@ class ExamControllerTests {
 
         assertThat(view).isNull();
         assertThat(response.getStatus()).isEqualTo(204);
+        verify(examSessionService).validateForPreflight(
+            anyList(), anyList(), any(),
+            any(), anyInt(), any(), any(), any()
+        );
         verify(aiRequestQuotaService, never()).checkAndRecord(any());
         verify(aiExamService, never()).generate(anyList(), anyList(), anyInt(), any(), any());
     }
