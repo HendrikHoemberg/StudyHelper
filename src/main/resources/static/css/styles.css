@@ -1541,15 +1541,17 @@ textarea.sh-input {
 /* ---- Children (rail + rows) ---- */
 .sh-d-children {
     position: relative;
-    margin-top: 4px;
-    padding-bottom: 4px;
     max-height: 0;
+    margin-top: 0;
+    padding-bottom: 0;
     overflow: hidden;
-    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sh-d-folder.is-open .sh-d-children {
     max-height: 1500px;
+    margin-top: 4px;
+    padding-bottom: 4px;
 }
 
 .sh-d-rail {
