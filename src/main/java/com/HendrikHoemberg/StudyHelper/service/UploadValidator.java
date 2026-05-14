@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
@@ -62,12 +61,8 @@ public class UploadValidator {
         if (file.getOriginalFilename() == null || file.getOriginalFilename().isBlank()) {
             throw new IllegalArgumentException("Uploaded file has no filename.");
         }
-        try {
-            byte[] all = file.getBytes();
-            int len = Math.min(SNIFF_BYTES, all.length);
-            byte[] head = new byte[len];
-            System.arraycopy(all, 0, head, 0, len);
-            return head;
+        try (var in = file.getInputStream()) {
+            return in.readNBytes(SNIFF_BYTES);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not read uploaded file: " + e.getMessage(), e);
         }
@@ -89,13 +84,17 @@ public class UploadValidator {
     }
 
     private String validateUtf8(MultipartFile file) {
-        try {
-            var decoder = StandardCharsets.UTF_8.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPORT)
-                .onUnmappableCharacter(CodingErrorAction.REPORT);
-            decoder.decode(java.nio.ByteBuffer.wrap(file.getBytes()));
+        var decoder = StandardCharsets.UTF_8.newDecoder()
+            .onMalformedInput(CodingErrorAction.REPORT)
+            .onUnmappableCharacter(CodingErrorAction.REPORT);
+        try (var reader = new java.io.BufferedReader(
+                new java.io.InputStreamReader(file.getInputStream(), decoder))) {
+            char[] buf = new char[8192];
+            while (reader.read(buf) != -1) {
+                // consume; decoder throws on malformed input
+            }
             return "text/plain";
-        } catch (CharacterCodingException e) {
+        } catch (java.nio.charset.MalformedInputException | java.nio.charset.UnmappableCharacterException e) {
             throw new IllegalArgumentException("Uploaded text file is not valid UTF-8 text.", e);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not read uploaded file: " + e.getMessage(), e);
