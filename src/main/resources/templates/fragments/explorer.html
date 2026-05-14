@@ -62,13 +62,13 @@
                 <div th:each="deck : ${deckOptions}"
                      class="sh-deck-tile sh-library-filter-item"
                      th:data-name="${deck.deckName + ' ' + deck.folderPath}"
-                     th:style="'--folder-color:' + ${deck.folderColorHex}">
+                     th:style="'--folder-color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
                     <a th:href="@{/decks/{id}(id=${deck.deckId})}"
                        class="sh-deck-cover"
                        hx-get th:hx-get="@{/decks/{id}(id=${deck.deckId})}"
                        hx-target="#explorer-detail" hx-push-url="true">
                         <span class="sh-deck-cover-icon">
-                            <iconify-icon icon="lucide:layers"></iconify-icon>
+                            <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
                         </span>
                     </a>
                     <div class="sh-deck-body">
@@ -76,11 +76,21 @@
                         <div class="sh-deck-meta" th:text="${deck.folderPath}">Folder</div>
                         <div class="sh-deck-meta" th:text="${deck.cardCount} + ' cards'">0 cards</div>
                     </div>
-                    <button class="sh-deck-edit-btn" title="Edit Deck"
-                            th:hx-get="@{/decks/{id}/rename(id=${deck.deckId})}"
-                            hx-target="#modal-placeholder">
-                        <iconify-icon icon="lucide:pencil"></iconify-icon>
-                    </button>
+                    <div class="sh-file-tile-actions">
+                        <button class="sh-deck-edit-btn" title="Edit Deck"
+                                th:hx-get="@{/decks/{id}/rename(id=${deck.deckId})}"
+                                hx-target="#modal-placeholder">
+                            <iconify-icon icon="lucide:pencil"></iconify-icon>
+                        </button>
+                        <button class="sh-deck-edit-btn sh-file-delete-btn"
+                                title="Delete"
+                                aria-label="Delete deck"
+                                th:hx-post="@{/decks/{id}/delete(id=${deck.deckId})}"
+                                hx-confirm="Delete this deck and all its flashcards? This action cannot be undone."
+                                hx-target="#explorer-detail">
+                            <iconify-icon icon="lucide:trash-2"></iconify-icon>
+                        </button>
+                    </div>
                 </div>
 
                 <div th:each="file : ${fileSummaries}"
