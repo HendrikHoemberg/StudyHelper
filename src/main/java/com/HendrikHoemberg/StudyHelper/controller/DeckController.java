@@ -31,7 +31,13 @@ public class DeckController {
     }
 
     @GetMapping("/folders/{folderId}/decks/new")
-    public String newDeckModal(@PathVariable Long folderId, Model model) {
+    public String newDeckModal(@PathVariable Long folderId, Model model, Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        var parentFolder = folderService.getFolder(folderId, user);
+        Deck blank = new Deck();
+        blank.setColorHex(parentFolder.getColorHex() != null ? parentFolder.getColorHex() : "#6366f1");
+        blank.setIconName("layers");
+        model.addAttribute("deck", blank);
         model.addAttribute("action", "/folders/" + folderId + "/decks");
         model.addAttribute("title", "New Deck");
         return "fragments/deck-form :: deckModal";
@@ -40,12 +46,14 @@ public class DeckController {
     @PostMapping("/folders/{folderId}/decks")
     public String createDeck(@PathVariable Long folderId,
                              @RequestParam String name,
+                             @RequestParam(required = false) String colorHex,
+                             @RequestParam(required = false) String iconName,
                              Principal principal,
                              Model model,
                              @RequestHeader(value = "HX-Request", required = false) String hxRequest,
                              HttpServletResponse response) {
         User user = userService.getByUsername(principal.getName());
-        Deck deck = deckService.createDeck(name, folderId, user);
+        Deck deck = deckService.createDeck(name, colorHex, iconName, folderId, user);
 
         if (hxRequest != null) {
             response.setHeader("HX-Push-Url", "/decks/" + deck.getId());
@@ -86,13 +94,15 @@ public class DeckController {
     }
 
     @PostMapping("/decks/{id}/rename")
-    public String renameDeck(@PathVariable Long id,
-                             @RequestParam String name,
-                             Principal principal,
-                             @RequestHeader(value = "HX-Request", required = false) String hxRequest,
-                             @RequestHeader(value = "HX-Current-URL", required = false) String currentUrl) {
+    public String editDeck(@PathVariable Long id,
+                           @RequestParam String name,
+                           @RequestParam(required = false) String colorHex,
+                           @RequestParam(required = false) String iconName,
+                           Principal principal,
+                           @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                           @RequestHeader(value = "HX-Current-URL", required = false) String currentUrl) {
         User user = userService.getByUsername(principal.getName());
-        Deck deck = deckService.renameDeck(id, name, user);
+        deckService.updateDeck(id, name, colorHex, iconName, user);
 
         if (hxRequest != null && currentUrl != null) {
             return "redirect:" + currentUrl;
