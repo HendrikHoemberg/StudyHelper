@@ -176,6 +176,8 @@ public class FolderService {
                     folder.getId(),
                     buildFolderPathString(folder),
                     folder.getColorHex(),
+                    deck.getColorHex(),
+                    deck.getIconName(),
                     total,
                     usable
                 );
@@ -279,8 +281,15 @@ public class FolderService {
             int usable = (int) deck.getFlashcards().stream()
                 .filter(flashcardService::hasUsableTextForAi).count();
             options.add(new StudyDeckOption(
-                deck.getId(), deck.getName(), folder.getId(), path, folder.getColorHex(),
-                deck.getFlashcards().size(), usable
+                deck.getId(),
+                deck.getName(),
+                folder.getId(),
+                path,
+                folder.getColorHex(),
+                deck.getColorHex(),
+                deck.getIconName(),
+                deck.getFlashcards().size(),
+                usable
             ));
         }
         for (Folder sub : folder.getSubFolders()) {
@@ -300,6 +309,8 @@ public class FolderService {
                     folder.getId(),
                     buildFolderPathString(folder),
                     folder.getColorHex(),
+                    deck.getColorHex(),
+                    deck.getIconName(),
                     total,
                     usable
                 );

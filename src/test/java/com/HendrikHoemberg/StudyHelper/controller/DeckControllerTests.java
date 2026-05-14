@@ -75,6 +75,7 @@ class DeckControllerTests {
     void createDeckPersistsColorAndIcon() throws Exception {
         mockMvc.perform(post("/folders/42/decks")
                 .with(csrf())
+                .principal(() -> "alice")
                 .param("name", "Vocabulary")
                 .param("colorHex", "#ff8800")
                 .param("iconName", "book"))
@@ -88,6 +89,7 @@ class DeckControllerTests {
     void createDeckWithoutColorAndIconUsesNulls() throws Exception {
         mockMvc.perform(post("/folders/42/decks")
                 .with(csrf())
+                .principal(() -> "alice")
                 .param("name", "Vocabulary"))
             .andExpect(status().is3xxRedirection());
 
@@ -99,6 +101,7 @@ class DeckControllerTests {
     void editDeckPersistsColorAndIcon() throws Exception {
         mockMvc.perform(post("/decks/7/rename")
                 .with(csrf())
+                .principal(() -> "alice")
                 .param("name", "Vocab")
                 .param("colorHex", "#112233")
                 .param("iconName", "languages"))
@@ -110,7 +113,9 @@ class DeckControllerTests {
     @Test
     @WithMockUser(username = "alice")
     void deleteDeckRedirectsToFolder() throws Exception {
-        mockMvc.perform(post("/decks/7/delete").with(csrf()))
+        mockMvc.perform(post("/decks/7/delete")
+                .with(csrf())
+                .principal(() -> "alice"))
             .andExpect(status().is3xxRedirection());
 
         verify(deckService).deleteDeck(7L, user);
