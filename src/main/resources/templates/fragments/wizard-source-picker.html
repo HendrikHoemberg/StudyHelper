@@ -61,7 +61,9 @@
                             <label th:each="deck : ${group.decks}" class="vb-deck" th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
                                 <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.cardCount == 0}"
                                        hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;FLASHCARDS&quot;}'}" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
-                                <span class="vb-deck-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
+                                <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
+                                    <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
+                                </span>
                                 <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                 <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
                             </label>
@@ -79,7 +81,9 @@
                                     <label th:each="deck : ${sub.decks}" class="vb-deck" th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
                                         <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.cardCount == 0}"
                                                hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;FLASHCARDS&quot;}'}" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
-                                        <span class="vb-deck-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
+                                        <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
+                                    <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
+                                </span>
                                         <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                         <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
                                     </label>
@@ -107,7 +111,9 @@
                             <label th:each="deck : ${group.decks}" class="vb-deck" th:classappend="${deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
                                 <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.usableCardCount == 0}"
                                        hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds'], [name^='pdfMode']" hx-swap="outerHTML">
-                                <span class="vb-deck-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
+                                <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
+                                    <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
+                                </span>
                                 <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                 <span class="sh-badge sh-badge-primary" th:text="${deck.usableCardCount} + ' cards'"></span>
                             </label>
@@ -143,7 +149,9 @@
                                     <label th:each="deck : ${sub.decks}" class="vb-deck" th:classappend="${deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
                                         <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.usableCardCount == 0}"
                                                hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds'], [name^='pdfMode']" hx-swap="outerHTML">
-                                        <span class="vb-deck-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
+                                        <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
+                                    <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
+                                </span>
                                         <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                         <span class="sh-badge sh-badge-primary" th:text="${deck.usableCardCount} + ' cards'"></span>
                                     </label>
