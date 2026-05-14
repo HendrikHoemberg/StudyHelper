@@ -17,7 +17,8 @@
       "Bash(./mvnw test *)",
       "Bash(./mvnw -q compile)",
       "Bash(./mvnw -q -DskipTests compile)",
-      "Bash(./mvnw *)"
+      "Bash(./mvnw *)",
+      "Bash(jar tf *)"
     ]
   }
 }
