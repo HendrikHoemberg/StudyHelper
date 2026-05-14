@@ -320,9 +320,21 @@
         if (!searchInput) return;
         
         const q = searchInput.value.toLowerCase();
-        document.querySelectorAll('.vb-group, .vb-deck, .vb-file').forEach(el => {
+        document.querySelectorAll('.vb-group, .vb-subgroup').forEach(folder => {
+            folder.classList.remove('is-search-expanded');
+        });
+
+        document.querySelectorAll('.vb-deck, .vb-file').forEach(el => {
             const text = el.innerText.toLowerCase();
-            el.style.display = text.includes(q) ? '' : 'none';
+            el.style.display = !q || text.includes(q) ? '' : 'none';
+        });
+
+        document.querySelectorAll('.vb-group, .vb-subgroup').forEach(folder => {
+            const text = folder.innerText.toLowerCase();
+            const matches = !q || text.includes(q);
+            folder.style.display = matches ? '' : 'none';
+            if (q && matches) folder.classList.add('is-search-expanded');
+            syncSourceFolderToggle(folder);
         });
     };
 
@@ -352,12 +364,69 @@
         });
     }
 
+    function setSourceFolderExpanded(folder, expanded) {
+        folder.classList.toggle('is-collapsed', !expanded);
+        folder.classList.remove('is-search-expanded');
+        const toggle = folder.querySelector(':scope > .vb-group-head .vb-folder-toggle, :scope > .vb-subgroup-head .vb-folder-toggle');
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            toggle.setAttribute('title', expanded ? 'Collapse folder' : 'Expand folder');
+        }
+    }
+
+    function syncSourceFolderToggle(folder) {
+        const toggle = folder.querySelector(':scope > .vb-group-head .vb-folder-toggle, :scope > .vb-subgroup-head .vb-folder-toggle');
+        if (!toggle) return;
+        const expanded = !folder.classList.contains('is-collapsed') || folder.classList.contains('is-search-expanded');
+        toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        toggle.setAttribute('title', expanded ? 'Collapse folder' : 'Expand folder');
+    }
+
+    window.openFoldersWithSelection = function() {
+        document.querySelectorAll('.vb-group, .vb-subgroup').forEach(folder => {
+            const hasSelection = !!folder.querySelector(':scope > .vb-folder-content .sh-source-checkbox:checked, :scope > .vb-group-head .sh-source-folder-checkbox:checked, :scope > .vb-subgroup-head .sh-source-folder-checkbox:checked');
+            if (hasSelection) setSourceFolderExpanded(folder, true);
+            else syncSourceFolderToggle(folder);
+        });
+    };
+
+    window.initSourceFolderTree = function() {
+        const picker = document.getElementById('setup-picker');
+        if (!picker) return;
+
+        openFoldersWithSelection();
+
+        picker.querySelectorAll('.vb-folder-toggle').forEach(toggle => {
+            if (toggle.dataset.initialized === 'true') return;
+            toggle.dataset.initialized = 'true';
+            toggle.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopPropagation();
+                const folder = toggle.closest('.vb-group, .vb-subgroup');
+                if (!folder) return;
+                setSourceFolderExpanded(folder, folder.classList.contains('is-collapsed'));
+            });
+        });
+
+        picker.querySelectorAll('.vb-folder-name-label').forEach(label => {
+            if (label.dataset.initialized === 'true') return;
+            label.dataset.initialized = 'true';
+            label.addEventListener('click', event => {
+                event.preventDefault();
+                const checkbox = label.closest('.vb-group-head, .vb-subgroup-head')?.querySelector('.sh-source-folder-checkbox');
+                if (!checkbox || checkbox.disabled) return;
+                checkbox.click();
+            });
+        });
+    };
+
     // Core init — called on DOMContentLoaded AND after HTMX swaps
     window.initStudyWizard = function () {
         const wizardForm = document.querySelector('.sh-study-setup-card');
         if (!wizardForm) return;
 
         applyIndeterminateCheckboxes();
+        initSourceFolderTree();
 
         // If this specific form instance is already initialized, don't reset state.
         // This prevents HTMX partial updates (like source selection) from resetting the step.

@@ -103,6 +103,30 @@ class UiResourceRegressionTests {
             .doesNotContain("submitBtn.childNodes[1]");
     }
 
+    @Test
+    void studyWizardSourceTreeIsScrollableAndCollapsible() throws IOException {
+        String template = resource("templates/fragments/wizard-source-picker.html");
+        String styles = resource("static/css/styles.css");
+        String wizardJs = resource("static/js/study-wizard.js");
+
+        assertThat(template)
+            .contains("vb-source-scroll")
+            .contains("vb-folder-toggle")
+            .contains("aria-expanded=\"false\"")
+            .contains("vb-folder-content")
+            .contains("hasSelectionInGroup");
+        assertThat(styles)
+            .contains(".vb-source-scroll")
+            .contains("overflow-y: auto")
+            .contains(".vb-group.is-collapsed:not(.is-search-expanded) > .vb-folder-content")
+            .contains(".vb-folder-toggle iconify-icon");
+        assertThat(wizardJs)
+            .contains("initSourceFolderTree")
+            .contains("vb-folder-toggle")
+            .contains("aria-expanded")
+            .contains("openFoldersWithSelection");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }

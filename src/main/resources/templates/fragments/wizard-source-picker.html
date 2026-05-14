@@ -42,22 +42,33 @@
                 </div>
             </div>
 
+            <div class="vb-source-scroll">
             <div class="vb-list">
                 <!-- Flashcards Mode: Decks Only -->
                 <th:block th:if="${#strings.toString(mode) == 'FLASHCARDS'}">
                     <div th:if="${#lists.isEmpty(deckGroups)}" class="sh-empty" style="padding:1.25rem 1rem;">
                         <p class="sh-empty-text mb-1">No decks available</p>
                     </div>
-                    <div th:each="group : ${deckGroups}" class="vb-group" th:style="'--folder-color: ' + ${group.folderColor}">
-                        <label class="vb-group-head">
+                    <div th:each="group : ${deckGroups}"
+                         th:with="hasSelectionInGroup=${group.isSelected or group.isIndeterminate}"
+                         class="vb-group"
+                         th:classappend="${hasSelectionInGroup ? '' : ' is-collapsed'}"
+                         th:data-source-folder-id="${group.folderId}"
+                         th:style="'--folder-color: ' + ${group.folderColor}">
+                        <div class="vb-group-head">
+                            <button type="button" class="vb-folder-toggle" aria-expanded="false" th:attr="aria-expanded=${hasSelectionInGroup}" title="Toggle folder">
+                                <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                            </button>
                             <input type="checkbox" class="sh-checkbox sh-source-folder-checkbox" th:checked="${group.isSelected}" th:attr="data-indeterminate=${group.isIndeterminate}" th:disabled="${group.selectableDeckCount == 0}"
                                    hx-post="/study/setup/update" th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + group.folderId + ', &quot;mode&quot;: &quot;FLASHCARDS&quot;}'}" hx-target="#setup-picker" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
                             <span class="vb-group-cap">
                                 <iconify-icon th:attr="icon=${group.folderIcon.contains(':') ? group.folderIcon : 'lucide:' + group.folderIcon}"></iconify-icon>
                             </span>
-                            <div class="vb-group-title" th:text="${group.folderName}">Folder</div>
-                        </label>
-                        <div class="vb-group-body">
+                            <label class="vb-folder-name-label">
+                                <span class="vb-group-title" th:text="${group.folderName}">Folder</span>
+                            </label>
+                        </div>
+                        <div class="vb-group-body vb-folder-content">
                             <label th:each="deck : ${group.decks}" class="vb-deck" th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
                                 <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.cardCount == 0}"
                                        hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;FLASHCARDS&quot;}'}" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
@@ -68,16 +79,26 @@
                                 <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
                             </label>
                             <!-- Subfolders -->
-                            <div th:each="sub : ${group.subGroups}" class="vb-subgroup" th:style="'--folder-color: ' + ${sub.folderColor}">
-                                <label class="vb-subgroup-head">
+                            <div th:each="sub : ${group.subGroups}"
+                                 th:with="hasSelectionInGroup=${sub.isSelected or sub.isIndeterminate}"
+                                 class="vb-subgroup"
+                                 th:classappend="${hasSelectionInGroup ? '' : ' is-collapsed'}"
+                                 th:data-source-folder-id="${sub.folderId}"
+                                 th:style="'--folder-color: ' + ${sub.folderColor}">
+                                <div class="vb-subgroup-head">
+                                    <button type="button" class="vb-folder-toggle" aria-expanded="false" th:attr="aria-expanded=${hasSelectionInGroup}" title="Toggle folder">
+                                        <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                                    </button>
                                     <input type="checkbox" class="sh-checkbox sh-source-folder-checkbox" th:checked="${sub.isSelected}" th:attr="data-indeterminate=${sub.isIndeterminate}" th:disabled="${sub.selectableDeckCount == 0}"
                                            hx-post="/study/setup/update" th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + sub.folderId + ', &quot;mode&quot;: &quot;FLASHCARDS&quot;}'}" hx-target="#setup-picker" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
                                     <span class="vb-subgroup-cap">
                                         <iconify-icon th:attr="icon=${sub.folderIcon.contains(':') ? sub.folderIcon : 'lucide:' + sub.folderIcon}"></iconify-icon>
                                     </span>
-                                    <span class="vb-subgroup-name" th:text="${sub.folderName}">Subfolder</span>
-                                </label>
-                                <div class="vb-subgroup-body">
+                                    <label class="vb-folder-name-label">
+                                        <span class="vb-subgroup-name" th:text="${sub.folderName}">Subfolder</span>
+                                    </label>
+                                </div>
+                                <div class="vb-subgroup-body vb-folder-content">
                                     <label th:each="deck : ${sub.decks}" class="vb-deck" th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
                                         <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.cardCount == 0}"
                                                hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;FLASHCARDS&quot;}'}" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
@@ -98,16 +119,26 @@
                     <div th:if="${#lists.isEmpty(quizSourceTree)}" class="sh-empty" style="padding:1.25rem 1rem;">
                         <p class="sh-empty-text mb-1">No sources available</p>
                     </div>
-                    <div th:each="group : ${quizSourceTree}" class="vb-group" th:style="'--folder-color: ' + ${group.folderColor}">
-                        <label class="vb-group-head">
+                    <div th:each="group : ${quizSourceTree}"
+                         th:with="hasSelectionInGroup=${group.isSelected or group.isIndeterminate}"
+                         class="vb-group"
+                         th:classappend="${hasSelectionInGroup ? '' : ' is-collapsed'}"
+                         th:data-source-folder-id="${group.folderId}"
+                         th:style="'--folder-color: ' + ${group.folderColor}">
+                        <div class="vb-group-head">
+                            <button type="button" class="vb-folder-toggle" aria-expanded="false" th:attr="aria-expanded=${hasSelectionInGroup}" title="Toggle folder">
+                                <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                            </button>
                             <input type="checkbox" class="sh-checkbox sh-source-folder-checkbox" th:checked="${group.isSelected}" th:attr="data-indeterminate=${group.isIndeterminate}" th:disabled="${group.selectableSourceCount == 0}"
                                    hx-post="/study/setup/update" th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + group.folderId + ', &quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-target="#setup-picker" hx-include="[name='selectedDeckIds'], [name='selectedFileIds'], [name^='pdfMode']" hx-swap="outerHTML">
                             <span class="vb-group-cap">
                                 <iconify-icon th:attr="icon=${group.folderIcon.contains(':') ? group.folderIcon : 'lucide:' + group.folderIcon}"></iconify-icon>
                             </span>
-                            <div class="vb-group-title" th:text="${group.folderName}">Folder</div>
-                        </label>
-                        <div class="vb-group-body">
+                            <label class="vb-folder-name-label">
+                                <span class="vb-group-title" th:text="${group.folderName}">Folder</span>
+                            </label>
+                        </div>
+                        <div class="vb-group-body vb-folder-content">
                             <label th:each="deck : ${group.decks}" class="vb-deck" th:classappend="${deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
                                 <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.usableCardCount == 0}"
                                        hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds'], [name^='pdfMode']" hx-swap="outerHTML">
@@ -136,16 +167,26 @@
                                 </div>
                             </div>
                             <!-- Subfolders -->
-                            <div th:each="sub : ${group.subGroups}" class="vb-subgroup" th:style="'--folder-color: ' + ${sub.folderColor}">
-                                <label class="vb-subgroup-head">
+                            <div th:each="sub : ${group.subGroups}"
+                                 th:with="hasSelectionInGroup=${sub.isSelected or sub.isIndeterminate}"
+                                 class="vb-subgroup"
+                                 th:classappend="${hasSelectionInGroup ? '' : ' is-collapsed'}"
+                                 th:data-source-folder-id="${sub.folderId}"
+                                 th:style="'--folder-color: ' + ${sub.folderColor}">
+                                <div class="vb-subgroup-head">
+                                    <button type="button" class="vb-folder-toggle" aria-expanded="false" th:attr="aria-expanded=${hasSelectionInGroup}" title="Toggle folder">
+                                        <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                                    </button>
                                     <input type="checkbox" class="sh-checkbox sh-source-folder-checkbox" th:checked="${sub.isSelected}" th:attr="data-indeterminate=${sub.isIndeterminate}" th:disabled="${sub.selectableSourceCount == 0}"
                                            hx-post="/study/setup/update" th:hx-vals="${'{&quot;toggledFolderId&quot;: ' + sub.folderId + ', &quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-target="#setup-picker" hx-include="[name='selectedDeckIds'], [name='selectedFileIds'], [name^='pdfMode']" hx-swap="outerHTML">
                                     <span class="vb-subgroup-cap">
                                         <iconify-icon th:attr="icon=${sub.folderIcon.contains(':') ? sub.folderIcon : 'lucide:' + sub.folderIcon}"></iconify-icon>
                                     </span>
-                                    <span class="vb-subgroup-name" th:text="${sub.folderName}">Subfolder</span>
-                                </label>
-                                <div class="vb-subgroup-body">
+                                    <label class="vb-folder-name-label">
+                                        <span class="vb-subgroup-name" th:text="${sub.folderName}">Subfolder</span>
+                                    </label>
+                                </div>
+                                <div class="vb-subgroup-body vb-folder-content">
                                     <label th:each="deck : ${sub.decks}" class="vb-deck" th:classappend="${deck.usableCardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
                                         <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.usableCardCount == 0}"
                                                hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds'], [name='selectedFileIds'], [name^='pdfMode']" hx-swap="outerHTML">
@@ -179,10 +220,12 @@
                     </div>
                 </th:block>
             </div>
+            </div>
 
             <script>
                 if (typeof reapplySearch === 'function') reapplySearch();
                 if (typeof updateSelectAllButton === 'function') updateSelectAllButton();
+                if (typeof initSourceFolderTree === 'function') initSourceFolderTree();
             </script>
         </div>
     </div>
