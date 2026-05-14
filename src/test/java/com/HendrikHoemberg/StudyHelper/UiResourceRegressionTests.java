@@ -127,6 +127,19 @@ class UiResourceRegressionTests {
             .contains("openFoldersWithSelection");
     }
 
+    @Test
+    void studyWizardMobileFooterWrapsActionsAndConstrainsSourceTree() throws IOException {
+        String styles = resource("static/css/styles.css");
+
+        assertThat(styles)
+            .contains("position: static")
+            .contains(".sh-wizard-footer > div")
+            .contains("margin-left: 0 !important")
+            .contains(".sh-wizard-footer #wizard-btn-submit-with-instructions")
+            .contains("flex: 1 1 12rem")
+            .contains("max-height: min(44vh, 28rem)");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }

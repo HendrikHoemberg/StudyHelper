@@ -4108,12 +4108,37 @@ iconify-icon {
         grid-template-columns: 1fr;
     }
 
-    .sh-wizard-panel {
-        padding-bottom: 6rem;
+    .sh-wizard-footer {
+        position: static;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: stretch;
     }
 
-    .sh-wizard-footer {
-        margin-bottom: 4rem;
+    .sh-wizard-footer > div {
+        flex: 1 1 100%;
+        min-width: 0;
+        margin-left: 0 !important;
+        flex-wrap: wrap;
+    }
+
+    .sh-wizard-footer .sh-btn {
+        min-width: 0;
+        justify-content: center;
+    }
+
+    .sh-wizard-footer #wizard-btn-back {
+        flex: 0 1 auto;
+    }
+
+    .sh-wizard-footer #wizard-btn-submit,
+    .sh-wizard-footer #wizard-btn-submit-with-instructions {
+        flex: 1 1 12rem;
+    }
+
+    .vb-source-scroll {
+        max-height: min(44vh, 28rem);
+        padding-bottom: 0.5rem;
     }
 }
 
