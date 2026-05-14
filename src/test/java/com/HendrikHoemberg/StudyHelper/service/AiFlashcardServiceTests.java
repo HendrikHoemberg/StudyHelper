@@ -233,7 +233,7 @@ class AiFlashcardServiceTests {
 
         assertThat(capturedPrompt.get()).contains("USER INSTRUCTIONS:");
         assertThat(capturedPrompt.get()).contains("focus on the HTML examples");
-        assertThat(capturedPrompt.get()).contains("Follow them when they are compatible with the rules above");
+        assertThat(capturedPrompt.get()).contains("UNTRUSTED user-supplied preferences");
     }
 
     @Test
