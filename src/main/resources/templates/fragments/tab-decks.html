@@ -26,24 +26,34 @@
         <div th:each="deck : ${view.decks}"
              class="sh-deck-tile"
              th:data-filter-text="${deck.name + ' ' + deck.flashcards.size() + ' cards'}"
-             th:style="'--folder-color:' + ${view.folder.colorHex}">
+             th:style="'--folder-color:' + ${deck.colorHex != null ? deck.colorHex : view.folder.colorHex}">
             <a th:href="@{/decks/{id}(id=${deck.id})}"
                class="sh-deck-cover"
                hx-get th:hx-get="@{/decks/{id}(id=${deck.id})}"
                hx-target="#explorer-detail" hx-push-url="true">
                 <span class="sh-deck-cover-icon">
-                    <iconify-icon icon="lucide:layers"></iconify-icon>
+                    <iconify-icon th:attr="icon=${(deck.iconName ?: 'layers').contains(':') ? (deck.iconName ?: 'layers') : 'lucide:' + (deck.iconName ?: 'layers')}"></iconify-icon>
                 </span>
             </a>
             <div class="sh-deck-body">
                 <div class="sh-deck-title" th:text="${deck.name}">Deck Name</div>
                 <div class="sh-deck-meta" th:text="${deck.flashcards.size()} + ' cards'">0 cards</div>
             </div>
-            <button class="sh-deck-edit-btn" title="Edit Deck"
-                    th:hx-get="@{/decks/{id}/rename(id=${deck.id})}"
-                    hx-target="#modal-placeholder">
-                <iconify-icon icon="lucide:pencil"></iconify-icon>
-            </button>
+            <div class="sh-file-tile-actions">
+                <button class="sh-deck-edit-btn" title="Edit Deck"
+                        th:hx-get="@{/decks/{id}/rename(id=${deck.id})}"
+                        hx-target="#modal-placeholder">
+                    <iconify-icon icon="lucide:pencil"></iconify-icon>
+                </button>
+                <button class="sh-deck-edit-btn sh-file-delete-btn"
+                        title="Delete"
+                        aria-label="Delete deck"
+                        th:hx-post="@{/decks/{id}/delete(id=${deck.id})}"
+                        hx-confirm="Delete this deck and all its flashcards? This action cannot be undone."
+                        hx-target="#explorer-detail">
+                    <iconify-icon icon="lucide:trash-2"></iconify-icon>
+                </button>
+            </div>
         </div>
     </div>
     <p class="sh-tab-filter-empty" data-sh-filter-empty-for="#deck-grid" hidden>No matching decks.</p>
