@@ -70,7 +70,7 @@ class FolderServiceTests {
         root.setFiles(List.of(pdf, png));
         root.setSubFolders(new ArrayList<>());
 
-        when(folderRepository.findRootsWithSubtreeByUser(user)).thenReturn(List.of(root));
+        when(folderRepository.findRootsWithSubFoldersByUser(user)).thenReturn(List.of(root));
 
         List<QuizSourceGroup> tree = folderService.getQuizSourceTree(user, List.of(), List.of());
 
@@ -101,7 +101,7 @@ class FolderServiceTests {
         deck.setFlashcards(List.of(flashcard));
         folder.setDecks(List.of(deck));
 
-        when(folderRepository.findByIdAndUserWithSubtree(1L, user)).thenReturn(Optional.of(folder));
+        when(folderRepository.findByIdAndUserWithSubFolders(1L, user)).thenReturn(Optional.of(folder));
 
         folderService.deleteFolder(1L, user);
 
