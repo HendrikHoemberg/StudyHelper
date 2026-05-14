@@ -36,8 +36,8 @@
     <!-- Deck header -->
     <div class="sh-page-header">
         <div class="flex items-center gap-3">
-            <div class="sh-deck-icon">
-                <iconify-icon icon="lucide:layers"></iconify-icon>
+            <div class="sh-deck-icon" th:style="'--folder-color:' + ${deck.colorHex != null ? deck.colorHex : (deck.folder.colorHex != null ? deck.folder.colorHex : '#6366f1')}">
+                <iconify-icon th:attr="icon=${(deck.iconName ?: 'layers').contains(':') ? (deck.iconName ?: 'layers') : 'lucide:' + (deck.iconName ?: 'layers')}"></iconify-icon>
             </div>
             <div>
                 <h1 class="sh-page-title" th:text="${deck.name}">Deck Name</h1>
