@@ -5,6 +5,8 @@ import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.repository.DeckRepository;
 import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,6 +21,7 @@ import java.util.NoSuchElementException;
 @Service
 public class FlashcardService {
 
+    private static final Logger log = LoggerFactory.getLogger(FlashcardService.class);
     private static final long MAX_IMAGE_BYTES = 10L * 1024 * 1024;
 
     private final FlashcardRepository flashcardRepository;
@@ -224,7 +227,8 @@ public class FlashcardService {
         if (filename == null) return;
         try {
             fileStorageService.delete(filename);
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            log.warn("Failed to delete flashcard image file: {} ({})", filename, e.getMessage());
         }
     }
 }

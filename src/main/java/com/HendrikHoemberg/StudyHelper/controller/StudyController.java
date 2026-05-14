@@ -10,6 +10,8 @@ import com.HendrikHoemberg.StudyHelper.service.DocumentModeResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,6 +25,8 @@ import java.util.*;
 
 @Controller
 public class StudyController {
+
+    private static final Logger log = LoggerFactory.getLogger(StudyController.class);
 
     private final StudySessionService studySessionService;
     private final AiQuizService aiQuizService;
@@ -103,7 +107,9 @@ public class StudyController {
             try {
                 deckService.getDeck(deckId, user);
                 preselectedDeckIds.add(deckId);
-            } catch (NoSuchElementException ignored) {}
+            } catch (NoSuchElementException e) {
+                log.debug("Ignoring preselect for missing deckId={} (user={})", deckId, user.getUsername());
+            }
         }
 
         if (fileId != null) {
@@ -112,7 +118,9 @@ public class StudyController {
                 if (documentExtractionService.isSupported(file)) {
                     preselectedFileIds.add(fileId);
                 }
-            } catch (NoSuchElementException ignored) {}
+            } catch (NoSuchElementException e) {
+                log.debug("Ignoring preselect for missing fileId={} (user={})", fileId, user.getUsername());
+            }
         }
 
         if (folderId != null) {
@@ -120,7 +128,9 @@ public class StudyController {
                 FolderService.FolderSources sources = folderService.getAllSourcesInFolder(folderId, user);
                 preselectedDeckIds.addAll(sources.deckIds());
                 preselectedFileIds.addAll(sources.fileIds());
-            } catch (NoSuchElementException ignored) {}
+            } catch (NoSuchElementException e) {
+                log.debug("Ignoring preselect for missing folderId={} (user={})", folderId, user.getUsername());
+            }
         }
 
         model.addAttribute("mode", mode);
@@ -451,7 +461,9 @@ public class StudyController {
                     charCache.put(fileId, text.length());
                     totalChars += text.length();
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.debug("Skipping char-count for fileId={}: {}", fileId, e.getMessage());
+            }
         }
         model.addAttribute("selectionTotalChars", totalChars);
         model.addAttribute("selectionWarn", totalChars >= 50_000);
