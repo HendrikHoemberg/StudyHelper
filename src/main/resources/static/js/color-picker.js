@@ -7,7 +7,7 @@
 
     // ── Curated app palette ──────────────────────────────────────────
     var APP_PALETTE = [
-        '#6366f1', '#8b5cf6', '#ec4899', '#ef4444',
+        '#0f766e', '#8b5cf6', '#ec4899', '#ef4444',
         '#f59e0b', '#10b981', '#06b6d4', '#3b82f6',
         '#64748b', '#1e293b', '#f8fafc', '#ffffff',
     ];
@@ -363,7 +363,7 @@
         opts = opts || {};
         if (state) _commitClose();
 
-        var c = parseColor(opts.initialColor) || parseColor('#6366f1');
+        var c = parseColor(opts.initialColor) || parseColor('#0f766e');
         state = { h: c.h, s: c.s, v: c.v, opts: opts, trigger: trigger, rafId: null };
 
         var pop = getPopover();
@@ -446,7 +446,7 @@
             var targetId    = el.dataset.target;
             var paletteKey  = el.dataset.paletteKey || 'default';
             var targetInput = targetId ? document.getElementById(targetId) : null;
-            var initialColor = (targetInput && targetInput.value) || el.dataset.initialColor || '#6366f1';
+            var initialColor = (targetInput && targetInput.value) || el.dataset.initialColor || '#0f766e';
 
             attach(el, {
                 initialColor: initialColor,

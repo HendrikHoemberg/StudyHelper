@@ -18,10 +18,10 @@
     --text-secondary: #6b7280;
     --text-muted: #9ca3af;
 
-    --accent: #6366f1;
-    --accent-hover: #4f46e5;
-    --accent-light: #eef2ff;
-    --accent-glow: rgba(99, 102, 241, 0.25);
+    --accent: #0f766e;
+    --accent-hover: #134e4a;
+    --accent-light: #ccfbf1;
+    --accent-glow: rgba(15, 118, 110, 0.25);
 
     --success: #10b981;
     --success-light: rgba(16, 185, 129, 0.12);
@@ -63,7 +63,7 @@
     --text: #e5e7eb;
     --text-secondary: #9ca3af;
     --text-muted: #6b7280;
-    --accent-light: rgba(99, 102, 241, 0.15);
+    --accent-light: rgba(15, 118, 110, 0.15);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.25);
@@ -171,6 +171,15 @@ a {
     width: 14px;
     height: 14px;
     stroke-width: 2.5;
+}
+
+.topnav-brand-logo {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0;
 }
 
 .topnav-brand-name {
@@ -4092,12 +4101,10 @@ iconify-icon {
 .sh-login-icon {
     width: 52px;
     height: 52px;
-    background: var(--accent);
     border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
     margin: 0 auto 1rem;
 }
 
@@ -4105,6 +4112,14 @@ iconify-icon {
     width: 26px;
     height: 26px;
     stroke-width: 2;
+}
+
+.sh-login-logo {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-lg);
+    object-fit: cover;
+    display: block;
 }
 
 .sh-login-brand {
@@ -4410,7 +4425,7 @@ iconify-icon {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: var(--accent, #6366f1);
+    background: var(--accent, #0f766e);
     border: none;
     cursor: pointer;
     display: flex;

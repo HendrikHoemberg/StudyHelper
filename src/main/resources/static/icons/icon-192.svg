@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="StudyHelper icon">
+  <rect width="192" height="192" rx="42" fill="#0f766e"/>
+  <path d="M52 50h54c18 0 34 15 34 34v58H84c-18 0-32-14-32-32V50Z" fill="#f8fafc"/>
+  <path d="M68 66h38c10 0 18 8 18 18v42H86c-10 0-18-8-18-18V66Z" fill="#ccfbf1"/>
+  <path d="M84 82h28M84 98h28M84 114h18" stroke="#0f766e" stroke-width="8" stroke-linecap="round"/>
+  <path d="M52 50h54c18 0 34 15 34 34" fill="none" stroke="#134e4a" stroke-width="10" stroke-linecap="round"/>
+</svg>

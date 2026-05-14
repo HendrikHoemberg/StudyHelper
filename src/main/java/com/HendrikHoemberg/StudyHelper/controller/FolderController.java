@@ -78,7 +78,7 @@ public class FolderController {
 
     @PostMapping("/folders")
     public String createRootFolder(@RequestParam String name,
-                                   @RequestParam(defaultValue = "#6366f1") String colorHex,
+                                   @RequestParam(defaultValue = "#0f766e") String colorHex,
                                    @RequestParam(defaultValue = "folder") String iconName,
                                    Principal principal,
                                    @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
@@ -154,7 +154,7 @@ public class FolderController {
     @PostMapping("/folders/{id}/subfolders")
     public String createSubfolder(@PathVariable Long id,
                                    @RequestParam String name,
-                                   @RequestParam(defaultValue = "#6366f1") String colorHex,
+                                   @RequestParam(defaultValue = "#0f766e") String colorHex,
                                    @RequestParam(defaultValue = "folder") String iconName,
                                    Principal principal,
                                    @RequestHeader(value = "HX-Request", required = false) String hxRequest) {

@@ -3,6 +3,7 @@
    ============================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
+    registerServiceWorker();
     initTheme();
     initLucide();
     initTopnav();
@@ -13,6 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initLightbox();
     initShDialog();
 });
+
+function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+
+    navigator.serviceWorker.register('/service-worker.js').catch((error) => {
+        console.warn('Service worker registration failed:', error);
+    });
+}
 
 // Re-run initializations after HTMX swaps
 document.body.addEventListener('htmx:afterSwap', () => {
@@ -308,7 +317,7 @@ function updateFolderPreview(modal) {
     const preview = modal.querySelector('.sh-edit-preview');
     if (!preview) return;
     
-    const color = modal.querySelector('input[name="colorHex"]')?.value || '#6366f1';
+    const color = modal.querySelector('input[name="colorHex"]')?.value || '#0f766e';
     const iconName = modal.querySelector('input[name="iconName"]')?.value || 'folder';
     
     preview.style.setProperty('--preview-color', color);

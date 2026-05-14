@@ -78,6 +78,6 @@ public class FlashcardGenerationViewService {
     private String colorOf(Folder folder) {
         return folder.getColorHex() != null && !folder.getColorHex().isBlank()
             ? folder.getColorHex()
-            : "#6366f1";
+            : "#0f766e";
     }
 }

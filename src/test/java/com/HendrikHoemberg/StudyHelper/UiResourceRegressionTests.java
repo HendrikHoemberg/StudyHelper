@@ -265,6 +265,116 @@ class UiResourceRegressionTests {
             .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.sh-dashboard-shell \\{\\s*padding: 0.75rem;\\s*\\}");
     }
 
+    @Test
+    void appExposesInstallablePwaMetadataWithoutOfflineCaching() throws IOException {
+        String layout = resource("templates/fragments/layout.html");
+        String appJs = resource("static/js/app.js");
+        String manifest = resource("static/manifest.webmanifest");
+        String serviceWorker = resource("static/service-worker.js");
+        String favicon = resource("static/icons/favicon.svg");
+        String securityConfig = file("src/main/java/com/HendrikHoemberg/StudyHelper/config/SecurityConfig.java");
+
+        assertThat(layout)
+            .contains("<link rel=\"manifest\" href=\"/manifest.webmanifest\">")
+            .contains("<link rel=\"icon\" href=\"/favicon.ico\" sizes=\"any\">")
+            .contains("<link rel=\"icon\" type=\"image/png\" sizes=\"192x192\" href=\"/icons/icon-192.png\">")
+            .contains("<link rel=\"icon\" type=\"image/svg+xml\" href=\"/icons/favicon.svg\">")
+            .contains("<meta name=\"theme-color\" content=\"#0f766e\">")
+            .contains("<meta name=\"mobile-web-app-capable\" content=\"yes\">")
+            .contains("<meta name=\"apple-mobile-web-app-capable\" content=\"yes\">")
+            .contains("<link rel=\"apple-touch-icon\" href=\"/icons/icon-192.png\">");
+        assertThat(layout.indexOf("href=\"/icons/favicon.svg\""))
+            .isGreaterThan(layout.indexOf("href=\"/icons/icon-192.png\""));
+        assertThat(appJs)
+            .contains("serviceWorker.register('/service-worker.js')");
+        assertThat(manifest)
+            .contains("\"name\": \"StudyHelper\"")
+            .contains("\"short_name\": \"StudyHelper\"")
+            .contains("\"start_url\": \"/dashboard\"")
+            .contains("\"display\": \"standalone\"")
+            .contains("\"icons\"")
+            .contains("\"/icons/icon-192.png\"")
+            .contains("\"/icons/icon-512.png\"");
+        assertThat(serviceWorker)
+            .contains("self.addEventListener('install'")
+            .contains("self.skipWaiting()")
+            .doesNotContain("caches.open")
+            .doesNotContain("fetch");
+        assertThat(favicon)
+            .contains("<rect width=\"64\" height=\"64\" fill=\"#0f766e\"")
+            .doesNotContain("rx=");
+        assertThat(securityConfig)
+            .contains(".requestMatchers(\"/login\", \"/register\", \"/css/**\", \"/js/**\", \"/manifest.webmanifest\", \"/service-worker.js\", \"/favicon.ico\", \"/icons/**\").permitAll()");
+    }
+
+    @Test
+    void authPagesUseStudyHelperLogoInsteadOfInlineBookIcon() throws IOException {
+        String login = resource("templates/login.html");
+        String register = resource("templates/register.html");
+        String styles = resource("static/css/styles.css");
+
+        assertThat(login)
+            .contains("<img src=\"/icons/icon-192.png\" alt=\"\" class=\"sh-login-logo\">")
+            .doesNotContain("<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/>");
+        assertThat(register)
+            .contains("<img src=\"/icons/icon-192.png\" alt=\"\" class=\"sh-login-logo\">")
+            .doesNotContain("<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/>");
+        assertThat(styles)
+            .contains(".sh-login-logo")
+            .contains("object-fit: cover");
+    }
+
+    @Test
+    void appPrimaryPaletteMatchesTealPwaIdentity() throws IOException {
+        String styles = resource("static/css/styles.css");
+        String manifest = resource("static/manifest.webmanifest");
+
+        assertThat(styles)
+            .contains("--accent: #0f766e;")
+            .contains("--accent-hover: #134e4a;")
+            .contains("--accent-light: #ccfbf1;")
+            .contains("--accent-glow: rgba(15, 118, 110, 0.25);")
+            .contains("--accent-light: rgba(15, 118, 110, 0.15);");
+        assertThat(manifest)
+            .contains("\"theme_color\": \"#0f766e\"");
+    }
+
+    @Test
+    void newFolderAndDeckFormsDefaultToPrimaryTeal() throws IOException {
+        String folderForm = resource("templates/fragments/folder-form.html");
+        String deckForm = resource("templates/fragments/deck-form.html");
+        String appJs = resource("static/js/app.js");
+        String colorPickerJs = resource("static/js/color-picker.js");
+        String colorPickerTemplate = resource("templates/fragments/color-picker.html");
+
+        assertThat(folderForm)
+            .contains("${colorHex ?: '#0f766e'}")
+            .contains("'#0F766E'");
+        assertThat(deckForm)
+            .contains("${colorHex ?: '#0f766e'}")
+            .contains("'#0F766E'");
+        assertThat(appJs)
+            .contains("|| '#0f766e'");
+        assertThat(colorPickerJs)
+            .contains("'#0f766e'")
+            .doesNotContain("'#6366f1'");
+        assertThat(colorPickerTemplate)
+            .contains("placeholder=\"#0f766e\"");
+    }
+
+    @Test
+    void topnavBrandUsesStudyHelperLogoAsset() throws IOException {
+        String layout = resource("templates/fragments/layout.html");
+        String styles = resource("static/css/styles.css");
+
+        assertThat(layout)
+            .contains("<img src=\"/icons/icon-192.png\" alt=\"\" class=\"topnav-brand-logo\">")
+            .doesNotContain("<span class=\"topnav-brand-icon\">\n                <iconify-icon icon=\"lucide:book-open\"></iconify-icon>\n            </span>");
+        assertThat(styles)
+            .contains(".topnav-brand-logo")
+            .contains("object-fit: cover");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }

@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -107,5 +108,14 @@ class FolderServiceTests {
         verify(fileStorageService, times(1)).delete("uploaded.pdf");
         verify(fileStorageService, times(1)).delete("front-image.png");
         verify(fileStorageService, times(1)).delete("back-image.png");
+    }
+
+    @Test
+    void createFolder_DefaultsBlankColorToPrimaryTeal() {
+        when(folderRepository.save(any(Folder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Folder created = folderService.createFolder("New Folder", " ", "", null, user);
+
+        assertThat(created.getColorHex()).isEqualTo("#0f766e");
     }
 }

@@ -95,7 +95,7 @@ public class FolderService {
             .map(this::toFolderPickerNode)
             .toList();
         String color = folder.getColorHex() != null && !folder.getColorHex().isBlank()
-            ? folder.getColorHex() : "#6366f1";
+            ? folder.getColorHex() : "#0f766e";
         return new FolderPickerNode(folder.getId(), folder.getName(), color, iconOf(folder), children);
     }
 
@@ -252,7 +252,7 @@ public class FolderService {
         boolean isIndeterminate = !allSelected && someSelected;
 
         String color = folder.getColorHex() != null && !folder.getColorHex().isBlank()
-            ? folder.getColorHex() : "#6366f1";
+            ? folder.getColorHex() : "#0f766e";
 
         return new QuizSourceGroup(
             folder.getId(),
@@ -358,7 +358,7 @@ public class FolderService {
         boolean isIndeterminate = !allSelected && someSelected;
 
         String color = folder.getColorHex() != null && !folder.getColorHex().isBlank()
-            ? folder.getColorHex() : "#6366f1";
+            ? folder.getColorHex() : "#0f766e";
 
         return new StudyDeckGroup(
             folder.getId(),
@@ -396,7 +396,7 @@ public class FolderService {
     public Folder createFolder(String name, String colorHex, String iconName, Long parentId, User user) {
         Folder folder = new Folder();
         folder.setName(name);
-        folder.setColorHex(colorHex != null && !colorHex.isBlank() ? colorHex : "#6366f1");
+        folder.setColorHex(colorHex != null && !colorHex.isBlank() ? colorHex : "#0f766e");
         folder.setIconName(iconName != null && !iconName.isBlank() ? iconName : "folder");
         folder.setUser(user);
         if (parentId != null) {

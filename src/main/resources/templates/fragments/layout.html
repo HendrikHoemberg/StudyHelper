@@ -7,6 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${title} + ' — StudyHelper'">StudyHelper</title>
     <meta name="description" content="StudyHelper — A flashcard study application">
+    <meta name="theme-color" content="#0f766e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="StudyHelper">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <link href="/css/styles.css" rel="stylesheet">
     <link href="/css/color-picker.css" rel="stylesheet">
     <link href="/css/image-editor.css" rel="stylesheet">
@@ -29,9 +38,7 @@
     <div class="topnav-inner">
         <a href="/dashboard" class="topnav-brand"
            hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
-            <span class="topnav-brand-icon">
-                <iconify-icon icon="lucide:book-open"></iconify-icon>
-            </span>
+            <img src="/icons/icon-192.png" alt="" class="topnav-brand-logo">
             <span class="topnav-brand-name">StudyHelper</span>
         </a>
 

@@ -34,7 +34,9 @@ public class DeckController {
         User user = userService.getByUsername(principal.getName());
         var parentFolder = folderService.getFolder(folderId, user);
         Deck blank = new Deck();
-        blank.setColorHex(parentFolder.getColorHex() != null ? parentFolder.getColorHex() : "#6366f1");
+        blank.setColorHex(parentFolder.getColorHex() != null && !parentFolder.getColorHex().isBlank()
+            ? parentFolder.getColorHex()
+            : "#0f766e");
         blank.setIconName("layers");
         model.addAttribute("deck", blank);
         model.addAttribute("action", "/folders/" + folderId + "/decks");

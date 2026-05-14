@@ -36,11 +36,21 @@ public class DeckService {
 
         Deck deck = new Deck();
         deck.setName(name);
-        deck.setColorHex(colorHex != null && !colorHex.isBlank() ? colorHex : folder.getColorHex());
+        deck.setColorHex(resolveDeckColor(colorHex, folder));
         deck.setIconName(iconName != null && !iconName.isBlank() ? iconName : "layers");
         deck.setFolder(folder);
         deck.setUser(user);
         return deckRepository.save(deck);
+    }
+
+    private String resolveDeckColor(String colorHex, Folder folder) {
+        if (colorHex != null && !colorHex.isBlank()) {
+            return colorHex;
+        }
+        if (folder.getColorHex() != null && !folder.getColorHex().isBlank()) {
+            return folder.getColorHex();
+        }
+        return "#0f766e";
     }
 
     @Transactional(readOnly = true)
