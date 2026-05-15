@@ -134,7 +134,7 @@ public class FolderService {
             }
         }
         for (FileEntry file : folder.getFiles()) {
-            String ext = getFileExtension(file.getOriginalFilename()).toLowerCase();
+            String ext = DocumentExtractionService.extension(file.getOriginalFilename());
             boolean supported = DocumentExtractionService.SUPPORTED_EXTENSIONS.contains(ext)
                 && file.getFileSizeBytes() <= DocumentExtractionService.MAX_FILE_SIZE_BYTES;
             if (supported) {
@@ -186,8 +186,8 @@ public class FolderService {
 
         List<QuizFileOption> files = folder.getFiles().stream()
             .filter(f -> {
-                String ext = getFileExtension(f.getOriginalFilename());
-                return DocumentExtractionService.SUPPORTED_EXTENSIONS.contains(ext.toLowerCase());
+                String ext = DocumentExtractionService.extension(f.getOriginalFilename());
+                return DocumentExtractionService.SUPPORTED_EXTENSIONS.contains(ext);
             })
             .map(f -> {
                 long size = f.getFileSizeBytes();
@@ -196,7 +196,7 @@ public class FolderService {
                     f.getId(),
                     f.getOriginalFilename(),
                     size,
-                    getFileExtension(f.getOriginalFilename()),
+                    DocumentExtractionService.extension(f.getOriginalFilename()),
                     isSupported
                 );
             })
@@ -243,11 +243,6 @@ public class FolderService {
             isSelected,
             isIndeterminate
         );
-    }
-
-    private String getFileExtension(String filename) {
-        if (filename == null || !filename.contains(".")) return "";
-        return filename.substring(filename.lastIndexOf(".") + 1);
     }
 
     private void collectDecksRecursively(Folder folder, List<StudyDeckOption> options) {

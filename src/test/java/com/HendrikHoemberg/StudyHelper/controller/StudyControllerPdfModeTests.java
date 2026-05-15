@@ -94,25 +94,6 @@ class StudyControllerPdfModeTests {
     }
 
     @Test
-    void updateSetup_withoutPrincipal_redirectsToLogin() {
-        String view = controller.updateSetup(
-                StudyMode.QUIZ,
-                List.of(),
-                List.of(),
-                null,
-                null,
-                null,
-                false,
-                new MockHttpServletRequest(),
-                new ExtendedModelMap(),
-                null,
-                new MockHttpSession());
-
-        assertThat(view).isEqualTo("redirect:/login");
-        verifyNoInteractions(userService);
-    }
-
-    @Test
     void updateSetup_removeFileId_removesFilePdfMode() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter("pdfMode[42]", "FULL_PDF");

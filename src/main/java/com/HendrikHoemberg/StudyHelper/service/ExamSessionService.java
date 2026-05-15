@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -66,13 +65,13 @@ public class ExamSessionService {
                                            Integer timerMinutes,
                                            ExamLayout layout,
                                            User user) throws Exception {
-        List<Long> deckIds = normalizeIds(selectedDeckIds);
-        List<Long> fileIds = normalizeIds(selectedFileIds);
+        List<Long> deckIds = StudySourceSupport.normalizeIds(selectedDeckIds);
+        List<Long> fileIds = StudySourceSupport.normalizeIds(selectedFileIds);
         validateSetup(questionSize, count, timerMinutes, layout);
         Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
         GenerationInput input = validateRequestWithSources(deckIds, fileIds, pdfMode, user);
 
-        int qCount = normalizeQuestionCount(count);
+        int qCount = StudySourceSupport.normalizeQuestionCount(count);
         aiRequestQuotaService.checkAndRecord(user);
 
         List<ExamQuestion> questions = aiExamService.generate(
@@ -103,8 +102,8 @@ public class ExamSessionService {
                                      Integer timerMinutes,
                                      ExamLayout layout,
                                      User user) throws Exception {
-        List<Long> deckIds = normalizeIds(selectedDeckIds);
-        List<Long> fileIds = normalizeIds(selectedFileIds);
+        List<Long> deckIds = StudySourceSupport.normalizeIds(selectedDeckIds);
+        List<Long> fileIds = StudySourceSupport.normalizeIds(selectedFileIds);
         validateSetup(questionSize, count, timerMinutes, layout);
         Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
         validateRequestWithSources(deckIds, fileIds, pdfMode, user);
@@ -120,7 +119,6 @@ public class ExamSessionService {
         if (layout == null) {
             throw new IllegalArgumentException("Please select an exam layout.");
         }
-        normalizeQuestionCount(count);
     }
 
     private GenerationInput validateRequestWithSources(List<Long> deckIds,
@@ -140,13 +138,13 @@ public class ExamSessionService {
         long totalChars = 0;
         for (Long fileId : fileIds) {
             FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-            if (isPdf(file) && !documentExtractionService.isSupported(file)) {
+            if (StudySourceSupport.isPdf(file) && !documentExtractionService.isSupported(file)) {
                 throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
             }
             DocumentMode docMode = DocumentModeResolver.resolve(file, pdfMode);
             switch (docMode) {
                 case TEXT -> {
-                    String text = requireExtractedText(file);
+                    String text = StudySourceSupport.requireExtractedText(documentExtractionService, file);
                     documents.add(new TextDocument(file.getOriginalFilename(), text));
                     totalChars += text.length();
                 }
@@ -156,33 +154,11 @@ public class ExamSessionService {
             sourceNames.add(file.getOriginalFilename());
         }
 
-        if (totalChars > 150_000) {
+        if (totalChars > StudySourceSupport.MAX_SELECTION_CHARS) {
             throw new IllegalArgumentException("Selection too large — please deselect some sources.");
         }
 
         return new GenerationInput(flashcards, documents, sourceNames);
-    }
-
-    private String requireExtractedText(FileEntry file) throws Exception {
-        String text = documentExtractionService.extractText(file);
-        if (text == null || text.isBlank()) {
-            throw new IllegalArgumentException("This PDF has no extractable text. Try Full PDF mode.");
-        }
-        return text;
-    }
-
-    private boolean isPdf(FileEntry file) {
-        String filename = file == null ? null : file.getOriginalFilename();
-        return filename != null && filename.toLowerCase().endsWith(".pdf");
-    }
-
-    private int normalizeQuestionCount(int count) {
-        return Math.max(1, Math.min(count, 20));
-    }
-
-    private List<Long> normalizeIds(List<Long> ids) {
-        if (ids == null) return List.of();
-        return ids.stream().filter(Objects::nonNull).distinct().toList();
     }
 
     private record GenerationInput(List<Flashcard> flashcards,

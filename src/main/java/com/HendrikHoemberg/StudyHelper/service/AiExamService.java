@@ -138,49 +138,21 @@ public class AiExamService {
         String docSection  = docContent.isBlank()  ? "(none)" : docContent;
         String pdfSection  = pdfListing.isBlank()  ? "(none)" : pdfListing;
 
-        return ("You are a study assistant. Generate %d exam questions based on the source material below.\n\n"
-                + "LANGUAGE:\n"
-                + "Detect the dominant natural language of the supplied source material (flashcards,\n"
-                + "documents, and attached PDFs together). Write every output string — question text\n"
-                + "and expectedAnswerHints — in that same language. If sources mix languages, use the\n"
-                + "most-prevalent one. Do not translate technical terms, proper nouns, or code.\n\n"
-                + "QUESTION DEPTH:\n"
-                + "%s\n\n"
-                + "TOPIC FOCUS:\n"
-                + "First identify the dominant subject matter of the supplied content. Generate\n"
-                + "questions only about concepts that belong to that subject. Ignore incidental\n"
-                + "metadata such as author names, page numbers, publication dates, headers, footers,\n"
-                + "or off-topic asides.\n\n"
-                + "COVERAGE:\n"
-                + "Distribute the %d requested questions evenly across the entire source material.\n"
-                + "- Treat each attached PDF and each text document as a separate source.\n"
-                + "- Within each source, sample roughly equally from the early third, middle third,\n"
-                + "  and final third (by page count for PDFs, by length for text).\n"
-                + "- If multiple sources are supplied, allocate questions proportionally to source\n"
-                + "  length, but ensure every source contributes at least one question when N is\n"
-                + "  large enough.\n"
-                + "- Do not cluster on introductions, abstracts, tables of contents, or the first\n"
-                + "  few pages. Skip these unless they contain core subject matter.\n"
-                + "- Before writing questions, sketch a brief internal coverage plan (which\n"
-                + "  pages/sections each question will draw from). Do not include the plan in\n"
-                + "  the JSON output.\n\n"
-                + "SOME CARDS MAY HAVE MISSING CONTEXT:\n"
-                + "Some flashcards may have had images removed. If a card's text alone is\n"
-                + "insufficient to form a meaningful question (e.g. it references \"this diagram\"\n"
-                + "or \"the image above\"), skip that card.\n\n"
-                + "GENERAL RULES:\n"
-                + "- Each question stands alone — do not reference \"the text\" or \"the document\".\n"
-                + "- Test understanding, not exact wording.\n"
-                + "- Use all supplied sources (flashcards, text documents, and attached PDFs) consistently with the coverage plan.\n"
-                + "- For each question, provide 'expectedAnswerHints' which is a 2–3 sentence rubric\n"
-                + "  describing what a perfect answer should contain. This rubric is never shown to the user.\n\n"
-                + "=== FLASHCARDS ===\n"
-                + "%s\n\n"
-                + "=== DOCUMENTS ===\n"
-                + "%s\n\n"
-                + "=== ATTACHED PDFs ===\n"
-                + "%s\n"
-        ).formatted(count, sizeInstruction, count, cardSection, docSection, pdfSection)
+        return "You are a study assistant. Generate %d exam questions based on the source material below.\n\n".formatted(count)
+            + AiGenerationSupport.languageSection("question text and expectedAnswerHints") + "\n"
+            + "QUESTION DEPTH:\n%s\n\n".formatted(sizeInstruction)
+            + AiGenerationSupport.topicFocusSection() + "\n"
+            + AiGenerationSupport.coverageSection(count) + "\n"
+            + AiGenerationSupport.missingContextSection() + "\n"
+            + "GENERAL RULES:\n"
+            + "- Each question stands alone — do not reference \"the text\" or \"the document\".\n"
+            + "- Test understanding, not exact wording.\n"
+            + "- Use all supplied sources (flashcards, text documents, and attached PDFs) consistently with the coverage plan.\n"
+            + "- For each question, provide 'expectedAnswerHints' which is a 2–3 sentence rubric\n"
+            + "  describing what a perfect answer should contain. This rubric is never shown to the user.\n\n"
+            + "=== FLASHCARDS ===\n%s\n\n".formatted(cardSection)
+            + "=== DOCUMENTS ===\n%s\n\n".formatted(docSection)
+            + "=== ATTACHED PDFs ===\n%s\n".formatted(pdfSection)
             + AiInstructionSupport.section(additionalInstructions);
     }
 

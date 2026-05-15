@@ -173,50 +173,22 @@ public class AiQuizService {
         String docSection  = docContent.isBlank()  ? "(none)" : docContent;
         String pdfSection  = pdfListing.isBlank()  ? "(none)" : pdfListing;
 
-        return ("You are a study assistant. Generate %d %s based on the source material below.\n\n"
-            + "LANGUAGE:\n"
-            + "Detect the dominant natural language of the supplied source material (flashcards,\n"
-            + "documents, and attached PDFs together). Write every output string — question text,\n"
-            + "answer options, hints — in that same language. If sources mix languages, use the\n"
-            + "most-prevalent one. Do not translate technical terms, proper nouns, or code.\n\n"
-            + "DIFFICULTY: %s\n\n"
-            + "TOPIC FOCUS:\n"
-            + "First identify the dominant subject matter of the supplied content. Generate\n"
-            + "questions only about concepts that belong to that subject. Ignore incidental\n"
-            + "metadata such as author names, page numbers, publication dates, headers, footers,\n"
-            + "or off-topic asides.\n\n"
-            + "COVERAGE:\n"
-            + "Distribute the %d requested questions evenly across the entire source material.\n"
-            + "- Treat each attached PDF and each text document as a separate source.\n"
-            + "- Within each source, sample roughly equally from the early third, middle third,\n"
-            + "  and final third (by page count for PDFs, by length for text).\n"
-            + "- If multiple sources are supplied, allocate questions proportionally to source\n"
-            + "  length, but ensure every source contributes at least one question when N is\n"
-            + "  large enough.\n"
-            + "- Do not cluster on introductions, abstracts, tables of contents, or the first\n"
-            + "  few pages. Skip these unless they contain core subject matter.\n"
-            + "- Before writing questions, sketch a brief internal coverage plan (which\n"
-            + "  pages/sections each question will draw from). Do not include the plan in\n"
-            + "  the JSON output.\n\n"
-            + "SOME CARDS MAY HAVE MISSING CONTEXT:\n"
-            + "Some flashcards may have had images removed. If a card's text alone is\n"
-            + "insufficient to form a meaningful question (e.g. it references \"this diagram\"\n"
-            + "or \"the image above\"), skip that card.\n\n"
-            + "QUESTION TYPE RULES:\n"
-            + "%s\n\n"
+        return "You are a study assistant. Generate %d %s based on the source material below.\n\n".formatted(count, modeDescription)
+            + AiGenerationSupport.languageSection("question text, answer options, hints") + "\n"
+            + "DIFFICULTY: %s\n\n".formatted(difficultyInstruction)
+            + AiGenerationSupport.topicFocusSection() + "\n"
+            + AiGenerationSupport.coverageSection(count) + "\n"
+            + AiGenerationSupport.missingContextSection() + "\n"
+            + "QUESTION TYPE RULES:\n%s\n\n".formatted(typeRules)
             + "GENERAL RULES:\n"
             + "- Each question stands alone — do not reference \"the text\" or \"the document\".\n"
             + "- correctOptionIndex is 0-based.\n"
             + "- Vary which index is correct across questions.\n"
             + "- Test understanding, not exact wording.\n"
             + "- Use the attached PDF documents (including their figures, diagrams, and tables) as primary source material for question generation.\n\n"
-            + "=== FLASHCARDS ===\n"
-            + "%s\n\n"
-            + "=== DOCUMENTS ===\n"
-            + "%s\n\n"
-            + "=== ATTACHED PDFs ===\n"
-            + "%s\n"
-        ).formatted(count, modeDescription, difficultyInstruction, count, typeRules, cardSection, docSection, pdfSection)
+            + "=== FLASHCARDS ===\n%s\n\n".formatted(cardSection)
+            + "=== DOCUMENTS ===\n%s\n\n".formatted(docSection)
+            + "=== ATTACHED PDFs ===\n%s\n".formatted(pdfSection)
             + AiInstructionSupport.section(additionalInstructions);
     }
 }
