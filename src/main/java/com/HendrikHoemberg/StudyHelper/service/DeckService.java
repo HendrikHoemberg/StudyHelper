@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.config.AppDefaults;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
@@ -12,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.NoSuchElementException;
+import com.HendrikHoemberg.StudyHelper.exception.ResourceNotFoundException;
 import java.util.Set;
 
 @Service
@@ -32,7 +33,7 @@ public class DeckService {
     @Transactional
     public Deck createDeck(String name, String colorHex, String iconName, Long folderId, User user) {
         Folder folder = folderRepository.findByIdAndUser(folderId, user)
-            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
 
         Deck deck = new Deck();
         deck.setName(name);
@@ -50,13 +51,13 @@ public class DeckService {
         if (folder.getColorHex() != null && !folder.getColorHex().isBlank()) {
             return folder.getColorHex();
         }
-        return "#0f766e";
+        return AppDefaults.DEFAULT_COLOR_HEX;
     }
 
     @Transactional(readOnly = true)
     public Deck getDeck(Long id, User user) {
         Deck deck = deckRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new NoSuchElementException("Deck not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Deck not found"));
         // Initialize lazy collections within transaction
         deck.getFlashcards().size();
         deck.getFolder().getName();
@@ -66,7 +67,7 @@ public class DeckService {
     @Transactional
     public Deck updateDeck(Long id, String newName, String colorHex, String iconName, User user) {
         Deck deck = deckRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new NoSuchElementException("Deck not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Deck not found"));
         if (newName != null && !newName.isBlank()) {
             deck.setName(newName);
         }
@@ -80,7 +81,7 @@ public class DeckService {
     @Transactional
     public Long deleteDeck(Long id, User user) {
         Deck deck = deckRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new NoSuchElementException("Deck not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Deck not found"));
         Long folderId = deck.getFolder().getId();
         deckRepository.delete(deck);
         return folderId;
@@ -89,7 +90,7 @@ public class DeckService {
     @Transactional(readOnly = true)
     public List<Deck> getDecksForFolder(Long folderId, User user) {
         Folder folder = folderRepository.findByIdAndUser(folderId, user)
-            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
         return deckRepository.findByUserAndFolder(user, folder);
     }
 
@@ -99,7 +100,7 @@ public class DeckService {
         List<Deck> orderedDecks = new ArrayList<>();
         for (Long deckId : normalized) {
             Deck deck = deckRepository.findByIdAndUser(deckId, user)
-                .orElseThrow(() -> new NoSuchElementException("Deck not found for user: " + deckId));
+                .orElseThrow(() -> new ResourceNotFoundException("Deck not found for user: " + deckId));
             deck.getFlashcards().size();
             deck.getFolder().getId();
             orderedDecks.add(deck);

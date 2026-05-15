@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
+import com.HendrikHoemberg.StudyHelper.exception.ResourceNotFoundException;
 
 @Service
 public class FlashcardService {
@@ -46,7 +46,7 @@ public class FlashcardService {
     public Flashcard createFlashcard(String frontText, String backText, Long deckId, User user,
                                      MultipartFile frontImage, MultipartFile backImage) {
         Deck deck = deckRepository.findByIdAndUser(deckId, user)
-            .orElseThrow(() -> new NoSuchElementException("Deck not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Deck not found"));
 
         Flashcard card = new Flashcard();
         card.setFrontText(frontText);
@@ -67,7 +67,7 @@ public class FlashcardService {
                                      MultipartFile frontImage, boolean removeFrontImage,
                                      MultipartFile backImage, boolean removeBackImage) {
         Flashcard card = flashcardRepository.findByIdAndDeckUserUsername(id, username)
-            .orElseThrow(() -> new NoSuchElementException("Flashcard not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Flashcard not found"));
         User user = card.getDeck().getUser();
         card.setFrontText(frontText);
         card.setBackText(backText);
@@ -96,7 +96,7 @@ public class FlashcardService {
     @Transactional
     public Long deleteFlashcard(Long id, String username) {
         Flashcard card = flashcardRepository.findByIdAndDeckUserUsername(id, username)
-            .orElseThrow(() -> new NoSuchElementException("Flashcard not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Flashcard not found"));
         Long deckId = card.getDeck().getId();
         deleteImageFile(card.getFrontImageFilename());
         deleteImageFile(card.getBackImageFilename());
@@ -107,7 +107,7 @@ public class FlashcardService {
     @Transactional(readOnly = true)
     public List<Flashcard> getFlashcardsForDeck(Long deckId, User user) {
         Deck deck = deckRepository.findByIdAndUser(deckId, user)
-            .orElseThrow(() -> new NoSuchElementException("Deck not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Deck not found"));
         return flashcardRepository.findByDeck(deck);
     }
 
@@ -144,13 +144,13 @@ public class FlashcardService {
     @Transactional(readOnly = true)
     public Flashcard getFlashcardForUser(Long cardId, User user) {
         return flashcardRepository.findByIdAndDeckUserUsername(cardId, user.getUsername())
-            .orElseThrow(() -> new NoSuchElementException("Flashcard not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Flashcard not found"));
     }
 
     @Transactional
     public void replaceImage(Long id, String side, MultipartFile image, User user) {
         Flashcard card = flashcardRepository.findByIdAndDeckUserUsername(id, user.getUsername())
-            .orElseThrow(() -> new NoSuchElementException("Flashcard not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Flashcard not found"));
 
         String oldFilename = "front".equals(side) ? card.getFrontImageFilename() : card.getBackImageFilename();
         long oldBytes = "front".equals(side)

@@ -67,33 +67,6 @@ class AiRequestQuotaServiceTests {
     }
 
     @Test
-    void assertHasQuota_ThrowsWhenUsedReachedLimit() {
-        AiRequestUsage usage = new AiRequestUsage();
-        usage.setUser(user);
-        usage.setUsageDate(today);
-        usage.setRequestCount(2);
-        when(aiRequestUsageRepository.findByUserAndUsageDate(user, today)).thenReturn(Optional.of(usage));
-
-        assertThatThrownBy(() -> aiRequestQuotaService.assertHasQuota(user))
-            .isInstanceOf(AiQuotaExceededException.class)
-            .hasMessage("Daily AI request limit reached.");
-    }
-
-    @Test
-    void recordRequest_IncrementsExistingRow() {
-        AiRequestUsage usage = new AiRequestUsage();
-        usage.setUser(user);
-        usage.setUsageDate(today);
-        usage.setRequestCount(1);
-        when(aiRequestUsageRepository.findByUserAndUsageDate(user, today)).thenReturn(Optional.of(usage));
-
-        aiRequestQuotaService.recordRequest(user);
-
-        assertThat(usage.getRequestCount()).isEqualTo(2);
-        verify(aiRequestUsageRepository, times(1)).save(usage);
-    }
-
-    @Test
     void checkAndRecord_WhenQuotaAvailable_RecordsOneRequest() {
         AiRequestUsage usage = new AiRequestUsage();
         usage.setUser(user);

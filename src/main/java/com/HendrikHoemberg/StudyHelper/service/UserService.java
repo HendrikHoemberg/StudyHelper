@@ -7,11 +7,15 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
 @Service
 public class UserService {
 
     public static final int MIN_PASSWORD_LENGTH = 8;
+
+    private static final String USER_CACHE_PREFIX = UserService.class.getName() + ".user.";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -21,9 +25,25 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Resolves a user by username, caching the result for the duration of the
+     * current web request. A single page render triggers several lookups for
+     * the same principal (controller advice, the handler itself); the cache
+     * collapses those into one query. Outside a request scope it always queries.
+     */
     public User getByUsername(String username) {
-        return userRepository.findByUsername(username)
+        RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
+        String cacheKey = USER_CACHE_PREFIX + username;
+        if (attributes != null
+            && attributes.getAttribute(cacheKey, RequestAttributes.SCOPE_REQUEST) instanceof User cached) {
+            return cached;
+        }
+        User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        if (attributes != null) {
+            attributes.setAttribute(cacheKey, user, RequestAttributes.SCOPE_REQUEST);
+        }
+        return user;
     }
 
     @Transactional

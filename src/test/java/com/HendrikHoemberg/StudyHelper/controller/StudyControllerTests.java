@@ -15,10 +15,9 @@ import java.util.Map;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -29,44 +28,36 @@ class StudyControllerTests {
 
     private StudyController controller;
     private StudySessionService studySessionService;
+    private QuizSessionService quizSessionService;
     private ExamSessionService examSessionService;
-    private AiRequestQuotaService aiRequestQuotaService;
     private User user;
 
     @BeforeEach
     void setUp() {
         studySessionService = mock(StudySessionService.class);
-        AiQuizService aiQuizService = mock(AiQuizService.class);
-        AiExamService aiExamService = mock(AiExamService.class);
-        ExamService examService = mock(ExamService.class);
-        UserService userService = mock(UserService.class);
+        quizSessionService = mock(QuizSessionService.class);
         DeckService deckService = mock(DeckService.class);
-        FlashcardService flashcardService = mock(FlashcardService.class);
         FolderService folderService = mock(FolderService.class);
+        UserService userService = mock(UserService.class);
         DocumentExtractionService documentExtractionService = mock(DocumentExtractionService.class);
         FileEntryService fileEntryService = mock(FileEntryService.class);
         examSessionService = mock(ExamSessionService.class);
-        aiRequestQuotaService = mock(AiRequestQuotaService.class);
 
         controller = new StudyController(
             studySessionService,
-            aiQuizService,
+            quizSessionService,
             deckService,
-            flashcardService,
             folderService,
             userService,
             documentExtractionService,
             fileEntryService,
-            examSessionService,
-            aiRequestQuotaService
+            examSessionService
         );
 
         user = new User();
         user.setId(1L);
         user.setUsername("alice");
         when(userService.getByUsername("alice")).thenReturn(user);
-        when(deckService.getValidatedDecksInRequestedOrder(anyList(), eq(user))).thenReturn(List.of());
-        when(flashcardService.getFlashcardsFlattened(anyList())).thenReturn(List.of());
     }
 
     @Test
@@ -78,11 +69,7 @@ class StudyControllerTests {
             Instant.now(),
             "source"
         );
-        doAnswer(invocation -> {
-                invocation.<Runnable>getArgument(9).run();
-                return new ExamSessionService.ExamSessionResult(state, ExamLayout.PER_PAGE);
-            })
-            .when(examSessionService).createSession(
+        when(examSessionService.createSession(
                 eq(List.of(10L)),
                 eq(List.of()),
                 eq("exam instructions"),
@@ -91,9 +78,8 @@ class StudyControllerTests {
                 eq(5),
                 eq(null),
                 eq(ExamLayout.PER_PAGE),
-                eq(user),
-                any(Runnable.class)
-            );
+                eq(user)))
+            .thenReturn(new ExamSessionService.ExamSessionResult(state, ExamLayout.PER_PAGE));
 
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpSession session = new MockHttpSession();
@@ -134,15 +120,14 @@ class StudyControllerTests {
             eq(5),
             eq(null),
             eq(ExamLayout.PER_PAGE),
-            eq(user),
-            any(Runnable.class)
-        );
+            eq(user));
     }
 
     @Test
-    void createSession_QuizQuotaExceeded_RendersStudyErrorPath() {
+    void createSession_QuizQuotaExceeded_RendersStudyErrorPath() throws Exception {
         doThrow(new AiQuotaExceededException("Daily AI request limit reached."))
-            .when(aiRequestQuotaService).checkAndRecord(user);
+            .when(quizSessionService).createSession(
+                any(), any(), any(), anyInt(), any(), any(), any(), eq(user));
 
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -173,11 +158,14 @@ class StudyControllerTests {
         assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("studyError")).isEqualTo("Daily AI request limit reached.");
-        verify(aiRequestQuotaService).checkAndRecord(user);
     }
 
     @Test
-    void preflightCreateSession_QuizWithoutSources_ReturnsStudyErrorAndSkipsQuota() {
+    void preflightCreateSession_QuizWithoutSources_ReturnsStudyErrorAndSkipsGeneration() throws Exception {
+        doThrow(new IllegalArgumentException("Please select at least one deck or document."))
+            .when(quizSessionService).validateForPreflight(
+                any(), any(), any(), any(), any(), eq(user));
+
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -203,7 +191,8 @@ class StudyControllerTests {
         assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("studyError")).isEqualTo("Please select at least one deck or document.");
-        verify(aiRequestQuotaService, never()).checkAndRecord(any());
+        verify(quizSessionService, never()).createSession(
+            any(), any(), any(), anyInt(), any(), any(), any(), any());
     }
 
     @Test
@@ -217,8 +206,7 @@ class StudyControllerTests {
                 eq(5),
                 eq(null),
                 eq(ExamLayout.PER_PAGE),
-                eq(user)
-            );
+                eq(user));
 
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -253,13 +241,11 @@ class StudyControllerTests {
             eq(5),
             eq(null),
             eq(ExamLayout.PER_PAGE),
-            eq(user)
-        );
-        verify(aiRequestQuotaService, never()).checkAndRecord(any());
+            eq(user));
     }
 
     @Test
-    void preflightCreateSession_FlashcardsInvalidSelection_ValidatesStudySessionAndSkipsQuota() {
+    void preflightCreateSession_FlashcardsInvalidSelection_ValidatesStudySession() {
         doThrow(new IllegalArgumentException("Please select at least one deck."))
             .when(studySessionService).buildSession(any(StudySessionConfig.class), eq(user));
 
@@ -289,6 +275,5 @@ class StudyControllerTests {
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("studyError")).isEqualTo("Please select at least one deck.");
         verify(studySessionService).buildSession(any(StudySessionConfig.class), eq(user));
-        verify(aiRequestQuotaService, never()).checkAndRecord(any());
     }
 }

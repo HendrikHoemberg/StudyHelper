@@ -32,6 +32,11 @@ public record AiGenerationDiagnostics(
         );
     }
 
+    /**
+     * Client-facing summary. Deliberately excludes the stack trace: the full
+     * trace is kept in {@link #stackTrace()} for server-side logging only and
+     * must never be rendered into a response sent to the browser.
+     */
     public String toDisplayString() {
         return "Generation ID: " + generationId + "\n"
             + "Timestamp: " + timestamp + "\n"
@@ -40,8 +45,7 @@ public record AiGenerationDiagnostics(
             + "Exception: " + exceptionClass + "\n"
             + "Exception message: " + exceptionMessage + "\n"
             + "Root cause: " + rootCauseClass + "\n"
-            + "Root cause message: " + rootCauseMessage + "\n\n"
-            + "Stack trace:\n" + stackTrace;
+            + "Root cause message: " + rootCauseMessage;
     }
 
     private static Throwable rootCause(Throwable throwable) {

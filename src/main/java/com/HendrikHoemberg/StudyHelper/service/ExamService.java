@@ -16,7 +16,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
+import com.HendrikHoemberg.StudyHelper.exception.ResourceNotFoundException;
 
 @Service
 public class ExamService {
@@ -85,9 +85,9 @@ public class ExamService {
 
     public Exam getOwnedById(User user, Long examId) {
         Exam exam = examRepository.findById(examId)
-                .orElseThrow(() -> new NoSuchElementException("Exam not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
         if (!exam.getUser().getId().equals(user.getId())) {
-            throw new NoSuchElementException("Exam not found or access denied");
+            throw new ResourceNotFoundException("Exam not found or access denied");
         }
         return exam;
     }

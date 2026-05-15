@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
+import com.HendrikHoemberg.StudyHelper.config.AppDefaults;
 import com.HendrikHoemberg.StudyHelper.dto.FileSummary;
 import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
@@ -78,7 +79,7 @@ public class FolderController {
 
     @PostMapping("/folders")
     public String createRootFolder(@RequestParam String name,
-                                   @RequestParam(defaultValue = "#0f766e") String colorHex,
+                                   @RequestParam(defaultValue = AppDefaults.DEFAULT_COLOR_HEX) String colorHex,
                                    @RequestParam(defaultValue = "folder") String iconName,
                                    Principal principal,
                                    @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
@@ -154,23 +155,19 @@ public class FolderController {
     @PostMapping("/folders/{id}/subfolders")
     public String createSubfolder(@PathVariable Long id,
                                    @RequestParam String name,
-                                   @RequestParam(defaultValue = "#0f766e") String colorHex,
+                                   @RequestParam(defaultValue = AppDefaults.DEFAULT_COLOR_HEX) String colorHex,
                                    @RequestParam(defaultValue = "folder") String iconName,
-                                   Principal principal,
-                                   @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+                                   Principal principal) {
         User user = userService.getByUsername(principal.getName());
         folderService.createFolder(name, colorHex, iconName, id, user);
 
-        if (hxRequest != null) {
-            return "redirect:/folders/" + id + "?tab=folders";
-        }
         return "redirect:/folders/" + id + "?tab=folders";
     }
 
     @PostMapping("/folders/{id}/edit")
     public String editFolder(@PathVariable Long id,
                              @RequestParam String name,
-                             @RequestParam(defaultValue = "#6c757d") String colorHex,
+                             @RequestParam(defaultValue = AppDefaults.DEFAULT_COLOR_HEX) String colorHex,
                              @RequestParam(defaultValue = "folder") String iconName,
                              Principal principal) {
         User user = userService.getByUsername(principal.getName());
@@ -181,14 +178,10 @@ public class FolderController {
     @PostMapping("/folders/{id}/color")
     public String updateColor(@PathVariable Long id,
                               @RequestParam String colorHex,
-                              Principal principal,
-                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+                              Principal principal) {
         User user = userService.getByUsername(principal.getName());
         folderService.updateFolderColor(id, colorHex, user);
 
-        if (hxRequest != null) {
-            return "redirect:/folders/" + id + "?tab=folders";
-        }
         return "redirect:/folders/" + id + "?tab=folders";
     }
 

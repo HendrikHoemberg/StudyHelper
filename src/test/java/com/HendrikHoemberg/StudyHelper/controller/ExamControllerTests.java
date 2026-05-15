@@ -5,6 +5,8 @@ import com.HendrikHoemberg.StudyHelper.dto.ExamQuestionSize;
 import com.HendrikHoemberg.StudyHelper.dto.ExamQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.ExamSessionState;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.service.AiGenerationDiagnostics;
+import com.HendrikHoemberg.StudyHelper.service.AiGenerationException;
 import com.HendrikHoemberg.StudyHelper.service.AiQuotaExceededException;
 import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.AiExamService;
@@ -26,7 +28,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -68,7 +69,7 @@ class ExamControllerTests {
         doThrow(new IllegalArgumentException("Please select at least one source."))
             .when(examSessionService).createSession(
                 anyList(), anyList(), any(), any(),
-                any(), anyInt(), any(), any(), any(), any(Runnable.class)
+                any(), anyInt(), any(), any(), any()
             );
 
         ExtendedModelMap model = new ExtendedModelMap();
@@ -97,7 +98,7 @@ class ExamControllerTests {
         assertThat(model.get("aiErrorMessage")).isEqualTo("Please select at least one source.");
         verify(examSessionService).createSession(
             anyList(), anyList(), any(), any(),
-            any(), anyInt(), any(), any(), any(), any(Runnable.class)
+            any(), anyInt(), any(), any(), any()
         );
     }
 
@@ -106,7 +107,7 @@ class ExamControllerTests {
         doThrow(new AiQuotaExceededException("Daily AI request limit reached."))
             .when(examSessionService).createSession(
                 anyList(), anyList(), any(), any(),
-                any(), anyInt(), any(), any(), any(), any(Runnable.class)
+                any(), anyInt(), any(), any(), any()
             );
 
         ExtendedModelMap model = new ExtendedModelMap();
@@ -134,19 +135,18 @@ class ExamControllerTests {
         assertThat(model.get("aiErrorMessage")).isEqualTo("Daily AI request limit reached.");
         verify(examSessionService).createSession(
             anyList(), anyList(), any(), any(),
-            any(), anyInt(), any(), any(), any(), any(Runnable.class)
+            any(), anyInt(), any(), any(), any()
         );
     }
 
     @Test
     void createSession_ProviderFailureAfterQuotaRefreshesQuota() throws Exception {
-        doAnswer(invocation -> {
-                invocation.<Runnable>getArgument(9).run();
-                throw new RuntimeException("provider unavailable");
-            })
+        doThrow(new AiGenerationException("provider unavailable",
+                AiGenerationDiagnostics.fromException("EXAM", "PROVIDER_REQUEST",
+                    new RuntimeException("provider unavailable"))))
             .when(examSessionService).createSession(
                 anyList(), anyList(), any(), any(),
-                any(), anyInt(), any(), any(), any(), any(Runnable.class)
+                any(), anyInt(), any(), any(), any()
             );
 
         ExtendedModelMap model = new ExtendedModelMap();

@@ -67,27 +67,6 @@ public class FlashcardGenerationController {
         this.aiRequestQuotaService = aiRequestQuotaService;
     }
 
-    public FlashcardGenerationController(AiFlashcardService aiFlashcardService,
-                                         FlashcardGenerationPersistenceService persistenceService,
-                                         FlashcardGenerationViewService viewService,
-                                         UserService userService,
-                                         FileEntryService fileEntryService,
-                                         DocumentExtractionService documentExtractionService,
-                                         DeckService deckService,
-                                         FolderService folderService) {
-        this(
-            aiFlashcardService,
-            persistenceService,
-            viewService,
-            userService,
-            fileEntryService,
-            documentExtractionService,
-            deckService,
-            folderService,
-            null
-        );
-    }
-
     @GetMapping("/flashcards/generate")
     public String showGenerator(@RequestParam(required = false) Long fileId,
                                 Model model,
@@ -120,7 +99,7 @@ public class FlashcardGenerationController {
         User user = userService.getByUsername(principal.getName());
         try {
             DocumentInput input = validateAndBuildInput(fileId, documentMode, destination, existingDeckId, newDeckFolderId, newDeckName, user);
-            requireQuotaService().checkAndRecord(user);
+            aiRequestQuotaService.checkAndRecord(user);
             response.addHeader("HX-Trigger", "refresh-quota");
             List<GeneratedFlashcard> generated = aiFlashcardService.generate(input, additionalInstructions);
             Deck savedDeck = persistenceService.saveGeneratedCards(
@@ -270,10 +249,4 @@ public class FlashcardGenerationController {
         return "Generated " + count + " flashcard" + (count == 1 ? "" : "s") + " from " + filename + ".";
     }
 
-    private AiRequestQuotaService requireQuotaService() {
-        if (aiRequestQuotaService == null) {
-            throw new IllegalStateException("AI quota service is not configured.");
-        }
-        return aiRequestQuotaService;
-    }
 }

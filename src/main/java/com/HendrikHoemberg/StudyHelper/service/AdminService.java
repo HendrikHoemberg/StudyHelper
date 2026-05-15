@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.NoSuchElementException;
+import com.HendrikHoemberg.StudyHelper.exception.ResourceNotFoundException;
 import java.util.Set;
 
 @Service
@@ -134,6 +134,6 @@ public class AdminService {
 
     private User getUser(Long userId) {
         return userRepository.findById(userId)
-            .orElseThrow(() -> new NoSuchElementException("User not found."));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found."));
     }
 }

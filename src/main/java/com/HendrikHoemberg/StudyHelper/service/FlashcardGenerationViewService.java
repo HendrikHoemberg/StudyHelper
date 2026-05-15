@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.config.AppDefaults;
 import com.HendrikHoemberg.StudyHelper.dto.FlashcardPdfOption;
 import com.HendrikHoemberg.StudyHelper.dto.FolderOption;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
@@ -78,6 +79,6 @@ public class FlashcardGenerationViewService {
     private String colorOf(Folder folder) {
         return folder.getColorHex() != null && !folder.getColorHex().isBlank()
             ? folder.getColorHex()
-            : "#0f766e";
+            : AppDefaults.DEFAULT_COLOR_HEX;
     }
 }

@@ -50,12 +50,15 @@ class StudyControllerPdfModeTests {
         fileEntryService = mock(FileEntryService.class);
         aiRequestQuotaService = mock(AiRequestQuotaService.class);
 
+        QuizSessionService quizSessionService = new QuizSessionService(
+                aiQuizService, deckService, flashcardService, fileEntryService,
+                documentExtractionService, aiRequestQuotaService);
         ExamSessionService examSessionService = new ExamSessionService(
                 aiExamService, deckService, flashcardService, fileEntryService,
                 documentExtractionService, aiRequestQuotaService);
         controller = new StudyController(
-                studySessionService, aiQuizService, deckService, flashcardService, folderService,
-                userService, documentExtractionService, fileEntryService, examSessionService, aiRequestQuotaService);
+                studySessionService, quizSessionService, deckService, folderService,
+                userService, documentExtractionService, fileEntryService, examSessionService);
 
         user = new User();
         user.setId(1L);
@@ -475,7 +478,9 @@ class StudyControllerPdfModeTests {
         when(deckService.getValidatedDecksInRequestedOrder(anyList(), eq(user))).thenReturn(List.of());
         when(flashcardService.getFlashcardsFlattened(anyList())).thenReturn(List.of());
         when(aiExamService.generate(anyList(), anyList(), anyInt(), any(), any()))
-                .thenThrow(new RuntimeException("provider unavailable"));
+                .thenThrow(new AiGenerationException("provider unavailable",
+                        AiGenerationDiagnostics.fromException("EXAM", "PROVIDER_REQUEST",
+                                new RuntimeException("provider unavailable"))));
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter("pdfMode[1]", "TEXT");
