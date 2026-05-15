@@ -1,53 +1,50 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.dto.Difficulty;
 import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
 import com.HendrikHoemberg.StudyHelper.dto.DocumentMode;
-import com.HendrikHoemberg.StudyHelper.dto.ExamConfig;
-import com.HendrikHoemberg.StudyHelper.dto.ExamLayout;
-import com.HendrikHoemberg.StudyHelper.dto.ExamQuestion;
-import com.HendrikHoemberg.StudyHelper.dto.ExamQuestionSize;
-import com.HendrikHoemberg.StudyHelper.dto.ExamSessionState;
 import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
+import com.HendrikHoemberg.StudyHelper.dto.QuizConfig;
+import com.HendrikHoemberg.StudyHelper.dto.QuizQuestion;
+import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionMode;
+import com.HendrikHoemberg.StudyHelper.dto.QuizSessionState;
 import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
- * Holds exam validation, AI generation, and session-state assembly so that
- * controllers can stay thin and so StudyController does not need to inject
- * ExamController to handle EXAM mode.
+ * Holds quiz validation, AI generation, and session-state assembly so that
+ * StudyController stays thin. Mirrors {@link ExamSessionService}.
  */
 @Service
-public class ExamSessionService {
+public class QuizSessionService {
 
-    private final AiExamService aiExamService;
+    private static final long MAX_TOTAL_CHARS = 150_000;
+
+    private final AiQuizService aiQuizService;
     private final DeckService deckService;
     private final FlashcardService flashcardService;
     private final FileEntryService fileEntryService;
     private final DocumentExtractionService documentExtractionService;
     private final AiRequestQuotaService aiRequestQuotaService;
 
-    @Autowired
-    public ExamSessionService(AiExamService aiExamService,
+    public QuizSessionService(AiQuizService aiQuizService,
                               DeckService deckService,
                               FlashcardService flashcardService,
                               FileEntryService fileEntryService,
                               DocumentExtractionService documentExtractionService,
                               AiRequestQuotaService aiRequestQuotaService) {
-        this.aiExamService = aiExamService;
+        this.aiQuizService = aiQuizService;
         this.deckService = deckService;
         this.flashcardService = flashcardService;
         this.fileEntryService = fileEntryService;
@@ -55,87 +52,70 @@ public class ExamSessionService {
         this.aiRequestQuotaService = aiRequestQuotaService;
     }
 
-    public record ExamSessionResult(ExamSessionState state, ExamLayout layout) {}
-
-    public ExamSessionResult createSession(List<Long> selectedDeckIds,
-                                           List<Long> selectedFileIds,
-                                           String additionalInstructions,
-                                           HttpServletRequest request,
-                                           ExamQuestionSize questionSize,
-                                           int count,
-                                           Integer timerMinutes,
-                                           ExamLayout layout,
-                                           User user) throws Exception {
+    public QuizSessionState createSession(List<Long> selectedDeckIds,
+                                          List<Long> selectedFileIds,
+                                          HttpServletRequest request,
+                                          int requestedQuestionCount,
+                                          QuizQuestionMode mode,
+                                          Difficulty difficulty,
+                                          String additionalInstructions,
+                                          User user) throws Exception {
         List<Long> deckIds = normalizeIds(selectedDeckIds);
         List<Long> fileIds = normalizeIds(selectedFileIds);
-        validateSetup(questionSize, count, timerMinutes, layout);
         Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
-        GenerationInput input = validateRequestWithSources(deckIds, fileIds, pdfMode, user);
+        QuizGenerationInput input = validateRequestWithSources(deckIds, fileIds, pdfMode, user);
 
-        int qCount = normalizeQuestionCount(count);
+        int qCount = normalizeQuestionCount(requestedQuestionCount);
         aiRequestQuotaService.checkAndRecord(user);
 
-        List<ExamQuestion> questions = aiExamService.generate(
+        List<QuizQuestion> questions = aiQuizService.generate(
             input.flashcards(),
             input.documents(),
             qCount,
-            questionSize,
+            mode,
+            difficulty,
             additionalInstructions
         );
 
-        String sourceSummary = input.sourceNames().stream().limit(3).collect(Collectors.joining(", "));
-        if (input.sourceNames().size() > 3) {
-            sourceSummary += " + " + (input.sourceNames().size() - 3) + " more";
-        }
-
-        ExamSessionState state = new ExamSessionState(
-            new ExamConfig(deckIds, fileIds, questionSize, qCount, timerMinutes, layout),
-            questions, new HashMap<>(), Instant.now(), sourceSummary
+        return new QuizSessionState(
+            new QuizConfig(deckIds, fileIds, qCount, mode, difficulty),
+            questions,
+            0,
+            new HashMap<>()
         );
-        return new ExamSessionResult(state, layout);
     }
 
     public void validateForPreflight(List<Long> selectedDeckIds,
                                      List<Long> selectedFileIds,
                                      HttpServletRequest request,
-                                     ExamQuestionSize questionSize,
-                                     int count,
-                                     Integer timerMinutes,
-                                     ExamLayout layout,
+                                     QuizQuestionMode mode,
+                                     Difficulty difficulty,
                                      User user) throws Exception {
-        List<Long> deckIds = normalizeIds(selectedDeckIds);
-        List<Long> fileIds = normalizeIds(selectedFileIds);
-        validateSetup(questionSize, count, timerMinutes, layout);
+        validateSetup(mode, difficulty);
         Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
-        validateRequestWithSources(deckIds, fileIds, pdfMode, user);
+        validateRequestWithSources(normalizeIds(selectedDeckIds), normalizeIds(selectedFileIds), pdfMode, user);
     }
 
-    private void validateSetup(ExamQuestionSize questionSize,
-                               int count,
-                               Integer timerMinutes,
-                               ExamLayout layout) {
-        if (questionSize == null) {
-            throw new IllegalArgumentException("Please select an exam question size.");
+    private void validateSetup(QuizQuestionMode mode, Difficulty difficulty) {
+        if (mode == null) {
+            throw new IllegalArgumentException("Please select a quiz mode.");
         }
-        if (layout == null) {
-            throw new IllegalArgumentException("Please select an exam layout.");
+        if (difficulty == null) {
+            throw new IllegalArgumentException("Please select a difficulty.");
         }
-        normalizeQuestionCount(count);
     }
 
-    private GenerationInput validateRequestWithSources(List<Long> deckIds,
-                                                       List<Long> fileIds,
-                                                       Map<Long, DocumentMode> pdfMode,
-                                                       User user) throws Exception {
+    private QuizGenerationInput validateRequestWithSources(List<Long> deckIds,
+                                                           List<Long> fileIds,
+                                                           Map<Long, DocumentMode> pdfMode,
+                                                           User user) throws Exception {
         if (deckIds.isEmpty() && fileIds.isEmpty()) {
-            throw new IllegalArgumentException("Please select at least one source.");
+            throw new IllegalArgumentException("Please select at least one deck or document.");
         }
 
         List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(deckIds, user);
         List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
         List<DocumentInput> documents = new ArrayList<>();
-        List<String> sourceNames = new ArrayList<>();
-        decks.forEach(d -> sourceNames.add(d.getName()));
 
         long totalChars = 0;
         for (Long fileId : fileIds) {
@@ -153,14 +133,12 @@ public class ExamSessionService {
                 case FULL_PDF -> documents.add(new PdfDocument(file.getOriginalFilename(),
                     documentExtractionService.loadResource(file)));
             }
-            sourceNames.add(file.getOriginalFilename());
         }
 
-        if (totalChars > 150_000) {
+        if (totalChars > MAX_TOTAL_CHARS) {
             throw new IllegalArgumentException("Selection too large — please deselect some sources.");
         }
-
-        return new GenerationInput(flashcards, documents, sourceNames);
+        return new QuizGenerationInput(flashcards, documents);
     }
 
     private String requireExtractedText(FileEntry file) throws Exception {
@@ -176,8 +154,8 @@ public class ExamSessionService {
         return filename != null && filename.toLowerCase().endsWith(".pdf");
     }
 
-    private int normalizeQuestionCount(int count) {
-        return Math.max(1, Math.min(count, 20));
+    private int normalizeQuestionCount(int questionCount) {
+        return Math.max(1, Math.min(questionCount, 20));
     }
 
     private List<Long> normalizeIds(List<Long> ids) {
@@ -185,7 +163,5 @@ public class ExamSessionService {
         return ids.stream().filter(Objects::nonNull).distinct().toList();
     }
 
-    private record GenerationInput(List<Flashcard> flashcards,
-                                   List<DocumentInput> documents,
-                                   List<String> sourceNames) {}
+    private record QuizGenerationInput(List<Flashcard> flashcards, List<DocumentInput> documents) {}
 }

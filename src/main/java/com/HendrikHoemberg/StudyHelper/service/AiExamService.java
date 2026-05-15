@@ -5,8 +5,6 @@ import com.HendrikHoemberg.StudyHelper.dto.ExamGradingResult;
 import com.HendrikHoemberg.StudyHelper.dto.ExamQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.ExamQuestionsResponse;
 import com.HendrikHoemberg.StudyHelper.dto.ExamQuestionSize;
-import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
-import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import tools.jackson.databind.json.JsonMapper;
 import org.springframework.ai.chat.client.ChatClient;
@@ -16,7 +14,6 @@ import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MimeType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,10 +48,10 @@ public class AiExamService {
             int questionCount,
             ExamQuestionSize size,
             String additionalInstructions) {
-        String cardContent = buildCardContent(flashcards);
-        String docContent  = buildTextDocContent(documents);
-        String pdfListing  = buildPdfListing(documents);
-        Media[] pdfMedia   = buildPdfMedia(documents);
+        String cardContent = AiGenerationSupport.cards(flashcards);
+        String docContent  = AiGenerationSupport.textDocuments(documents);
+        String pdfListing  = AiGenerationSupport.pdfListing(documents);
+        Media[] pdfMedia   = AiGenerationSupport.pdfMedia(documents);
 
         if (cardContent.isBlank() && docContent.isBlank() && pdfMedia.length == 0) {
             throw new IllegalArgumentException("Selected sources contain no usable text or PDFs. Pick a deck, a document with extractable content, or a PDF in full-document mode.");
@@ -75,7 +72,8 @@ public class AiExamService {
                     .call()
                     .entity(ExamQuestionsResponse.class);
         } catch (Exception e) {
-            throw aiFailure("PROVIDER_REQUEST", "AI request failed, please retry with fewer or smaller PDFs.", e);
+            throw AiGenerationSupport.failure(log, "EXAM", "PROVIDER_REQUEST",
+                "AI request failed, please retry with fewer or smaller PDFs.", e);
         }
 
         try {
@@ -90,7 +88,8 @@ public class AiExamService {
             }
 
             if (valid.size() < Math.max(1, questionCount / 2)) {
-                throw aiFailure("RESPONSE_VALIDATION", "AI returned too few valid questions; please retry.",
+                throw AiGenerationSupport.failure(log, "EXAM", "RESPONSE_VALIDATION",
+                    "AI returned too few valid questions; please retry.",
                     new IllegalStateException("AI response contained " + valid.size() + " valid exam questions for requested count " + questionCount + "."));
             }
 
@@ -99,7 +98,8 @@ public class AiExamService {
         } catch (IllegalStateException | IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
-            throw aiFailure("RESPONSE_PARSE", "Could not parse the AI response. Please try again.", e);
+            throw AiGenerationSupport.failure(log, "EXAM", "RESPONSE_PARSE",
+                "Could not parse the AI response. Please try again.", e);
         }
     }
 
@@ -123,66 +123,6 @@ public class AiExamService {
         } catch (Exception e) {
             throw new IllegalStateException("AI grading request failed. Please try again.", e);
         }
-    }
-
-    private AiGenerationException aiFailure(String stage, String message, Throwable cause) {
-        AiGenerationDiagnostics diagnostics = AiGenerationDiagnostics.fromException("EXAM", stage, cause);
-        log.error("AI generation failed generationId={} type={} stage={}",
-            diagnostics.generationId(), diagnostics.type(), diagnostics.stage(), cause);
-        return new AiGenerationException(message, diagnostics, cause);
-    }
-
-    private String buildCardContent(List<Flashcard> flashcards) {
-        if (flashcards == null || flashcards.isEmpty()) return "";
-        StringBuilder sb = new StringBuilder();
-        int count = 0;
-        for (Flashcard card : flashcards) {
-            if (card == null) continue;
-            String front = card.getFrontText();
-            String back = card.getBackText();
-            boolean hasFront = front != null && !front.isBlank();
-            boolean hasBack = back != null && !back.isBlank();
-            if (!hasFront && !hasBack) continue;
-            count++;
-            sb.append("Card ").append(count).append(":\n");
-            if (hasFront) sb.append("  Q: ").append(front.strip()).append("\n");
-            if (hasBack) sb.append("  A: ").append(back.strip()).append("\n");
-        }
-        return sb.toString();
-    }
-
-    private String buildTextDocContent(List<DocumentInput> documents) {
-        if (documents == null || documents.isEmpty()) return "";
-        StringBuilder sb = new StringBuilder();
-        int n = 0;
-        for (DocumentInput doc : documents) {
-            if (!(doc instanceof TextDocument td)) continue;
-            if (td.extractedText() == null || td.extractedText().isBlank()) continue;
-            n++;
-            sb.append("Document ").append(n).append(" — ").append(td.filename()).append(":\n")
-              .append(td.extractedText()).append("\n\n");
-        }
-        return sb.toString();
-    }
-
-    private String buildPdfListing(List<DocumentInput> documents) {
-        if (documents == null || documents.isEmpty()) return "";
-        StringBuilder sb = new StringBuilder();
-        for (DocumentInput doc : documents) {
-            if (doc instanceof PdfDocument pd) {
-                sb.append("- ").append(pd.filename()).append("\n");
-            }
-        }
-        return sb.toString();
-    }
-
-    private Media[] buildPdfMedia(List<DocumentInput> documents) {
-        if (documents == null || documents.isEmpty()) return new Media[0];
-        return documents.stream()
-                .filter(d -> d instanceof PdfDocument)
-                .map(d -> (PdfDocument) d)
-                .map(pd -> new Media(new MimeType("application", "pdf"), pd.source()))
-                .toArray(Media[]::new);
     }
 
     private String buildGenerationPrompt(String cardContent, String docContent, String pdfListing,

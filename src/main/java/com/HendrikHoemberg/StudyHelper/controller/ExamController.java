@@ -58,9 +58,9 @@ public class ExamController {
         try {
             ExamSessionService.ExamSessionResult result = examSessionService.createSession(
                 selectedDeckIds, selectedFileIds, additionalInstructions, request,
-                questionSize, count, timerMinutes, layout, user,
-                () -> response.addHeader("HX-Trigger", "refresh-quota")
+                questionSize, count, timerMinutes, layout, user
             );
+            response.addHeader("HX-Trigger", "refresh-quota");
             session.setAttribute(SESSION_KEY, result.state());
 
             if ("true".equals(hxRequest)) {
@@ -105,6 +105,11 @@ public class ExamController {
 
     private String renderGenerationError(Model model, HttpServletResponse response, Exception exception) {
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        // An AI generation failure means the provider was reached after quota
+        // was consumed, so the client still needs to refresh its quota widget.
+        if (exception instanceof AiGenerationException) {
+            response.addHeader("HX-Trigger", "refresh-quota");
+        }
         model.addAttribute("aiErrorTitle", "AI generation failed");
         String message = exception == null ? null : exception.getMessage();
         model.addAttribute("aiErrorMessage", message == null || message.isBlank()
@@ -189,7 +194,7 @@ public class ExamController {
         }
 
         try {
-            requireQuotaService().checkAndRecord(user);
+            aiRequestQuotaService.checkAndRecord(user);
             response.addHeader("HX-Trigger", "refresh-quota");
             ExamGradingResult grading = aiExamService.grade(state.questions(), finalAnswers, state.config().size());
 
@@ -286,10 +291,4 @@ public class ExamController {
         }
     }
 
-    private AiRequestQuotaService requireQuotaService() {
-        if (aiRequestQuotaService == null) {
-            throw new IllegalStateException("AI quota service is not configured.");
-        }
-        return aiRequestQuotaService;
-    }
 }

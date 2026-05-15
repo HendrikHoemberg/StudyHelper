@@ -36,28 +36,6 @@ public class AiRequestQuotaService {
             .orElse(0);
     }
 
-    @Transactional(readOnly = true)
-    public void assertHasQuota(User user) {
-        if (todayUsed(user) >= user.getDailyAiRequestLimit()) {
-            throw new AiQuotaExceededException("Daily AI request limit reached.");
-        }
-    }
-
-    @Transactional
-    public void recordRequest(User user) {
-        LocalDate today = LocalDate.now(clock);
-        AiRequestUsage usage = aiRequestUsageRepository.findByUserAndUsageDate(user, today)
-            .orElseGet(() -> {
-                AiRequestUsage created = new AiRequestUsage();
-                created.setUser(user);
-                created.setUsageDate(today);
-                created.setRequestCount(0);
-                return created;
-            });
-        usage.setRequestCount(usage.getRequestCount() + 1);
-        aiRequestUsageRepository.save(usage);
-    }
-
     @Transactional
     public void checkAndRecord(User user) {
         LocalDate today = LocalDate.now(clock);

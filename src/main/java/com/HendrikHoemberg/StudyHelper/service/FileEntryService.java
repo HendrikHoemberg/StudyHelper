@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.NoSuchElementException;
+import com.HendrikHoemberg.StudyHelper.exception.ResourceNotFoundException;
 
 @Service
 public class FileEntryService {
@@ -40,7 +40,7 @@ public class FileEntryService {
     @Transactional
     public FileEntry upload(MultipartFile file, Long folderId, User user) throws IOException {
         Folder folder = folderRepository.findByIdAndUser(folderId, user)
-            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
 
         String validatedMime = uploadValidator.validateUpload(file);
         storageQuotaService.assertWithinQuota(user, 0L, file.getSize());
@@ -60,13 +60,13 @@ public class FileEntryService {
     @Transactional(readOnly = true)
     public FileEntry getByIdAndUser(Long id, User user) {
         return fileEntryRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new NoSuchElementException("File not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("File not found"));
     }
 
     @Transactional(readOnly = true)
     public FileEntry getFile(Long id, User user) {
         FileEntry entry = fileEntryRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new NoSuchElementException("File not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("File not found"));
         // Initialize folder proxy within transaction so folderId is available outside
         entry.getFolder().getId();
         return entry;
@@ -97,7 +97,7 @@ public class FileEntryService {
     @Transactional
     public Long replaceContents(Long id, MultipartFile image, User user) throws IOException {
         FileEntry entry = fileEntryRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new NoSuchElementException("File not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("File not found"));
 
         String validatedMime = uploadValidator.validateImage(image);
         long existingBytes = entry.getFileSizeBytes() == null ? 0L : entry.getFileSizeBytes();
@@ -113,7 +113,7 @@ public class FileEntryService {
     @Transactional
     public Long deleteAndGetFolderId(Long id, User user) throws IOException {
         FileEntry entry = fileEntryRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new NoSuchElementException("File not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("File not found"));
         Long folderId = entry.getFolder().getId();
         fileStorageService.delete(entry.getStoredFilename());
         fileEntryRepository.delete(entry);
@@ -123,7 +123,7 @@ public class FileEntryService {
     @Transactional
     public FileEntry renameFile(Long id, String newName, User user) {
         FileEntry entry = fileEntryRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new NoSuchElementException("File not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("File not found"));
         entry.setOriginalFilename(newName);
         return fileEntryRepository.save(entry);
     }

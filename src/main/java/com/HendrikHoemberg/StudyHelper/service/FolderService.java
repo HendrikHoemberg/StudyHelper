@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.config.AppDefaults;
 import com.HendrikHoemberg.StudyHelper.dto.FolderPickerNode;
 import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckGroup;
@@ -17,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
+import com.HendrikHoemberg.StudyHelper.exception.ResourceNotFoundException;
 
 @Service
 public class FolderService {
@@ -94,8 +95,7 @@ public class FolderService {
         List<FolderPickerNode> children = folder.getSubFolders().stream()
             .map(this::toFolderPickerNode)
             .toList();
-        String color = folder.getColorHex() != null && !folder.getColorHex().isBlank()
-            ? folder.getColorHex() : "#0f766e";
+        String color = colorOf(folder);
         return new FolderPickerNode(folder.getId(), folder.getName(), color, iconOf(folder), children);
     }
 
@@ -118,7 +118,7 @@ public class FolderService {
     @Transactional(readOnly = true)
     public FolderSources getAllSourcesInFolder(Long folderId, User user) {
         Folder folder = folderRepository.findByIdAndUserWithSubFolders(folderId, user)
-            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
         List<Long> deckIds = new ArrayList<>();
         List<Long> fileIds = new ArrayList<>();
         collectSourcesRecursively(folder, deckIds, fileIds);
@@ -135,7 +135,7 @@ public class FolderService {
         }
         for (FileEntry file : folder.getFiles()) {
             String ext = getFileExtension(file.getOriginalFilename()).toLowerCase();
-            boolean supported = List.of("pdf", "txt", "md").contains(ext) 
+            boolean supported = DocumentExtractionService.SUPPORTED_EXTENSIONS.contains(ext)
                 && file.getFileSizeBytes() <= DocumentExtractionService.MAX_FILE_SIZE_BYTES;
             if (supported) {
                 fileIds.add(file.getId());
@@ -149,7 +149,7 @@ public class FolderService {
     @Transactional(readOnly = true)
     public List<StudyDeckOption> getAllDecksInFolder(Long folderId, User user) {
         Folder folder = folderRepository.findByIdAndUserWithSubFolders(folderId, user)
-            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
         List<StudyDeckOption> options = new ArrayList<>();
         collectDecksRecursively(folder, options);
         return options;
@@ -187,7 +187,7 @@ public class FolderService {
         List<QuizFileOption> files = folder.getFiles().stream()
             .filter(f -> {
                 String ext = getFileExtension(f.getOriginalFilename());
-                return List.of("pdf", "txt", "md").contains(ext.toLowerCase());
+                return DocumentExtractionService.SUPPORTED_EXTENSIONS.contains(ext.toLowerCase());
             })
             .map(f -> {
                 long size = f.getFileSizeBytes();
@@ -214,45 +214,20 @@ public class FolderService {
         int totalSourceCount = decks.size() + files.size()
             + subGroups.stream().mapToInt(QuizSourceGroup::totalSourceCount).sum();
 
-        boolean allSelected = true;
-        boolean someSelected = false;
-
+        SelectionAccumulator selection = new SelectionAccumulator();
         for (StudyDeckOption deck : decks) {
-            if (selectedDeckIds.contains(deck.deckId())) {
-                someSelected = true;
-            } else {
-                allSelected = false;
-            }
+            selection.leaf(selectedDeckIds.contains(deck.deckId()));
         }
-
         for (QuizFileOption file : files) {
-            if (selectedFileIds.contains(file.fileId())) {
-                someSelected = true;
-            } else {
-                allSelected = false;
-            }
+            selection.leaf(selectedFileIds.contains(file.fileId()));
         }
-
         for (QuizSourceGroup sub : subGroups) {
-            if (sub.isSelected()) {
-                someSelected = true;
-            } else if (sub.isIndeterminate()) {
-                someSelected = true;
-                allSelected = false;
-            } else {
-                allSelected = false;
-            }
+            selection.group(sub.isSelected(), sub.isIndeterminate());
         }
+        boolean isSelected = selection.isSelected();
+        boolean isIndeterminate = selection.isIndeterminate();
 
-        if (decks.isEmpty() && files.isEmpty() && subGroups.isEmpty()) {
-            allSelected = false;
-        }
-
-        boolean isSelected = allSelected && someSelected;
-        boolean isIndeterminate = !allSelected && someSelected;
-
-        String color = folder.getColorHex() != null && !folder.getColorHex().isBlank()
-            ? folder.getColorHex() : "#0f766e";
+        String color = colorOf(folder);
 
         return new QuizSourceGroup(
             folder.getId(),
@@ -328,37 +303,17 @@ public class FolderService {
         int totalCardCount = decks.stream().mapToInt(StudyDeckOption::cardCount).sum()
             + subGroups.stream().mapToInt(StudyDeckGroup::totalCardCount).sum();
 
-        boolean allSelected = true;
-        boolean someSelected = false;
-
+        SelectionAccumulator selection = new SelectionAccumulator();
         for (StudyDeckOption deck : decks) {
-            if (selectedDeckIds.contains(deck.deckId())) {
-                someSelected = true;
-            } else {
-                allSelected = false;
-            }
+            selection.leaf(selectedDeckIds.contains(deck.deckId()));
         }
-
         for (StudyDeckGroup sub : subGroups) {
-            if (sub.isSelected()) {
-                someSelected = true;
-            } else if (sub.isIndeterminate()) {
-                someSelected = true;
-                allSelected = false;
-            } else {
-                allSelected = false;
-            }
+            selection.group(sub.isSelected(), sub.isIndeterminate());
         }
+        boolean isSelected = selection.isSelected();
+        boolean isIndeterminate = selection.isIndeterminate();
 
-        if (decks.isEmpty() && subGroups.isEmpty()) {
-            allSelected = false;
-        }
-
-        boolean isSelected = allSelected && someSelected;
-        boolean isIndeterminate = !allSelected && someSelected;
-
-        String color = folder.getColorHex() != null && !folder.getColorHex().isBlank()
-            ? folder.getColorHex() : "#0f766e";
+        String color = colorOf(folder);
 
         return new StudyDeckGroup(
             folder.getId(),
@@ -389,19 +344,19 @@ public class FolderService {
     @Transactional(readOnly = true)
     public Folder getFolder(Long id, User user) {
         return folderRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
     }
 
     @Transactional
     public Folder createFolder(String name, String colorHex, String iconName, Long parentId, User user) {
         Folder folder = new Folder();
         folder.setName(name);
-        folder.setColorHex(colorHex != null && !colorHex.isBlank() ? colorHex : "#0f766e");
+        folder.setColorHex(colorHex != null && !colorHex.isBlank() ? colorHex : AppDefaults.DEFAULT_COLOR_HEX);
         folder.setIconName(iconName != null && !iconName.isBlank() ? iconName : "folder");
         folder.setUser(user);
         if (parentId != null) {
             Folder parent = folderRepository.findByIdAndUser(parentId, user)
-                .orElseThrow(() -> new NoSuchElementException("Parent folder not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Parent folder not found"));
             if (parent.getParentFolder() != null) {
                 throw new IllegalArgumentException("Subfolders cannot contain further subfolders");
             }
@@ -413,7 +368,7 @@ public class FolderService {
     @Transactional
     public Folder updateFolderColor(Long id, String colorHex, User user) {
         Folder folder = folderRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
         folder.setColorHex(colorHex);
         return folderRepository.save(folder);
     }
@@ -421,7 +376,7 @@ public class FolderService {
     @Transactional
     public Folder updateFolder(Long id, String name, String colorHex, String iconName, User user) {
         Folder folder = folderRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
         if (name != null && !name.isBlank()) folder.setName(name);
         if (colorHex != null && !colorHex.isBlank()) folder.setColorHex(colorHex);
         folder.setIconName(iconName != null && !iconName.isBlank() ? iconName : "folder");
@@ -433,6 +388,51 @@ public class FolderService {
             ? folder.getIconName() : "folder";
     }
 
+    private String colorOf(Folder folder) {
+        return folder.getColorHex() != null && !folder.getColorHex().isBlank()
+            ? folder.getColorHex() : AppDefaults.DEFAULT_COLOR_HEX;
+    }
+
+    /**
+     * Folds the selection state of a folder's children into the tri-state
+     * (selected / indeterminate / unselected) used by the source-picker tree.
+     * Shared by the study-deck and quiz-source tree builders.
+     */
+    private static final class SelectionAccumulator {
+        private boolean allSelected = true;
+        private boolean someSelected = false;
+        private boolean empty = true;
+
+        void leaf(boolean selected) {
+            empty = false;
+            if (selected) {
+                someSelected = true;
+            } else {
+                allSelected = false;
+            }
+        }
+
+        void group(boolean groupSelected, boolean groupIndeterminate) {
+            empty = false;
+            if (groupSelected) {
+                someSelected = true;
+            } else if (groupIndeterminate) {
+                someSelected = true;
+                allSelected = false;
+            } else {
+                allSelected = false;
+            }
+        }
+
+        boolean isSelected() {
+            return !empty && allSelected && someSelected;
+        }
+
+        boolean isIndeterminate() {
+            return !allSelected && someSelected;
+        }
+    }
+
     @Transactional(readOnly = true)
     public FolderView getFolderView(Long id, User user) {
         return getFolderView(id, user, null, "asc");
@@ -441,7 +441,7 @@ public class FolderService {
     @Transactional(readOnly = true)
     public FolderView getFolderView(Long id, User user, String sortBy, String direction) {
         Folder folder = folderRepository.findByIdAndUserWithSubFolders(id, user)
-            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
 
         List<Folder> subFolders = new ArrayList<>(folder.getSubFolders());
         List<Deck> decks = new ArrayList<>(folder.getDecks());
@@ -489,7 +489,7 @@ public class FolderService {
     @Transactional
     public void deleteFolder(Long id, User user) throws IOException {
         Folder folder = folderRepository.findByIdAndUserWithSubFolders(id, user)
-            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
 
         List<String> storedFilenames = collectStoredFilenames(folder);
         folderRepository.delete(folder);

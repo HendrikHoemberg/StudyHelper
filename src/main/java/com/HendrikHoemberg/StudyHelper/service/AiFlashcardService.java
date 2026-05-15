@@ -3,8 +3,6 @@ package com.HendrikHoemberg.StudyHelper.service;
 import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
 import com.HendrikHoemberg.StudyHelper.dto.FlashcardsResponse;
 import com.HendrikHoemberg.StudyHelper.dto.GeneratedFlashcard;
-import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
-import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.content.Media;
 import org.springframework.ai.converter.BeanOutputConverter;
@@ -12,7 +10,6 @@ import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MimeType;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
@@ -41,9 +38,10 @@ public class AiFlashcardService {
             throw new IllegalArgumentException("Flashcard generation requires one PDF input.");
         }
 
-        String docContent = buildTextDocContent(document);
-        String pdfListing = buildPdfListing(document);
-        Media[] pdfMedia = buildPdfMedia(document);
+        List<DocumentInput> documents = List.of(document);
+        String docContent = AiGenerationSupport.textDocuments(documents);
+        String pdfListing = AiGenerationSupport.pdfListing(documents);
+        Media[] pdfMedia = AiGenerationSupport.pdfMedia(documents);
 
         if (docContent.isBlank() && pdfMedia.length == 0) {
             throw new IllegalArgumentException(
@@ -66,7 +64,8 @@ public class AiFlashcardService {
                     .call()
                     .entity(FlashcardsResponse.class);
         } catch (Exception e) {
-            throw aiFailure("PROVIDER_REQUEST", "AI request failed, please retry with fewer or smaller PDFs.", e);
+            throw AiGenerationSupport.failure(log, "FLASHCARDS", "PROVIDER_REQUEST",
+                "AI request failed, please retry with fewer or smaller PDFs.", e);
         }
 
         try {
@@ -86,7 +85,8 @@ public class AiFlashcardService {
             }
 
             if (valid.isEmpty()) {
-                throw aiFailure("RESPONSE_VALIDATION", "AI returned no valid flashcards; please retry.",
+                throw AiGenerationSupport.failure(log, "FLASHCARDS", "RESPONSE_VALIDATION",
+                    "AI returned no valid flashcards; please retry.",
                     new IllegalStateException("AI response contained no flashcards with both frontText and backText."));
             }
 
@@ -95,38 +95,9 @@ public class AiFlashcardService {
         } catch (IllegalStateException | IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
-            throw aiFailure("RESPONSE_PARSE", "Could not parse the AI response. Please try again.", e);
+            throw AiGenerationSupport.failure(log, "FLASHCARDS", "RESPONSE_PARSE",
+                "Could not parse the AI response. Please try again.", e);
         }
-    }
-
-    private AiGenerationException aiFailure(String stage, String message, Throwable cause) {
-        AiGenerationDiagnostics diagnostics = AiGenerationDiagnostics.fromException("FLASHCARDS", stage, cause);
-        log.error("AI generation failed generationId={} type={} stage={}",
-            diagnostics.generationId(), diagnostics.type(), diagnostics.stage(), cause);
-        return new AiGenerationException(message, diagnostics, cause);
-    }
-
-    private String buildTextDocContent(DocumentInput document) {
-        StringBuilder sb = new StringBuilder();
-        if (document instanceof TextDocument td && td.extractedText() != null && !td.extractedText().isBlank()) {
-            sb.append("Document: ").append(td.filename()).append("\n")
-                    .append(td.extractedText().trim()).append("\n\n");
-        }
-        return sb.toString();
-    }
-
-    private String buildPdfListing(DocumentInput document) {
-        StringBuilder sb = new StringBuilder();
-        if (document instanceof PdfDocument pd) {
-            sb.append("- ").append(pd.filename()).append("\n");
-        }
-        return sb.toString();
-    }
-
-    private Media[] buildPdfMedia(DocumentInput document) {
-        if (!(document instanceof PdfDocument pd))
-            return new Media[0];
-        return new Media[] { new Media(new MimeType("application", "pdf"), pd.source()) };
     }
 
     private String buildPrompt(String docContent, String pdfListing, String additionalInstructions) {

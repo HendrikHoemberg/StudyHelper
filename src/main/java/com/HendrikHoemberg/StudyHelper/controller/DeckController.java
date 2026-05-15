@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
+import com.HendrikHoemberg.StudyHelper.config.AppDefaults;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
@@ -36,7 +37,7 @@ public class DeckController {
         Deck blank = new Deck();
         blank.setColorHex(parentFolder.getColorHex() != null && !parentFolder.getColorHex().isBlank()
             ? parentFolder.getColorHex()
-            : "#0f766e");
+            : AppDefaults.DEFAULT_COLOR_HEX);
         blank.setIconName("layers");
         model.addAttribute("deck", blank);
         model.addAttribute("action", "/folders/" + folderId + "/decks");

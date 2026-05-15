@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
+import com.HendrikHoemberg.StudyHelper.exception.ResourceNotFoundException;
 
 @Service
 public class FlashcardGenerationPersistenceService {
@@ -72,7 +72,7 @@ public class FlashcardGenerationPersistenceService {
             throw new IllegalArgumentException("Existing deck id is required.");
         }
         return deckRepository.findByIdAndUser(deckId, user)
-            .orElseThrow(() -> new NoSuchElementException("Deck not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Deck not found"));
     }
 
     private Folder findValidatedNewDeckFolder(Long folderId, String deckName, User user) {
@@ -84,7 +84,7 @@ public class FlashcardGenerationPersistenceService {
         }
 
         Folder folder = folderRepository.findByIdAndUser(folderId, user)
-            .orElseThrow(() -> new NoSuchElementException("Folder not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
 
         String normalizedName = deckName.trim();
         boolean duplicateName = deckRepository.findByUserAndFolder(user, folder).stream()

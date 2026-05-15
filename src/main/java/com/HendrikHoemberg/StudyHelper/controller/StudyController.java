@@ -1,12 +1,9 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
-import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
-import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.*;
-import com.HendrikHoemberg.StudyHelper.service.DocumentModeResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -29,37 +26,31 @@ public class StudyController {
     private static final Logger log = LoggerFactory.getLogger(StudyController.class);
 
     private final StudySessionService studySessionService;
-    private final AiQuizService aiQuizService;
+    private final QuizSessionService quizSessionService;
     private final DeckService deckService;
-    private final FlashcardService flashcardService;
     private final FolderService folderService;
     private final UserService userService;
     private final DocumentExtractionService documentExtractionService;
     private final FileEntryService fileEntryService;
     private final ExamSessionService examSessionService;
-    private final AiRequestQuotaService aiRequestQuotaService;
 
     @Autowired
     public StudyController(StudySessionService studySessionService,
-                           AiQuizService aiQuizService,
+                           QuizSessionService quizSessionService,
                            DeckService deckService,
-                           FlashcardService flashcardService,
                            FolderService folderService,
                            UserService userService,
                            DocumentExtractionService documentExtractionService,
                            FileEntryService fileEntryService,
-                           ExamSessionService examSessionService,
-                           AiRequestQuotaService aiRequestQuotaService) {
+                           ExamSessionService examSessionService) {
         this.studySessionService = studySessionService;
-        this.aiQuizService = aiQuizService;
+        this.quizSessionService = quizSessionService;
         this.deckService = deckService;
-        this.flashcardService = flashcardService;
         this.folderService = folderService;
         this.userService = userService;
         this.documentExtractionService = documentExtractionService;
         this.fileEntryService = fileEntryService;
         this.examSessionService = examSessionService;
-        this.aiRequestQuotaService = aiRequestQuotaService;
     }
 
     @GetMapping("/study/start")
@@ -156,7 +147,7 @@ public class StudyController {
             List<Long> folderDecks = sources.deckIds();
             List<Long> folderFiles = sources.fileIds();
 
-            boolean allSelected = new HashSet<>(decks).containsAll(folderDecks) && 
+            boolean allSelected = new HashSet<>(decks).containsAll(folderDecks) &&
                                  new HashSet<>(files).containsAll(folderFiles);
 
             if (allSelected && (!folderDecks.isEmpty() || !folderFiles.isEmpty())) {
@@ -214,30 +205,11 @@ public class StudyController {
             }
         } else if (mode == StudyMode.QUIZ) {
             try {
-                List<Long> deckIds = normalizeIds(selectedDeckIds);
-                List<Long> fileIds = normalizeIds(selectedFileIds);
-                if (deckIds.isEmpty() && fileIds.isEmpty()) {
-                    throw new IllegalArgumentException("Please select at least one deck or document.");
-                }
-
-                QuizGenerationInput input = validateQuizGenerationRequest(deckIds, fileIds, pdfMode, user);
-
-                int qCount = Math.max(1, Math.min(questionCount, 20));
-                requireQuotaService().checkAndRecord(user);
+                QuizSessionState state = quizSessionService.createSession(
+                    selectedDeckIds, selectedFileIds, request, questionCount,
+                    quizQuestionMode, difficulty, additionalInstructions, user
+                );
                 response.addHeader("HX-Trigger", "refresh-quota");
-                List<QuizQuestion> questions = aiQuizService.generate(
-                    input.flashcards(),
-                    input.documents(),
-                    qCount,
-                    quizQuestionMode,
-                    difficulty,
-                    additionalInstructions
-                );
-
-                QuizSessionState state = new QuizSessionState(
-                    new QuizConfig(deckIds, fileIds, qCount, quizQuestionMode, difficulty),
-                    questions, 0, new HashMap<>()
-                );
                 model.addAttribute("mode", mode);
                 session.setAttribute("quizSessionState", state);
                 return delegateToQuiz(model, state, hxRequest);
@@ -246,12 +218,11 @@ public class StudyController {
             }
         } else if (mode == StudyMode.EXAM) {
             try {
-                Runnable refreshQuota = () -> response.addHeader("HX-Trigger", "refresh-quota");
                 ExamSessionService.ExamSessionResult result = examSessionService.createSession(
                     selectedDeckIds, selectedFileIds, additionalInstructions, request,
-                    questionSize, count, timerMinutes, layout, user,
-                    refreshQuota
+                    questionSize, count, timerMinutes, layout, user
                 );
+                response.addHeader("HX-Trigger", "refresh-quota");
                 session.setAttribute("examSession", result.state());
                 model.addAttribute("mode", mode);
                 if (hxRequest != null) {
@@ -294,8 +265,10 @@ public class StudyController {
 
         try {
             if (mode == StudyMode.QUIZ) {
-                validateQuizGenerationSetup(quizQuestionMode, difficulty, questionCount);
-                validateQuizGenerationRequest(normalizeIds(selectedDeckIds), normalizeIds(selectedFileIds), pdfMode, user);
+                quizSessionService.validateForPreflight(
+                    selectedDeckIds, selectedFileIds, request,
+                    quizQuestionMode, difficulty, user
+                );
             } else if (mode == StudyMode.EXAM) {
                 examSessionService.validateForPreflight(
                     selectedDeckIds, selectedFileIds, request,
@@ -319,66 +292,6 @@ public class StudyController {
         }
     }
 
-    private QuizGenerationInput validateQuizGenerationRequest(List<Long> deckIds,
-                                                              List<Long> fileIds,
-                                                              Map<Long, DocumentMode> pdfMode,
-                                                              User user) throws Exception {
-        if (deckIds.isEmpty() && fileIds.isEmpty()) {
-            throw new IllegalArgumentException("Please select at least one deck or document.");
-        }
-
-        List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(deckIds, user);
-        List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
-        List<DocumentInput> documents = new ArrayList<>();
-
-        long totalChars = 0;
-        for (Long fileId : fileIds) {
-            FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-            if (isPdf(file) && !documentExtractionService.isSupported(file)) {
-                throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
-            }
-            DocumentMode docMode = DocumentModeResolver.resolve(file, pdfMode);
-            switch (docMode) {
-                case TEXT -> {
-                    String text = requireExtractedText(file);
-                    documents.add(new TextDocument(file.getOriginalFilename(), text));
-                    totalChars += text.length();
-                }
-                case FULL_PDF -> documents.add(new PdfDocument(file.getOriginalFilename(),
-                    documentExtractionService.loadResource(file)));
-            }
-        }
-
-        if (totalChars > 150_000) throw new IllegalArgumentException("Selection too large — please deselect some sources.");
-        return new QuizGenerationInput(flashcards, documents);
-    }
-
-    private void validateQuizGenerationSetup(QuizQuestionMode quizQuestionMode,
-                                             Difficulty difficulty,
-                                             int questionCount) {
-        if (quizQuestionMode == null) {
-            throw new IllegalArgumentException("Please select a quiz mode.");
-        }
-        if (difficulty == null) {
-            throw new IllegalArgumentException("Please select a difficulty.");
-        }
-        normalizeQuestionCount(questionCount);
-    }
-
-    private int normalizeQuestionCount(int questionCount) {
-        return Math.max(1, Math.min(questionCount, 20));
-    }
-
-    private String requireExtractedText(FileEntry file) throws Exception {
-        String text = documentExtractionService.extractText(file);
-        if (text == null || text.isBlank()) {
-            throw new IllegalArgumentException("This PDF has no extractable text. Try Full PDF mode.");
-        }
-        return text;
-    }
-
-    private record QuizGenerationInput(List<Flashcard> flashcards, List<DocumentInput> documents) {}
-
     private SessionMode parseSessionMode(String raw) {
         if (raw == null || raw.isBlank()) {
             return SessionMode.DECK_BY_DECK;
@@ -397,6 +310,7 @@ public class StudyController {
         prepareWizardModel(model, user, deckIds, fileIds, Map.of(), error, session);
     }
 
+    @SuppressWarnings("unchecked")
     private void prepareWizardModel(Model model, User user, List<Long> deckIds, List<Long> fileIds,
                                     Map<Long, DocumentMode> pdfMode, String error, HttpSession session) {
         List<Long> normalizedDecks = normalizeIds(deckIds);
@@ -451,6 +365,11 @@ public class StudyController {
                                Exception error, Model model, User user, HttpSession session,
                                HttpServletResponse response, String hxRequest) {
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        // An Ai generation failure means the request reached the provider after
+        // quota was consumed, so the client still needs to refresh its quota widget.
+        if (error instanceof AiGenerationException) {
+            response.addHeader("HX-Trigger", "refresh-quota");
+        }
         model.addAttribute("mode", mode);
         prepareWizardModel(model, user, deckIds, fileIds, pdfMode, error.getMessage(), session);
         model.addAttribute("aiErrorDetails", generationDetails(mode, error));
@@ -510,6 +429,14 @@ public class StudyController {
         return filename != null && filename.toLowerCase().endsWith(".pdf");
     }
 
+    private String requireExtractedText(FileEntry file) throws Exception {
+        String text = documentExtractionService.extractText(file);
+        if (text == null || text.isBlank()) {
+            throw new IllegalArgumentException("This PDF has no extractable text. Try Full PDF mode.");
+        }
+        return text;
+    }
+
     private List<Long> resolveOrderedSelection(List<Long> selected, String ordered, SessionMode mode) {
         List<Long> normalized = normalizeIds(selected);
         if (mode != SessionMode.DECK_BY_DECK || ordered == null || ordered.isBlank()) return normalized;
@@ -517,12 +444,5 @@ public class StudyController {
         List<Long> resolved = new ArrayList<>(manual.stream().filter(normalized::contains).toList());
         normalized.stream().filter(id -> !resolved.contains(id)).forEach(resolved::add);
         return resolved;
-    }
-
-    private AiRequestQuotaService requireQuotaService() {
-        if (aiRequestQuotaService == null) {
-            throw new IllegalStateException("AI quota service is not configured.");
-        }
-        return aiRequestQuotaService;
     }
 }

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Something went wrong — StudyHelper</title>
+    <link href="/css/styles.css" rel="stylesheet">
+    <script>
+        (function() {
+            var t = localStorage.getItem('theme') || 'light';
+            document.documentElement.dataset.theme = t;
+        })();
+    </script>
+</head>
+<body class="sh-login-bg">
+    <div class="sh-login-card">
+        <div class="sh-login-icon">
+            <img src="/icons/icon-192.png" alt="" class="sh-login-logo">
+        </div>
+        <h1 class="sh-login-brand" th:text="${status} ?: 'Error'">Error</h1>
+        <p class="sh-login-subtitle" th:text="${error} ?: 'Something went wrong.'">Something went wrong.</p>
+        <p class="sh-login-subtitle">The page you were looking for could not be found.</p>
+        <a class="sh-btn sh-btn-primary" href="/dashboard">Back to dashboard</a>
+    </div>
+</body>
+</html>
