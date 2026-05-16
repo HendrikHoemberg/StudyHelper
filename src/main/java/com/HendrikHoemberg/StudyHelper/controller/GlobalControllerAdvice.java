@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
+import com.HendrikHoemberg.StudyHelper.config.AppDefaults;
 import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
 import com.HendrikHoemberg.StudyHelper.dto.UserQuotaSummary;
 import com.HendrikHoemberg.StudyHelper.entity.User;
@@ -77,6 +78,11 @@ public class GlobalControllerAdvice {
         }
         User user = userService.getByUsername(principal.getName());
         return user.getRole() == UserRole.ADMIN;
+    }
+
+    @ModelAttribute("defaultColorHex")
+    public String addDefaultColorHex() {
+        return AppDefaults.DEFAULT_COLOR_HEX;
     }
 
     @ModelAttribute("userQuota")
