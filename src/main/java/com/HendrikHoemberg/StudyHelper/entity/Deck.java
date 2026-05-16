@@ -41,5 +41,6 @@ public class Deck {
     private Folder folder;
 
     @OneToMany(mappedBy = "deck", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id DESC")
     private List<Flashcard> flashcards = new ArrayList<>();
 }

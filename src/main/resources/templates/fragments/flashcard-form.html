@@ -88,7 +88,7 @@
                 </div>
                 <div class="sh-modal-footer">
                     <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()">Cancel</button>
-                    <button type="submit" class="sh-btn sh-btn-primary" th:text="${flashcard?.id == null ? 'Add Card' : 'Save'}">Save</button>
+                    <button type="submit" class="sh-btn sh-btn-primary" th:text="${flashcard?.id == null ? 'New Card' : 'Save'}">Save</button>
                 </div>
             </form>
         </div>

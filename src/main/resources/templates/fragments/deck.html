@@ -57,7 +57,7 @@
                     th:hx-get="@{/decks/{id}/flashcards/new(id=${deck.id})}"
                     hx-target="#modal-placeholder">
                 <iconify-icon icon="lucide:plus"></iconify-icon>
-                Add Card
+                New Card
             </button>
             <button class="sh-btn sh-btn-secondary sh-btn-sm"
                     th:hx-get="@{/decks/{id}/rename(id=${deck.id})}"
@@ -81,12 +81,12 @@
     <div th:fragment="flashcardList" id="flashcard-list">
         <!-- Flashcard grid -->
         <div class="sh-flashcard-grid">
-            <!-- Add Card Placeholder -->
+            <!-- New Card Placeholder -->
             <div class="sh-flashcard sh-flashcard-add"
                  th:hx-get="@{/decks/{id}/flashcards/new(id=${deck.id})}"
                  hx-target="#modal-placeholder">
                 <iconify-icon icon="lucide:plus"></iconify-icon>
-                <span class="sh-flashcard-label">Add Card</span>
+                <span class="sh-flashcard-label">New Card</span>
             </div>
 
             <div th:each="card : ${flashcards}" class="sh-flashcard">

@@ -414,13 +414,17 @@ public class FolderService {
             .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
 
         List<Folder> subFolders = new ArrayList<>(folder.getSubFolders());
+        subFolders.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
         List<Deck> decks = new ArrayList<>(folder.getDecks());
+        decks.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
         // Materialize flashcards in one batch for the visible deck list.
         decks.forEach(d -> d.getFlashcards().size());
         
         List<FileEntry> files = new ArrayList<>(folder.getFiles());
         if (sortBy != null) {
             sortFiles(files, sortBy, "desc".equalsIgnoreCase(direction));
+        } else {
+            files.sort((a, b) -> b.getUploadedAt().compareTo(a.getUploadedAt()));
         }
 
         List<Folder> breadcrumb = buildBreadcrumb(folder);
