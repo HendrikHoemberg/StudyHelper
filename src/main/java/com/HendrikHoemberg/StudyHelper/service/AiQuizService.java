@@ -15,7 +15,10 @@ import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +34,28 @@ public class AiQuizService {
 
     public AiQuizService(ChatClient.Builder builder, JsonMapper objectMapper) {
         this.chatClient = builder.build();
-        this.responseSchema = new BeanOutputConverter<>(QuizQuestionsResponse.class, objectMapper).getJsonSchema();
+        String rawSchema = new BeanOutputConverter<>(QuizQuestionsResponse.class, objectMapper).getJsonSchema();
+        this.responseSchema = withQuestionPropertyOrdering(rawSchema, objectMapper);
+    }
+
+    private static String withQuestionPropertyOrdering(String schema, JsonMapper objectMapper) {
+        try {
+            JsonNode root = objectMapper.readTree(schema);
+            JsonNode items = root.path("properties").path("questions").path("items");
+            if (!(items instanceof ObjectNode itemsObj)) {
+                return schema;
+            }
+            ArrayNode ordering = objectMapper.createArrayNode();
+            ordering.add("questionText");
+            ordering.add("options");
+            ordering.add("optionAnalysis");
+            ordering.add("correctOptionIndices");
+            ordering.add("type");
+            itemsObj.set("propertyOrdering", ordering);
+            return objectMapper.writeValueAsString(root);
+        } catch (RuntimeException e) {
+            return schema;
+        }
     }
 
     public List<QuizQuestion> generate(

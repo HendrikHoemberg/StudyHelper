@@ -307,6 +307,25 @@ class AiQuizServiceTests {
     }
 
     @Test
+    void generate_ResponseSchema_DeclaresPropertyOrderingForChainOfThought() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
+        ));
+
+        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
+
+        String schema = ((GoogleGenAiChatOptions) capturedOptionsBuilder.get().build()).getResponseSchema();
+        int ordering = schema.indexOf("propertyOrdering");
+        assertThat(ordering).isGreaterThan(-1);
+
+        String orderingTail = schema.substring(ordering);
+        assertThat(orderingTail.indexOf("optionAnalysis"))
+            .isLessThan(orderingTail.indexOf("correctOptionIndices"));
+        assertThat(orderingTail.indexOf("options"))
+            .isLessThan(orderingTail.indexOf("optionAnalysis"));
+    }
+
+    @Test
     void generate_PromptContainsLanguageAndCoverageBlocks() {
         when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
             mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
