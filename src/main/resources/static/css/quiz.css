@@ -26,8 +26,12 @@
 }
 
 .sh-quiz-option:hover:not(.sh-quiz-option--disabled) {
-    border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+    border-color: var(--sh-primary, #6366f1);
+}
+
+.sh-quiz-option:hover:not(.sh-quiz-option--disabled) .sh-quiz-option-letter {
+    background: var(--sh-primary, #6366f1);
+    color: #fff;
 }
 
 .sh-quiz-option--correct {
@@ -359,8 +363,8 @@
 }
 
 .sh-quiz-option.is-selected {
-    border-color: var(--sh-primary, #6366f1);
-    background: var(--sh-primary-soft, rgba(99, 102, 241, 0.12));
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 6%, var(--surface));
 }
 
 .sh-quiz-option.is-selected .sh-quiz-option-letter {
