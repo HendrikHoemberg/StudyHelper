@@ -457,6 +457,17 @@ class UiResourceRegressionTests {
             .contains(".sh-upload-limit");
     }
 
+    @Test
+    void pdfJsLibraryIsVendoredLocally() throws IOException {
+        String lib = resource("static/js/lib/pdfjs/pdf.min.mjs");
+        String worker = resource("static/js/lib/pdfjs/pdf.worker.min.mjs");
+
+        assertThat(lib.length()).isGreaterThan(50000);
+        assertThat(worker.length()).isGreaterThan(50000);
+        assertThat(lib).contains("pdfjsVersion = 5.7.284");
+        assertThat(worker).contains("pdfjsVersion = 5.7.284");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }
