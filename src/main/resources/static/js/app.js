@@ -60,7 +60,7 @@ function initLightbox() {
             const src = trigger.src || trigger.dataset.src || trigger.href;
             if (src) {
                 lastTrigger = trigger;
-                lbImg.src = src;
+                lbImg.src = src + (src.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
                 lb.style.display = 'flex';
             }
         }
@@ -131,6 +131,10 @@ function initLightbox() {
                                 container.querySelectorAll('img[src*="/files/"]').forEach(function (img) {
                                     var s = img.getAttribute('src');
                                     if (s) img.setAttribute('src', s + (s.indexOf('?') === -1 ? '?t=' : '&t=') + t);
+                                });
+                                container.querySelectorAll('a.sh-lightbox-trigger[href*="/files/"]').forEach(function (a) {
+                                    var h = a.getAttribute('href');
+                                    if (h) a.setAttribute('href', h + (h.indexOf('?') === -1 ? '?t=' : '&t=') + t);
                                 });
                             });
                         }
