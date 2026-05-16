@@ -43,3 +43,6 @@ security_review.md
 /uploads/
 backups/
 .superpowers/
+
+# Internal AI planning/spec docs — kept locally, not version-controlled
+docs/

@@ -9,7 +9,6 @@ import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -25,15 +24,15 @@ public class GlobalControllerAdvice {
     private final FolderService folderService;
     private final DeckService deckService;
     private final UserService userService;
-    private final ObjectProvider<AiRequestQuotaService> aiRequestQuotaService;
-    private final ObjectProvider<StorageQuotaService> storageQuotaService;
+    private final AiRequestQuotaService aiRequestQuotaService;
+    private final StorageQuotaService storageQuotaService;
     private final HttpServletRequest request;
 
     public GlobalControllerAdvice(FolderService folderService,
                                   DeckService deckService,
                                   UserService userService,
-                                  ObjectProvider<AiRequestQuotaService> aiRequestQuotaService,
-                                  ObjectProvider<StorageQuotaService> storageQuotaService,
+                                  AiRequestQuotaService aiRequestQuotaService,
+                                  StorageQuotaService storageQuotaService,
                                   HttpServletRequest request) {
         this.folderService = folderService;
         this.deckService = deckService;
@@ -85,16 +84,11 @@ public class GlobalControllerAdvice {
         if (principal == null) {
             return null;
         }
-        AiRequestQuotaService aiService = aiRequestQuotaService.getIfAvailable();
-        StorageQuotaService storageService = storageQuotaService.getIfAvailable();
-        if (aiService == null || storageService == null) {
-            return null;
-        }
         User user = userService.getByUsername(principal.getName());
         return new UserQuotaSummary(
-            storageService.usedBytes(user),
+            storageQuotaService.usedBytes(user),
             user.getStorageQuotaBytes(),
-            aiService.todayUsed(user),
+            aiRequestQuotaService.todayUsed(user),
             user.getDailyAiRequestLimit()
         );
     }

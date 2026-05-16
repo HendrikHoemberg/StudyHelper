@@ -8,9 +8,11 @@ import com.HendrikHoemberg.StudyHelper.dto.StudySessionState;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionStats;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
+import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.StudySessionService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,6 +54,12 @@ class StudySessionControllerTests {
 
     @MockitoBean
     private DeckService deckService;
+
+    @MockitoBean
+    private AiRequestQuotaService aiRequestQuotaService;
+
+    @MockitoBean
+    private StorageQuotaService storageQuotaService;
 
     private User user;
 

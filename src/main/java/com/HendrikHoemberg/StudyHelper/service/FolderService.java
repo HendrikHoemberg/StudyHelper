@@ -166,22 +166,7 @@ public class FolderService {
 
     private QuizSourceGroup toQuizSourceGroup(Folder folder, List<Long> selectedDeckIds, List<Long> selectedFileIds) {
         List<StudyDeckOption> decks = folder.getDecks().stream()
-            .map(deck -> {
-                int total = deck.getFlashcards().size();
-                int usable = (int) deck.getFlashcards().stream()
-                    .filter(flashcardService::hasUsableTextForAi).count();
-                return new StudyDeckOption(
-                    deck.getId(),
-                    deck.getName(),
-                    folder.getId(),
-                    buildFolderPathString(folder),
-                    folder.getColorHex(),
-                    deck.getColorHex(),
-                    deck.getIconName(),
-                    total,
-                    usable
-                );
-            })
+            .map(deck -> toDeckOption(folder, deck))
             .toList();
 
         List<QuizFileOption> files = folder.getFiles().stream()
@@ -246,45 +231,35 @@ public class FolderService {
     }
 
     private void collectDecksRecursively(Folder folder, List<StudyDeckOption> options) {
-        String path = buildFolderPathString(folder);
         for (Deck deck : folder.getDecks()) {
-            int usable = (int) deck.getFlashcards().stream()
-                .filter(flashcardService::hasUsableTextForAi).count();
-            options.add(new StudyDeckOption(
-                deck.getId(),
-                deck.getName(),
-                folder.getId(),
-                path,
-                folder.getColorHex(),
-                deck.getColorHex(),
-                deck.getIconName(),
-                deck.getFlashcards().size(),
-                usable
-            ));
+            options.add(toDeckOption(folder, deck));
         }
         for (Folder sub : folder.getSubFolders()) {
             collectDecksRecursively(sub, options);
         }
     }
 
+    /** Maps a deck to its picker option, counting total and AI-usable cards. */
+    private StudyDeckOption toDeckOption(Folder folder, Deck deck) {
+        int total = deck.getFlashcards().size();
+        int usable = (int) deck.getFlashcards().stream()
+            .filter(flashcardService::hasUsableTextForAi).count();
+        return new StudyDeckOption(
+            deck.getId(),
+            deck.getName(),
+            folder.getId(),
+            buildFolderPathString(folder),
+            folder.getColorHex(),
+            deck.getColorHex(),
+            deck.getIconName(),
+            total,
+            usable
+        );
+    }
+
     private StudyDeckGroup toStudyDeckGroup(Folder folder, List<Long> selectedDeckIds) {
         List<StudyDeckOption> decks = folder.getDecks().stream()
-            .map(deck -> {
-                int total = deck.getFlashcards().size();
-                int usable = (int) deck.getFlashcards().stream()
-                    .filter(flashcardService::hasUsableTextForAi).count();
-                return new StudyDeckOption(
-                    deck.getId(),
-                    deck.getName(),
-                    folder.getId(),
-                    buildFolderPathString(folder),
-                    folder.getColorHex(),
-                    deck.getColorHex(),
-                    deck.getIconName(),
-                    total,
-                    usable
-                );
-            })
+            .map(deck -> toDeckOption(folder, deck))
             .toList();
 
         List<StudyDeckGroup> subGroups = folder.getSubFolders().stream()
