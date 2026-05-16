@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<!-- PDF splitter overlay — included once in layout, driven by pdf-splitter.js -->
+<div th:fragment="modal" id="sh-ps-modal" class="sh-ps-modal" style="display:none;"
+     role="dialog" aria-modal="true" aria-labelledby="sh-ps-title">
+
+    <div class="sh-ps-header">
+        <span class="sh-ps-title" id="sh-ps-title">Split PDF</span>
+        <button type="button" class="sh-ps-hdr-btn" id="sh-ps-close-btn" aria-label="Close splitter">
+            <iconify-icon icon="lucide:x"></iconify-icon>
+        </button>
+    </div>
+
+    <div class="sh-ps-body">
+        <div class="sh-ps-overlay" id="sh-ps-loading" style="display:none;" aria-label="Loading">
+            <iconify-icon icon="lucide:loader-2" class="sh-ps-spin"></iconify-icon>
+        </div>
+        <div class="sh-ps-overlay" id="sh-ps-error" style="display:none;">
+            <p>This PDF could not be opened.</p>
+        </div>
+        <div class="sh-ps-overlay" id="sh-ps-single" style="display:none;">
+            <p>This PDF has only one page — there is nothing to split.</p>
+        </div>
+
+        <div class="sh-ps-workspace" id="sh-ps-workspace" style="display:none;">
+            <div class="sh-ps-pages" id="sh-ps-pages"></div>
+            <aside class="sh-ps-sidebar">
+                <h6 class="sh-ps-sidebar-title">Parts</h6>
+                <p class="sh-ps-hint">Click the scissors on a page to split after it.
+                    Each part is saved as a new file.</p>
+                <div class="sh-ps-parts" id="sh-ps-parts"></div>
+            </aside>
+        </div>
+    </div>
+
+    <div class="sh-ps-footer">
+        <div class="sh-ps-footer-alert sh-alert sh-alert-danger" id="sh-ps-footer-alert"
+             style="display:none;" role="alert"></div>
+        <div class="sh-ps-actions">
+            <button type="button" class="sh-btn sh-btn-secondary" id="sh-ps-cancel-btn">Cancel</button>
+            <button type="button" class="sh-btn sh-btn-primary" id="sh-ps-save-btn" disabled>
+                <iconify-icon icon="lucide:save"></iconify-icon>
+                Save <span id="sh-ps-save-count">1</span> parts
+            </button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

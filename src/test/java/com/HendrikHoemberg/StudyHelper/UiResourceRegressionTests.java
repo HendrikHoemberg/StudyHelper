@@ -487,6 +487,25 @@ class UiResourceRegressionTests {
             .contains("window.PdfViewer");
     }
 
+    @Test
+    void pdfSplitterComponentRendersModalAndModule() throws IOException {
+        String html = resource("templates/fragments/pdf-splitter.html");
+        String css = resource("static/css/pdf-splitter.css");
+        String js = resource("static/js/pdf-splitter.js");
+
+        assertThat(html)
+            .contains("th:fragment=\"modal\"")
+            .contains("id=\"sh-ps-modal\"")
+            .contains("id=\"sh-ps-pages\"")
+            .contains("id=\"sh-ps-parts\"")
+            .contains("id=\"sh-ps-save-btn\"");
+        assertThat(css).contains(".sh-ps-modal");
+        assertThat(js)
+            .contains("import * as pdfjsLib from '/js/lib/pdfjs/pdf.min.mjs'")
+            .contains("data-split-file-id")
+            .contains("window.PdfSplitter");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }
