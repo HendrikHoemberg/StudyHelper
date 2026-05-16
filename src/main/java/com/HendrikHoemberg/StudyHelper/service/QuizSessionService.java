@@ -14,13 +14,14 @@ import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Holds quiz validation, AI generation, and session-state assembly so that
@@ -29,7 +30,10 @@ import java.util.Objects;
 @Service
 public class QuizSessionService {
 
-    private static final long MAX_TOTAL_CHARS = 150_000;
+    private static final Logger log = LoggerFactory.getLogger(QuizSessionService.class);
+
+    /** Total extracted-text length above which the wizard shows a "large selection" warning. */
+    private static final long SELECTION_WARN_CHARS = 50_000;
 
     private final AiQuizService aiQuizService;
     private final DeckService deckService;
@@ -60,12 +64,12 @@ public class QuizSessionService {
                                           Difficulty difficulty,
                                           String additionalInstructions,
                                           User user) throws Exception {
-        List<Long> deckIds = normalizeIds(selectedDeckIds);
-        List<Long> fileIds = normalizeIds(selectedFileIds);
+        List<Long> deckIds = StudySourceSupport.normalizeIds(selectedDeckIds);
+        List<Long> fileIds = StudySourceSupport.normalizeIds(selectedFileIds);
         Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
         QuizGenerationInput input = validateRequestWithSources(deckIds, fileIds, pdfMode, user);
 
-        int qCount = normalizeQuestionCount(requestedQuestionCount);
+        int qCount = StudySourceSupport.normalizeQuestionCount(requestedQuestionCount);
         aiRequestQuotaService.checkAndRecord(user);
 
         List<QuizQuestion> questions = aiQuizService.generate(
@@ -93,7 +97,61 @@ public class QuizSessionService {
                                      User user) throws Exception {
         validateSetup(mode, difficulty);
         Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
-        validateRequestWithSources(normalizeIds(selectedDeckIds), normalizeIds(selectedFileIds), pdfMode, user);
+        validateRequestWithSources(
+            StudySourceSupport.normalizeIds(selectedDeckIds),
+            StudySourceSupport.normalizeIds(selectedFileIds),
+            pdfMode, user);
+    }
+
+    /** Selection-size estimate for the study wizard's "large selection" warning. */
+    public record SelectionSize(long totalChars, boolean warn, boolean exceedsCap) {}
+
+    /**
+     * Best-effort estimate of the combined extracted-text size of the selected
+     * documents. Files that cannot be read are skipped — this drives a wizard
+     * warning, not validation. {@code charCache} is a caller-owned cache (e.g.
+     * session-scoped) keyed by file id; an entry is reused only while the file's
+     * byte size is unchanged, so a replaced file is recounted.
+     */
+    public SelectionSize estimateSelectionSize(List<Long> fileIds,
+                                               Map<Long, DocumentMode> pdfMode,
+                                               User user,
+                                               Map<Long, long[]> charCache) {
+        long totalChars = 0;
+        for (Long fileId : StudySourceSupport.normalizeIds(fileIds)) {
+            totalChars += charCountForFile(fileId, pdfMode, user, charCache);
+        }
+        return new SelectionSize(
+            totalChars,
+            totalChars >= SELECTION_WARN_CHARS,
+            totalChars > StudySourceSupport.MAX_SELECTION_CHARS
+        );
+    }
+
+    private int charCountForFile(Long fileId,
+                                 Map<Long, DocumentMode> pdfMode,
+                                 User user,
+                                 Map<Long, long[]> charCache) {
+        try {
+            FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
+            if (DocumentModeResolver.resolve(file, pdfMode) == DocumentMode.FULL_PDF) {
+                return 0;
+            }
+            long sizeBytes = file.getFileSizeBytes() == null ? -1 : file.getFileSizeBytes();
+            long[] cached = charCache.get(fileId);
+            if (cached != null && cached[0] == sizeBytes) {
+                return (int) cached[1];
+            }
+            if (StudySourceSupport.isPdf(file) && !documentExtractionService.isSupported(file)) {
+                throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
+            }
+            int chars = StudySourceSupport.requireExtractedText(documentExtractionService, file).length();
+            charCache.put(fileId, new long[]{sizeBytes, chars});
+            return chars;
+        } catch (Exception e) {
+            log.debug("Skipping char-count for fileId={}: {}", fileId, e.getMessage());
+            return 0;
+        }
     }
 
     private void validateSetup(QuizQuestionMode mode, Difficulty difficulty) {
@@ -120,13 +178,13 @@ public class QuizSessionService {
         long totalChars = 0;
         for (Long fileId : fileIds) {
             FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-            if (isPdf(file) && !documentExtractionService.isSupported(file)) {
+            if (StudySourceSupport.isPdf(file) && !documentExtractionService.isSupported(file)) {
                 throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
             }
             DocumentMode docMode = DocumentModeResolver.resolve(file, pdfMode);
             switch (docMode) {
                 case TEXT -> {
-                    String text = requireExtractedText(file);
+                    String text = StudySourceSupport.requireExtractedText(documentExtractionService, file);
                     documents.add(new TextDocument(file.getOriginalFilename(), text));
                     totalChars += text.length();
                 }
@@ -135,32 +193,10 @@ public class QuizSessionService {
             }
         }
 
-        if (totalChars > MAX_TOTAL_CHARS) {
+        if (totalChars > StudySourceSupport.MAX_SELECTION_CHARS) {
             throw new IllegalArgumentException("Selection too large — please deselect some sources.");
         }
         return new QuizGenerationInput(flashcards, documents);
-    }
-
-    private String requireExtractedText(FileEntry file) throws Exception {
-        String text = documentExtractionService.extractText(file);
-        if (text == null || text.isBlank()) {
-            throw new IllegalArgumentException("This PDF has no extractable text. Try Full PDF mode.");
-        }
-        return text;
-    }
-
-    private boolean isPdf(FileEntry file) {
-        String filename = file == null ? null : file.getOriginalFilename();
-        return filename != null && filename.toLowerCase().endsWith(".pdf");
-    }
-
-    private int normalizeQuestionCount(int questionCount) {
-        return Math.max(1, Math.min(questionCount, 20));
-    }
-
-    private List<Long> normalizeIds(List<Long> ids) {
-        if (ids == null) return List.of();
-        return ids.stream().filter(Objects::nonNull).distinct().toList();
     }
 
     private record QuizGenerationInput(List<Flashcard> flashcards, List<DocumentInput> documents) {}

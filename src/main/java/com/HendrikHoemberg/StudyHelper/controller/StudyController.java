@@ -62,9 +62,6 @@ public class StudyController {
                         Principal principal,
                         HttpSession session,
                         @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
 
@@ -125,12 +122,9 @@ public class StudyController {
                               Model model,
                               Principal principal,
                               HttpSession session) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
         User user = userService.getByUsername(principal.getName());
-        List<Long> decks = new ArrayList<>(normalizeIds(selectedDeckIds));
-        List<Long> files = new ArrayList<>(normalizeIds(selectedFileIds));
+        List<Long> decks = new ArrayList<>(StudySourceSupport.normalizeIds(selectedDeckIds));
+        List<Long> files = new ArrayList<>(StudySourceSupport.normalizeIds(selectedFileIds));
         Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
 
         if (clearAll) {
@@ -190,7 +184,6 @@ public class StudyController {
                                 HttpServletResponse response,
                                 @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
-        if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
 
         if (mode == StudyMode.FLASHCARDS) {
@@ -260,7 +253,6 @@ public class StudyController {
                                          HttpServletResponse response,
                                          @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
-        if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
 
         try {
@@ -313,8 +305,8 @@ public class StudyController {
     @SuppressWarnings("unchecked")
     private void prepareWizardModel(Model model, User user, List<Long> deckIds, List<Long> fileIds,
                                     Map<Long, DocumentMode> pdfMode, String error, HttpSession session) {
-        List<Long> normalizedDecks = normalizeIds(deckIds);
-        List<Long> normalizedFiles = normalizeIds(fileIds);
+        List<Long> normalizedDecks = StudySourceSupport.normalizeIds(deckIds);
+        List<Long> normalizedFiles = StudySourceSupport.normalizeIds(fileIds);
         Map<Long, DocumentMode> safePdfMode = pdfMode == null ? Map.of() : pdfMode;
 
         model.addAttribute("deckGroups", folderService.getStudyFolderTree(user, normalizedDecks));
@@ -328,37 +320,16 @@ public class StudyController {
         model.addAttribute("quizQuestionModes", QuizQuestionMode.values());
         model.addAttribute("difficulties", Difficulty.values());
 
-        // Quiz character count logic
-        Map<Long, Integer> charCache = (Map<Long, Integer>) session.getAttribute("quizFileCharCache");
+        Map<Long, long[]> charCache = (Map<Long, long[]>) session.getAttribute("quizFileCharCache");
         if (charCache == null) {
             charCache = new HashMap<>();
             session.setAttribute("quizFileCharCache", charCache);
         }
-
-        long totalChars = 0;
-        for (Long fileId : normalizedFiles) {
-            try {
-                FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-                if (DocumentModeResolver.resolve(file, safePdfMode) == DocumentMode.FULL_PDF) {
-                    continue;
-                }
-                if (charCache.containsKey(fileId)) {
-                    totalChars += charCache.get(fileId);
-                } else {
-                    if (isPdf(file) && !documentExtractionService.isSupported(file)) {
-                        throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
-                    }
-                    String text = requireExtractedText(file);
-                    charCache.put(fileId, text.length());
-                    totalChars += text.length();
-                }
-            } catch (Exception e) {
-                log.debug("Skipping char-count for fileId={}: {}", fileId, e.getMessage());
-            }
-        }
-        model.addAttribute("selectionTotalChars", totalChars);
-        model.addAttribute("selectionWarn", totalChars >= 50_000);
-        model.addAttribute("selectionExceedsCap", totalChars > 150_000);
+        QuizSessionService.SelectionSize selection =
+            quizSessionService.estimateSelectionSize(normalizedFiles, safePdfMode, user, charCache);
+        model.addAttribute("selectionTotalChars", selection.totalChars());
+        model.addAttribute("selectionWarn", selection.warn());
+        model.addAttribute("selectionExceedsCap", selection.exceedsCap());
     }
 
     private String handleError(StudyMode mode, List<Long> deckIds, List<Long> fileIds, Map<Long, DocumentMode> pdfMode,
@@ -419,26 +390,8 @@ public class StudyController {
         return "study-page";
     }
 
-    private List<Long> normalizeIds(List<Long> ids) {
-        if (ids == null) return List.of();
-        return ids.stream().filter(Objects::nonNull).distinct().toList();
-    }
-
-    private boolean isPdf(FileEntry file) {
-        String filename = file == null ? null : file.getOriginalFilename();
-        return filename != null && filename.toLowerCase().endsWith(".pdf");
-    }
-
-    private String requireExtractedText(FileEntry file) throws Exception {
-        String text = documentExtractionService.extractText(file);
-        if (text == null || text.isBlank()) {
-            throw new IllegalArgumentException("This PDF has no extractable text. Try Full PDF mode.");
-        }
-        return text;
-    }
-
     private List<Long> resolveOrderedSelection(List<Long> selected, String ordered, SessionMode mode) {
-        List<Long> normalized = normalizeIds(selected);
+        List<Long> normalized = StudySourceSupport.normalizeIds(selected);
         if (mode != SessionMode.DECK_BY_DECK || ordered == null || ordered.isBlank()) return normalized;
         List<Long> manual = Arrays.stream(ordered.split(",")).map(String::trim).filter(s -> !s.isEmpty()).map(Long::parseLong).toList();
         List<Long> resolved = new ArrayList<>(manual.stream().filter(normalized::contains).toList());

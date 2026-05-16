@@ -63,7 +63,7 @@ public class DocumentExtractionService {
                 && file.getFileSizeBytes() <= MAX_FILE_SIZE_BYTES;
     }
 
-    private String extension(String filename) {
+    public static String extension(String filename) {
         if (filename == null || !filename.contains(".")) return "";
         return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
     }

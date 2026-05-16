@@ -72,7 +72,6 @@ public class FlashcardGenerationController {
                                 Model model,
                                 Principal principal,
                                 @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
         List<FlashcardPdfOption> pdfOptions = prepareGeneratorModel(model, user);
         model.addAttribute("selectedFileId", fileId);
@@ -95,7 +94,6 @@ public class FlashcardGenerationController {
                            Principal principal,
                            HttpServletResponse response,
                            @RequestHeader(value = "HX-Request", required = false) String hxRequest) throws Exception {
-        if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
         try {
             DocumentInput input = validateAndBuildInput(fileId, documentMode, destination, existingDeckId, newDeckFolderId, newDeckName, user);
@@ -153,7 +151,6 @@ public class FlashcardGenerationController {
                                     Principal principal,
                                     HttpServletResponse response,
                                     @RequestHeader(value = "HX-Request", required = false) String hxRequest) throws Exception {
-        if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
         try {
             validateAndBuildInput(fileId, documentMode, destination, existingDeckId, newDeckFolderId, newDeckName, user);

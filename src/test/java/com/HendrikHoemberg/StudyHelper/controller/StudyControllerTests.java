@@ -58,6 +58,8 @@ class StudyControllerTests {
         user.setId(1L);
         user.setUsername("alice");
         when(userService.getByUsername("alice")).thenReturn(user);
+        when(quizSessionService.estimateSelectionSize(any(), any(), any(), any()))
+            .thenReturn(new QuizSessionService.SelectionSize(0, false, false));
     }
 
     @Test

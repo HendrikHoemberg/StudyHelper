@@ -52,7 +52,6 @@ public class ExamController {
             Model model, Principal principal, HttpSession session, HttpServletResponse response,
             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
 
-        if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
 
         try {
@@ -88,7 +87,6 @@ public class ExamController {
             @RequestParam(defaultValue = "PER_PAGE") ExamLayout layout,
             Model model, Principal principal, HttpSession session, HttpServletResponse response,
             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
 
         try {
@@ -171,7 +169,6 @@ public class ExamController {
                          @RequestParam(required = false) String answer,
                          @RequestParam(required = false) Map<String, String> allAnswers,
                          Model model, Principal principal, HttpSession session, HttpServletResponse response) {
-        if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
 
         ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
@@ -221,7 +218,6 @@ public class ExamController {
     @GetMapping("/exams")
     public String listExams(Model model, Principal principal,
                             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
         List<Exam> exams = examService.listForUser(user);
         model.addAttribute("exams", exams);
@@ -236,37 +232,25 @@ public class ExamController {
     @GetMapping("/exams/{id}")
     public String viewExam(@PathVariable Long id, Model model, Principal principal,
                            @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        if (principal == null) return "redirect:/login";
         User user = userService.getByUsername(principal.getName());
-        try {
-            Exam exam = examService.getOwnedById(user, id);
-            ExamReport report = examService.deserializeReport(exam.getReportJson());
-            model.addAttribute("exam", exam);
-            model.addAttribute("report", report);
+        Exam exam = examService.getOwnedById(user, id);
+        ExamReport report = examService.deserializeReport(exam.getReportJson());
+        model.addAttribute("exam", exam);
+        model.addAttribute("report", report);
 
-            if ("true".equals(hxRequest)) {
-                model.addAttribute("refreshSidebar", true);
-                return "fragments/exam-detail :: exam-detail";
-            }
-            return "exams-page";
-        } catch (NoSuchElementException e) {
-            // Plan says ownership errors -> 404.
-            // In a real app we'd use @ResponseStatus(HttpStatus.NOT_FOUND) or throw a custom exception.
-            return "redirect:/exams";
+        if ("true".equals(hxRequest)) {
+            model.addAttribute("refreshSidebar", true);
+            return "fragments/exam-detail :: exam-detail";
         }
+        return "exams-page";
     }
 
     @PostMapping("/exams/{id}/rename")
     @ResponseBody
     public String renameExam(@PathVariable Long id, @RequestParam("title") String newTitle, Principal principal) {
-        if (principal == null) return "Unauthorized";
         User user = userService.getByUsername(principal.getName());
-        try {
-            examService.renameOwned(user, id, newTitle);
-            return newTitle;
-        } catch (NoSuchElementException e) {
-            return "Error";
-        }
+        examService.renameOwned(user, id, newTitle);
+        return newTitle;
     }
 
     @DeleteMapping("/exams/{id}")
@@ -274,21 +258,16 @@ public class ExamController {
     public String deleteExam(@PathVariable Long id, Principal principal,
                              @RequestHeader(value = "HX-Target", required = false) String hxTarget,
                              HttpServletResponse response) {
-        if (principal == null) return "Unauthorized";
         User user = userService.getByUsername(principal.getName());
-        try {
-            examService.deleteOwned(user, id);
+        examService.deleteOwned(user, id);
 
-            // If coming from detail page, redirect to list.
-            // HX-Target will usually be 'explorer-detail' (or similar) when in detail view.
-            if ("explorer-detail".equals(hxTarget)) {
-                response.setHeader("HX-Redirect", "/exams");
-            }
-
-            return ""; // Empty body for card removal in list view
-        } catch (NoSuchElementException e) {
-            return "Error";
+        // HX-Target is 'explorer-detail' when the delete comes from the detail view;
+        // send the client back to the list since the detail page no longer exists.
+        if ("explorer-detail".equals(hxTarget)) {
+            response.setHeader("HX-Redirect", "/exams");
         }
+
+        return "";
     }
 
 }

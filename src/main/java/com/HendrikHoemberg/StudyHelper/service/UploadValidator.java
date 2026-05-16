@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Validates uploaded MultipartFiles against an extension whitelist
@@ -17,7 +18,11 @@ import java.util.Set;
 @Service
 public class UploadValidator {
 
-    private static final Set<String> DOC_EXTENSIONS = Set.of(".pdf", ".txt", ".md");
+    // Dotted form of DocumentExtractionService.SUPPORTED_EXTENSIONS — the single
+    // source of truth for which document types the app accepts.
+    private static final Set<String> DOC_EXTENSIONS = DocumentExtractionService.SUPPORTED_EXTENSIONS.stream()
+        .map(ext -> "." + ext)
+        .collect(Collectors.toUnmodifiableSet());
     private static final Set<String> IMAGE_EXTENSIONS = Set.of(".png", ".jpg", ".jpeg", ".gif", ".webp");
     private static final int SNIFF_BYTES = 16;
 
