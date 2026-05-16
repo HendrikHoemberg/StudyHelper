@@ -29,14 +29,9 @@
                             <input type="text" id="filename-base-input" 
                                    class="sh-input border-none shadow-none flex-grow focus:ring-0" 
                                    required 
-                                   th:value="${baseName}"
+                                   th:value="${file.originalFilename}"
                                    placeholder="Filename">
-                            <div th:if="${hasDot}" 
-                                 class="flex items-center px-4 bg-[var(--bg-light)] text-[var(--text-muted)] font-medium border-l border-[var(--border-light)] select-none" 
-                                 th:text="${extension}">
-                                .pdf
-                            </div>
-                        </div>
+                         </div>
                         <input type="hidden" name="name" id="filename-full-input" th:value="${file.originalFilename}">
                     </div>
                     <div class="mt-1">
@@ -99,14 +94,13 @@
             initLucide();
             var baseInput = document.getElementById('filename-base-input');
             var fullInput = document.getElementById('filename-full-input');
-            var extension = /*[[${extension}]]*/ '';
             
             if (baseInput && fullInput) {
                 baseInput.focus();
                 baseInput.select();
                 
                 baseInput.addEventListener('input', function() {
-                    fullInput.value = baseInput.value + extension;
+                    fullInput.value = baseInput.value;
                 });
             }
         })();
