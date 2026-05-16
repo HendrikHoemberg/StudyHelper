@@ -32,6 +32,14 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void deckViewShowsAddCardTileBeforeExistingFlashcards() throws IOException {
+        String template = resource("templates/fragments/deck.html");
+
+        assertThat(template.indexOf("sh-flashcard sh-flashcard-add"))
+            .isLessThan(template.indexOf("th:each=\"card : ${flashcards}\""));
+    }
+
+    @Test
     void appJsShowsAiGenerationDialogForNonResponseHtmxFailures() throws IOException {
         String appJs = resource("static/js/app.js");
 
