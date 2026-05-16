@@ -15,6 +15,7 @@ let _fitBase = 1;
 let _baseWidth = 0;
 let _observer = null;
 let _wired = false;
+const _historyKey = { pv: true };
 
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 5;
@@ -46,6 +47,7 @@ async function open(opts) {
     $id('sh-pv-page-val').textContent = '\u2013';
     _setState('loading');
     _show(true);
+    history.pushState(_historyKey, '');
     try {
         _pdf = await pdfjsLib.getDocument({ url: _opts.url }).promise;
         const first = await _pdf.getPage(1);
@@ -177,9 +179,11 @@ function _wire() {
     $id('sh-pv-split-btn').addEventListener('click', _toSplitter);
     $id('sh-pv-body').addEventListener('scroll', _updatePageIndicator);
     document.addEventListener('keydown', _onKeydown);
+    window.addEventListener('popstate', () => { if (_isOpen()) close(); });
 }
 
 function close() {
+    if (history.state === _historyKey) history.back();
     _show(false);
     if (_observer) { _observer.disconnect(); _observer = null; }
     if (_pdf) { _pdf.destroy(); _pdf = null; }

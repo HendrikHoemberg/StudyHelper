@@ -15,6 +15,7 @@ let _opts = null;       // { fileId, url, name }
 let _numPages = 0;
 let _breaks = new Set();  // page numbers AFTER which a split occurs
 let _wired = false;
+const _historyKey = { ps: true };
 
 function _baseName(name) {
     return (name || 'document.pdf').replace(/\.[^.]+$/, '');
@@ -57,6 +58,7 @@ async function open(opts) {
     _showFooterError('');
     _setState('loading');
     _show(true);
+    history.pushState(_historyKey, '');
     try {
         _pdf = await pdfjsLib.getDocument({ url: _opts.url }).promise;
         _numPages = _pdf.numPages;
@@ -250,9 +252,11 @@ function _wire() {
     $id('sh-ps-cancel-btn').addEventListener('click', close);
     $id('sh-ps-save-btn').addEventListener('click', _save);
     document.addEventListener('keydown', _onKeydown);
+    window.addEventListener('popstate', () => { if (_isOpen()) close(); });
 }
 
 function close() {
+    if (history.state === _historyKey) history.back();
     _show(false);
     if (_pdf) { _pdf.destroy(); _pdf = null; }
     const pages = $id('sh-ps-pages');
