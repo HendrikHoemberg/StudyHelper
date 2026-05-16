@@ -46,7 +46,7 @@ public class PdfThumbnailService {
     }
 
     private Path thumbnailPath(Path source) {
-        String filename = source.getFileName().toString() + ".png";
+        String filename = source.getFileName().toString() + ".cover.png";
         return source.getParent().resolve("thumbnails").resolve(filename);
     }
 
@@ -54,13 +54,13 @@ public class PdfThumbnailService {
         try (PDDocument document = Loader.loadPDF(source.toFile())) {
             PDFRenderer renderer = new PDFRenderer(document);
             BufferedImage rendered = renderer.renderImageWithDPI(0, RENDER_DPI, ImageType.RGB);
-            BufferedImage scaled = scaleToFit(rendered);
+            BufferedImage scaled = scaleToCover(rendered);
             ImageIO.write(scaled, "png", thumbnail.toFile());
         }
     }
 
-    private BufferedImage scaleToFit(BufferedImage source) {
-        double scale = Math.min(
+    private BufferedImage scaleToCover(BufferedImage source) {
+        double scale = Math.max(
             THUMBNAIL_WIDTH / (double) source.getWidth(),
             THUMBNAIL_HEIGHT / (double) source.getHeight()
         );
