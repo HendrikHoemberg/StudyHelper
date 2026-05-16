@@ -214,15 +214,23 @@ public class AiQuizService {
                 - Generate exactly the requested split as specified above.""";
         };
 
+        String perOptionAnalysis = """
+            PER-OPTION ANALYSIS (fill optionAnalysis before choosing type or indices):
+            - For every option, write one short line in optionAnalysis: why it is a
+              correct answer, or why it is factually FALSE.
+            - correctOptionIndices must list exactly the options your analysis marked correct.
+
+            """;
+
         String typeSelection = mode == QuizQuestionMode.TF_ONLY ? "" : """
             QUESTION-TYPE SELECTION (critical):
-            - Decide each choice question's type by how many options are correct:
-              * Exactly one option is a defensible correct answer  -> MULTIPLE_CHOICE
-              * Two or three options are each independently correct -> MULTIPLE_SELECT
+            - Use your optionAnalysis: count how many options it marked as correct.
+              * exactly 1 correct  -> MULTIPLE_CHOICE
+              * 2 or 3 correct     -> MULTIPLE_SELECT
             - A MULTIPLE_CHOICE question MUST have exactly one correct option and three
-              options that are each clearly, factually FALSE. If you cannot make the
-              other three unambiguously false, the question is not single-answer —
-              make it MULTIPLE_SELECT or rewrite it.
+              options that are each clearly, factually FALSE. If you cannot write a
+              convincing "false because..." for all three distractors, the question is
+              not single-answer — make it MULTIPLE_SELECT.
             - NEVER collapse a multi-answer question into MULTIPLE_CHOICE by picking
               one of several correct options. That marks a correct answer as wrong.
             - Choose whichever type fits the concept best. Do not force a quota.
@@ -239,6 +247,7 @@ public class AiQuizService {
             + AiGenerationSupport.topicFocusSection() + "\n"
             + AiGenerationSupport.coverageSection(count) + "\n"
             + AiGenerationSupport.missingContextSection() + "\n"
+            + perOptionAnalysis
             + typeSelection
             + "QUESTION TYPE RULES:\n%s\n\n".formatted(typeRules)
             + "GENERAL RULES:\n"

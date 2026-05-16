@@ -424,6 +424,29 @@ class AiQuizServiceTests {
         assertThat(capturedPrompt.get()).doesNotContain("QUESTION-TYPE SELECTION");
     }
 
+    @Test
+    void generate_PromptContainsPerOptionAnalysisGuidance() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
+        ));
+
+        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
+
+        assertThat(capturedPrompt.get()).contains("PER-OPTION ANALYSIS");
+        assertThat(capturedPrompt.get()).contains("fill optionAnalysis before choosing type");
+    }
+
+    @Test
+    void generate_TfOnlyMode_StillContainsPerOptionAnalysisGuidance() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            tf("Q1", 0), tf("Q2", 1), tf("Q3", 0)
+        ));
+
+        service.generate(cards(2), List.of(), 3, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
+
+        assertThat(capturedPrompt.get()).contains("PER-OPTION ANALYSIS");
+    }
+
     // --- helpers ---
 
     private QuizQuestionsResponse wrap(GeneratedQuizQuestion... questions) {
