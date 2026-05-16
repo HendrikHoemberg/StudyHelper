@@ -389,6 +389,23 @@ class UiResourceRegressionTests {
             .contains("showPreview(file)");
     }
 
+    @Test
+    void flashcardAddImageOpensBrowseOrPasteChooser() throws IOException {
+        String template = resource("templates/fragments/flashcard-form.html");
+
+        assertThat(template)
+            .contains("data-image-source-trigger=\"front\"")
+            .contains("data-image-source-trigger=\"back\"")
+            .contains("id=\"flashcard-image-source-modal\"")
+            .contains("data-image-source-browse")
+            .contains("data-image-source-paste")
+            .contains("openImageSourceModal(side)")
+            .contains("pasteImageFromClipboard(selectedImageSourceSide)")
+            .contains("navigator.clipboard.read()")
+            .contains("Paste image")
+            .contains("Browse files");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }

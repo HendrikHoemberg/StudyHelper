@@ -41,11 +41,13 @@
                                     <iconify-icon icon="lucide:x"></iconify-icon>
                                 </button>
                             </div>
-                            <label th:class="${frontImageUrl != null} ? 'sh-img-drop-label is-hidden' : 'sh-img-drop-label'"
-                                   id="front-drop-label" for="frontImageInput">
+                            <button type="button"
+                                    th:class="${frontImageUrl != null} ? 'sh-img-drop-label is-hidden' : 'sh-img-drop-label'"
+                                    id="front-drop-label"
+                                    data-image-source-trigger="front">
                                 <iconify-icon icon="lucide:image-plus"></iconify-icon>
                                 <span>Add image</span>
-                            </label>
+                            </button>
                             <input type="file" id="frontImageInput" name="frontImage"
                                    accept="image/jpeg,image/png,image/webp,image/gif"
                                    class="sh-img-file-input">
@@ -70,11 +72,13 @@
                                     <iconify-icon icon="lucide:x"></iconify-icon>
                                 </button>
                             </div>
-                            <label th:class="${backImageUrl != null} ? 'sh-img-drop-label is-hidden' : 'sh-img-drop-label'"
-                                   id="back-drop-label" for="backImageInput">
+                            <button type="button"
+                                    th:class="${backImageUrl != null} ? 'sh-img-drop-label is-hidden' : 'sh-img-drop-label'"
+                                    id="back-drop-label"
+                                    data-image-source-trigger="back">
                                 <iconify-icon icon="lucide:image-plus"></iconify-icon>
                                 <span>Add image</span>
-                            </label>
+                            </button>
                             <input type="file" id="backImageInput" name="backImage"
                                    accept="image/jpeg,image/png,image/webp,image/gif"
                                    class="sh-img-file-input">
@@ -90,6 +94,29 @@
         </div>
     </div>
 
+    <div class="sh-modal sh-image-source-modal" id="flashcard-image-source-modal" aria-modal="true" role="dialog" aria-labelledby="flashcard-image-source-title">
+        <div class="sh-modal-backdrop" data-image-source-close></div>
+        <div class="sh-modal-dialog sh-modal-dialog-sm">
+            <div class="sh-modal-content">
+                <div class="sh-modal-header">
+                    <h5 class="sh-modal-title" id="flashcard-image-source-title">Add image</h5>
+                    <button type="button" class="sh-modal-close" data-image-source-close aria-label="Close">
+                        <iconify-icon icon="lucide:x"></iconify-icon>
+                    </button>
+                </div>
+                <div class="sh-modal-body">
+                    <button type="button" class="sh-btn sh-btn-secondary" data-image-source-browse>
+                        <iconify-icon icon="lucide:folder-open"></iconify-icon>
+                        <span>Browse files</span>
+                    </button>
+                    <button type="button" class="sh-btn sh-btn-primary" data-image-source-paste>
+                        <iconify-icon icon="lucide:clipboard"></iconify-icon>
+                        <span>Paste image</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         (function() {
@@ -112,6 +139,7 @@
             });
 
             var imageZones = {};
+            var selectedImageSourceSide = null;
 
             function setupZone(zoneId, inputId, dropLabelId, removeInputId, removeBtnId, side) {
                 var zone = document.getElementById(zoneId);
@@ -209,6 +237,9 @@
 
                 return {
                     setImageFile: setImageFile,
+                    browse: function() {
+                        input.click();
+                    },
                     hasPreview: function() {
                         return !!zone.querySelector('.sh-img-preview-wrap');
                     }
@@ -225,22 +256,8 @@
                 var clipboardData = e.clipboardData || window.clipboardData;
                 if (!clipboardData || !clipboardData.items) return;
 
-                for (var i = 0; i < clipboardData.items.length; i++) {
-                    var item = clipboardData.items[i];
-                    if (!item.type || !item.type.startsWith('image/')) continue;
-
-                    var blob = item.getAsFile();
-                    if (!blob) return;
-
-                    var extension = (blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
-                    var filename = 'pasted-image-' + Date.now() + '.' + extension;
-                    var file = new File([blob], filename, { type: blob.type || 'image/png' });
-                    var side = selectPasteTargetSide();
-                    if (!imageZones[side]) return;
-
+                if (setImageFromClipboardItems(clipboardData.items, selectPasteTargetSide())) {
                     e.preventDefault();
-                    imageZones[side].setImageFile(file);
-                    return;
                 }
             }
 
@@ -253,11 +270,121 @@
                 return 'front';
             }
 
+            function setImageFromClipboardItems(items, side) {
+                if (!items || !imageZones[side]) return false;
+                for (var i = 0; i < items.length; i++) {
+                    var item = items[i];
+                    if (!item.type || !item.type.startsWith('image/')) continue;
+
+                    var blob = item.getAsFile();
+                    if (!blob) return false;
+
+                    imageZones[side].setImageFile(fileFromImageBlob(blob));
+                    return true;
+                }
+                return false;
+            }
+
+            function fileFromImageBlob(blob) {
+                var extension = (blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+                var filename = 'pasted-image-' + Date.now() + '.' + extension;
+                var file = new File([blob], filename, { type: blob.type || 'image/png' });
+                return file;
+            }
+
             if (window.flashcardImagePasteHandler) {
                 document.removeEventListener('paste', window.flashcardImagePasteHandler);
             }
             window.flashcardImagePasteHandler = handleImagePaste;
             document.addEventListener('paste', handleImagePaste);
+
+            function openImageSourceModal(side) {
+                selectedImageSourceSide = side;
+                var sourceModal = document.getElementById('flashcard-image-source-modal');
+                if (!sourceModal) return;
+                sourceModal.classList.add('is-open');
+                initLucide();
+                var pasteButton = sourceModal.querySelector('[data-image-source-paste]');
+                if (pasteButton) pasteButton.focus();
+            }
+
+            function closeImageSourceModal() {
+                var sourceModal = document.getElementById('flashcard-image-source-modal');
+                if (sourceModal) sourceModal.classList.remove('is-open');
+            }
+
+            function pasteImageFromClipboard(side) {
+                if (!side || !imageZones[side]) return;
+                if (!navigator.clipboard || !navigator.clipboard.read) {
+                    closeImageSourceModal();
+                    shAlert({
+                        title: 'Paste image',
+                        message: 'Press Ctrl+V or Cmd+V while this flashcard is open to paste an image.',
+                        icon: 'lucide:clipboard'
+                    });
+                    return;
+                }
+
+                navigator.clipboard.read()
+                    .then(function(items) {
+                        var imagePromise = null;
+                        items.forEach(function(item) {
+                            if (imagePromise) return;
+                            var imageType = item.types.find(function(type) {
+                                return type.startsWith('image/');
+                            });
+                            if (imageType) imagePromise = item.getType(imageType);
+                        });
+                        return imagePromise || null;
+                    })
+                    .then(function(blob) {
+                        closeImageSourceModal();
+                        if (!blob) {
+                            shAlert({
+                                title: 'No image found',
+                                message: 'Copy an image first, then choose Paste image again.',
+                                icon: 'lucide:clipboard'
+                            });
+                            return;
+                        }
+                        imageZones[side].setImageFile(fileFromImageBlob(blob));
+                    })
+                    .catch(function() {
+                        closeImageSourceModal();
+                        shAlert({
+                            title: 'Paste image',
+                            message: 'Your browser blocked direct clipboard access. Press Ctrl+V or Cmd+V while this flashcard is open instead.',
+                            icon: 'lucide:clipboard'
+                        });
+                    });
+            }
+
+            document.querySelectorAll('[data-image-source-trigger]').forEach(function(trigger) {
+                trigger.addEventListener('click', function() {
+                    openImageSourceModal(trigger.dataset.imageSourceTrigger);
+                });
+            });
+
+            document.querySelectorAll('[data-image-source-close]').forEach(function(closeTrigger) {
+                closeTrigger.addEventListener('click', closeImageSourceModal);
+            });
+
+            var browseTrigger = document.querySelector('[data-image-source-browse]');
+            if (browseTrigger) {
+                browseTrigger.addEventListener('click', function() {
+                    if (selectedImageSourceSide && imageZones[selectedImageSourceSide]) {
+                        imageZones[selectedImageSourceSide].browse();
+                    }
+                    closeImageSourceModal();
+                });
+            }
+
+            var pasteTrigger = document.querySelector('[data-image-source-paste]');
+            if (pasteTrigger) {
+                pasteTrigger.addEventListener('click', function() {
+                    pasteImageFromClipboard(selectedImageSourceSide);
+                });
+            }
 
             function csrfHeaders() {
                 var tokenEl  = document.querySelector('meta[name="_csrf"]');
