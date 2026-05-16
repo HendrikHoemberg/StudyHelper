@@ -99,6 +99,14 @@
                            min="1" max="100" value="100" aria-label="Opacity">
                     <span class="sh-ie-ctrl-val" id="sh-ie-opacity-val">100%</span>
                 </div>
+                <div class="sh-ie-opt-group" data-opts="rect ellipse line">
+                    <label class="sh-ie-ctrl-label">Border</label>
+                    <button type="button" class="sh-ie-color-btn" id="sh-ie-border-btn"
+                            title="Border color" aria-label="Border color">
+                        <span class="sh-ie-color-swatch" id="sh-ie-border-swatch"
+                              style="background:#000000"></span>
+                    </button>
+                </div>
                 <div class="sh-ie-opt-group" data-opts="rect ellipse">
                     <label class="sh-ie-ctrl-label">Fill</label>
                     <button type="button" class="sh-ie-color-btn" id="sh-ie-fill-btn"
@@ -149,10 +157,7 @@
             <button type="button" class="sh-btn sh-btn-secondary" id="sh-ie-cancel-btn">
                 Cancel
             </button>
-            <button type="button" class="sh-btn sh-btn-secondary"
-                    id="sh-ie-saveas-btn" style="display:none;">
-                Save as new
-            </button>
+
             <button type="button" class="sh-btn sh-btn-primary" id="sh-ie-save-btn">
                 <iconify-icon icon="lucide:save"></iconify-icon>
                 <span id="sh-ie-save-label">Save</span>
@@ -169,6 +174,33 @@
             <div class="sh-ie-prompt-actions">
                 <button type="button" class="sh-btn sh-btn-secondary" id="sh-ie-prompt-cancel">Cancel</button>
                 <button type="button" class="sh-btn sh-btn-primary" id="sh-ie-prompt-ok">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save-choice Modal Overlay -->
+    <div class="sh-ie-overlay" id="sh-ie-save-choice" style="display:none; z-index: 2000;"
+         role="dialog" aria-modal="true" aria-labelledby="sh-ie-save-choice-title">
+        <div class="sh-ie-prompt-panel sh-ie-choice-panel">
+            <h3 class="sh-ie-prompt-title" id="sh-ie-save-choice-title">Save changes</h3>
+            <p class="sh-ie-prompt-desc">How would you like to save?</p>
+            <button type="button" class="sh-ie-choice-card" id="sh-ie-choice-overwrite">
+                <iconify-icon icon="lucide:refresh-cw" class="sh-ie-choice-icon"></iconify-icon>
+                <span class="sh-ie-choice-text">
+                    <span class="sh-ie-choice-label">Overwrite original</span>
+                    <span class="sh-ie-choice-sub">Replace the existing file</span>
+                </span>
+            </button>
+            <button type="button" class="sh-ie-choice-card" id="sh-ie-choice-new">
+                <iconify-icon icon="lucide:copy-plus" class="sh-ie-choice-icon"></iconify-icon>
+                <span class="sh-ie-choice-text">
+                    <span class="sh-ie-choice-label">Save as new file</span>
+                    <span class="sh-ie-choice-sub">Keep the original, add a copy</span>
+                </span>
+            </button>
+            <div class="sh-ie-prompt-actions">
+                <button type="button" class="sh-btn sh-btn-secondary"
+                        id="sh-ie-save-choice-cancel">Cancel</button>
             </div>
         </div>
     </div>

@@ -21,6 +21,8 @@
     var _color    = '#000000';
     var _fillColor = 'transparent';   // shape fill; 'transparent' = no fill
     var _wired    = false;   // interactions wired once flag
+    var _strokeOpts = null;  // shared ColorPicker opts for stroke/border swatches
+    var _fillOpts   = null;  // ColorPicker opts for the fill swatch
 
     // ── Shape drawing state ───────────────────────────────────────────
     var _shapeOrigin  = null;   // {x, y} canvas coords at mouse:down
@@ -123,7 +125,7 @@
             btn.classList.toggle('is-active', btn.dataset.tool === name);
         });
 
-        _showOptionsFor(name);
+        _refreshOptionsBar();
 
         if (!_fc) return;
 
@@ -185,16 +187,71 @@
         _histPush();
     }
 
-    function _showOptionsFor(name) {
+    // Decide which option groups to show from the active tool AND the
+    // currently selected object's type (a selected shape/text wins).
+    function _refreshOptionsBar() {
         var bar = $id('sh-ie-options');
         if (!bar) return;
+        var key = _tool;
+        var active = _fc ? _fc.getActiveObject() : null;
+        if (active && active !== _baseImg) {
+            if (active.type === 'rect' || active.type === 'ellipse' || active.type === 'line') {
+                key = active.type;
+            } else if (active.type === 'i-text' || active.type === 'text') {
+                key = 'text';
+            }
+        }
         var anyVisible = false;
         bar.querySelectorAll('.sh-ie-opt-group').forEach(function (group) {
-            var match = group.dataset.opts.split(' ').indexOf(name) !== -1;
+            var match = group.dataset.opts.split(' ').indexOf(key) !== -1;
             group.style.display = match ? '' : 'none';
             if (match) anyVisible = true;
         });
         bar.style.display = anyVisible ? '' : 'none';
+    }
+
+    function _syncControlsFromObject(obj) {
+        if (!obj || obj === _baseImg) return;
+        var t = obj.type;
+        if (t === 'rect' || t === 'ellipse' || t === 'line') {
+            var sizeSlider = $id('sh-ie-size-slider');
+            if (sizeSlider) {
+                var sw = Math.min(60, Math.max(1, Math.round(obj.strokeWidth || 1)));
+                sizeSlider.value = sw;
+                $id('sh-ie-size-val').textContent = sw;
+            }
+            var opSlider = $id('sh-ie-opacity-slider');
+            if (opSlider) {
+                var raw = (obj.opacity != null ? obj.opacity : 1) * 100;
+                var op  = Math.min(100, Math.max(1, Math.round(raw)));
+                opSlider.value = op;
+                $id('sh-ie-opacity-val').textContent = op + '%';
+            }
+            if (obj.stroke) {
+                _color = obj.stroke;
+                _paintColorSwatches(obj.stroke);
+                if (_strokeOpts) _strokeOpts.initialColor = obj.stroke;
+            }
+            if (t === 'rect' || t === 'ellipse') {
+                _fillColor = obj.fill || 'transparent';
+                _paintFillSwatch(_fillColor);
+                if (_fillOpts && _fillColor !== 'transparent') {
+                    _fillOpts.initialColor = _fillColor;
+                }
+            }
+        } else if (t === 'i-text' || t === 'text') {
+            var fontSlider = $id('sh-ie-font-slider');
+            if (fontSlider && obj.fontSize) {
+                var fs = Math.min(120, Math.max(8, Math.round(obj.fontSize)));
+                fontSlider.value = fs;
+                $id('sh-ie-font-val').textContent = fs;
+            }
+        }
+    }
+
+    function _onSelectionChange() {
+        _refreshOptionsBar();
+        _syncControlsFromObject(_fc ? _fc.getActiveObject() : null);
     }
 
     // ── Shape event helpers ──────────────────────────────────────────
@@ -224,6 +281,7 @@
     function _bindShapeEvents(shapeName) {
         _fc.on('mouse:down', function (opt) {
             if (opt.target && opt.target !== _baseImg) return; // clicked an existing object
+            _fc.discardActiveObject();
             var pt = _getPointer(opt);
             _shapeOrigin = { x: pt.x, y: pt.y };
             _shapeActive = true;
@@ -284,11 +342,15 @@
         _fc.on('mouse:up', function () {
             if (!_shapeActive || !_shapePreview) return;
             _shapeActive = false;
-            // Finalize: make selectable
-            _shapePreview.set({ selectable: true, evented: true });
+            // Finalize: make selectable and select it for immediate editing
+            var justDrawn = _shapePreview;
+            justDrawn.set({ selectable: true, evented: true });
             _shapePreview = null;
             _shapeOrigin  = null;
+            _fc.setActiveObject(justDrawn);
             _fc.renderAll();
+            _refreshOptionsBar();
+            _syncControlsFromObject(justDrawn);
             _histPush();
         });
     }
@@ -327,11 +389,26 @@
         _fc.freeDrawingBrush.color = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + opacity + ')';
     }
 
+    // ── Selection-aware history helper ───────────────────────────────
+    function _histPushIfShape() {
+        var a = _fc ? _fc.getActiveObject() : null;
+        if (a && (a.type === 'rect' || a.type === 'ellipse' || a.type === 'line')) {
+            _histPush();
+        }
+    }
+
+    function _paintColorSwatches(hex) {
+        var sw = $id('sh-ie-color-swatch');
+        if (sw) sw.style.background = hex;
+        var bsw = $id('sh-ie-border-swatch');
+        if (bsw) bsw.style.background = hex;
+    }
+
     // ── Color ─────────────────────────────────────────────────────────
     function _setColor(hex) {
         _color = hex;
-        var sw = $id('sh-ie-color-swatch');
-        if (sw) sw.style.background = hex;
+        _paintColorSwatches(hex);
+        if (_strokeOpts) _strokeOpts.initialColor = hex;
         _syncBrush();
         // Also update the fill/stroke of any currently selected object
         if (_fc) {
@@ -347,18 +424,22 @@
         }
     }
 
+    function _paintFillSwatch(value) {
+        var sw = $id('sh-ie-fill-swatch');
+        if (!sw) return;
+        if (value === 'transparent' || value === '' || value == null) {
+            sw.classList.add('sh-ie-fill-none');
+            sw.style.background = '';
+        } else {
+            sw.classList.remove('sh-ie-fill-none');
+            sw.style.background = value;
+        }
+    }
+
     function _setFill(value) {
         _fillColor = value;
-        var sw = $id('sh-ie-fill-swatch');
-        if (sw) {
-            if (value === 'transparent') {
-                sw.classList.add('sh-ie-fill-none');
-                sw.style.background = '';
-            } else {
-                sw.classList.remove('sh-ie-fill-none');
-                sw.style.background = value;
-            }
-        }
+        _paintFillSwatch(value);
+        if (_fillOpts && value !== 'transparent') _fillOpts.initialColor = value;
         if (_fc) {
             var active = _fc.getActiveObject();
             if (active && (active.type === 'rect' || active.type === 'ellipse')) {
@@ -610,6 +691,9 @@
         _resizeViewport();
 
         _fc.on('before:render', _drawArtboardPage);
+        _fc.on('selection:created', _onSelectionChange);
+        _fc.on('selection:updated', _onSelectionChange);
+        _fc.on('selection:cleared', _onSelectionChange);
 
         // Push snapshot after each free-drawing stroke; eraser strokes erase.
         _fc.on('path:created', function (e) {
@@ -812,6 +896,24 @@
         inputEl.addEventListener('keydown', handleKey);
     }
 
+    function _onSaveClick() {
+        if (_opts && _opts.mode === 'file-existing') {
+            _showSaveChoice();
+        } else {
+            _handleSave('overwrite');
+        }
+    }
+
+    function _showSaveChoice() {
+        var el = $id('sh-ie-save-choice');
+        if (el) el.style.display = 'flex';
+    }
+
+    function _hideSaveChoice() {
+        var el = $id('sh-ie-save-choice');
+        if (el) el.style.display = 'none';
+    }
+
     function _handleSave(choice) {
         if (!_opts || !_opts.onSave) { close(); return; }
 
@@ -870,6 +972,11 @@
 
         var promptEl = $id('sh-ie-prompt');
         if (promptEl && promptEl.style.display !== 'none') return; // let prompt handle shortcuts
+        var choiceEl = $id('sh-ie-save-choice');
+        if (choiceEl && choiceEl.style.display !== 'none') {
+            if (e.key === 'Escape') { e.preventDefault(); _hideSaveChoice(); }
+            return;
+        }
 
         if (e.key === 'Escape') {
             e.preventDefault();
@@ -879,6 +986,11 @@
         if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
             e.preventDefault();
             if (e.shiftKey) _redo(); else _undo();
+            return;
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) {
+            e.preventDefault();
+            _redo();
             return;
         }
 
@@ -940,30 +1052,38 @@
             btn.addEventListener('click', function () { _applyTool(btn.dataset.tool); });
         });
 
-        // Color swatch → ColorPicker
-        var colorBtn = $id('sh-ie-color-btn');
-        if (colorBtn && window.ColorPicker) {
-            ColorPicker.attach(colorBtn, {
+        // Color + Border swatches → one shared ColorPicker opts object so the
+        // toolbar swatch and the shape Border swatch always show _color.
+        var colorBtn  = $id('sh-ie-color-btn');
+        var borderBtn = $id('sh-ie-border-btn');
+        if (window.ColorPicker) {
+            _strokeOpts = {
                 initialColor: _color,
                 paletteKey:   'imageeditor',
                 onChange:     function (hex) { _setColor(hex); },
-                onCommit:     function (hex) { _setColor(hex); },
-            });
+                onCommit:     function (hex) { _setColor(hex); _histPushIfShape(); },
+            };
+            if (colorBtn)  ColorPicker.attach(colorBtn,  _strokeOpts);
+            if (borderBtn) ColorPicker.attach(borderBtn, _strokeOpts);
         }
 
         // Fill swatch → ColorPicker
         var fillBtn = $id('sh-ie-fill-btn');
         if (fillBtn && window.ColorPicker) {
-            ColorPicker.attach(fillBtn, {
-                initialColor: '#ffffff',
+            _fillOpts = {
+                initialColor: (_fillColor !== 'transparent' ? _fillColor : '#ffffff'),
                 paletteKey:   'imageeditor-fill',
                 onChange:     function (hex) { _setFill(hex); },
-                onCommit:     function (hex) { _setFill(hex); },
-            });
+                onCommit:     function (hex) { _setFill(hex); _histPushIfShape(); },
+            };
+            ColorPicker.attach(fillBtn, _fillOpts);
         }
         var fillNoneBtn = $id('sh-ie-fill-none-btn');
         if (fillNoneBtn) {
-            fillNoneBtn.addEventListener('click', function () { _setFill('transparent'); });
+            fillNoneBtn.addEventListener('click', function () {
+                _setFill('transparent');
+                _histPushIfShape();
+            });
         }
 
         // Undo / Redo
@@ -988,21 +1108,35 @@
             });
         });
 
-        // Size slider
+        // Size slider — edits a selected shape's strokeWidth, else brush/eraser
         $id('sh-ie-size-slider').addEventListener('input', function () {
             $id('sh-ie-size-val').textContent = this.value;
-            if (_tool === 'brush') {
+            var active = _fc ? _fc.getActiveObject() : null;
+            if (active && (active.type === 'rect' || active.type === 'ellipse'
+                           || active.type === 'line')) {
+                active.set('strokeWidth', parseInt(this.value) || 1);
+                _fc.renderAll();
+            } else if (_tool === 'brush') {
                 _syncBrush();
             } else if (_tool === 'eraser' && _fc && _fc.freeDrawingBrush) {
                 _fc.freeDrawingBrush.width = parseInt(this.value) || 8;
             }
         });
+        $id('sh-ie-size-slider').addEventListener('change', _histPushIfShape);
 
-        // Opacity slider
+        // Opacity slider — edits a selected shape's opacity, else the brush
         $id('sh-ie-opacity-slider').addEventListener('input', function () {
             $id('sh-ie-opacity-val').textContent = this.value + '%';
-            _syncBrush();
+            var active = _fc ? _fc.getActiveObject() : null;
+            if (active && (active.type === 'rect' || active.type === 'ellipse'
+                           || active.type === 'line')) {
+                active.set('opacity', (parseInt(this.value) || 100) / 100);
+                _fc.renderAll();
+            } else {
+                _syncBrush();
+            }
         });
+        $id('sh-ie-opacity-slider').addEventListener('change', _histPushIfShape);
 
         // Font size slider (text tool)
         var fontSlider = $id('sh-ie-font-slider');
@@ -1030,9 +1164,23 @@
         });
         $id('sh-ie-err-cancel-btn').addEventListener('click', function () { close(); });
 
-        // Save / Save-as-new
-        $id('sh-ie-save-btn').addEventListener('click',   function () { _handleSave('overwrite'); });
-        $id('sh-ie-saveas-btn').addEventListener('click', function () { _handleSave('new'); });
+        // Save → choice modal (file-existing) or direct save (flashcard modes)
+        $id('sh-ie-save-btn').addEventListener('click', _onSaveClick);
+
+        // Save-choice modal buttons
+        $id('sh-ie-choice-overwrite').addEventListener('click', function () {
+            _hideSaveChoice();
+            _handleSave('overwrite');
+        });
+        $id('sh-ie-choice-new').addEventListener('click', function () {
+            _hideSaveChoice();
+            _handleSave('new');
+        });
+        $id('sh-ie-save-choice-cancel').addEventListener('click', _hideSaveChoice);
+        // Backdrop click (the overlay itself, not the panel) cancels
+        $id('sh-ie-save-choice').addEventListener('click', function (e) {
+            if (e.target === this) _hideSaveChoice();
+        });
 
         // Zoom reset button
         var zoomReset = $id('sh-ie-zoom-reset');
@@ -1088,10 +1236,6 @@
                 : 'Image Editor';
         }
 
-        // Show/hide Save-as-new button
-        var saveAsBtn = $id('sh-ie-saveas-btn');
-        if (saveAsBtn) saveAsBtn.style.display = (_opts.mode === 'file-existing') ? '' : 'none';
-
         // Reset controls
         var sizeSlider = $id('sh-ie-size-slider');
         var opSlider   = $id('sh-ie-opacity-slider');
@@ -1105,6 +1249,7 @@
         _hideError();
         _showFooterError('');
         _setSaveSpinner(false);
+        _hideSaveChoice();
         _refreshHistBtns();
 
         // Show modal and prevent body scroll
