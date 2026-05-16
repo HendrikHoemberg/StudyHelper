@@ -632,7 +632,7 @@ class UiResourceRegressionTests {
 
         assertThat(html).contains("id=\"sh-ie-options\"");
         assertThat(css).contains(".sh-ie-options");
-        assertThat(js).contains("function _showOptionsFor(");
+        assertThat(js).contains("function _refreshOptionsBar(");
     }
 
     @Test
