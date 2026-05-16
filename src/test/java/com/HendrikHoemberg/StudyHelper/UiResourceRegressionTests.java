@@ -506,6 +506,47 @@ class UiResourceRegressionTests {
             .contains("window.PdfSplitter");
     }
 
+    @Test
+    void layoutWiresPdfViewerAndSplitterAssets() throws IOException {
+        String layout = resource("templates/fragments/layout.html");
+
+        assertThat(layout)
+            .contains("<link href=\"/css/pdf-viewer.css\" rel=\"stylesheet\">")
+            .contains("<link href=\"/css/pdf-splitter.css\" rel=\"stylesheet\">")
+            .contains("<script type=\"module\" src=\"/js/pdf-viewer.js\"></script>")
+            .contains("<script type=\"module\" src=\"/js/pdf-splitter.js\"></script>")
+            .contains("~{fragments/pdf-viewer :: modal}")
+            .contains("~{fragments/pdf-splitter :: modal}");
+    }
+
+    @Test
+    void pdfFileTilesOpenTheInAppViewer() throws IOException {
+        String tabFiles = resource("templates/fragments/tab-files.html");
+        String explorer = resource("templates/fragments/explorer.html");
+
+        assertThat(tabFiles)
+            .contains("'sh-pdf-viewer-trigger'")
+            .contains("th:data-file-id=\"${file.id}\"")
+            .contains("th:data-file-url=\"@{/files/{id}/view(id=${file.id})}\"")
+            .contains("th:data-file-name=\"${file.originalFilename}\"");
+        assertThat(explorer)
+            .contains("'sh-pdf-viewer-trigger'")
+            .contains("th:data-file-id=\"${file.id}\"")
+            .contains("th:data-file-url=\"@{/files/{id}/view(id=${file.id})}\"")
+            .contains("th:data-file-name=\"${file.originalFilename}\"");
+    }
+
+    @Test
+    void fileEditModalOffersPdfSplitterForPdfFiles() throws IOException {
+        String modal = resource("templates/fragments/file-edit-modal.html");
+
+        assertThat(modal)
+            .contains("data-split-file-id=${file.id}")
+            .contains("data-split-url=@{/files/{id}/view(id=${file.id})}")
+            .contains("data-split-filename=${file.originalFilename}")
+            .contains("Open PDF Splitter");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }
