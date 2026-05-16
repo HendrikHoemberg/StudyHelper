@@ -27,7 +27,7 @@ public class QuizController {
 
     @PostMapping("/quiz/answer")
     public String answer(
-            @RequestParam int selectedOption,
+            @RequestParam(required = false) java.util.List<Integer> selectedOptions,
             Model model,
             HttpSession httpSession,
             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
@@ -40,9 +40,17 @@ public class QuizController {
         if (state.isAnswered(idx)) {
             return renderQuestion(model, state, hxRequest);
         }
+        if (selectedOptions == null || selectedOptions.isEmpty()) {
+            return renderQuestion(model, state, hxRequest);
+        }
 
-        Map<Integer, Integer> newAnswers = new HashMap<>(state.answers());
-        newAnswers.put(idx, selectedOption);
+        java.util.List<Integer> cleaned = selectedOptions.stream()
+            .filter(java.util.Objects::nonNull)
+            .distinct()
+            .sorted()
+            .toList();
+        Map<Integer, java.util.List<Integer>> newAnswers = new HashMap<>(state.answers());
+        newAnswers.put(idx, cleaned);
         QuizSessionState newState = new QuizSessionState(
             state.config(), state.questions(), idx, newAnswers
         );
@@ -80,7 +88,8 @@ public class QuizController {
         model.addAttribute("questionNumber", idx + 1);
         model.addAttribute("totalQuestions", state.questions().size());
         model.addAttribute("answered", answered);
-        model.addAttribute("selectedOption", answered ? state.answers().get(idx) : null);
+        model.addAttribute("selectedOptions", answered ? state.answers().get(idx) : java.util.List.of());
+        model.addAttribute("answerCorrect", answered && state.isCorrect(idx));
         if (hxRequest != null) return "fragments/quiz-question :: quizQuestion";
         model.addAttribute("studyStateView", VIEW_QUESTION);
         return "study-page";

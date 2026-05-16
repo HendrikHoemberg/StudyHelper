@@ -6,5 +6,5 @@ public record QuizQuestion(
     QuestionType type,
     String questionText,
     List<String> options,
-    int correctOptionIndex
+    List<Integer> correctOptionIndices
 ) {}

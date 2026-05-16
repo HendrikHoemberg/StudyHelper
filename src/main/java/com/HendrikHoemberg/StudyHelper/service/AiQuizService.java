@@ -112,37 +112,52 @@ public class AiQuizService {
         if (q.questionText() == null || q.questionText().isBlank()) return null;
         if (q.options() == null) return null;
         if (q.options().stream().anyMatch(Objects::isNull)) return null;
+        if (q.correctOptionIndices() == null || q.correctOptionIndices().isEmpty()) return null;
+        if (q.correctOptionIndices().stream().anyMatch(Objects::isNull)) return null;
 
-        QuestionType type = q.type() != null ? q.type() : inferType(q.options());
+        QuestionType type = q.type() != null ? q.type() : inferType(q.options(), q.correctOptionIndices());
+        List<Integer> indices = q.correctOptionIndices().stream().distinct().sorted().toList();
 
-        if (type == QuestionType.MULTIPLE_CHOICE) {
-            if (q.options().size() != 4) return null;
-            if (q.correctOptionIndex() < 0 || q.correctOptionIndex() > 3) return null;
-            return new QuizQuestion(QuestionType.MULTIPLE_CHOICE, q.questionText(), q.options(), q.correctOptionIndex());
-        } else {
-            if (q.options().size() != 2) return null;
-            String opt0 = q.options().get(0).trim();
-            String opt1 = q.options().get(1).trim();
-            if (!opt0.equalsIgnoreCase("true") || !opt1.equalsIgnoreCase("false")) return null;
-            if (q.correctOptionIndex() < 0 || q.correctOptionIndex() > 1) return null;
-            return new QuizQuestion(QuestionType.TRUE_FALSE, q.questionText(), List.of("True", "False"), q.correctOptionIndex());
-        }
+        return switch (type) {
+            case MULTIPLE_CHOICE -> {
+                if (q.options().size() != 4) yield null;
+                if (indices.size() != 1) yield null;
+                if (indices.get(0) < 0 || indices.get(0) > 3) yield null;
+                yield new QuizQuestion(QuestionType.MULTIPLE_CHOICE, q.questionText(), q.options(), indices);
+            }
+            case MULTIPLE_SELECT -> {
+                if (q.options().size() != 4) yield null;
+                if (indices.size() < 2 || indices.size() > 3) yield null;
+                if (indices.stream().anyMatch(i -> i < 0 || i > 3)) yield null;
+                yield new QuizQuestion(QuestionType.MULTIPLE_SELECT, q.questionText(), q.options(), indices);
+            }
+            case TRUE_FALSE -> {
+                if (q.options().size() != 2) yield null;
+                String opt0 = q.options().get(0).trim();
+                String opt1 = q.options().get(1).trim();
+                if (!opt0.equalsIgnoreCase("true") || !opt1.equalsIgnoreCase("false")) yield null;
+                if (indices.size() != 1) yield null;
+                if (indices.get(0) < 0 || indices.get(0) > 1) yield null;
+                yield new QuizQuestion(QuestionType.TRUE_FALSE, q.questionText(), List.of("True", "False"), indices);
+            }
+        };
     }
 
-    private QuestionType inferType(List<String> options) {
+    private QuestionType inferType(List<String> options, List<Integer> correctIndices) {
         if (options.size() == 2) {
             String raw0 = options.get(0);
             String raw1 = options.get(1);
-            if (raw0 == null || raw1 == null) {
-                return QuestionType.MULTIPLE_CHOICE;
-            }
-            String o0 = raw0.trim().toLowerCase();
-            String o1 = raw1.trim().toLowerCase();
-            if ((o0.equals("true") || o0.equals("false")) && (o1.equals("true") || o1.equals("false"))) {
-                return QuestionType.TRUE_FALSE;
+            if (raw0 != null && raw1 != null) {
+                String o0 = raw0.trim().toLowerCase();
+                String o1 = raw1.trim().toLowerCase();
+                if ((o0.equals("true") || o0.equals("false")) && (o1.equals("true") || o1.equals("false"))) {
+                    return QuestionType.TRUE_FALSE;
+                }
             }
         }
-        return QuestionType.MULTIPLE_CHOICE;
+        return correctIndices.stream().distinct().count() > 1
+            ? QuestionType.MULTIPLE_SELECT
+            : QuestionType.MULTIPLE_CHOICE;
     }
 
     private String buildPrompt(String cardContent, String docContent, String pdfListing,

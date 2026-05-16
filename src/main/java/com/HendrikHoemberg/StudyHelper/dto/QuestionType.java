@@ -1,5 +1,5 @@
 package com.HendrikHoemberg.StudyHelper.dto;
 
 public enum QuestionType {
-    MULTIPLE_CHOICE, TRUE_FALSE
+    MULTIPLE_CHOICE, MULTIPLE_SELECT, TRUE_FALSE
 }

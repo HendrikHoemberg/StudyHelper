@@ -190,7 +190,7 @@ class StudyControllerPdfModeTests {
         when(deckService.getValidatedDecksInRequestedOrder(anyList(), eq(user))).thenReturn(List.of());
         when(flashcardService.getFlashcardsFlattened(anyList())).thenReturn(List.of());
         when(aiQuizService.generate(anyList(), anyList(), anyInt(), any(), any()))
-                .thenReturn(List.of(new QuizQuestion(QuestionType.MULTIPLE_CHOICE, "Q", List.of("a", "b", "c", "d"), 0)));
+                .thenReturn(List.of(new QuizQuestion(QuestionType.MULTIPLE_CHOICE, "Q", List.of("a", "b", "c", "d"), List.of(0))));
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter("pdfMode[1]", "TEXT");
