@@ -19,7 +19,8 @@ import java.util.List;
 public class AiFlashcardService {
 
     private static final Logger log = LoggerFactory.getLogger(AiFlashcardService.class);
-    private static final int MAX_FLASHCARDS = 50;
+    private static final int MAX_FLASHCARDS = 100;
+    private static final int DEFAULT_FLASHCARD_COUNT = 20;
 
     private final ChatClient chatClient;
     private final String responseSchema;
@@ -30,10 +31,14 @@ public class AiFlashcardService {
     }
 
     public List<GeneratedFlashcard> generate(DocumentInput document) {
-        return generate(document, null);
+        return generate(document, DEFAULT_FLASHCARD_COUNT, null);
     }
 
     public List<GeneratedFlashcard> generate(DocumentInput document, String additionalInstructions) {
+        return generate(document, DEFAULT_FLASHCARD_COUNT, additionalInstructions);
+    }
+
+    public List<GeneratedFlashcard> generate(DocumentInput document, int cardCount, String additionalInstructions) {
         if (document == null) {
             throw new IllegalArgumentException("Flashcard generation requires one PDF input.");
         }
@@ -48,7 +53,8 @@ public class AiFlashcardService {
                     "Selected sources contain no usable text or PDFs. Pick a document with extractable content, or a PDF in full-document mode.");
         }
 
-        String prompt = buildPrompt(docContent, pdfListing, additionalInstructions);
+        int normalizedCount = normalizeCardCount(cardCount);
+        String prompt = buildPrompt(docContent, pdfListing, normalizedCount, additionalInstructions);
 
         FlashcardsResponse response;
         try {
@@ -90,7 +96,7 @@ public class AiFlashcardService {
                     new IllegalStateException("AI response contained no flashcards with both frontText and backText."));
             }
 
-            return valid.stream().limit(MAX_FLASHCARDS).toList();
+            return valid.stream().limit(normalizedCount).toList();
 
         } catch (IllegalStateException | IllegalArgumentException e) {
             throw e;
@@ -100,12 +106,20 @@ public class AiFlashcardService {
         }
     }
 
-    private String buildPrompt(String docContent, String pdfListing, String additionalInstructions) {
+    private static int normalizeCardCount(int count) {
+        return Math.max(1, Math.min(count, MAX_FLASHCARDS));
+    }
+
+    private String buildPrompt(String docContent, String pdfListing, int cardCount, String additionalInstructions) {
         String docSection = docContent.isBlank() ? "(none)" : docContent;
         String pdfSection = pdfListing.isBlank() ? "(none)" : pdfListing;
 
         return ("You are a study assistant. Generate flashcards based on the source material below.\n\n"
-                + "Maximum flashcards: %d\n\n"
+                + "TARGET COUNT:\n"
+                + "Generate exactly %d flashcards. If the source material genuinely cannot\n"
+                + "support %d distinct, non-duplicate, high-value cards, generate as many\n"
+                + "high-quality cards as the material supports rather than padding with\n"
+                + "low-value or duplicate cards.\n\n"
                 + "LANGUAGE:\n"
                 + "Detect the dominant natural language of the supplied source material.\n"
                 + "Write every flashcard front and back in that same language. If sources mix\n"
@@ -124,7 +138,7 @@ public class AiFlashcardService {
                 + "=== DOCUMENTS ===\n"
                 + "%s\n\n"
                 + "=== ATTACHED PDFs ===\n"
-                + "%s\n").formatted(MAX_FLASHCARDS, docSection, pdfSection)
+                + "%s\n").formatted(cardCount, cardCount, docSection, pdfSection)
                 + AiInstructionSupport.section(additionalInstructions);
     }
 }

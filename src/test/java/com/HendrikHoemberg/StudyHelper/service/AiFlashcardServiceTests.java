@@ -92,7 +92,7 @@ class AiFlashcardServiceTests {
         assertThat(capturedPrompt.get()).contains("=== DOCUMENTS ===");
         assertThat(capturedPrompt.get()).contains("notes.txt");
         assertThat(capturedPrompt.get()).contains("Photosynthesis converts light energy.");
-        assertThat(capturedPrompt.get()).contains("Maximum flashcards: 50");
+        assertThat(capturedPrompt.get()).contains("Generate exactly");
         assertThat(capturedPrompt.get()).containsIgnoringCase("dominant educational content");
         assertThat(capturedPrompt.get()).containsIgnoringCase("ignore metadata");
         assertThat(capturedPrompt.get()).containsIgnoringCase("avoid duplicate cards");
@@ -116,7 +116,7 @@ class AiFlashcardServiceTests {
         assertThat(result).hasSize(2);
         assertThat(capturedPrompt.get()).contains("=== ATTACHED PDFs ===");
         assertThat(capturedPrompt.get()).contains("chapter5.pdf");
-        assertThat(capturedPrompt.get()).contains("Maximum flashcards: 50");
+        assertThat(capturedPrompt.get()).contains("Generate exactly");
         assertThat(capturedMedia).hasSize(1);
         assertThat(capturedMedia.get(0).getMimeType().toString()).isEqualTo("application/pdf");
     }
@@ -147,14 +147,34 @@ class AiFlashcardServiceTests {
     }
 
     @Test
-    void generate_MoreThanFiftyCards_CapsAtFifty() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(manyFlashcards(55)));
+    void generate_MoreThanRequestedCount_CapsAtRequestedCount() {
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(manyFlashcards(60)));
 
-        List<GeneratedFlashcard> result = service.generate(new TextDocument("notes.txt", "topic"));
+        List<GeneratedFlashcard> result = service.generate(new TextDocument("notes.txt", "topic"), 40, null);
 
-        assertThat(result).hasSize(50);
+        assertThat(result).hasSize(40);
         assertThat(result.get(0)).isEqualTo(new GeneratedFlashcard("Front 1", "Back 1"));
-        assertThat(result.get(49)).isEqualTo(new GeneratedFlashcard("Front 50", "Back 50"));
+        assertThat(result.get(39)).isEqualTo(new GeneratedFlashcard("Front 40", "Back 40"));
+    }
+
+    @Test
+    void generate_RequestedCountAboveHundred_ClampedToHundred() {
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(manyFlashcards(150)));
+
+        List<GeneratedFlashcard> result = service.generate(new TextDocument("notes.txt", "topic"), 999, null);
+
+        assertThat(result).hasSize(100);
+    }
+
+    @Test
+    void generate_RequestedCount_AppearsInPrompt() {
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("Front 1", "Back 1")
+        ));
+
+        service.generate(new TextDocument("notes.txt", "topic"), 33, null);
+
+        assertThat(capturedPrompt.get()).contains("Generate exactly 33 flashcards");
     }
 
     @Test
