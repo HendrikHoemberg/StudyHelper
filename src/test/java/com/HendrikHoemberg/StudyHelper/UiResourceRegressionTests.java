@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper;
 
+import com.HendrikHoemberg.StudyHelper.config.AppDefaults;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -347,12 +348,11 @@ class UiResourceRegressionTests {
         String colorPickerJs = resource("static/js/color-picker.js");
         String colorPickerTemplate = resource("templates/fragments/color-picker.html");
 
+        assertThat(AppDefaults.DEFAULT_COLOR_HEX).isEqualTo("#0f766e");
         assertThat(folderForm)
-            .contains("${colorHex ?: '#0f766e'}")
-            .contains("'#0F766E'");
+            .contains("${colorHex ?: defaultColorHex}");
         assertThat(deckForm)
-            .contains("${colorHex ?: '#0f766e'}")
-            .contains("'#0F766E'");
+            .contains("${colorHex ?: defaultColorHex}");
         assertThat(appJs)
             .contains("|| '#0f766e'");
         assertThat(colorPickerJs)

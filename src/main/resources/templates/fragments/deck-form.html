@@ -22,11 +22,11 @@
             <label class="sh-label">Color</label>
             <button type="button" class="sh-color-trigger" data-color-picker
                 th:attr="data-target=${prefix + 'DeckColor'}" data-palette-key="deck">
-                <span class="sh-color-swatch" th:style="'background:' + ${colorHex ?: '#0f766e'}"></span>
+                <span class="sh-color-swatch" th:style="'background:' + ${colorHex ?: defaultColorHex}"></span>
                 <span class="sh-color-hex"
-                    th:text="${colorHex != null ? #strings.toUpperCase(colorHex) : '#0F766E'}"></span>
+                    th:text="${#strings.toUpperCase(colorHex ?: defaultColorHex)}"></span>
             </button>
-            <input type="hidden" name="colorHex" th:id="${prefix + 'DeckColor'}" th:value="${colorHex ?: '#0f766e'}">
+            <input type="hidden" name="colorHex" th:id="${prefix + 'DeckColor'}" th:value="${colorHex ?: defaultColorHex}">
         </div>
 
         <!-- Icon Selection -->
@@ -66,7 +66,7 @@
                     hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
                     <div class="sh-modal-body">
                         <div
-                            th:replace="~{fragments/deck-form :: deckFields(${deck?.name}, ${deck?.colorHex ?: '#0f766e'}, ${deck?.iconName ?: 'layers'}, 'modal')}">
+                            th:replace="~{fragments/deck-form :: deckFields(${deck?.name}, ${deck?.colorHex ?: defaultColorHex}, ${deck?.iconName ?: 'layers'}, 'modal')}">
                         </div>
                     </div>
                     <div class="sh-modal-footer"

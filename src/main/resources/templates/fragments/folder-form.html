@@ -23,11 +23,11 @@
             <label class="sh-label">Color</label>
             <button type="button" class="sh-color-trigger" data-color-picker
                 th:attr="data-target=${prefix + 'FolderColor'}" data-palette-key="folder">
-                <span class="sh-color-swatch" th:style="'background:' + ${colorHex ?: '#0f766e'}"></span>
+                <span class="sh-color-swatch" th:style="'background:' + ${colorHex ?: defaultColorHex}"></span>
                 <span class="sh-color-hex"
-                    th:text="${colorHex != null ? #strings.toUpperCase(colorHex) : '#0F766E'}"></span>
+                    th:text="${#strings.toUpperCase(colorHex ?: defaultColorHex)}"></span>
             </button>
-            <input type="hidden" name="colorHex" th:id="${prefix + 'FolderColor'}" th:value="${colorHex ?: '#0f766e'}">
+            <input type="hidden" name="colorHex" th:id="${prefix + 'FolderColor'}" th:value="${colorHex ?: defaultColorHex}">
         </div>
 
         <!-- Icon Selection -->
@@ -67,7 +67,7 @@
                 <form th:action="${action}" method="post">
                     <div class="sh-modal-body">
                         <div
-                            th:replace="~{fragments/folder-form :: folderFields(${folder.name}, ${folder.colorHex ?: '#0f766e'}, ${folder.iconName ?: 'folder'}, 'modal')}">
+                            th:replace="~{fragments/folder-form :: folderFields(${folder.name}, ${folder.colorHex ?: defaultColorHex}, ${folder.iconName ?: 'folder'}, 'modal')}">
                         </div>
                     </div>
                     <div class="sh-modal-footer">

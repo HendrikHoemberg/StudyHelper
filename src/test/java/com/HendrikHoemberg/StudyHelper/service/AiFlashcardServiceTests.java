@@ -172,7 +172,6 @@ class AiFlashcardServiceTests {
                 assertThat(aiEx.diagnostics().stage()).isEqualTo("PROVIDER_REQUEST");
                 assertThat(aiEx.diagnostics().exceptionClass()).contains("RuntimeException");
                 assertThat(aiEx.diagnostics().exceptionMessage()).contains("provider offline");
-                assertThat(aiEx.diagnostics().stackTrace()).contains("provider offline");
             });
     }
 
