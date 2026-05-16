@@ -36,6 +36,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -136,7 +137,7 @@ class FlashcardGenerationControllerTests {
         when(fileEntryService.getByIdAndUser(99L, user)).thenReturn(pdf);
         when(documentExtractionService.isSupported(pdf)).thenReturn(true);
         when(documentExtractionService.extractText(pdf)).thenReturn("Lecture text");
-        when(aiFlashcardService.generate(any(DocumentInput.class), any())).thenReturn(List.of(new GeneratedFlashcard("Q", "A")));
+        when(aiFlashcardService.generate(any(DocumentInput.class), anyInt(), any())).thenReturn(List.of(new GeneratedFlashcard("Q", "A")));
         when(persistenceService.saveGeneratedCards(eq(FlashcardGenerationDestination.EXISTING_DECK), eq(20L), eq(null), eq(null), eq(user), any())).thenReturn(deck);
         when(deckService.getDeck(20L, user)).thenReturn(deck);
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -146,6 +147,7 @@ class FlashcardGenerationControllerTests {
             99L,
             DocumentMode.TEXT,
             "focus on definitions",
+            20,
             FlashcardGenerationDestination.EXISTING_DECK,
             20L,
             null,
@@ -157,7 +159,7 @@ class FlashcardGenerationControllerTests {
         );
 
         ArgumentCaptor<DocumentInput> docCaptor = ArgumentCaptor.forClass(DocumentInput.class);
-        verify(aiFlashcardService).generate(docCaptor.capture(), eq("focus on definitions"));
+        verify(aiFlashcardService).generate(docCaptor.capture(), eq(20), eq("focus on definitions"));
         assertThat(docCaptor.getValue()).isInstanceOf(TextDocument.class);
         assertThat(view).isEqualTo("fragments/deck :: deckDetail");
         assertThat(response.getHeader("HX-Push-Url")).isEqualTo("/decks/20");
@@ -169,14 +171,14 @@ class FlashcardGenerationControllerTests {
         when(fileEntryService.getByIdAndUser(99L, user)).thenReturn(pdf);
         when(documentExtractionService.isSupported(pdf)).thenReturn(true);
         when(documentExtractionService.loadResource(pdf)).thenReturn(new ByteArrayResource(new byte[]{1, 2, 3}));
-        when(aiFlashcardService.generate(any(DocumentInput.class), any())).thenReturn(List.of(new GeneratedFlashcard("Q", "A"), new GeneratedFlashcard("Q2", "A2")));
+        when(aiFlashcardService.generate(any(DocumentInput.class), anyInt(), any())).thenReturn(List.of(new GeneratedFlashcard("Q", "A"), new GeneratedFlashcard("Q2", "A2")));
         when(persistenceService.saveGeneratedCards(eq(FlashcardGenerationDestination.NEW_DECK), eq(null), eq(10L), eq("Lecture Deck"), eq(user), any())).thenReturn(deck);
         when(deckService.getDeck(20L, user)).thenReturn(deck);
 
-        controller.generate(99L, DocumentMode.FULL_PDF, "cover visual concepts", FlashcardGenerationDestination.NEW_DECK, null, 10L, "Lecture Deck", new ExtendedModelMap(), () -> "alice", new MockHttpServletResponse(), "true");
+        controller.generate(99L, DocumentMode.FULL_PDF, "cover visual concepts", 20, FlashcardGenerationDestination.NEW_DECK, null, 10L, "Lecture Deck", new ExtendedModelMap(), () -> "alice", new MockHttpServletResponse(), "true");
 
         ArgumentCaptor<DocumentInput> docCaptor = ArgumentCaptor.forClass(DocumentInput.class);
-        verify(aiFlashcardService).generate(docCaptor.capture(), eq("cover visual concepts"));
+        verify(aiFlashcardService).generate(docCaptor.capture(), eq(20), eq("cover visual concepts"));
         assertThat(docCaptor.getValue()).isInstanceOf(PdfDocument.class);
         verify(documentExtractionService, never()).extractText(pdf);
     }
@@ -190,12 +192,12 @@ class FlashcardGenerationControllerTests {
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        String view = controller.generate(99L, DocumentMode.TEXT, null, FlashcardGenerationDestination.EXISTING_DECK, 20L, null, null, model, () -> "alice", response, "true");
+        String view = controller.generate(99L, DocumentMode.TEXT, null, 20, FlashcardGenerationDestination.EXISTING_DECK, 20L, null, null, model, () -> "alice", response, "true");
 
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("generationError")).isEqualTo("This PDF has no extractable text. Try Full PDF mode.");
-        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), any());
+        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), anyInt(), any());
     }
 
     @Test
@@ -203,12 +205,12 @@ class FlashcardGenerationControllerTests {
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        String view = controller.generate(null, DocumentMode.TEXT, null, FlashcardGenerationDestination.EXISTING_DECK, 20L, null, null, model, () -> "alice", response, "true");
+        String view = controller.generate(null, DocumentMode.TEXT, null, 20, FlashcardGenerationDestination.EXISTING_DECK, 20L, null, null, model, () -> "alice", response, "true");
 
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("generationError")).isEqualTo("Please select one PDF.");
-        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), any());
+        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), anyInt(), any());
     }
 
     @Test
@@ -218,12 +220,12 @@ class FlashcardGenerationControllerTests {
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        String view = controller.generate(99L, DocumentMode.TEXT, null, FlashcardGenerationDestination.NEW_DECK, null, 10L, "   ", model, () -> "alice", response, "true");
+        String view = controller.generate(99L, DocumentMode.TEXT, null, 20, FlashcardGenerationDestination.NEW_DECK, null, 10L, "   ", model, () -> "alice", response, "true");
 
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("generationError")).isEqualTo("Deck name is required.");
-        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), any());
+        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), anyInt(), any());
     }
 
     @Test
@@ -233,12 +235,12 @@ class FlashcardGenerationControllerTests {
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        String view = controller.generate(99L, DocumentMode.TEXT, null, FlashcardGenerationDestination.NEW_DECK, null, 10L, "lecture", model, () -> "alice", response, "true");
+        String view = controller.generate(99L, DocumentMode.TEXT, null, 20, FlashcardGenerationDestination.NEW_DECK, null, 10L, "lecture", model, () -> "alice", response, "true");
 
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("generationError")).isEqualTo("A deck named \"lecture\" already exists in this folder.");
-        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), any());
+        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), anyInt(), any());
     }
 
     @Test
@@ -254,12 +256,12 @@ class FlashcardGenerationControllerTests {
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        String view = controller.generate(55L, DocumentMode.TEXT, null, FlashcardGenerationDestination.EXISTING_DECK, 20L, null, null, model, () -> "alice", response, "true");
+        String view = controller.generate(55L, DocumentMode.TEXT, null, 20, FlashcardGenerationDestination.EXISTING_DECK, 20L, null, null, model, () -> "alice", response, "true");
 
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("generationError")).isEqualTo("Please select a supported PDF under 10 MB.");
-        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), any());
+        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), anyInt(), any());
     }
 
     @Test
@@ -267,7 +269,7 @@ class FlashcardGenerationControllerTests {
         when(fileEntryService.getByIdAndUser(99L, user)).thenReturn(pdf);
         when(documentExtractionService.isSupported(pdf)).thenReturn(true);
         when(documentExtractionService.extractText(pdf)).thenReturn("Lecture text");
-        when(aiFlashcardService.generate(any(DocumentInput.class), any()))
+        when(aiFlashcardService.generate(any(DocumentInput.class), anyInt(), any()))
             .thenThrow(new AiGenerationException(
                 "AI request failed, please retry with a smaller PDF or Text mode.",
                 AiGenerationDiagnostics.fromException("FLASHCARDS", "PROVIDER_REQUEST", new RuntimeException("provider offline"))
@@ -276,7 +278,7 @@ class FlashcardGenerationControllerTests {
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        String view = controller.generate(99L, DocumentMode.TEXT, null, FlashcardGenerationDestination.NEW_DECK, null, 10L, "Deck", model, () -> "alice", response, "true");
+        String view = controller.generate(99L, DocumentMode.TEXT, null, 20, FlashcardGenerationDestination.NEW_DECK, null, 10L, "Deck", model, () -> "alice", response, "true");
 
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
         assertThat(response.getStatus()).isEqualTo(400);
@@ -304,6 +306,7 @@ class FlashcardGenerationControllerTests {
             99L,
             DocumentMode.TEXT,
             null,
+            20,
             FlashcardGenerationDestination.EXISTING_DECK,
             20L,
             null,
@@ -317,7 +320,7 @@ class FlashcardGenerationControllerTests {
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("generationError")).isEqualTo("Daily AI request limit reached.");
-        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), any());
+        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), anyInt(), any());
     }
 
     @Test
@@ -344,7 +347,7 @@ class FlashcardGenerationControllerTests {
         assertThat(response.getStatus()).isEqualTo(204);
         assertThat(view).isNull();
         verify(aiRequestQuotaService, never()).checkAndRecord(any());
-        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), any());
+        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), anyInt(), any());
     }
 
     @Test
@@ -369,6 +372,6 @@ class FlashcardGenerationControllerTests {
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("generationError")).isEqualTo("Please select one PDF.");
         verify(aiRequestQuotaService, never()).checkAndRecord(any());
-        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), any());
+        verify(aiFlashcardService, never()).generate(any(DocumentInput.class), anyInt(), any());
     }
 }
