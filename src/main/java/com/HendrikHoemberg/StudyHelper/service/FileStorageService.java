@@ -24,6 +24,12 @@ public class FileStorageService {
         Files.createDirectories(this.uploadDir);
     }
 
+    public String storeBytes(byte[] content, String extension) throws IOException {
+        String storedFilename = UUID.randomUUID() + (extension == null ? "" : extension);
+        Files.write(uploadDir.resolve(storedFilename), content);
+        return storedFilename;
+    }
+
     public String store(MultipartFile file) throws IOException {
         String storedFilename = UUID.randomUUID() + extension(file.getOriginalFilename());
         Files.copy(file.getInputStream(), uploadDir.resolve(storedFilename), StandardCopyOption.REPLACE_EXISTING);
