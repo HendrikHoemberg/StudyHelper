@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCsrf();
     initLightbox();
     initShDialog();
+    initQuizAnswerForm();
     if (window.initCustomSteppers) window.initCustomSteppers(document);
 });
 
@@ -27,6 +28,7 @@ function registerServiceWorker() {
 // Re-run initializations after HTMX swaps
 document.body.addEventListener('htmx:afterSwap', () => {
     if (window.initCustomSteppers) window.initCustomSteppers(document);
+    initQuizAnswerForm();
 });
 
 // Optional fade-in animation after settle
@@ -609,6 +611,44 @@ function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText
             else okBtn.focus();
         }, 0);
     });
+}
+
+/* ---------- Quiz answer form ---------- */
+function initQuizAnswerForm() {
+    const form = document.querySelector('.sh-quiz-answer-form');
+    if (!form || form.dataset.quizAnswerInit === 'true') return;
+    form.dataset.quizAnswerInit = 'true';
+
+    const multi = form.dataset.questionType === 'MULTIPLE_SELECT';
+    const options = Array.from(form.querySelectorAll('.sh-quiz-option'));
+    const submitBtn = form.querySelector('.sh-quiz-submit-btn');
+    const hiddenWrap = form.querySelector('.sh-quiz-selected-inputs');
+    if (!submitBtn || !hiddenWrap) return;
+
+    function sync() {
+        const selected = options.filter(o => o.classList.contains('is-selected'));
+        hiddenWrap.innerHTML = '';
+        selected.forEach(o => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'selectedOptions';
+            input.value = o.dataset.index;
+            hiddenWrap.appendChild(input);
+        });
+        submitBtn.disabled = selected.length === 0;
+    }
+
+    options.forEach(opt => {
+        opt.addEventListener('click', () => {
+            if (multi) {
+                opt.classList.toggle('is-selected');
+            } else {
+                options.forEach(o => o.classList.toggle('is-selected', o === opt));
+            }
+            sync();
+        });
+    });
+    sync();
 }
 
 function shConfirm(opts) {
