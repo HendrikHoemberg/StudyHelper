@@ -11,11 +11,15 @@
     var _opts     = null;    // open() options
     var _objUrl   = null;    // revocable object URL created from File/Blob source
     var _baseImg  = null;    // reference to the background FabricImage object
+    var _artboard = { x: 0, y: 0, w: 0, h: 0 };  // document-space export rect
+    var _exporting    = false;  // true while exporting → suppress page chrome
+    var _checkerCanvas = null;  // cached offscreen checkerboard tile
     var _history  = [];      // serialized canvas snapshots (canvas.toObject())
     var _histPos  = -1;      // current position in _history
     var _histLock = false;   // suppress push during snapshot restore
     var _tool     = 'brush'; // active tool id
     var _color    = '#000000';
+    var _fillColor = 'transparent';   // shape fill; 'transparent' = no fill
     var _wired    = false;   // interactions wired once flag
 
     // ── Shape drawing state ───────────────────────────────────────────
@@ -34,6 +38,16 @@
     var ZOOM_MAX = 8;
     var HIST_MAX = 20;
 
+    var _resizeTimer = null;  // debounce handle for window-resize re-fit
+
+    // ── Edge-handle drag state (Task 7) ───────────────────────────────
+    var MIN_ARTBOARD = 20;     // smallest artboard side, document units
+    var _handleEls   = [];     // 8 handle DOM elements
+    var _hbDir       = null;   // active drag direction, e.g. 'se'
+    var _hbStartAb   = null;   // artboard snapshot at drag start
+    var _hbStartX    = 0;      // pointer X at drag start (screen)
+    var _hbStartY    = 0;      // pointer Y at drag start (screen)
+
     // ── DOM helper ───────────────────────────────────────────────────
     function $id(id) { return document.getElementById(id); }
 
@@ -44,7 +58,10 @@
         if (_histPos < _history.length - 1) {
             _history = _history.slice(0, _histPos + 1);
         }
-        _history.push(_fc.toObject());
+        _history.push({
+            canvas:   _fc.toObject(),
+            artboard: { x: _artboard.x, y: _artboard.y, w: _artboard.w, h: _artboard.h },
+        });
         if (_history.length > HIST_MAX) {
             _history.shift();
         } else {
@@ -67,8 +84,11 @@
 
     function _loadSnap(snap) {
         _histLock = true;
-        _fc.loadFromJSON(snap).then(function () {
-            _fc.renderAll();
+        _fc.loadFromJSON(snap.canvas).then(function () {
+            _artboard = {
+                x: snap.artboard.x, y: snap.artboard.y,
+                w: snap.artboard.w, h: snap.artboard.h,
+            };
             // Base image is always the bottom-most object; re-lock it
             _baseImg = _fc.getObjects()[0] || null;
             if (_baseImg) {
@@ -77,9 +97,12 @@
                     hasControls: false, hasBorders: false,
                 });
             }
+            _syncClipPath();
+            _fc.renderAll();
             _histLock = false;
             _refreshHistBtns();
             _applyTool(_tool);
+            _updateHandles();
         }).catch(function (err) {
             console.error('ImageEditor: snapshot restore failed', err);
             _histLock = false;
@@ -100,15 +123,28 @@
             btn.classList.toggle('is-active', btn.dataset.tool === name);
         });
 
-        // Toggle footer control groups
-        var brushCtrl = $id('sh-ie-brush-controls');
-        var textCtrl  = $id('sh-ie-text-controls');
-        if (brushCtrl) brushCtrl.style.display = (name === 'text') ? 'none' : '';
-        if (textCtrl)  textCtrl.style.display  = (name === 'text') ? ''     : 'none';
+        _showOptionsFor(name);
 
         if (!_fc) return;
 
         _unbindShapeEvents();
+
+        if (name === 'select') {
+            _fc.isDrawingMode = false;
+            _fc.selection     = true;
+            _fc.defaultCursor = 'default';
+            _fc.getObjects().forEach(function (obj) {
+                if (obj === _baseImg) return;
+                obj.set({ selectable: true, evented: true });
+            });
+            return;
+        }
+        // Non-select tools: keep drawn objects inert so they don't intercept
+        _fc.getObjects().forEach(function (obj) {
+            if (obj === _baseImg) return;
+            obj.set({ selectable: false, evented: false });
+        });
+        _fc.discardActiveObject();
 
         if (name === 'brush') {
             _fc.isDrawingMode = true;
@@ -135,6 +171,30 @@
             _fc.defaultCursor = 'text';
             _bindTextEvents();
         }
+    }
+
+    function _deleteActiveObjects() {
+        if (!_fc) return;
+        var objs = _fc.getActiveObjects();
+        if (!objs.length) return;
+        objs.forEach(function (obj) {
+            if (obj !== _baseImg) _fc.remove(obj);
+        });
+        _fc.discardActiveObject();
+        _fc.renderAll();
+        _histPush();
+    }
+
+    function _showOptionsFor(name) {
+        var bar = $id('sh-ie-options');
+        if (!bar) return;
+        var anyVisible = false;
+        bar.querySelectorAll('.sh-ie-opt-group').forEach(function (group) {
+            var match = group.dataset.opts.split(' ').indexOf(name) !== -1;
+            group.style.display = match ? '' : 'none';
+            if (match) anyVisible = true;
+        });
+        bar.style.display = anyVisible ? '' : 'none';
     }
 
     // ── Shape event helpers ──────────────────────────────────────────
@@ -175,7 +235,7 @@
                 top:             pt.y,
                 stroke:          _color,
                 strokeWidth:     sw,
-                fill:            'transparent',
+                fill:            _fillColor,
                 opacity:         op,
                 selectable:      false,
                 evented:         false,
@@ -287,17 +347,183 @@
         }
     }
 
+    function _setFill(value) {
+        _fillColor = value;
+        var sw = $id('sh-ie-fill-swatch');
+        if (sw) {
+            if (value === 'transparent') {
+                sw.classList.add('sh-ie-fill-none');
+                sw.style.background = '';
+            } else {
+                sw.classList.remove('sh-ie-fill-none');
+                sw.style.background = value;
+            }
+        }
+        if (_fc) {
+            var active = _fc.getActiveObject();
+            if (active && (active.type === 'rect' || active.type === 'ellipse')) {
+                active.set('fill', value);
+                _fc.renderAll();
+            }
+        }
+    }
+
     // ── Zoom / Pan helpers ────────────────────────────────────────────
     function _updateZoomDisplay() {
         var el = $id('sh-ie-zoom-val');
         if (el) el.textContent = Math.round(_zoom * 100) + '%';
     }
 
-    function _resetZoom() {
-        if (!_fc) return;
-        _zoom = 1;
-        _fc.setViewportTransform([1, 0, 0, 1, 0, 0]);
+    function _fitArtboard() {
+        if (!_fc || !_artboard.w || !_artboard.h) return;
+        var pad = 56;
+        var zx  = (_fc.width  - pad * 2) / _artboard.w;
+        var zy  = (_fc.height - pad * 2) / _artboard.h;
+        var z   = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.min(zx, zy)));
+        _zoom = z;
+        var tx = (_fc.width  - _artboard.w * z) / 2 - _artboard.x * z;
+        var ty = (_fc.height - _artboard.h * z) / 2 - _artboard.y * z;
+        _fc.setViewportTransform([z, 0, 0, z, tx, ty]);
         _updateZoomDisplay();
+        _updateHandles();
+    }
+
+    var HANDLE_DIRS = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+
+    function _buildHandles() {
+        var layer = $id('sh-ie-handles');
+        if (!layer) return;
+        layer.innerHTML = '';
+        _handleEls = HANDLE_DIRS.map(function (dir) {
+            var el = document.createElement('div');
+            el.className = 'sh-ie-handle';
+            el.dataset.dir = dir;
+            el.addEventListener('mousedown', function (e) { _startHandleDrag(e, dir); });
+            layer.appendChild(el);
+            return el;
+        });
+        _updateHandles();
+    }
+
+    function _docToScreen(x, y) {
+        var vpt = _fc.viewportTransform;
+        return { x: x * vpt[0] + vpt[4], y: y * vpt[3] + vpt[5] };
+    }
+
+    function _updateHandles() {
+        if (!_fc || !_artboard.w || !_handleEls.length) return;
+        var a  = _artboard;
+        var cx = a.x + a.w / 2;
+        var cy = a.y + a.h / 2;
+        var pts = {
+            nw: [a.x, a.y],        n: [cx, a.y],          ne: [a.x + a.w, a.y],
+            e:  [a.x + a.w, cy],   se: [a.x + a.w, a.y + a.h],
+            s:  [cx, a.y + a.h],   sw: [a.x, a.y + a.h],  w: [a.x, cy],
+        };
+        _handleEls.forEach(function (el) {
+            var p = _docToScreen(pts[el.dataset.dir][0], pts[el.dataset.dir][1]);
+            el.style.left = p.x + 'px';
+            el.style.top  = p.y + 'px';
+        });
+    }
+
+    function _startHandleDrag(e, dir) {
+        e.preventDefault();
+        e.stopPropagation();
+        _hbDir     = dir;
+        _hbStartAb = { x: _artboard.x, y: _artboard.y, w: _artboard.w, h: _artboard.h };
+        _hbStartX  = e.clientX;
+        _hbStartY  = e.clientY;
+        document.addEventListener('mousemove', _handleDragMove);
+        document.addEventListener('mouseup',   _handleDragUp);
+        var readout = $id('sh-ie-handle-readout');
+        if (readout) readout.style.display = '';
+    }
+
+    function _handleDragMove(e) {
+        if (!_hbDir) return;
+        var z  = _fc.viewportTransform[0];
+        var dx = (e.clientX - _hbStartX) / z;
+        var dy = (e.clientY - _hbStartY) / z;
+        _resizeArtboard(_hbDir, dx, dy);
+        _syncClipPath();
+        _updateHandles();
+        _fc.requestRenderAll();
+        var readout = $id('sh-ie-handle-readout');
+        if (readout) {
+            readout.textContent = Math.round(_artboard.w) + ' × ' +
+                                  Math.round(_artboard.h) + ' px';
+        }
+    }
+
+    function _handleDragUp() {
+        if (!_hbDir) return;
+        _hbDir = null;
+        document.removeEventListener('mousemove', _handleDragMove);
+        document.removeEventListener('mouseup',   _handleDragUp);
+        var readout = $id('sh-ie-handle-readout');
+        if (readout) readout.style.display = 'none';
+        _histPush();
+    }
+
+    function _resizeArtboard(dir, dx, dy) {
+        var s = _hbStartAb;
+        var x = s.x, y = s.y, w = s.w, h = s.h;
+
+        if (dir.indexOf('e') !== -1) {
+            w = Math.max(MIN_ARTBOARD, s.w + dx);
+        }
+        if (dir.indexOf('w') !== -1) {
+            w = Math.max(MIN_ARTBOARD, s.w - dx);
+            x = s.x + s.w - w;
+        }
+        if (dir.indexOf('s') !== -1) {
+            h = Math.max(MIN_ARTBOARD, s.h + dy);
+        }
+        if (dir.indexOf('n') !== -1) {
+            h = Math.max(MIN_ARTBOARD, s.h - dy);
+            y = s.y + s.h - h;
+        }
+        _artboard = { x: x, y: y, w: w, h: h };
+    }
+
+    // Paint the artboard page beneath the Fabric objects (not an object → not
+    // in history). Suppressed during export so the checkerboard is not baked in.
+    function _drawArtboardPage() {
+        if (!_fc || _exporting || !_artboard.w) return;
+        var ctx = _fc.getContext();
+        var vpt = _fc.viewportTransform;
+        var z   = vpt[0];
+        var x = _artboard.x, y = _artboard.y, w = _artboard.w, h = _artboard.h;
+
+        ctx.save();
+        ctx.transform(vpt[0], vpt[1], vpt[2], vpt[3], vpt[4], vpt[5]);
+
+        ctx.shadowColor   = 'rgba(0,0,0,0.45)';
+        ctx.shadowBlur    = 24 / z;
+        ctx.shadowOffsetY = 8 / z;
+        ctx.fillStyle = ctx.createPattern(_getCheckerCanvas(), 'repeat');
+        ctx.fillRect(x, y, w, h);
+
+        ctx.shadowColor = 'transparent';
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.lineWidth   = 1 / z;
+        ctx.strokeRect(x, y, w, h);
+        ctx.restore();
+    }
+
+    // Clip object rendering to the artboard rectangle.
+    function _syncClipPath() {
+        if (!_fc) return;
+        if (!_artboard.w) { _fc.clipPath = null; return; }
+        _fc.clipPath = new fabric.Rect({
+            left:               _artboard.x,
+            top:                _artboard.y,
+            width:              _artboard.w,
+            height:             _artboard.h,
+            absolutePositioned: true,
+        });
+        _fc.requestRenderAll();
     }
 
     function _bindZoomPan(wrap) {
@@ -323,6 +549,7 @@
             _fc.zoomToPoint(point, newZoom);
             _zoom = newZoom;
             _updateZoomDisplay();
+            _updateHandles();
         }, { passive: false });
 
         // ── Middle-click drag → pan ───────────────────────────────────
@@ -331,35 +558,35 @@
             e.preventDefault();
             _startPan(e.clientX, e.clientY, wrap);
         });
+    }
 
-        // pointer moves and releases are handled globally so they
-        // don't get swallowed by the canvas element
-        document.addEventListener('mousemove', function (e) {
-            if (!_isPanning) return;
-            var dx = e.clientX - _panLastX;
-            var dy = e.clientY - _panLastY;
-            _panLastX = e.clientX;
-            _panLastY = e.clientY;
-            if (_fc) _fc.relativePan(new fabric.Point(dx, dy));
-        });
+    function _panMove(e) {
+        if (!_isPanning) return;
+        var dx = e.clientX - _panLastX;
+        var dy = e.clientY - _panLastY;
+        _panLastX = e.clientX;
+        _panLastY = e.clientY;
+        if (_fc) _fc.relativePan(new fabric.Point(dx, dy));
+        _updateHandles();
+    }
 
-        document.addEventListener('mouseup', function () {
-            if (_isPanning) {
-                var wrapEl = $id('sh-ie-canvas-wrap');
-                _endPan(wrapEl);
-            }
-        });
+    function _panUp() {
+        if (_isPanning) _endPan($id('sh-ie-canvas-wrap'));
     }
 
     function _startPan(clientX, clientY, wrap) {
         _isPanning  = true;
         _panLastX   = clientX;
         _panLastY   = clientY;
+        document.addEventListener('mousemove', _panMove);
+        document.addEventListener('mouseup',   _panUp);
         var area = wrap ? wrap.closest('.sh-ie-canvas-area') : null;
         if (area) { area.classList.remove('is-pan-ready'); area.classList.add('is-panning'); }
     }
 
     function _endPan(wrap) {
+        document.removeEventListener('mousemove', _panMove);
+        document.removeEventListener('mouseup',   _panUp);
         _isPanning = false;
         var area = wrap ? wrap.closest('.sh-ie-canvas-area') : null;
         if (area) {
@@ -370,22 +597,46 @@
 
     // ── Canvas bootstrap ─────────────────────────────────────────────
     function _makeCanvas(wrap) {
-        // Force a layout flush so clientWidth/Height are accurate
-        var w = wrap.clientWidth  || 800;
-        var h = wrap.clientHeight || 600;
         var el = document.createElement('canvas');
         wrap.appendChild(el);
 
         _fc = new fabric.Canvas(el, {
-            width:               w,
-            height:              h,
-            backgroundColor:     null,
-            enableRetinaScaling: false,
-            selection:           false,
+            backgroundColor:       null,
+            enableRetinaScaling:   true,
+            selection:             false,
+            preserveObjectStacking: true,
         });
 
-        // Push snapshot after each free-drawing stroke
-        _fc.on('path:created', function () { _histPush(); });
+        _resizeViewport();
+
+        _fc.on('before:render', _drawArtboardPage);
+
+        // Push snapshot after each free-drawing stroke; eraser strokes erase.
+        _fc.on('path:created', function (e) {
+            if (_tool === 'eraser' && e && e.path) {
+                e.path.globalCompositeOperation = 'destination-out';
+                e.path.set({ stroke: 'rgba(0,0,0,1)' });
+                _fc.renderAll();
+            }
+            _histPush();
+        });
+    }
+
+    function _resizeViewport() {
+        var area = document.querySelector('.sh-ie-canvas-area');
+        if (!_fc || !area) return;
+        _fc.setDimensions({ width: area.clientWidth, height: area.clientHeight });
+        _fc.renderAll();
+    }
+
+    function _onWindowResize() {
+        var modal = $id('sh-ie-modal');
+        if (!modal || modal.style.display === 'none') return;
+        clearTimeout(_resizeTimer);
+        _resizeTimer = setTimeout(function () {
+            _resizeViewport();
+            _fitArtboard();
+        }, 120);
     }
 
     function _loadSource(src) {
@@ -399,18 +650,7 @@
 
         fabric.Image.fromURL(url, { crossOrigin: 'anonymous' })
             .then(function (img) {
-                var canvasW = _fc.width;
-                var canvasH = _fc.height;
-                var scale   = Math.min(canvasW / img.width, canvasH / img.height, 1);
-
-                var newW = img.width * scale;
-                var newH = img.height * scale;
-                
-                _fc.setDimensions({ width: newW, height: newH });
-
                 img.set({
-                    scaleX:        scale,
-                    scaleY:        scale,
                     left:          0,
                     top:           0,
                     selectable:    false,
@@ -426,7 +666,11 @@
 
                 _fc.add(img);
                 _fc.sendObjectToBack(img);
-                _baseImg = img;
+                _baseImg  = img;
+                _artboard = { x: 0, y: 0, w: img.width, h: img.height };
+
+                _syncClipPath();
+                _fitArtboard();
                 _fc.renderAll();
                 _showLoading(false);
                 _histPush(); // initial "clean" snapshot
@@ -440,26 +684,23 @@
 
     // ── Export ────────────────────────────────────────────────────────
     function _exportPNG() {
-        if (!_baseImg) {
-            var fullData = _fc.toDataURL({ format: 'png', multiplier: 1 });
-            return _dataURLToBlob(fullData);
-        }
+        if (!_fc) return null;
 
-        // Temporarily reset viewport transform to ensure accurate crop
+        _exporting = true;
         var vpt = _fc.viewportTransform;
         _fc.setViewportTransform([1, 0, 0, 1, 0, 0]);
 
         var dataURL = _fc.toDataURL({
-            format: 'png',
-            left: _baseImg.left,
-            top: _baseImg.top,
-            width: _baseImg.width * _baseImg.scaleX,
-            height: _baseImg.height * _baseImg.scaleY,
-            multiplier: 1 / _baseImg.scaleX
+            format:     'png',
+            left:       _artboard.x,
+            top:        _artboard.y,
+            width:      _artboard.w,
+            height:     _artboard.h,
+            multiplier: 1,
         });
 
-        // Restore viewport transform
         _fc.setViewportTransform(vpt);
+        _exporting = false;
 
         return _dataURLToBlob(dataURL);
     }
@@ -662,9 +903,15 @@
         if (e.key === 'o' || e.key === 'O') _applyTool('ellipse');
         if (e.key === 'l' || e.key === 'L') _applyTool('line');
         if (e.key === 't' || e.key === 'T') _applyTool('text');
+        if (e.key === 'v' || e.key === 'V') _applyTool('select');
 
-        // 0 → reset zoom
-        if (e.key === '0' || e.key === 'Numpad0') _resetZoom();
+        if (_tool === 'select' && (e.key === 'Delete' || e.key === 'Backspace')) {
+            e.preventDefault();
+            _deleteActiveObjects();
+        }
+
+        // 0 → fit to screen
+        if (e.key === '0' || e.key === 'Numpad0') _fitArtboard();
     }
 
     function _keyup(e) {
@@ -702,6 +949,21 @@
                 onChange:     function (hex) { _setColor(hex); },
                 onCommit:     function (hex) { _setColor(hex); },
             });
+        }
+
+        // Fill swatch → ColorPicker
+        var fillBtn = $id('sh-ie-fill-btn');
+        if (fillBtn && window.ColorPicker) {
+            ColorPicker.attach(fillBtn, {
+                initialColor: '#ffffff',
+                paletteKey:   'imageeditor-fill',
+                onChange:     function (hex) { _setFill(hex); },
+                onCommit:     function (hex) { _setFill(hex); },
+            });
+        }
+        var fillNoneBtn = $id('sh-ie-fill-none-btn');
+        if (fillNoneBtn) {
+            fillNoneBtn.addEventListener('click', function () { _setFill('transparent'); });
         }
 
         // Undo / Redo
@@ -774,7 +1036,7 @@
 
         // Zoom reset button
         var zoomReset = $id('sh-ie-zoom-reset');
-        if (zoomReset) zoomReset.addEventListener('click', _resetZoom);
+        if (zoomReset) zoomReset.addEventListener('click', _fitArtboard);
 
         // Space+drag pan: capture mousedown on canvas wrap
         var wrap = $id('sh-ie-canvas-wrap');
@@ -789,6 +1051,7 @@
         }
 
         // Global keyboard shortcuts (persisted; guards itself against closed state)
+        window.addEventListener('resize', _onWindowResize);
         document.addEventListener('keydown', _keydown);
         document.addEventListener('keyup',   _keyup);
     }
@@ -806,9 +1069,13 @@
         _tool         = 'brush';
         _color        = '#000000';
         _baseImg      = null;
+        _artboard     = { x: 0, y: 0, w: 0, h: 0 };
         _shapeOrigin  = null;
         _shapePreview = null;
         _shapeActive  = false;
+        _handleEls    = [];
+        _hbDir        = null;
+        _hbStartAb    = null;
 
         var modal = $id('sh-ie-modal');
         if (!modal) { console.error('ImageEditor: #sh-ie-modal not found in DOM'); return; }
@@ -833,6 +1100,7 @@
 
         // Reset UI state
         _setColor('#000000');
+        _setFill('transparent');
         _showLoading(false);
         _hideError();
         _showFooterError('');
@@ -860,6 +1128,7 @@
         _makeCanvas(wrap);
         _bindZoomPan(wrap);
         _applyTool('brush');
+        _buildHandles();
 
         // Re-render Lucide icons inside the modal
         if (typeof initLucide === 'function') initLucide();
@@ -887,8 +1156,11 @@
 
         _opts         = null;
         _baseImg      = null;
+        _artboard     = { x: 0, y: 0, w: 0, h: 0 };
         _history      = [];
         _histPos      = -1;
+        _exporting    = false;
+        _checkerCanvas = null;
         _shapeOrigin  = null;
         _shapePreview = null;
         _shapeActive  = false;
@@ -897,6 +1169,20 @@
     }
 
     // ── Utility ───────────────────────────────────────────────────────
+    function _getCheckerCanvas() {
+        if (_checkerCanvas) return _checkerCanvas;
+        var c = document.createElement('canvas');
+        c.width = c.height = 20;
+        var ctx = c.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 20, 20);
+        ctx.fillStyle = '#d6d6d6';
+        ctx.fillRect(0, 0, 10, 10);
+        ctx.fillRect(10, 10, 10, 10);
+        _checkerCanvas = c;
+        return c;
+    }
+
     function _hexToRgb(hex) {
         hex = hex.replace(/^#/, '');
         if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];

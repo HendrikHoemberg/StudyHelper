@@ -183,25 +183,13 @@
 .sh-ie-canvas-wrap {
     width: 100%;
     height: 100%;
-    /* Checkerboard pattern to show transparency */
-    background-color: #c8c8c8;
-    background-image:
-        linear-gradient(45deg, #ababab 25%, transparent 25%),
-        linear-gradient(-45deg, #ababab 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #ababab 75%),
-        linear-gradient(-45deg, transparent 75%, #ababab 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: var(--bg);
     overflow: hidden;
 }
 
 /* Fabric's generated wrapper — must not add background */
 .sh-ie-canvas-wrap .canvas-container {
     background: transparent !important;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 .sh-ie-canvas-wrap canvas {
@@ -474,5 +462,80 @@
 .sh-ie-canvas-area.is-panning,
 .sh-ie-canvas-area.is-panning * {
     cursor: grabbing !important;
+}
+
+/* ── Artboard edge handles ───────────────────────────────────── */
+.sh-ie-handles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.sh-ie-handle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    background: var(--accent);
+    border: 2px solid #fff;
+    border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    pointer-events: auto;
+}
+
+.sh-ie-handle[data-dir="n"],
+.sh-ie-handle[data-dir="s"]  { cursor: ns-resize; }
+.sh-ie-handle[data-dir="e"],
+.sh-ie-handle[data-dir="w"]  { cursor: ew-resize; }
+.sh-ie-handle[data-dir="ne"],
+.sh-ie-handle[data-dir="sw"] { cursor: nesw-resize; }
+.sh-ie-handle[data-dir="nw"],
+.sh-ie-handle[data-dir="se"] { cursor: nwse-resize; }
+
+.sh-ie-handle-readout {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 3px 10px;
+    font-size: 0.75rem;
+    font-family: var(--font-body);
+    color: #fff;
+    background: rgba(0, 0, 0, 0.75);
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    z-index: 6;
+}
+
+/* ── Contextual options bar ──────────────────────────────────── */
+.sh-ie-options {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 6px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.sh-ie-opt-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Shape fill swatch ───────────────────────────────────────── */
+.sh-ie-fill-none {
+    background:
+        linear-gradient(45deg, transparent 45%, var(--danger) 45%,
+                        var(--danger) 55%, transparent 55%),
+        #fff;
 }
 

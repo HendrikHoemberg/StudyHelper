@@ -547,6 +547,112 @@ class UiResourceRegressionTests {
             .contains("Open PDF Splitter");
     }
 
+    @Test
+    void imageEditorUsesViewportArtboardModelWithRetinaScaling() throws IOException {
+        String js = resource("static/js/image-editor.js");
+
+        assertThat(js)
+            .contains("enableRetinaScaling")
+            .contains("_artboard")
+            .contains("function _resizeViewport()")
+            .contains("function _fitArtboard()");
+    }
+
+    @Test
+    void imageEditorPaintsArtboardPageAndClipsToIt() throws IOException {
+        String js = resource("static/js/image-editor.js");
+
+        assertThat(js)
+            .contains("before:render")
+            .contains("function _drawArtboardPage()")
+            .contains("function _syncClipPath()")
+            .contains("absolutePositioned");
+    }
+
+    @Test
+    void imageEditorExportsTheArtboardRectAtNativeResolution() throws IOException {
+        String js = resource("static/js/image-editor.js");
+
+        assertThat(js)
+            .contains("_exporting = true")
+            .contains("toDataURL")
+            .contains("_artboard.w");
+    }
+
+    @Test
+    void imageEditorRefitsOnResizeAndScopesPanListeners() throws IOException {
+        String js = resource("static/js/image-editor.js");
+
+        assertThat(js)
+            .contains("function _onWindowResize()")
+            .contains("window.addEventListener('resize', _onWindowResize)")
+            .contains("function _panMove(")
+            .contains("function _panUp(");
+    }
+
+    @Test
+    void imageEditorHistorySnapshotsIncludeTheArtboard() throws IOException {
+        String js = resource("static/js/image-editor.js");
+
+        assertThat(js)
+            .contains("artboard: { x: _artboard.x")
+            .contains("snap.artboard");
+    }
+
+    @Test
+    void imageEditorHasASelectTool() throws IOException {
+        String js   = resource("static/js/image-editor.js");
+        String html = resource("templates/fragments/image-editor.html");
+
+        assertThat(html).contains("data-tool=\"select\"");
+        assertThat(js)
+            .contains("name === 'select'")
+            .contains("_deleteActiveObjects");
+    }
+
+    @Test
+    void imageEditorHasDraggableArtboardEdgeHandles() throws IOException {
+        String js   = resource("static/js/image-editor.js");
+        String html = resource("templates/fragments/image-editor.html");
+        String css  = resource("static/css/image-editor.css");
+
+        assertThat(html).contains("id=\"sh-ie-handles\"");
+        assertThat(css).contains(".sh-ie-handle");
+        assertThat(js)
+            .contains("function _updateHandles()")
+            .contains("function _resizeArtboard(")
+            .contains("MIN_ARTBOARD");
+    }
+
+    @Test
+    void imageEditorHasAContextualOptionsBar() throws IOException {
+        String html = resource("templates/fragments/image-editor.html");
+        String css  = resource("static/css/image-editor.css");
+        String js   = resource("static/js/image-editor.js");
+
+        assertThat(html).contains("id=\"sh-ie-options\"");
+        assertThat(css).contains(".sh-ie-options");
+        assertThat(js).contains("function _showOptionsFor(");
+    }
+
+    @Test
+    void imageEditorShapesSupportAFillColor() throws IOException {
+        String html = resource("templates/fragments/image-editor.html");
+        String js   = resource("static/js/image-editor.js");
+
+        assertThat(html).contains("id=\"sh-ie-fill-btn\"");
+        assertThat(js)
+            .contains("_fillColor")
+            .contains("function _setFill(");
+    }
+
+    @Test
+    void imageEditorEraserErasesToTransparency() throws IOException {
+        String js = resource("static/js/image-editor.js");
+
+        assertThat(js).contains("globalCompositeOperation = 'destination-out'");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }

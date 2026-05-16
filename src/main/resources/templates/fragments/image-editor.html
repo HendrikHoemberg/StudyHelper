@@ -24,6 +24,13 @@
 
         <!-- Left toolbar -->
         <nav class="sh-ie-toolbar" aria-label="Drawing tools">
+            <button type="button" class="sh-ie-tool-btn"
+                    data-tool="select" title="Select / Move (V)" aria-label="Select">
+                <iconify-icon icon="lucide:mouse-pointer-2"></iconify-icon>
+            </button>
+
+            <div class="sh-ie-sep" role="separator"></div>
+
             <button type="button" class="sh-ie-tool-btn is-active"
                     data-tool="brush" title="Brush (B)" aria-label="Brush">
                 <iconify-icon icon="lucide:pencil"></iconify-icon>
@@ -81,7 +88,36 @@
 
         <!-- Canvas area -->
         <div class="sh-ie-canvas-area">
+            <div class="sh-ie-options" id="sh-ie-options">
+                <div class="sh-ie-opt-group" data-opts="brush eraser rect ellipse line">
+                    <label class="sh-ie-ctrl-label" for="sh-ie-size-slider">Size</label>
+                    <input type="range" class="sh-ie-slider" id="sh-ie-size-slider"
+                           min="1" max="60" value="8" aria-label="Brush/shape size">
+                    <span class="sh-ie-ctrl-val" id="sh-ie-size-val">8</span>
+                    <label class="sh-ie-ctrl-label" for="sh-ie-opacity-slider">Opacity</label>
+                    <input type="range" class="sh-ie-slider" id="sh-ie-opacity-slider"
+                           min="1" max="100" value="100" aria-label="Opacity">
+                    <span class="sh-ie-ctrl-val" id="sh-ie-opacity-val">100%</span>
+                </div>
+                <div class="sh-ie-opt-group" data-opts="rect ellipse">
+                    <label class="sh-ie-ctrl-label">Fill</label>
+                    <button type="button" class="sh-ie-color-btn" id="sh-ie-fill-btn"
+                            title="Fill color" aria-label="Fill color">
+                        <span class="sh-ie-color-swatch sh-ie-fill-none" id="sh-ie-fill-swatch"></span>
+                    </button>
+                    <button type="button" class="sh-ie-zoom-reset" id="sh-ie-fill-none-btn"
+                            title="No fill">None</button>
+                </div>
+                <div class="sh-ie-opt-group" data-opts="text">
+                    <label class="sh-ie-ctrl-label" for="sh-ie-font-slider">Font</label>
+                    <input type="range" class="sh-ie-slider" id="sh-ie-font-slider"
+                           min="8" max="120" value="24" aria-label="Font size">
+                    <span class="sh-ie-ctrl-val" id="sh-ie-font-val">24</span>
+                </div>
+            </div>
             <div class="sh-ie-canvas-wrap" id="sh-ie-canvas-wrap"></div>
+            <div class="sh-ie-handles" id="sh-ie-handles" aria-hidden="true"></div>
+            <div class="sh-ie-handle-readout" id="sh-ie-handle-readout" style="display:none;"></div>
             <div class="sh-ie-overlay" id="sh-ie-loading" style="display:none;" aria-label="Loading">
                 <iconify-icon icon="lucide:loader-2" class="sh-ie-spin"></iconify-icon>
             </div>
@@ -98,31 +134,11 @@
     <!-- Footer -->
     <div class="sh-ie-footer">
         <div class="sh-ie-controls">
-            <!-- Brush/shape controls -->
-            <div class="sh-ie-ctrl-group" id="sh-ie-brush-controls">
-                <label class="sh-ie-ctrl-label" for="sh-ie-size-slider">Size</label>
-                <input type="range" class="sh-ie-slider" id="sh-ie-size-slider"
-                       min="1" max="60" value="8" aria-label="Brush/shape size">
-                <span class="sh-ie-ctrl-val" id="sh-ie-size-val">8</span>
-
-                <label class="sh-ie-ctrl-label" for="sh-ie-opacity-slider">Opacity</label>
-                <input type="range" class="sh-ie-slider" id="sh-ie-opacity-slider"
-                       min="1" max="100" value="100" aria-label="Brush opacity">
-                <span class="sh-ie-ctrl-val" id="sh-ie-opacity-val">100%</span>
-            </div>
-            <!-- Text tool controls -->
-            <div class="sh-ie-ctrl-group" id="sh-ie-text-controls" style="display:none;">
-                <label class="sh-ie-ctrl-label" for="sh-ie-font-slider">Font</label>
-                <input type="range" class="sh-ie-slider" id="sh-ie-font-slider"
-                       min="8" max="120" value="24" aria-label="Font size">
-                <span class="sh-ie-ctrl-val" id="sh-ie-font-val">24</span>
-            </div>
-            <!-- Zoom indicator -->
             <div class="sh-ie-ctrl-group" id="sh-ie-zoom-controls">
                 <span class="sh-ie-ctrl-label">Zoom</span>
                 <span class="sh-ie-ctrl-val" id="sh-ie-zoom-val">100%</span>
                 <button type="button" class="sh-ie-zoom-reset" id="sh-ie-zoom-reset"
-                        title="Reset zoom (0)" aria-label="Reset zoom">Reset</button>
+                        title="Fit to screen (0)" aria-label="Fit to screen">Fit</button>
             </div>
         </div>
 
