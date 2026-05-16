@@ -40,6 +40,16 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void pdfFileThumbnailsFillDeckCoverLikeImageThumbnails() throws IOException {
+        String styles = resource("static/css/styles.css");
+
+        assertThat(styles)
+            .contains(".sh-deck-cover-img")
+            .contains("object-fit: cover")
+            .contains(".sh-pdf-cover-img {\n    object-fit: cover;");
+    }
+
+    @Test
     void appJsShowsAiGenerationDialogForNonResponseHtmxFailures() throws IOException {
         String appJs = resource("static/js/app.js");
 

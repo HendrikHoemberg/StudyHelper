@@ -747,7 +747,7 @@ a {
 }
 
 .sh-pdf-cover-img {
-    object-fit: contain;
+    object-fit: cover;
     background: #ffffff;
 }
 
