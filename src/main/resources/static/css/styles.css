@@ -4494,8 +4494,35 @@ iconify-icon {
     outline: none;
 }
 
+.sh-upload-chooser.is-selected {
+    border-color: color-mix(in srgb, var(--success) 65%, var(--border));
+    color: var(--text);
+    background: var(--success-light);
+}
+
 .sh-upload-chooser iconify-icon {
     font-size: 1.2rem;
+}
+
+.sh-upload-selected {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--success) 35%, var(--border));
+    border-radius: var(--radius-sm);
+    background: var(--success-light);
+    color: var(--text);
+}
+
+.sh-upload-selected.is-visible {
+    display: flex;
+}
+
+.sh-upload-selected iconify-icon {
+    flex: 0 0 auto;
+    color: var(--success);
+    font-size: 1rem;
 }
 
 .sh-upload-file-name {
@@ -4504,6 +4531,12 @@ iconify-icon {
     font-size: 0.8125rem;
     font-weight: 600;
     overflow-wrap: anywhere;
+}
+
+.sh-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .sh-upload-limit {

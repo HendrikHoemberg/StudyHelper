@@ -21,13 +21,16 @@
                             <iconify-icon icon="lucide:upload-cloud"></iconify-icon>
                             <span>Choose file</span>
                         </button>
-                        <div class="sh-upload-file-name" id="upload-file-name">No file selected</div>
+                        <div class="sh-upload-selected" id="upload-selected-file">
+                            <iconify-icon icon="lucide:check-circle"></iconify-icon>
+                            <div class="sh-upload-file-name" id="upload-file-name">No file selected</div>
+                        </div>
                     </div>
                     <p class="sh-upload-limit">Maximum file size: 100 MB</p>
                 </div>
                 <div class="sh-modal-footer">
                     <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()">Cancel</button>
-                    <button type="submit" class="sh-btn sh-btn-primary">Upload</button>
+                    <button type="submit" class="sh-btn sh-btn-primary" id="upload-submit" disabled>Upload</button>
                 </div>
             </form>
         </div>
@@ -37,16 +40,27 @@
             initLucide();
             var fileInput = document.getElementById('upload-file-input');
             var chooser = document.getElementById('upload-file-chooser');
+            var chooserText = chooser ? chooser.querySelector('span') : null;
             var selectedFileName = document.getElementById('upload-file-name');
-            if (!fileInput || !chooser || !selectedFileName) return;
+            var selectedFile = document.getElementById('upload-selected-file');
+            var submitButton = document.getElementById('upload-submit');
+            if (!fileInput || !chooser || !chooserText || !selectedFileName || !selectedFile || !submitButton) return;
 
             chooser.addEventListener('click', function() {
                 fileInput.click();
             });
 
-            fileInput.addEventListener('change', function() {
+            function updateUploadState() {
+                var hasFile = !!fileInput.files[0];
                 selectedFileName.textContent = fileInput.files[0] ? fileInput.files[0].name : 'No file selected';
-            });
+                selectedFile.classList.toggle('is-visible', hasFile);
+                chooser.classList.toggle('is-selected', hasFile);
+                chooserText.textContent = hasFile ? 'Change file' : 'Choose file';
+                submitButton.disabled = !hasFile;
+            }
+
+            fileInput.addEventListener('change', updateUploadState);
+            updateUploadState();
         })();
     </script>
 </div>

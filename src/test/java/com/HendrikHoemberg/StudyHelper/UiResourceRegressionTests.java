@@ -418,13 +418,23 @@ class UiResourceRegressionTests {
             .contains("Choose file")
             .contains("id=\"upload-file-name\"")
             .contains("No file selected")
+            .contains("class=\"sh-upload-selected\"")
+            .contains("lucide:check-circle")
+            .contains("id=\"upload-submit\"")
+            .contains("<button type=\"submit\" class=\"sh-btn sh-btn-primary\" id=\"upload-submit\" disabled>Upload</button>")
+            .contains("chooser.classList.toggle('is-selected', hasFile);")
+            .contains("chooserText.textContent = hasFile ? 'Change file' : 'Choose file';")
+            .contains("submitButton.disabled = !hasFile;")
             .contains("Maximum file size: 100 MB")
             .contains("selectedFileName.textContent = fileInput.files[0] ? fileInput.files[0].name : 'No file selected';")
+            .doesNotContain("Ready to upload")
             .doesNotContain("style=\"color:var(--text-muted); font-size:0.8125rem; margin-top:0.5rem; margin-bottom:0;\"");
 
         assertThat(styles)
             .contains(".sh-upload-chooser")
+            .contains(".sh-upload-chooser.is-selected")
             .contains(".sh-upload-file-input")
+            .contains(".sh-upload-selected")
             .contains(".sh-upload-file-name")
             .contains(".sh-upload-limit");
     }
