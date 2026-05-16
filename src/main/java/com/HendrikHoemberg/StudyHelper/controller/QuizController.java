@@ -102,6 +102,17 @@ public class QuizController {
         model.addAttribute("mode", StudyMode.QUIZ);
         model.addAttribute("questions", state.questions());
         model.addAttribute("answers", state.answers());
+        java.util.List<Boolean> correctFlags = new java.util.ArrayList<>();
+        java.util.List<String> correctAnswerTexts = new java.util.ArrayList<>();
+        for (int i = 0; i < state.questions().size(); i++) {
+            correctFlags.add(state.isCorrect(i));
+            QuizQuestion q = state.questions().get(i);
+            correctAnswerTexts.add(q.correctOptionIndices().stream()
+                .map(idx -> q.options().get(idx))
+                .collect(java.util.stream.Collectors.joining(", ")));
+        }
+        model.addAttribute("correctFlags", correctFlags);
+        model.addAttribute("correctAnswerTexts", correctAnswerTexts);
         model.addAttribute("correctCount", correct);
         model.addAttribute("totalQuestions", total);
         model.addAttribute("scorePercent", pct);

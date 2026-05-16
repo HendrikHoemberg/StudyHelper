@@ -22,8 +22,7 @@
             <div class="sh-section-title mt-4">Review</div>
             <div class="sh-quiz-review-list">
                 <div th:each="question, iter : ${questions}"
-                     th:with="userAnswer=${answers[iter.index]},
-                               isCorrect=${answers[iter.index] != null and answers[iter.index] == question.correctOptionIndex}"
+                     th:with="isCorrect=${correctFlags[iter.index]}"
                      class="sh-quiz-review-item"
                      th:classappend="${isCorrect ? ' sh-quiz-review-item--correct' : ' sh-quiz-review-item--wrong'}">
 
@@ -38,7 +37,8 @@
                     </div>
 
                     <div th:unless="${isCorrect}" class="sh-quiz-review-correct-ans">
-                        Correct answer: <strong th:text="${question.options[question.correctOptionIndex]}">Answer</strong>
+                        <span th:text="${question.correctOptionIndices.size() > 1} ? 'Correct answers: ' : 'Correct answer: '">Correct answer: </span>
+                        <strong th:text="${correctAnswerTexts[iter.index]}">Answer</strong>
                     </div>
                 </div>
             </div>
