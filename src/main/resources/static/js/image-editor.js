@@ -18,11 +18,13 @@
     var _histPos  = -1;      // current position in _history
     var _histLock = false;   // suppress push during snapshot restore
     var _tool     = 'brush'; // active tool id
-    var _color    = '#000000';
-    var _fillColor = '#000000';       // shape fill; matches default border color
-    var _wired    = false;   // interactions wired once flag
-    var _strokeOpts = null;  // shared ColorPicker opts for stroke/border swatches
-    var _fillOpts   = null;  // ColorPicker opts for the fill swatch
+    var _color       = '#000000';
+    var _borderColor = '#000000';     // shape border; independent from sidebar color
+    var _fillColor   = '#000000';     // shape fill; matches default border color
+    var _wired       = false; // interactions wired once flag
+    var _strokeOpts  = null;  // ColorPicker opts for the sidebar color swatch
+    var _borderOpts  = null;  // ColorPicker opts for the shape border swatch
+    var _fillOpts    = null;  // ColorPicker opts for the fill swatch
 
     // ── Shape drawing state ───────────────────────────────────────────
     var _shapeOrigin  = null;   // {x, y} canvas coords at mouse:down
@@ -233,9 +235,9 @@
                 $id('sh-ie-opacity-val').textContent = op + '%';
             }
             if (obj.stroke) {
-                _color = obj.stroke;
-                _paintColorSwatches(obj.stroke);
-                if (_strokeOpts) _strokeOpts.initialColor = obj.stroke;
+                _borderColor = obj.stroke;
+                _paintBorderSwatch(obj.stroke);
+                if (_borderOpts) _borderOpts.initialColor = obj.stroke;
             }
             if (t === 'rect' || t === 'ellipse') {
                 _fillColor = obj.fill || 'transparent';
@@ -296,7 +298,7 @@
             var cfg = {
                 left:            pt.x,
                 top:             pt.y,
-                stroke:          _color,
+                stroke:          _borderColor,
                 strokeWidth:     sw,
                 fill:            _fillColor,
                 opacity:         op,
@@ -311,7 +313,7 @@
                 _shapePreview = new fabric.Ellipse(Object.assign(cfg, { rx: 1, ry: 1, originX: 'left', originY: 'top' }));
             } else if (shapeName === 'line') {
                 _shapePreview = new fabric.Line([pt.x, pt.y, pt.x, pt.y], {
-                    stroke:        _color,
+                    stroke:        _borderColor,
                     strokeWidth:   sw,
                     opacity:       op,
                     selectable:    false,
@@ -405,6 +407,9 @@
     function _paintColorSwatches(hex) {
         var sw = $id('sh-ie-color-swatch');
         if (sw) sw.style.background = hex;
+    }
+
+    function _paintBorderSwatch(hex) {
         var bsw = $id('sh-ie-border-swatch');
         if (bsw) bsw.style.background = hex;
     }
@@ -415,6 +420,10 @@
         _paintColorSwatches(hex);
         if (_strokeOpts) _strokeOpts.initialColor = hex;
         _syncBrush();
+        // Sync border and fill to match sidebar color
+        _borderColor = hex;
+        _paintBorderSwatch(hex);
+        if (_borderOpts) _borderOpts.initialColor = hex;
         _setFill(hex);
         // Also update the fill/stroke of any currently selected object
         if (_fc) {
@@ -426,6 +435,21 @@
                     active.set('stroke', hex);
                 }
                 _fc.renderAll();
+            }
+        }
+    }
+
+    function _setBorder(hex) {
+        _borderColor = hex;
+        _paintBorderSwatch(hex);
+        if (_borderOpts) _borderOpts.initialColor = hex;
+        if (_fc) {
+            var active = _fc.getActiveObject();
+            if (active && active !== _baseImg) {
+                if (active.type === 'rect' || active.type === 'ellipse' || active.type === 'line') {
+                    active.set('stroke', hex);
+                    _fc.renderAll();
+                }
             }
         }
     }
@@ -1058,8 +1082,7 @@
             btn.addEventListener('click', function () { _applyTool(btn.dataset.tool); });
         });
 
-        // Color + Border swatches → one shared ColorPicker opts object so the
-        // toolbar swatch and the shape Border swatch always show _color.
+        // Sidebar color swatch → ColorPicker; syncs border+fill with it
         var colorBtn  = $id('sh-ie-color-btn');
         var borderBtn = $id('sh-ie-border-btn');
         if (window.ColorPicker) {
@@ -1070,7 +1093,17 @@
                 onCommit:     function (hex) { _setColor(hex); _histPushIfShape(); },
             };
             if (colorBtn)  ColorPicker.attach(colorBtn,  _strokeOpts);
-            if (borderBtn) ColorPicker.attach(borderBtn, _strokeOpts);
+        }
+
+        // Border swatch (shape options) → independent ColorPicker
+        if (borderBtn && window.ColorPicker) {
+            _borderOpts = {
+                initialColor: _borderColor,
+                paletteKey:   'imageeditor-border',
+                onChange:     function (hex) { _setBorder(hex); },
+                onCommit:     function (hex) { _setBorder(hex); _histPushIfShape(); },
+            };
+            ColorPicker.attach(borderBtn, _borderOpts);
         }
 
         // Fill swatch → ColorPicker
