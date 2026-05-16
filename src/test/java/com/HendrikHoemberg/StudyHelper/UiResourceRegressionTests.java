@@ -653,6 +653,25 @@ class UiResourceRegressionTests {
         assertThat(js).contains("globalCompositeOperation = 'destination-out'");
     }
 
+    @Test
+    void flashcardGeneratorOffersCardCountStepper() throws IOException {
+        String template = resource("templates/fragments/flashcard-generator.html");
+
+        assertThat(template)
+            .contains("name=\"cardCount\"")
+            .contains("max=\"100\"");
+    }
+
+    @Test
+    void quizQuestionUsesExplicitSubmitButton() throws IOException {
+        String template = resource("templates/fragments/quiz-question.html");
+
+        assertThat(template)
+            .contains("sh-quiz-submit-btn")
+            .contains("Submit Answer")
+            .contains("sh-quiz-answer-hint");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }
