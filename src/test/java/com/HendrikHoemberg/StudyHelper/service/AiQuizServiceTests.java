@@ -380,6 +380,30 @@ class AiQuizServiceTests {
             .hasMessageContaining("too few valid questions");
     }
 
+    @Test
+    void generate_McqMode_PromptContainsTypeSelectionGuidance() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
+        ));
+
+        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
+
+        assertThat(capturedPrompt.get()).contains("QUESTION-TYPE SELECTION");
+        assertThat(capturedPrompt.get()).contains("NEVER collapse a multi-answer question");
+        assertThat(capturedPrompt.get()).contains("MULTIPLE_SELECT");
+    }
+
+    @Test
+    void generate_TfOnlyMode_OmitsTypeSelectionGuidance() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            tf("Q1", 0), tf("Q2", 1), tf("Q3", 0)
+        ));
+
+        service.generate(cards(2), List.of(), 3, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
+
+        assertThat(capturedPrompt.get()).doesNotContain("QUESTION-TYPE SELECTION");
+    }
+
     // --- helpers ---
 
     private QuizQuestionsResponse wrap(QuizQuestion... questions) {

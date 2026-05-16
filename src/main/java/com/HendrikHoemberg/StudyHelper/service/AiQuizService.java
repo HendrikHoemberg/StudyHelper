@@ -164,9 +164,9 @@ public class AiQuizService {
                                 int count, QuizQuestionMode mode, Difficulty difficulty,
                                 int mcqCount, int tfCount, String additionalInstructions) {
         String modeDescription = switch (mode) {
-            case MCQ_ONLY -> "multiple-choice questions";
+            case MCQ_ONLY -> "choice questions (single- or multi-answer)";
             case TF_ONLY -> "true/false questions";
-            case MIXED -> "questions: exactly " + mcqCount + " multiple-choice and " + tfCount + " true/false";
+            case MIXED -> "questions: exactly " + mcqCount + " choice questions (single- or multi-answer) and " + tfCount + " true/false";
         };
 
         String difficultyInstruction = switch (difficulty) {
@@ -176,13 +176,33 @@ public class AiQuizService {
         };
 
         String typeRules = switch (mode) {
-            case MCQ_ONLY -> "- All questions are MULTIPLE_CHOICE with exactly 4 options. Exactly one correct.";
-            case TF_ONLY -> "- All questions are TRUE_FALSE. options must be exactly [\"True\",\"False\"]. correctOptionIndex is 0 (True) or 1 (False).";
+            case MCQ_ONLY -> """
+                - Every question is MULTIPLE_CHOICE or MULTIPLE_SELECT — you choose per question.
+                - MULTIPLE_CHOICE: exactly 4 options; correctOptionIndices lists exactly 1 index.
+                - MULTIPLE_SELECT: exactly 4 options; correctOptionIndices lists 2 or 3 distinct indices.""";
+            case TF_ONLY -> "- All questions are TRUE_FALSE. options must be exactly [\"True\",\"False\"]. correctOptionIndices lists exactly 1 index: 0 (True) or 1 (False).";
             case MIXED -> """
-                - All MULTIPLE_CHOICE questions have exactly 4 options. Exactly one correct.
-                - All TRUE_FALSE questions: options must be exactly ["True","False"]. correctOptionIndex is 0 (True) or 1 (False).
+                - Choice questions are MULTIPLE_CHOICE or MULTIPLE_SELECT — you choose per question.
+                - MULTIPLE_CHOICE: exactly 4 options; correctOptionIndices lists exactly 1 index.
+                - MULTIPLE_SELECT: exactly 4 options; correctOptionIndices lists 2 or 3 distinct indices.
+                - TRUE_FALSE: options must be exactly ["True","False"]; correctOptionIndices lists exactly 1 index: 0 (True) or 1 (False).
                 - Generate exactly the requested split as specified above.""";
         };
+
+        String typeSelection = mode == QuizQuestionMode.TF_ONLY ? "" : """
+            QUESTION-TYPE SELECTION (critical):
+            - Decide each choice question's type by how many options are correct:
+              * Exactly one option is a defensible correct answer  -> MULTIPLE_CHOICE
+              * Two or three options are each independently correct -> MULTIPLE_SELECT
+            - A MULTIPLE_CHOICE question MUST have exactly one correct option and three
+              options that are each clearly, factually FALSE. If you cannot make the
+              other three unambiguously false, the question is not single-answer —
+              make it MULTIPLE_SELECT or rewrite it.
+            - NEVER collapse a multi-answer question into MULTIPLE_CHOICE by picking
+              one of several correct options. That marks a correct answer as wrong.
+            - Choose whichever type fits the concept best. Do not force a quota.
+
+            """;
 
         String cardSection = cardContent.isBlank() ? "(none)" : cardContent;
         String docSection  = docContent.isBlank()  ? "(none)" : docContent;
@@ -194,11 +214,12 @@ public class AiQuizService {
             + AiGenerationSupport.topicFocusSection() + "\n"
             + AiGenerationSupport.coverageSection(count) + "\n"
             + AiGenerationSupport.missingContextSection() + "\n"
+            + typeSelection
             + "QUESTION TYPE RULES:\n%s\n\n".formatted(typeRules)
             + "GENERAL RULES:\n"
             + "- Each question stands alone — do not reference \"the text\" or \"the document\".\n"
-            + "- correctOptionIndex is 0-based.\n"
-            + "- Vary which index is correct across questions.\n"
+            + "- correctOptionIndices entries are 0-based.\n"
+            + "- Vary which option(s) are correct across questions.\n"
             + "- Test understanding, not exact wording.\n"
             + "- Use the attached PDF documents (including their figures, diagrams, and tables) as primary source material for question generation.\n\n"
             + "=== FLASHCARDS ===\n%s\n\n".formatted(cardSection)
