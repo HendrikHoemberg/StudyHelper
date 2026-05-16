@@ -1,0 +1,102 @@
+/* ============================================================
+   StudyHelper — In-app PDF Viewer
+   ============================================================ */
+.sh-pv-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1600;
+    display: none;
+    flex-direction: column;
+}
+.sh-pv-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.75);
+}
+.sh-pv-dialog {
+    position: relative;
+    z-index: 1;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    width: min(960px, 100%);
+    height: 100%;
+    background: var(--bg, #ffffff);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+.sh-pv-header,
+.sh-pv-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    background: var(--bg-light, #f8fafc);
+}
+.sh-pv-header { border-bottom: 1px solid var(--border-light, #e2e8f0); }
+.sh-pv-footer { border-top: 1px solid var(--border-light, #e2e8f0); flex-wrap: wrap; }
+.sh-pv-title {
+    flex: 1;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.sh-pv-hdr-btn,
+.sh-pv-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--border-light, #e2e8f0);
+    border-radius: 0.5rem;
+    background: var(--bg, #fff);
+    cursor: pointer;
+}
+.sh-pv-hdr-btn:hover,
+.sh-pv-tool-btn:hover { background: var(--bg-light, #f1f5f9); }
+.sh-pv-body {
+    position: relative;
+    flex: 1;
+    overflow: auto;
+    background: var(--bg-muted, #e5e7eb);
+}
+.sh-pv-pages { padding: 1.5rem 0; }
+.sh-pv-page {
+    margin: 0 auto 1rem;
+    width: max-content;
+    max-width: 100%;
+}
+.sh-pv-page canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+.sh-pv-overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: var(--bg-muted, #e5e7eb);
+}
+.sh-pv-error-msg { color: var(--text-muted, #64748b); }
+.sh-pv-toolgroup { display: flex; align-items: center; gap: 0.5rem; }
+.sh-pv-zoom-val,
+.sh-pv-page-val {
+    min-width: 3.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--text-muted, #64748b);
+}
+.sh-pv-actions { margin-left: auto; display: flex; gap: 0.5rem; }
+.sh-pv-spin {
+    font-size: 2rem;
+    color: var(--accent, #0f766e);
+    animation: sh-pv-spin 0.8s linear infinite;
+}
+@keyframes sh-pv-spin { to { transform: rotate(360deg); } }

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<!-- In-app PDF viewer overlay — included once in layout, driven by pdf-viewer.js -->
+<div th:fragment="modal" id="sh-pv-modal" class="sh-pv-modal" style="display:none;"
+     role="dialog" aria-modal="true" aria-labelledby="sh-pv-title">
+
+    <div class="sh-pv-backdrop" id="sh-pv-backdrop"></div>
+
+    <div class="sh-pv-dialog">
+        <div class="sh-pv-header">
+            <span class="sh-pv-title" id="sh-pv-title">PDF</span>
+            <button type="button" class="sh-pv-hdr-btn" id="sh-pv-close-btn" aria-label="Close viewer">
+                <iconify-icon icon="lucide:x"></iconify-icon>
+            </button>
+        </div>
+
+        <div class="sh-pv-body" id="sh-pv-body">
+            <div class="sh-pv-pages" id="sh-pv-pages"></div>
+            <div class="sh-pv-overlay" id="sh-pv-loading" style="display:none;" aria-label="Loading">
+                <iconify-icon icon="lucide:loader-2" class="sh-pv-spin"></iconify-icon>
+            </div>
+            <div class="sh-pv-overlay" id="sh-pv-error" style="display:none;">
+                <p class="sh-pv-error-msg">This PDF could not be displayed.</p>
+                <button type="button" class="sh-btn sh-btn-secondary" id="sh-pv-error-close">Close</button>
+            </div>
+        </div>
+
+        <div class="sh-pv-footer">
+            <div class="sh-pv-toolgroup">
+                <button type="button" class="sh-pv-tool-btn" id="sh-pv-zoom-out" aria-label="Zoom out">
+                    <iconify-icon icon="lucide:minus"></iconify-icon>
+                </button>
+                <span class="sh-pv-zoom-val" id="sh-pv-zoom-val">100%</span>
+                <button type="button" class="sh-pv-tool-btn" id="sh-pv-zoom-in" aria-label="Zoom in">
+                    <iconify-icon icon="lucide:plus"></iconify-icon>
+                </button>
+            </div>
+            <span class="sh-pv-page-val" id="sh-pv-page-val">1 / 1</span>
+            <div class="sh-pv-actions">
+                <button type="button" class="sh-btn sh-btn-secondary" id="sh-pv-download">
+                    <iconify-icon icon="lucide:download"></iconify-icon>
+                    Download
+                </button>
+                <button type="button" class="sh-btn sh-btn-primary" id="sh-pv-split-btn">
+                    <iconify-icon icon="lucide:scissors"></iconify-icon>
+                    Split this PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

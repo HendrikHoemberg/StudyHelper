@@ -468,6 +468,25 @@ class UiResourceRegressionTests {
         assertThat(worker).contains("pdfjsVersion = 5.7.284");
     }
 
+    @Test
+    void pdfViewerComponentRendersOverlayAndModule() throws IOException {
+        String html = resource("templates/fragments/pdf-viewer.html");
+        String css = resource("static/css/pdf-viewer.css");
+        String js = resource("static/js/pdf-viewer.js");
+
+        assertThat(html)
+            .contains("th:fragment=\"modal\"")
+            .contains("id=\"sh-pv-modal\"")
+            .contains("id=\"sh-pv-pages\"")
+            .contains("id=\"sh-pv-split-btn\"");
+        assertThat(css).contains(".sh-pv-modal");
+        assertThat(js)
+            .contains("import * as pdfjsLib from '/js/lib/pdfjs/pdf.min.mjs'")
+            .contains("GlobalWorkerOptions.workerSrc")
+            .contains("sh-pdf-viewer-trigger")
+            .contains("window.PdfViewer");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }
