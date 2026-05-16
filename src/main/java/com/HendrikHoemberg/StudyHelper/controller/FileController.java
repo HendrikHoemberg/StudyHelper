@@ -1,11 +1,13 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
+import com.HendrikHoemberg.StudyHelper.dto.SplitPdfRequest;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.ActiveTab;
 import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
 import com.HendrikHoemberg.StudyHelper.service.FileStorageService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
+import com.HendrikHoemberg.StudyHelper.service.PdfSplitService;
 import com.HendrikHoemberg.StudyHelper.service.PdfThumbnailService;
 import com.HendrikHoemberg.StudyHelper.service.FolderView;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaExceededException;
@@ -23,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.Map;
 
 @Controller
 public class FileController {
@@ -32,17 +35,20 @@ public class FileController {
     private final UserService userService;
     private final FolderService folderService;
     private final PdfThumbnailService pdfThumbnailService;
+    private final PdfSplitService pdfSplitService;
 
     public FileController(FileEntryService fileEntryService,
                           FileStorageService fileStorageService,
                           UserService userService,
                           FolderService folderService,
-                          PdfThumbnailService pdfThumbnailService) {
+                          PdfThumbnailService pdfThumbnailService,
+                          PdfSplitService pdfSplitService) {
         this.fileEntryService = fileEntryService;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
         this.folderService = folderService;
         this.pdfThumbnailService = pdfThumbnailService;
+        this.pdfSplitService = pdfSplitService;
     }
 
     @GetMapping("/folders/{folderId}/files/upload")
@@ -134,6 +140,22 @@ public class FileController {
             .header(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + entry.getOriginalFilename() + "\"")
             .body(resource);
+    }
+
+    @PostMapping(value = "/files/{id}/split", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> split(@PathVariable Long id,
+                                                     @RequestBody SplitPdfRequest request,
+                                                     Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        try {
+            Long folderId = pdfSplitService.splitPdf(id, request.parts(), user);
+            return ResponseEntity.ok(Map.of("folderId", folderId));
+        } catch (StorageQuotaExceededException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IOException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "Could not split the PDF: " + e.getMessage()));
+        }
     }
 
     @PostMapping(value = "/files/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

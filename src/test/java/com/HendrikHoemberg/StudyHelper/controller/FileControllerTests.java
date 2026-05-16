@@ -8,6 +8,7 @@ import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
 import com.HendrikHoemberg.StudyHelper.service.FileStorageService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
+import com.HendrikHoemberg.StudyHelper.service.PdfSplitService;
 import com.HendrikHoemberg.StudyHelper.service.PdfThumbnailService;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
@@ -22,11 +23,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.IOException;
 
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = FileController.class)
@@ -58,6 +63,9 @@ class FileControllerTests {
 
     @MockitoBean
     private StorageQuotaService storageQuotaService;
+
+    @MockitoBean
+    private PdfSplitService pdfSplitService;
 
     private User user;
     private FileEntry pdf;
@@ -95,5 +103,36 @@ class FileControllerTests {
             .andExpect(content().contentType("image/png"))
             .andExpect(header().string("Cache-Control", "private, max-age=86400"))
             .andExpect(content().bytes(new byte[] {1, 2, 3}));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void split_ReturnsFolderId_OnSuccess() throws Exception {
+        when(pdfSplitService.splitPdf(eq(7L), anyList(), eq(user))).thenReturn(42L);
+
+        mockMvc.perform(post("/files/7/split")
+                .with(csrf())
+                .principal(() -> "alice")
+                .contentType("application/json")
+                .content("{\"parts\":[" +
+                    "{\"name\":\"a.pdf\",\"startPage\":1,\"endPage\":2}," +
+                    "{\"name\":\"b.pdf\",\"startPage\":3,\"endPage\":4}]}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.folderId").value(42));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void split_ReturnsBadRequest_WhenServiceRejectsInput() throws Exception {
+        when(pdfSplitService.splitPdf(eq(7L), anyList(), eq(user)))
+            .thenThrow(new IllegalArgumentException("A split needs at least two parts."));
+
+        mockMvc.perform(post("/files/7/split")
+                .with(csrf())
+                .principal(() -> "alice")
+                .contentType("application/json")
+                .content("{\"parts\":[{\"name\":\"a.pdf\",\"startPage\":1,\"endPage\":4}]}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("A split needs at least two parts."));
     }
 }
