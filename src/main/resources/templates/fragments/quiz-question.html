@@ -23,21 +23,38 @@
         </div>
     </div>
 
-    <!-- Options: clickable form when unanswered -->
+    <!-- Options: selectable form when unanswered -->
     <form th:if="${!answered}"
           method="post"
           hx-post="/quiz/answer"
           hx-target="#quiz-session-content"
           hx-swap="outerHTML swap:300ms"
-          hx-disabled-elt="find button">
+          hx-disabled-elt="find button[type='submit']"
+          class="sh-quiz-answer-form"
+          th:data-question-type="${currentQuestion.type}">
+
+        <div class="sh-quiz-answer-hint" th:switch="${currentQuestion.type.name()}">
+            <span th:case="'MULTIPLE_SELECT'">Select all correct answers — more than one is correct.</span>
+            <span th:case="'TRUE_FALSE'">Select True or False.</span>
+            <span th:case="*">Select one answer.</span>
+        </div>
+
         <div class="sh-quiz-options">
             <button th:each="option, iter : ${currentQuestion.options}"
-                    type="submit"
-                    name="selectedOption"
-                    th:value="${iter.index}"
-                    class="sh-quiz-option">
+                    type="button"
+                    class="sh-quiz-option"
+                    th:data-index="${iter.index}">
                 <span class="sh-quiz-option-letter" th:text="${{'A','B','C','D'}[iter.index]}">A</span>
                 <span class="sh-quiz-option-text" th:text="${option}">Option text</span>
+            </button>
+        </div>
+
+        <!-- JS keeps one hidden selectedOptions input per selected button here -->
+        <div class="sh-quiz-selected-inputs" hidden></div>
+
+        <div class="sh-quiz-feedback-actions">
+            <button type="submit" class="sh-btn sh-btn-primary sh-quiz-submit-btn" disabled>
+                Submit Answer <iconify-icon icon="lucide:check"></iconify-icon>
             </button>
         </div>
     </form>
@@ -45,8 +62,8 @@
     <!-- Options: highlighted when answered -->
     <div th:unless="${!answered}" class="sh-quiz-options">
         <div th:each="option, iter : ${currentQuestion.options}"
-             th:with="isCorrect=${iter.index == currentQuestion.correctOptionIndex},
-                       isSelected=${iter.index == selectedOption}"
+             th:with="isCorrect=${currentQuestion.correctOptionIndices.contains(iter.index)},
+                       isSelected=${selectedOptions.contains(iter.index)}"
              th:class="${'sh-quiz-option sh-quiz-option--disabled'
                          + (isCorrect ? ' sh-quiz-option--correct'
                             : (isSelected ? ' sh-quiz-option--wrong'
@@ -60,13 +77,11 @@
 
     <!-- Feedback + next button (shown after answering) -->
     <div th:if="${answered}" class="sh-quiz-feedback">
-        <div th:if="${selectedOption == currentQuestion.correctOptionIndex}"
-             class="sh-alert sh-alert-success">
+        <div th:if="${answerCorrect}" class="sh-alert sh-alert-success">
             <iconify-icon icon="lucide:check-circle"></iconify-icon>
             Correct!
         </div>
-        <div th:unless="${selectedOption == currentQuestion.correctOptionIndex}"
-             class="sh-alert sh-alert-danger">
+        <div th:unless="${answerCorrect}" class="sh-alert sh-alert-danger">
             <iconify-icon icon="lucide:x-circle"></iconify-icon>
             Incorrect.
         </div>
