@@ -746,6 +746,11 @@ a {
     border-radius: inherit;
 }
 
+.sh-pdf-cover-img {
+    object-fit: contain;
+    background: #ffffff;
+}
+
 .sh-deck-edit-btn {
     position: absolute;
     bottom: 0.75rem;

@@ -104,7 +104,10 @@
                         <img th:if="${#strings.startsWith(file.mimeType, 'image/')}"
                              th:src="@{/files/{id}/view(id=${file.id})}"
                              class="sh-deck-cover-img" alt="Preview">
-                        <span th:unless="${#strings.startsWith(file.mimeType, 'image/')}" class="sh-deck-cover-icon">
+                        <img th:if="${file.mimeType == 'application/pdf'}"
+                             th:src="@{/files/{id}/thumbnail(id=${file.id})}"
+                             class="sh-deck-cover-img sh-pdf-cover-img" alt="PDF preview">
+                        <span th:unless="${#strings.startsWith(file.mimeType, 'image/') || file.mimeType == 'application/pdf'}" class="sh-deck-cover-icon">
                             <iconify-icon icon="lucide:file"></iconify-icon>
                         </span>
                     </a>

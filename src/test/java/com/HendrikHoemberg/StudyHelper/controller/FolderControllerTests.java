@@ -3,6 +3,7 @@ package com.HendrikHoemberg.StudyHelper.controller;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.dto.FileSummary;
 import com.HendrikHoemberg.StudyHelper.service.ActiveTab;
 import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
@@ -165,6 +166,8 @@ class FolderControllerTests {
             .andExpect(content().string(containsString("aria-label=\"File information\"")))
             .andExpect(content().string(containsString("class=\"sh-file-info-modals\"")))
             .andExpect(content().string(containsString("Details for Docker für Anwendungsentwickler.pdf")))
+            .andExpect(content().string(containsString("/files/7/thumbnail")))
+            .andExpect(content().string(containsString("class=\"sh-deck-cover-img sh-pdf-cover-img\"")))
             .andExpect(content().string(containsString("title=\"Generate flashcards\"")))
             .andExpect(content().string(containsString("/flashcards/generate?fileId=7")))
             .andExpect(content().string(not(containsString("<div class=\"sh-deck-meta\" th:text=\"${file.mimeType}\""))))
@@ -172,5 +175,32 @@ class FolderControllerTests {
             .andExpect(content().string(not(containsString(">Edit</button>"))))
             .andExpect(content().string(not(containsString(">Download</a>"))))
             .andExpect(content().string(not(containsString(">Delete</button>"))));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void dashboard_RendersPdfFilesWithThumbnailCards() throws Exception {
+        FileSummary pdf = new FileSummary(
+            9L,
+            "lecture.pdf",
+            42L,
+            "Test Folder",
+            "#abcdef",
+            "application/pdf",
+            40_000L,
+            LocalDateTime.of(2026, 5, 7, 16, 20)
+        );
+
+        when(folderService.getRootFolders(user)).thenReturn(List.of(folder));
+        when(deckService.getStudyDeckOptions(user)).thenReturn(Collections.emptyList());
+        when(fileEntryService.getFileSummaries(user)).thenReturn(List.of(pdf));
+
+        mockMvc.perform(get("/dashboard")
+                .with(csrf())
+                .principal(() -> "alice"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("/files/9/thumbnail")))
+            .andExpect(content().string(containsString("class=\"sh-deck-cover-img sh-pdf-cover-img\"")))
+            .andExpect(content().string(containsString("lecture.pdf")));
     }
 }

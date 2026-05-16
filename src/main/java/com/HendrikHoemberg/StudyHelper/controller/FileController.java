@@ -6,6 +6,7 @@ import com.HendrikHoemberg.StudyHelper.service.ActiveTab;
 import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
 import com.HendrikHoemberg.StudyHelper.service.FileStorageService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
+import com.HendrikHoemberg.StudyHelper.service.PdfThumbnailService;
 import com.HendrikHoemberg.StudyHelper.service.FolderView;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaExceededException;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
@@ -30,15 +31,18 @@ public class FileController {
     private final FileStorageService fileStorageService;
     private final UserService userService;
     private final FolderService folderService;
+    private final PdfThumbnailService pdfThumbnailService;
 
     public FileController(FileEntryService fileEntryService,
                           FileStorageService fileStorageService,
                           UserService userService,
-                          FolderService folderService) {
+                          FolderService folderService,
+                          PdfThumbnailService pdfThumbnailService) {
         this.fileEntryService = fileEntryService;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
         this.folderService = folderService;
+        this.pdfThumbnailService = pdfThumbnailService;
     }
 
     @GetMapping("/folders/{folderId}/files/upload")
@@ -106,6 +110,17 @@ public class FileController {
             .contentType(MediaType.parseMediaType(entry.getMimeType()))
             .header(HttpHeaders.CONTENT_DISPOSITION,
                 "inline; filename=\"" + entry.getOriginalFilename() + "\"")
+            .body(resource);
+    }
+
+    @GetMapping("/files/{id}/thumbnail")
+    public ResponseEntity<Resource> thumbnail(@PathVariable Long id, Principal principal) throws IOException {
+        User user = userService.getByUsername(principal.getName());
+        FileEntry entry = fileEntryService.getFile(id, user);
+        Resource resource = pdfThumbnailService.thumbnailFor(entry);
+        return ResponseEntity.ok()
+            .contentType(MediaType.IMAGE_PNG)
+            .header(HttpHeaders.CACHE_CONTROL, "private, max-age=86400")
             .body(resource);
     }
 
