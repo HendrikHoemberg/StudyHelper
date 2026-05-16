@@ -7,7 +7,7 @@ import * as pdfjsLib from '/js/lib/pdfjs/pdf.min.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/lib/pdfjs/pdf.worker.min.mjs';
 
 const $id = (id) => document.getElementById(id);
-const THUMB_WIDTH = 150;
+const THUMB_WIDTH = 300;
 const TINT_COUNT = 6;
 
 let _pdf = null;        // PDFDocumentProxy
