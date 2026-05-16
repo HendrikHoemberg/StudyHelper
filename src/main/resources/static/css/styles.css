@@ -2063,6 +2063,7 @@ textarea.sh-input {
     position: relative;
     transform-style: preserve-3d;
     transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: grid;
 }
 
 .sh-flip-card.flipped {
@@ -2070,8 +2071,8 @@ textarea.sh-input {
 }
 
 .sh-flip-face {
-    position: absolute;
-    inset: 0;
+    grid-area: 1 / 1;
+    min-height: 360px;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
     display: flex;
@@ -2091,6 +2092,16 @@ textarea.sh-input {
 .sh-flip-back {
     transform: rotateY(180deg);
     justify-content: space-between;
+}
+
+.sh-flip-card:not(.flipped) .sh-flip-back {
+    visibility: hidden;
+    opacity: 0;
+}
+
+.sh-flip-card.flipped .sh-flip-front {
+    visibility: hidden;
+    opacity: 0;
 }
 
 .sh-study-face-content {
@@ -2163,10 +2174,12 @@ textarea.sh-input {
 
 .sh-study-flip-container {
     min-height: 360px;
+    height: auto;
 }
 
 .sh-study-flip-card {
     min-height: 360px;
+    height: auto;
 }
 
 /* Round correct/incorrect buttons inside card back */
@@ -4286,11 +4299,13 @@ iconify-icon {
 
     .sh-study-flip-container {
         min-height: 300px;
+        height: auto;
     }
 
     .sh-study-flip-card,
     .sh-flip-card {
         min-height: 300px;
+        height: auto;
     }
 
     .sh-study-face-text {
