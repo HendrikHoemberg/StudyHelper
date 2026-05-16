@@ -19,7 +19,7 @@
     var _histLock = false;   // suppress push during snapshot restore
     var _tool     = 'brush'; // active tool id
     var _color    = '#000000';
-    var _fillColor = 'transparent';   // shape fill; 'transparent' = no fill
+    var _fillColor = '#000000';       // shape fill; matches default border color
     var _wired    = false;   // interactions wired once flag
     var _strokeOpts = null;  // shared ColorPicker opts for stroke/border swatches
     var _fillOpts   = null;  // ColorPicker opts for the fill swatch
@@ -208,6 +208,11 @@
             if (match) anyVisible = true;
         });
         bar.style.display = anyVisible ? '' : 'none';
+
+        var sizeLabel = $id('sh-ie-size-label');
+        if (sizeLabel) {
+            sizeLabel.textContent = (key === 'rect' || key === 'ellipse' || key === 'line') ? 'Bordersize' : 'Size';
+        }
     }
 
     function _syncControlsFromObject(obj) {
@@ -256,7 +261,7 @@
 
     // ── Shape event helpers ──────────────────────────────────────────
     function _shapeStrokeWidth() {
-        return Math.max(1, parseInt(($id('sh-ie-size-slider') || {}).value) || 3);
+        return Math.max(1, parseInt(($id('sh-ie-size-slider') || {}).value) || 1);
     }
 
     function _shapeOpacity() {
@@ -410,6 +415,7 @@
         _paintColorSwatches(hex);
         if (_strokeOpts) _strokeOpts.initialColor = hex;
         _syncBrush();
+        _setFill(hex);
         // Also update the fill/stroke of any currently selected object
         if (_fc) {
             var active = _fc.getActiveObject();
@@ -1239,12 +1245,12 @@
         // Reset controls
         var sizeSlider = $id('sh-ie-size-slider');
         var opSlider   = $id('sh-ie-opacity-slider');
-        if (sizeSlider) { sizeSlider.value = '8';   $id('sh-ie-size-val').textContent = '8'; }
+        if (sizeSlider) { sizeSlider.value = '1';   $id('sh-ie-size-val').textContent = '1'; }
         if (opSlider)   { opSlider.value   = '100'; $id('sh-ie-opacity-val').textContent = '100%'; }
 
         // Reset UI state
         _setColor('#000000');
-        _setFill('transparent');
+        _setFill('#000000');
         _showLoading(false);
         _hideError();
         _showFooterError('');
