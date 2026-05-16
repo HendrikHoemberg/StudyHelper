@@ -63,6 +63,22 @@
                         Open Image Editor
                     </button>
                 </div>
+
+                <hr th:if="${file.mimeType == 'application/pdf'}"
+                    style="margin: 0.75rem 0; border: none; border-top: 1px solid var(--border-light);">
+
+                <!-- PDF Splitter Section -->
+                <div th:if="${file.mimeType == 'application/pdf'}">
+                    <label class="sh-label mb-2">PDF Tools</label>
+                    <button type="button" class="sh-btn sh-btn-secondary w-full justify-center"
+                            th:attr="data-split-file-id=${file.id},
+                                     data-split-url=@{/files/{id}/view(id=${file.id})},
+                                     data-split-filename=${file.originalFilename}"
+                            onclick="this.closest('.sh-modal').remove()">
+                        <iconify-icon icon="lucide:scissors"></iconify-icon>
+                        Open PDF Splitter
+                    </button>
+                </div>
             </div>
             
             <div class="sh-modal-footer flex justify-between items-center">
