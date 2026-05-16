@@ -2,6 +2,7 @@ package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.Difficulty;
 import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
+import com.HendrikHoemberg.StudyHelper.dto.GeneratedQuizQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.QuestionType;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestion;
@@ -152,8 +153,8 @@ class AiQuizServiceTests {
     @Test
     void generate_MalformedEntriesDropped_TooFewThrowsIllegalState() {
         when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
-            new QuizQuestion(QuestionType.MULTIPLE_CHOICE, "Q1", List.of("only", "two"), List.of(0)),
-            new QuizQuestion(QuestionType.MULTIPLE_CHOICE, "Q2", List.of("only", "two"), List.of(0))
+            gen(QuestionType.MULTIPLE_CHOICE, "Q1", List.of("only", "two"), List.of(0)),
+            gen(QuestionType.MULTIPLE_CHOICE, "Q2", List.of("only", "two"), List.of(0))
         ));
 
         assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
@@ -198,8 +199,8 @@ class AiQuizServiceTests {
     @Test
     void generate_NullMcqOptionEntry_IsDroppedAndCanTriggerTooFewValid() {
         when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
-            new QuizQuestion(QuestionType.MULTIPLE_CHOICE, "Q1", Arrays.asList("a", null, "c", "d"), List.of(0)),
-            new QuizQuestion(QuestionType.MULTIPLE_CHOICE, "Q2", Arrays.asList("a", null, "c", "d"), List.of(0))
+            gen(QuestionType.MULTIPLE_CHOICE, "Q1", Arrays.asList("a", null, "c", "d"), List.of(0)),
+            gen(QuestionType.MULTIPLE_CHOICE, "Q2", Arrays.asList("a", null, "c", "d"), List.of(0))
         ));
 
         assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
@@ -210,8 +211,8 @@ class AiQuizServiceTests {
     @Test
     void generate_NullTfOptionEntry_IsDroppedAndCanTriggerTooFewValid() {
         when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
-            new QuizQuestion(QuestionType.TRUE_FALSE, "Q1", Arrays.asList("True", null), List.of(0)),
-            new QuizQuestion(QuestionType.TRUE_FALSE, "Q2", Arrays.asList(null, "False"), List.of(1))
+            gen(QuestionType.TRUE_FALSE, "Q1", Arrays.asList("True", null), List.of(0)),
+            gen(QuestionType.TRUE_FALSE, "Q2", Arrays.asList(null, "False"), List.of(1))
         ));
 
         assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.TF_ONLY, Difficulty.EASY))
@@ -359,8 +360,8 @@ class AiQuizServiceTests {
     @Test
     void generate_MultiSelect_OneCorrect_IsRejected() {
         when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
-            new QuizQuestion(QuestionType.MULTIPLE_SELECT, "Q1", List.of("a", "b", "c", "d"), List.of(0)),
-            new QuizQuestion(QuestionType.MULTIPLE_SELECT, "Q2", List.of("a", "b", "c", "d"), List.of(1))
+            gen(QuestionType.MULTIPLE_SELECT, "Q1", List.of("a", "b", "c", "d"), List.of(0)),
+            gen(QuestionType.MULTIPLE_SELECT, "Q2", List.of("a", "b", "c", "d"), List.of(1))
         ));
 
         assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
@@ -371,8 +372,8 @@ class AiQuizServiceTests {
     @Test
     void generate_MultiSelect_AllFourCorrect_IsRejected() {
         when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
-            new QuizQuestion(QuestionType.MULTIPLE_SELECT, "Q1", List.of("a", "b", "c", "d"), List.of(0, 1, 2, 3)),
-            new QuizQuestion(QuestionType.MULTIPLE_SELECT, "Q2", List.of("a", "b", "c", "d"), List.of(0, 1, 2, 3))
+            gen(QuestionType.MULTIPLE_SELECT, "Q1", List.of("a", "b", "c", "d"), List.of(0, 1, 2, 3)),
+            gen(QuestionType.MULTIPLE_SELECT, "Q2", List.of("a", "b", "c", "d"), List.of(0, 1, 2, 3))
         ));
 
         assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
@@ -406,36 +407,43 @@ class AiQuizServiceTests {
 
     // --- helpers ---
 
-    private QuizQuestionsResponse wrap(QuizQuestion... questions) {
+    private QuizQuestionsResponse wrap(GeneratedQuizQuestion... questions) {
         return new QuizQuestionsResponse(List.of(questions));
     }
 
-    private QuizQuestion mcq(String text, int correctIdx) {
-        return new QuizQuestion(QuestionType.MULTIPLE_CHOICE, text,
-            List.of("a", "b", "c", "d"), List.of(correctIdx));
+    private GeneratedQuizQuestion gen(QuestionType type, String text,
+                                      List<String> options, List<Integer> correctIndices) {
+        return new GeneratedQuizQuestion(text, options, List.of(), type, correctIndices);
     }
 
-    private QuizQuestion multiSelect(String text, Integer... correctIdx) {
-        return new QuizQuestion(QuestionType.MULTIPLE_SELECT, text,
-            List.of("a", "b", "c", "d"), List.of(correctIdx));
+    private GeneratedQuizQuestion mcq(String text, int correctIdx) {
+        return new GeneratedQuizQuestion(text, List.of("a", "b", "c", "d"),
+            List.of(), QuestionType.MULTIPLE_CHOICE, List.of(correctIdx));
     }
 
-    private QuizQuestion tf(String text, int correctIdx) {
-        return new QuizQuestion(QuestionType.TRUE_FALSE, text,
-            List.of("True", "False"), List.of(correctIdx));
+    private GeneratedQuizQuestion multiSelect(String text, Integer... correctIdx) {
+        return new GeneratedQuizQuestion(text, List.of("a", "b", "c", "d"),
+            List.of(), QuestionType.MULTIPLE_SELECT, List.of(correctIdx));
     }
 
-    private QuizQuestion tfLower(String text, int correctIdx) {
-        return new QuizQuestion(QuestionType.TRUE_FALSE, text,
-            List.of("true", "false"), List.of(correctIdx));
+    private GeneratedQuizQuestion tf(String text, int correctIdx) {
+        return new GeneratedQuizQuestion(text, List.of("True", "False"),
+            List.of(), QuestionType.TRUE_FALSE, List.of(correctIdx));
     }
 
-    private QuizQuestion mcqTypeless(String text, int correctIdx) {
-        return new QuizQuestion(null, text, List.of("a", "b", "c", "d"), List.of(correctIdx));
+    private GeneratedQuizQuestion tfLower(String text, int correctIdx) {
+        return new GeneratedQuizQuestion(text, List.of("true", "false"),
+            List.of(), QuestionType.TRUE_FALSE, List.of(correctIdx));
     }
 
-    private QuizQuestion tfTypeless(String text, int correctIdx) {
-        return new QuizQuestion(null, text, List.of("True", "False"), List.of(correctIdx));
+    private GeneratedQuizQuestion mcqTypeless(String text, int correctIdx) {
+        return new GeneratedQuizQuestion(text, List.of("a", "b", "c", "d"),
+            List.of(), null, List.of(correctIdx));
+    }
+
+    private GeneratedQuizQuestion tfTypeless(String text, int correctIdx) {
+        return new GeneratedQuizQuestion(text, List.of("True", "False"),
+            List.of(), null, List.of(correctIdx));
     }
 
     private List<Flashcard> cards(int n) {

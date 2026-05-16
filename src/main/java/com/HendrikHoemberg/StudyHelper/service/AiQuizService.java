@@ -2,6 +2,7 @@ package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.Difficulty;
 import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
+import com.HendrikHoemberg.StudyHelper.dto.GeneratedQuizQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.QuestionType;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionMode;
@@ -81,12 +82,12 @@ public class AiQuizService {
         }
 
         try {
-            List<QuizQuestion> rawList = response == null || response.questions() == null
+            List<GeneratedQuizQuestion> rawList = response == null || response.questions() == null
                 ? List.of()
                 : response.questions();
 
             List<QuizQuestion> valid = new ArrayList<>();
-            for (QuizQuestion q : rawList) {
+            for (GeneratedQuizQuestion q : rawList) {
                 if (q == null) continue;
                 QuizQuestion normalized = normalizeQuestion(q);
                 if (normalized != null) valid.add(normalized);
@@ -108,7 +109,7 @@ public class AiQuizService {
         }
     }
 
-    private QuizQuestion normalizeQuestion(QuizQuestion q) {
+    private QuizQuestion normalizeQuestion(GeneratedQuizQuestion q) {
         if (q.questionText() == null || q.questionText().isBlank()) return null;
         if (q.options() == null) return null;
         if (q.options().stream().anyMatch(Objects::isNull)) return null;
