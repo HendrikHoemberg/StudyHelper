@@ -111,6 +111,8 @@
                 // Global Escape handler in app.js takes care of lightbox
             });
 
+            var imageZones = {};
+
             function setupZone(zoneId, inputId, dropLabelId, removeInputId, removeBtnId, side) {
                 var zone = document.getElementById(zoneId);
                 var input = document.getElementById(inputId);
@@ -135,15 +137,19 @@
                     zone.classList.remove('is-dragover');
                     var file = e.dataTransfer.files[0];
                     if (file && file.type.startsWith('image/')) {
-                        var dt = new DataTransfer();
-                        dt.items.add(file);
-                        input.files = dt.files;
-                        showPreview(file);
+                        setImageFile(file);
                     }
                 });
 
                 if (removeBtn) {
                     removeBtn.addEventListener('click', clearPreview);
+                }
+
+                function setImageFile(file) {
+                    var dt = new DataTransfer();
+                    dt.items.add(file);
+                    input.files = dt.files;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
 
                 function showPreview(file) {
@@ -200,10 +206,58 @@
                         if (removeInput) removeInput.value = 'true';
                     });
                 }
+
+                return {
+                    setImageFile: setImageFile,
+                    hasPreview: function() {
+                        return !!zone.querySelector('.sh-img-preview-wrap');
+                    }
+                };
             }
 
-            setupZone('front-img-zone', 'frontImageInput', 'front-drop-label', 'removeFrontImage', 'front-remove-btn', 'front');
-            setupZone('back-img-zone',  'backImageInput',  'back-drop-label',  'removeBackImage',  'back-remove-btn',  'back');
+            imageZones.front = setupZone('front-img-zone', 'frontImageInput', 'front-drop-label', 'removeFrontImage', 'front-remove-btn', 'front');
+            imageZones.back = setupZone('back-img-zone',  'backImageInput',  'back-drop-label',  'removeBackImage',  'back-remove-btn',  'back');
+
+            function handleImagePaste(e) {
+                var activeModal = document.querySelector('.sh-modal.is-open');
+                if (!activeModal || !activeModal.contains(e.target)) return;
+
+                var clipboardData = e.clipboardData || window.clipboardData;
+                if (!clipboardData || !clipboardData.items) return;
+
+                for (var i = 0; i < clipboardData.items.length; i++) {
+                    var item = clipboardData.items[i];
+                    if (!item.type || !item.type.startsWith('image/')) continue;
+
+                    var blob = item.getAsFile();
+                    if (!blob) return;
+
+                    var extension = (blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+                    var filename = 'pasted-image-' + Date.now() + '.' + extension;
+                    var file = new File([blob], filename, { type: blob.type || 'image/png' });
+                    var side = selectPasteTargetSide();
+                    if (!imageZones[side]) return;
+
+                    e.preventDefault();
+                    imageZones[side].setImageFile(file);
+                    return;
+                }
+            }
+
+            function selectPasteTargetSide() {
+                var activeElement = document.activeElement;
+                if (activeElement && activeElement.name === 'backText') return 'back';
+                if (activeElement && activeElement.name === 'frontText') return 'front';
+                if (imageZones.front && !imageZones.front.hasPreview()) return 'front';
+                if (imageZones.back && !imageZones.back.hasPreview()) return 'back';
+                return 'front';
+            }
+
+            if (window.flashcardImagePasteHandler) {
+                document.removeEventListener('paste', window.flashcardImagePasteHandler);
+            }
+            window.flashcardImagePasteHandler = handleImagePaste;
+            document.addEventListener('paste', handleImagePaste);
 
             function csrfHeaders() {
                 var tokenEl  = document.querySelector('meta[name="_csrf"]');

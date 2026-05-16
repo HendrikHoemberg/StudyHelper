@@ -375,6 +375,20 @@ class UiResourceRegressionTests {
             .contains("object-fit: cover");
     }
 
+    @Test
+    void flashcardImageInputsAcceptPastedClipboardImages() throws IOException {
+        String template = resource("templates/fragments/flashcard-form.html");
+
+        assertThat(template)
+            .contains("document.addEventListener('paste', handleImagePaste)")
+            .contains("clipboardData.items")
+            .contains("item.type.startsWith('image/')")
+            .contains("selectPasteTargetSide")
+            .contains("var file = new File([blob], filename, { type: blob.type || 'image/png' })")
+            .contains("input.dispatchEvent(new Event('change', { bubbles: true }))")
+            .contains("showPreview(file)");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }
