@@ -51,9 +51,6 @@ public class StudySessionController {
                            HttpSession httpSession,
                            HttpServletResponse response,
                            @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
         StudySessionState state = getState(httpSession);
@@ -77,9 +74,6 @@ public class StudySessionController {
                          HttpSession httpSession,
                          HttpServletResponse response,
                          @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
         StudySessionState state = getState(httpSession);
@@ -119,9 +113,6 @@ public class StudySessionController {
                        HttpSession httpSession,
                        HttpServletResponse response,
                        @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
         StudySessionState state = getState(httpSession);
@@ -145,8 +136,6 @@ public class StudySessionController {
                                 HttpSession httpSession,
                                 HttpServletResponse response,
                                 @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        if (principal == null) return "redirect:/login";
-
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
         StudySessionState state = getState(httpSession);

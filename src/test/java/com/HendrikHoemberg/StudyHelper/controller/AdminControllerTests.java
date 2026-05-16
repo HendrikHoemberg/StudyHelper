@@ -5,9 +5,11 @@ import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.entity.UserRole;
 import com.HendrikHoemberg.StudyHelper.repository.UserRepository;
 import com.HendrikHoemberg.StudyHelper.service.AdminService;
+import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.RegistrationCodeService;
+import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,6 +58,12 @@ class AdminControllerTests {
 
     @MockitoBean
     private UserRepository userRepository;
+
+    @MockitoBean
+    private AiRequestQuotaService aiRequestQuotaService;
+
+    @MockitoBean
+    private StorageQuotaService storageQuotaService;
 
     @BeforeEach
     void setUp() {

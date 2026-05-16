@@ -3,9 +3,11 @@ package com.HendrikHoemberg.StudyHelper.controller;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
+import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,12 @@ class DeckControllerTests {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private AiRequestQuotaService aiRequestQuotaService;
+
+    @MockitoBean
+    private StorageQuotaService storageQuotaService;
 
     private User user;
     private Folder folder;

@@ -1,9 +1,11 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
+import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.InviteRegistrationService;
 import com.HendrikHoemberg.StudyHelper.service.RegistrationCodeService;
+import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,12 @@ class RegistrationControllerTests {
 
     @MockitoBean
     private DeckService deckService;
+
+    @MockitoBean
+    private AiRequestQuotaService aiRequestQuotaService;
+
+    @MockitoBean
+    private StorageQuotaService storageQuotaService;
 
     @Test
     void registerPage_IsPublicAndRenders() throws Exception {
