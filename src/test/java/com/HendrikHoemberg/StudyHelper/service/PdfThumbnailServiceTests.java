@@ -43,10 +43,12 @@ class PdfThumbnailServiceTests {
         Resource resource = service.thumbnailFor(fileEntry("stored-portrait.pdf"));
         BufferedImage thumbnail = ImageIO.read(resource.getInputStream());
 
+        assertThat(resource.getFilename()).isEqualTo("portrait.pdf.cover-top.png");
         assertThat(thumbnail.getWidth()).isEqualTo(360);
         assertThat(thumbnail.getHeight()).isEqualTo(240);
         assertThat(new Color(thumbnail.getRGB(0, thumbnail.getHeight() / 2))).isNotEqualTo(Color.WHITE);
         assertThat(new Color(thumbnail.getRGB(thumbnail.getWidth() - 1, thumbnail.getHeight() / 2))).isNotEqualTo(Color.WHITE);
+        assertThat(new Color(thumbnail.getRGB(10, 10))).isEqualTo(Color.RED);
     }
 
     private FileEntry fileEntry(String storedFilename) {
@@ -65,6 +67,9 @@ class PdfThumbnailServiceTests {
             try (PDPageContentStream content = new PDPageContentStream(doc, page)) {
                 content.setNonStrokingColor(new Color(180, 180, 180));
                 content.addRect(0, 0, pageSize.getWidth(), pageSize.getHeight());
+                content.fill();
+                content.setNonStrokingColor(Color.RED);
+                content.addRect(0, pageSize.getHeight() - 120, pageSize.getWidth(), 120);
                 content.fill();
             }
             doc.save(dest.toFile());

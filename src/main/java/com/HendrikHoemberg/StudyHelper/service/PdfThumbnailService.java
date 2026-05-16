@@ -46,7 +46,7 @@ public class PdfThumbnailService {
     }
 
     private Path thumbnailPath(Path source) {
-        String filename = source.getFileName().toString() + ".cover.png";
+        String filename = source.getFileName().toString() + ".cover-top.png";
         return source.getParent().resolve("thumbnails").resolve(filename);
     }
 
@@ -74,9 +74,7 @@ public class PdfThumbnailService {
             graphics.fillRect(0, 0, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
             graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            int x = (THUMBNAIL_WIDTH - width) / 2;
-            int y = (THUMBNAIL_HEIGHT - height) / 2;
-            graphics.drawImage(source, x, y, width, height, null);
+            graphics.drawImage(source, 0, 0, width, height, null);
         } finally {
             graphics.dispose();
         }
