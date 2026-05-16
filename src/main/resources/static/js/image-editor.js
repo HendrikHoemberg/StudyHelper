@@ -1463,7 +1463,7 @@
             var filename = btn.dataset.editFilename || 'image.png';
 
             ImageEditor.open({
-                source:   url,
+                source:   url + (url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now(),
                 filename: filename,
                 mode:     'file-existing',
                 onSave:   function(blob, choice, customName) {

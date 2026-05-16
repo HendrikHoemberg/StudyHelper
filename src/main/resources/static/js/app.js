@@ -95,73 +95,76 @@ function initLightbox() {
         const filename = lastTrigger.dataset.fileName || 'image.png';
         closeLightbox();
 
-        if (fileId && folderId && window.ImageEditor) {
-            window.ImageEditor.open({
-                source: src,
-                filename: filename,
-                mode: 'file-existing',
-                onSave: function(blob, choice, customName) {
-                    var fd = new FormData();
-                    var pngName = filename.replace(/\.[^.]+$/, '') + '.png';
-                    var tokenEl = document.querySelector('meta[name="_csrf"]');
-                    var headerEl = document.querySelector('meta[name="_csrf_header"]');
-                    var h = {};
-                    if (tokenEl && headerEl) h[headerEl.content] = tokenEl.content;
+        if (window.ImageEditor) {
+            var cacheBustSrc = src + (src.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
+            if (fileId && folderId) {
+                window.ImageEditor.open({
+                    source: cacheBustSrc,
+                    filename: filename,
+                    mode: 'file-existing',
+                    onSave: function(blob, choice, customName) {
+                        var fd = new FormData();
+                        var pngName = filename.replace(/\.[^.]+$/, '') + '.png';
+                        var tokenEl = document.querySelector('meta[name="_csrf"]');
+                        var headerEl = document.querySelector('meta[name="_csrf_header"]');
+                        var h = {};
+                        if (tokenEl && headerEl) h[headerEl.content] = tokenEl.content;
 
-                    function reloadLibrary() {
-                        var isDashboard = !!document.getElementById('library-grid-container');
-                        var url = isDashboard ? '/dashboard' : ('/folders/' + folderId + '?tab=files');
-                        var targetId = isDashboard ? 'library-grid-container' : 'folder-tabs-section';
-                        return fetch(url, {
-                            headers: { 'HX-Request': 'true', 'HX-Target': targetId },
-                        }).then(function(r) { return r.text(); }).then(function(html) {
-                            var container = document.getElementById(targetId);
-                            if (!container) return;
-                            if (targetId === 'folder-tabs-section') {
-                                container.outerHTML = html;
-                                container = document.getElementById(targetId);
-                            } else {
-                                container.innerHTML = html;
-                            }
-                            if (typeof initLucide === 'function') initLucide();
-                            if (window.htmx) htmx.process(container);
-                            var t = Date.now();
-                            container.querySelectorAll('img[src*="/files/"]').forEach(function (img) {
-                                var s = img.getAttribute('src');
-                                if (s) img.setAttribute('src', s + (s.indexOf('?') === -1 ? '?t=' : '&t=') + t);
+                        function reloadLibrary() {
+                            var isDashboard = !!document.getElementById('library-grid-container');
+                            var url = isDashboard ? '/dashboard' : ('/folders/' + folderId + '?tab=files');
+                            var targetId = isDashboard ? 'library-grid-container' : 'folder-tabs-section';
+                            return fetch(url, {
+                                headers: { 'HX-Request': 'true', 'HX-Target': targetId },
+                            }).then(function(r) { return r.text(); }).then(function(html) {
+                                var container = document.getElementById(targetId);
+                                if (!container) return;
+                                if (targetId === 'folder-tabs-section') {
+                                    container.outerHTML = html;
+                                    container = document.getElementById(targetId);
+                                } else {
+                                    container.innerHTML = html;
+                                }
+                                if (typeof initLucide === 'function') initLucide();
+                                if (window.htmx) htmx.process(container);
+                                var t = Date.now();
+                                container.querySelectorAll('img[src*="/files/"]').forEach(function (img) {
+                                    var s = img.getAttribute('src');
+                                    if (s) img.setAttribute('src', s + (s.indexOf('?') === -1 ? '?t=' : '&t=') + t);
+                                });
                             });
-                        });
-                    }
+                        }
 
-                    if (choice === 'new') {
-                        fd.append('file', blob, pngName);
-                        return fetch('/folders/' + folderId + '/files', {
-                            method: 'POST',
-                            body: fd,
-                            headers: h,
-                        }).then(function(resp) {
-                            if (!resp.ok) throw new Error('Upload failed');
-                            return reloadLibrary();
-                        });
-                    } else {
-                        fd.append('image', blob, pngName);
-                        return fetch('/files/' + fileId + '/edit', {
-                            method: 'POST',
-                            body: fd,
-                            headers: h,
-                        }).then(function(resp) {
-                            if (!resp.ok) throw new Error('Save failed');
-                            return reloadLibrary();
-                        });
-                    }
-                },
-            });
-        } else if (window.ImageEditor) {
-            window.ImageEditor.open({
-                source: src,
-                filename: filename,
-                mode: 'flashcard-new',
-            });
+                        if (choice === 'new') {
+                            fd.append('file', blob, pngName);
+                            return fetch('/folders/' + folderId + '/files', {
+                                method: 'POST',
+                                body: fd,
+                                headers: h,
+                            }).then(function(resp) {
+                                if (!resp.ok) throw new Error('Upload failed');
+                                return reloadLibrary();
+                            });
+                        } else {
+                            fd.append('image', blob, pngName);
+                            return fetch('/files/' + fileId + '/edit', {
+                                method: 'POST',
+                                body: fd,
+                                headers: h,
+                            }).then(function(resp) {
+                                if (!resp.ok) throw new Error('Save failed');
+                                return reloadLibrary();
+                            });
+                        }
+                    },
+                });
+            } else {
+                window.ImageEditor.open({
+                    source: cacheBustSrc,
+                    filename: filename,
+                    mode: 'flashcard-new',
+                });
+            }
         }
     });
 }
