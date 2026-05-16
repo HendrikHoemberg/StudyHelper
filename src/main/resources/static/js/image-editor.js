@@ -1408,6 +1408,14 @@
             }
             if (typeof initLucide === 'function') initLucide();
             if (window.htmx && container) htmx.process(container);
+            // Bust browser cache for file images that might have been overwritten
+            if (container) {
+                var t = Date.now();
+                container.querySelectorAll('img[src*="/files/"]').forEach(function (img) {
+                    var s = img.getAttribute('src');
+                    if (s) img.setAttribute('src', s + (s.indexOf('?') === -1 ? '?t=' : '&t=') + t);
+                });
+            }
         });
     }
 

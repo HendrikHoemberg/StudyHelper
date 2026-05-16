@@ -232,11 +232,11 @@
 .sh-ie-prompt-panel {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     padding: 1.5rem;
     width: 320px;
     max-width: 90vw;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-xl);
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
