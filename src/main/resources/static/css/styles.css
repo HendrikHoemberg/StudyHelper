@@ -4454,6 +4454,65 @@ iconify-icon {
 }
 
 /* ============================================================
+   FILE UPLOAD MODAL
+   ============================================================ */
+
+.sh-upload-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.sh-upload-file-input {
+    display: none;
+}
+
+.sh-upload-chooser {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.7rem 0.85rem;
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.sh-upload-chooser:hover,
+.sh-upload-chooser:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+    outline: none;
+}
+
+.sh-upload-chooser iconify-icon {
+    font-size: 1.2rem;
+}
+
+.sh-upload-file-name {
+    min-height: 1.1rem;
+    color: var(--text-main);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.sh-upload-limit {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    margin: 0;
+}
+
+/* ============================================================
    STUDY CARD IMAGE
    ============================================================ */
 

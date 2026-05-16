@@ -15,12 +15,15 @@
             <form th:action="@{/folders/{id}/files(id=${folderId})}" method="post"
                   enctype="multipart/form-data">
                 <div class="sh-modal-body">
-                    <div>
-                        <label class="sh-label">File</label>
-                        <input type="file" name="file" class="sh-input" required>
+                    <div class="sh-upload-field">
+                        <input type="file" name="file" id="upload-file-input" class="sh-upload-file-input" required>
+                        <button type="button" class="sh-upload-chooser" id="upload-file-chooser">
+                            <iconify-icon icon="lucide:upload-cloud"></iconify-icon>
+                            <span>Choose file</span>
+                        </button>
+                        <div class="sh-upload-file-name" id="upload-file-name">No file selected</div>
                     </div>
-                    <p style="color:var(--text-muted); font-size:0.8125rem; margin-top:0.5rem; margin-bottom:0;">
-                        Maximum file size: 100 MB</p>
+                    <p class="sh-upload-limit">Maximum file size: 100 MB</p>
                 </div>
                 <div class="sh-modal-footer">
                     <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()">Cancel</button>
@@ -29,7 +32,23 @@
             </form>
         </div>
     </div>
-    <script>initLucide();</script>
+    <script>
+        (function() {
+            initLucide();
+            var fileInput = document.getElementById('upload-file-input');
+            var chooser = document.getElementById('upload-file-chooser');
+            var selectedFileName = document.getElementById('upload-file-name');
+            if (!fileInput || !chooser || !selectedFileName) return;
+
+            chooser.addEventListener('click', function() {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function() {
+                selectedFileName.textContent = fileInput.files[0] ? fileInput.files[0].name : 'No file selected';
+            });
+        })();
+    </script>
 </div>
 
 </body>

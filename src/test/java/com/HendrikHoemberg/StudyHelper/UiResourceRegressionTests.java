@@ -406,6 +406,29 @@ class UiResourceRegressionTests {
             .contains("Browse files");
     }
 
+    @Test
+    void fileUploadModalUsesModernChooserDesign() throws IOException {
+        String template = resource("templates/fragments/file-form.html");
+        String styles = resource("static/css/styles.css");
+
+        assertThat(template)
+            .contains("class=\"sh-upload-file-input\"")
+            .contains("class=\"sh-upload-chooser\"")
+            .contains("lucide:upload-cloud")
+            .contains("Choose file")
+            .contains("id=\"upload-file-name\"")
+            .contains("No file selected")
+            .contains("Maximum file size: 100 MB")
+            .contains("selectedFileName.textContent = fileInput.files[0] ? fileInput.files[0].name : 'No file selected';")
+            .doesNotContain("style=\"color:var(--text-muted); font-size:0.8125rem; margin-top:0.5rem; margin-bottom:0;\"");
+
+        assertThat(styles)
+            .contains(".sh-upload-chooser")
+            .contains(".sh-upload-file-input")
+            .contains(".sh-upload-file-name")
+            .contains(".sh-upload-limit");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }
