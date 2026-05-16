@@ -492,6 +492,8 @@
         });
     }
 
+    window.initCustomSteppers = initCustomSteppers;
+
     function initInstantStepTwoChoices(root = document) {
         root.querySelectorAll('input[name="sessionMode"], input[name="quizQuestionMode"], input[name="questionSize"]').forEach(input => {
             const choice = input.closest('.sh-wizard-panel[data-step="2"] .sh-study-choice');

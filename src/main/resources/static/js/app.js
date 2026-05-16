@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCsrf();
     initLightbox();
     initShDialog();
+    if (window.initCustomSteppers) window.initCustomSteppers(document);
 });
 
 function registerServiceWorker() {
@@ -25,7 +26,7 @@ function registerServiceWorker() {
 
 // Re-run initializations after HTMX swaps
 document.body.addEventListener('htmx:afterSwap', () => {
-    // No-op for now as iconify-icon is a web component and handles itself
+    if (window.initCustomSteppers) window.initCustomSteppers(document);
 });
 
 // Optional fade-in animation after settle

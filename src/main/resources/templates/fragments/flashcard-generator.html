@@ -177,6 +177,22 @@
                         </div>
 
                     </div>
+                    <div class="sh-setting-row" style="margin-top:1.25rem;">
+                        <div>
+                            <div class="sh-setting-label">Card Count</div>
+                            <div class="sh-setting-hint">Choose between 1 and 100 generated cards.</div>
+                        </div>
+                        <div class="sh-number-stepper" data-stepper>
+                            <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" aria-label="Decrease card count">
+                                <iconify-icon icon="lucide:minus"></iconify-icon>
+                            </button>
+                            <input type="number" name="cardCount" class="sh-stepper-input"
+                                   th:value="${cardCount != null ? cardCount : 20}" min="1" max="100">
+                            <button type="button" class="sh-stepper-btn" data-stepper-action="increment" aria-label="Increase card count">
+                                <iconify-icon icon="lucide:plus"></iconify-icon>
+                            </button>
+                        </div>
+                    </div>
                 </section>
             </div>
         </div>
