@@ -29,8 +29,11 @@
              th:style="'--folder-color:' + ${view.folder.colorHex}">
             <a th:href="@{/files/{id}/view(id=${file.id})}"
                target="_blank"
-               th:classappend="${#strings.startsWith(file.mimeType, 'image/')} ? 'sh-lightbox-trigger' : ''"
-               class="sh-deck-cover">
+               th:classappend="${#strings.startsWith(file.mimeType, 'image/') ? 'sh-lightbox-trigger' : (file.mimeType == 'application/pdf' ? 'sh-pdf-viewer-trigger' : '')}"
+               class="sh-deck-cover"
+               th:data-file-id="${file.id}"
+               th:data-file-url="@{/files/{id}/view(id=${file.id})}"
+               th:data-file-name="${file.originalFilename}">
                 <img th:if="${#strings.startsWith(file.mimeType, 'image/')}"
                      th:src="@{/files/{id}/view(id=${file.id})}"
                      class="sh-deck-cover-img" alt="Preview">
