@@ -2,12 +2,22 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <body>
 
-<div th:fragment="lightbox" id="sh-lightbox" class="sh-lightbox" style="display:none;" onclick="this.style.display='none'">
-    <button class="sh-lightbox-close" onclick="document.getElementById('sh-lightbox').style.display='none'">
+<div th:fragment="lightbox" id="sh-lightbox" class="sh-lightbox" style="display:none;">
+    <button class="sh-lightbox-close" id="sh-lightbox-close">
         <iconify-icon icon="lucide:x"></iconify-icon>
     </button>
     <div class="sh-lightbox-content" onclick="event.stopPropagation()">
         <img id="sh-lightbox-img" class="sh-lightbox-img" src="" alt="Full size image">
+        <div class="sh-lightbox-footer">
+            <button type="button" class="sh-btn sh-btn-secondary" id="sh-lightbox-download">
+                <iconify-icon icon="lucide:download"></iconify-icon>
+                Download
+            </button>
+            <button type="button" class="sh-btn sh-btn-primary" id="sh-lightbox-edit-btn">
+                <iconify-icon icon="lucide:pencil"></iconify-icon>
+                Open Image Editor
+            </button>
+        </div>
     </div>
 </div>
 

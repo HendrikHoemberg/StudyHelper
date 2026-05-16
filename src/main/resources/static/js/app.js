@@ -43,6 +43,12 @@ function initLightbox() {
     if (!lb) return;
 
     const lbImg = document.getElementById('sh-lightbox-img');
+    let lastTrigger = null;
+
+    function closeLightbox() {
+        lb.style.display = 'none';
+        lastTrigger = null;
+    }
 
     document.body.addEventListener('click', (e) => {
         const trigger = e.target.closest('.sh-lightbox-trigger');
@@ -53,6 +59,7 @@ function initLightbox() {
             // Try to get image source from src, data-src, or href
             const src = trigger.src || trigger.dataset.src || trigger.href;
             if (src) {
+                lastTrigger = trigger;
                 lbImg.src = src;
                 lb.style.display = 'flex';
             }
@@ -60,7 +67,102 @@ function initLightbox() {
     });
 
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') lb.style.display = 'none';
+        if (e.key === 'Escape') closeLightbox();
+    });
+
+    lb.addEventListener('click', closeLightbox);
+    document.getElementById('sh-lightbox-close')?.addEventListener('click', closeLightbox);
+
+    document.getElementById('sh-lightbox-download')?.addEventListener('click', () => {
+        if (!lastTrigger) return;
+        const fileId = lastTrigger.dataset.fileId;
+        if (fileId) {
+            window.location.href = '/files/' + fileId + '/download';
+        } else {
+            const src = lbImg.src;
+            const match = src.match(/\/files\/(\d+)\/view/);
+            if (match) {
+                window.location.href = '/files/' + match[1] + '/download';
+            }
+        }
+    });
+
+    document.getElementById('sh-lightbox-edit-btn')?.addEventListener('click', () => {
+        if (!lastTrigger) return;
+        const src = lbImg.src;
+        const fileId = lastTrigger.dataset.fileId;
+        const folderId = lastTrigger.dataset.fileFolderId;
+        const filename = lastTrigger.dataset.fileName || 'image.png';
+        closeLightbox();
+
+        if (fileId && folderId && window.ImageEditor) {
+            window.ImageEditor.open({
+                source: src,
+                filename: filename,
+                mode: 'file-existing',
+                onSave: function(blob, choice, customName) {
+                    var fd = new FormData();
+                    var pngName = filename.replace(/\.[^.]+$/, '') + '.png';
+                    var tokenEl = document.querySelector('meta[name="_csrf"]');
+                    var headerEl = document.querySelector('meta[name="_csrf_header"]');
+                    var h = {};
+                    if (tokenEl && headerEl) h[headerEl.content] = tokenEl.content;
+
+                    function reloadLibrary() {
+                        var isDashboard = !!document.getElementById('library-grid-container');
+                        var url = isDashboard ? '/dashboard' : ('/folders/' + folderId + '?tab=files');
+                        var targetId = isDashboard ? 'library-grid-container' : 'folder-tabs-section';
+                        return fetch(url, {
+                            headers: { 'HX-Request': 'true', 'HX-Target': targetId },
+                        }).then(function(r) { return r.text(); }).then(function(html) {
+                            var container = document.getElementById(targetId);
+                            if (!container) return;
+                            if (targetId === 'folder-tabs-section') {
+                                container.outerHTML = html;
+                                container = document.getElementById(targetId);
+                            } else {
+                                container.innerHTML = html;
+                            }
+                            if (typeof initLucide === 'function') initLucide();
+                            if (window.htmx) htmx.process(container);
+                            var t = Date.now();
+                            container.querySelectorAll('img[src*="/files/"]').forEach(function (img) {
+                                var s = img.getAttribute('src');
+                                if (s) img.setAttribute('src', s + (s.indexOf('?') === -1 ? '?t=' : '&t=') + t);
+                            });
+                        });
+                    }
+
+                    if (choice === 'new') {
+                        fd.append('file', blob, pngName);
+                        return fetch('/folders/' + folderId + '/files', {
+                            method: 'POST',
+                            body: fd,
+                            headers: h,
+                        }).then(function(resp) {
+                            if (!resp.ok) throw new Error('Upload failed');
+                            return reloadLibrary();
+                        });
+                    } else {
+                        fd.append('image', blob, pngName);
+                        return fetch('/files/' + fileId + '/edit', {
+                            method: 'POST',
+                            body: fd,
+                            headers: h,
+                        }).then(function(resp) {
+                            if (!resp.ok) throw new Error('Save failed');
+                            return reloadLibrary();
+                        });
+                    }
+                },
+            });
+        } else if (window.ImageEditor) {
+            window.ImageEditor.open({
+                source: src,
+                filename: filename,
+                mode: 'flashcard-new',
+            });
+        }
     });
 }
 

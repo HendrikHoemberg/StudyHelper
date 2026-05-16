@@ -103,7 +103,8 @@
                        class="sh-deck-cover"
                        th:data-file-id="${file.id}"
                        th:data-file-url="@{/files/{id}/view(id=${file.id})}"
-                       th:data-file-name="${file.originalFilename}">
+                       th:data-file-name="${file.originalFilename}"
+                       th:data-file-folder-id="${file.folderId}">
                         <img th:if="${#strings.startsWith(file.mimeType, 'image/')}"
                              th:src="@{/files/{id}/view(id=${file.id})}"
                              class="sh-deck-cover-img" alt="Preview">
