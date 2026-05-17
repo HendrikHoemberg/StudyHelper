@@ -126,6 +126,25 @@ class AiQuizServiceTests {
     }
 
     @Test
+    void generate_Mixed_InterleavesGroupedChoiceAndTrueFalseQuestions() {
+        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
+            mcq("Q1", 0), mcq("Q2", 1), mcq("Q3", 2),
+            tf("Q4", 0), tf("Q5", 1), tf("Q6", 0)
+        ));
+
+        List<QuizQuestion> result = service.generate(cards(6), List.of(), 6, QuizQuestionMode.MIXED, Difficulty.MEDIUM);
+
+        assertThat(result).extracting(QuizQuestion::type).containsExactly(
+            QuestionType.MULTIPLE_CHOICE,
+            QuestionType.TRUE_FALSE,
+            QuestionType.MULTIPLE_CHOICE,
+            QuestionType.TRUE_FALSE,
+            QuestionType.MULTIPLE_CHOICE,
+            QuestionType.TRUE_FALSE
+        );
+    }
+
+    @Test
     void generate_LowercaseTfOptions_NormalizedToTitleCase() {
         when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
             tfLower("Q1", 0), tfLower("Q2", 1)

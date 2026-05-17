@@ -123,7 +123,11 @@ public class AiQuizService {
                     new IllegalStateException("AI response contained " + valid.size() + " valid quiz questions for requested count " + count + "."));
             }
 
-            return valid.stream().limit(count).toList();
+            List<QuizQuestion> ordered = mode == QuizQuestionMode.MIXED
+                ? interleaveMixedQuestions(valid)
+                : valid;
+
+            return ordered.stream().limit(count).toList();
 
         } catch (IllegalStateException | IllegalArgumentException e) {
             throw e;
@@ -185,6 +189,40 @@ public class AiQuizService {
             : QuestionType.MULTIPLE_CHOICE;
     }
 
+    private List<QuizQuestion> interleaveMixedQuestions(List<QuizQuestion> questions) {
+        List<QuizQuestion> choiceQuestions = questions.stream()
+            .filter(q -> q.type() != QuestionType.TRUE_FALSE)
+            .toList();
+        List<QuizQuestion> trueFalseQuestions = questions.stream()
+            .filter(q -> q.type() == QuestionType.TRUE_FALSE)
+            .toList();
+
+        if (choiceQuestions.isEmpty() || trueFalseQuestions.isEmpty()) {
+            return questions;
+        }
+
+        boolean choiceTurn = questions.get(0).type() != QuestionType.TRUE_FALSE;
+        int choiceIndex = 0;
+        int trueFalseIndex = 0;
+        List<QuizQuestion> mixed = new ArrayList<>(questions.size());
+
+        while (choiceIndex < choiceQuestions.size() || trueFalseIndex < trueFalseQuestions.size()) {
+            if (choiceTurn && choiceIndex < choiceQuestions.size()) {
+                mixed.add(choiceQuestions.get(choiceIndex++));
+            } else if (!choiceTurn && trueFalseIndex < trueFalseQuestions.size()) {
+                mixed.add(trueFalseQuestions.get(trueFalseIndex++));
+            } else if (choiceIndex < choiceQuestions.size()) {
+                mixed.add(choiceQuestions.get(choiceIndex++));
+            } else {
+                mixed.add(trueFalseQuestions.get(trueFalseIndex++));
+            }
+
+            choiceTurn = !choiceTurn;
+        }
+
+        return mixed;
+    }
+
     private String buildPrompt(String cardContent, String docContent, String pdfListing,
                                 int count, QuizQuestionMode mode, Difficulty difficulty,
                                 int mcqCount, int tfCount, String additionalInstructions) {
@@ -211,7 +249,8 @@ public class AiQuizService {
                 - MULTIPLE_CHOICE: exactly 4 options; correctOptionIndices lists exactly 1 index.
                 - MULTIPLE_SELECT: exactly 4 options; correctOptionIndices lists 2 or 3 distinct indices.
                 - TRUE_FALSE: options must be exactly ["True","False"]; correctOptionIndices lists exactly 1 index: 0 (True) or 1 (False).
-                - Generate exactly the requested split as specified above.""";
+                - Generate exactly the requested split as specified above.
+                - Interleave choice and true/false questions throughout the list. Do not group all choice questions first or all true/false questions last.""";
         };
 
         String perOptionAnalysis = """
