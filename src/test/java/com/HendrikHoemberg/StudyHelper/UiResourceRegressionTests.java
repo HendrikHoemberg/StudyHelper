@@ -174,7 +174,11 @@ class UiResourceRegressionTests {
             .contains("initSourceFolderTree")
             .contains("vb-folder-toggle")
             .contains("aria-expanded")
-            .contains("openFoldersWithSelection");
+            .contains("openFoldersWithSelection")
+            .contains("sourceTreeScrollTop")
+            .contains("htmx:beforeSwap")
+            .contains("htmx:afterSwap")
+            .contains(".vb-source-scroll");
     }
 
     @Test

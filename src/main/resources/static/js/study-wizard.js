@@ -1,6 +1,7 @@
 (function () {
     let currentStep = 1;
     let currentMode = 'FLASHCARDS';
+    let sourceTreeScrollTop = 0;
 
     const STEP_LABELS = {
         FLASHCARDS: ["Mode", "Type", "Decks", "Order"],
@@ -590,6 +591,19 @@
 
     // Initialize on first page load
     document.addEventListener('DOMContentLoaded', window.initStudyWizard);
+
+    document.body.addEventListener('htmx:beforeSwap', function (e) {
+        if (e.detail.target?.id !== 'setup-picker') return;
+        const scroll = e.detail.target.querySelector('.vb-source-scroll');
+        if (scroll) sourceTreeScrollTop = scroll.scrollTop;
+    });
+
+    document.body.addEventListener('htmx:afterSwap', function (e) {
+        if (e.detail.target?.id !== 'setup-picker') return;
+        const picker = document.getElementById('setup-picker');
+        const scroll = picker?.querySelector('.vb-source-scroll');
+        if (scroll) scroll.scrollTop = sourceTreeScrollTop;
+    });
 
     // Re-initialize after HTMX injects the wizard via navigation
     document.body.addEventListener('htmx:afterSettle', function (e) {
