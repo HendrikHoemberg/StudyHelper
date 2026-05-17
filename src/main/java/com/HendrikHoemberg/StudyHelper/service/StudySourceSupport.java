@@ -16,7 +16,10 @@ public final class StudySourceSupport {
     /** Upper bound on the combined extracted-text length of a generation request. */
     public static final long MAX_SELECTION_CHARS = 150_000;
 
-    /** Largest number of questions a single generation request may ask for. */
+    /** Largest number of quiz questions a single generation request may ask for. */
+    public static final int MAX_QUIZ_QUESTION_COUNT = 100;
+
+    /** Largest number of exam questions a single generation request may ask for. */
     public static final int MAX_QUESTION_COUNT = 20;
 
     private StudySourceSupport() {
@@ -31,6 +34,11 @@ public final class StudySourceSupport {
     /** Clamps a requested question count into the supported 1..MAX range. */
     public static int normalizeQuestionCount(int count) {
         return Math.max(1, Math.min(count, MAX_QUESTION_COUNT));
+    }
+
+    /** Clamps a requested quiz question count into the supported 1..MAX range. */
+    public static int normalizeQuizQuestionCount(int count) {
+        return Math.max(1, Math.min(count, MAX_QUIZ_QUESTION_COUNT));
     }
 
     public static boolean isPdf(FileEntry file) {

@@ -175,7 +175,9 @@ class UiResourceRegressionTests {
             .contains("data-step=\"3\" data-mode=\"QUIZ\"")
             .contains("Quiz Settings")
             .contains("class=\"sh-number-stepper\"")
-            .contains("name=\"questionCount\"");
+            .contains("name=\"questionCount\"")
+            .contains("Choose between 1 and 100 generated questions.")
+            .contains("max=\"100\"");
 
         assertThat(examTemplate)
             .contains("data-step=\"3\" data-mode=\"EXAM\"")
@@ -190,7 +192,11 @@ class UiResourceRegressionTests {
         assertThat(styles)
             .contains(".sh-number-stepper")
             .contains(".sh-stepper-btn")
+            .contains("touch-action: manipulation")
             .contains("appearance: textfield");
+
+        assertThat(wizardJs)
+            .contains("Please enter a question count between 1 and 100.");
     }
 
     @Test

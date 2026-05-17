@@ -228,8 +228,8 @@
         if (step === 3) {
             if (currentMode === 'QUIZ') {
                 const countInput = document.querySelector('input[name="questionCount"]');
-                if (countInput && (parseInt(countInput.value) < 1 || parseInt(countInput.value) > 20)) {
-                    shAlert({ title: 'Invalid value', message: 'Please enter a question count between 1 and 20.' });
+                if (countInput && (parseInt(countInput.value) < 1 || parseInt(countInput.value) > 100)) {
+                    shAlert({ title: 'Invalid value', message: 'Please enter a question count between 1 and 100.' });
                     return false;
                 }
             }

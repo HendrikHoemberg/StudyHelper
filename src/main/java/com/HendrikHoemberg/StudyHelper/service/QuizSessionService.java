@@ -69,7 +69,7 @@ public class QuizSessionService {
         Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
         QuizGenerationInput input = validateRequestWithSources(deckIds, fileIds, pdfMode, user);
 
-        int qCount = StudySourceSupport.normalizeQuestionCount(requestedQuestionCount);
+        int qCount = StudySourceSupport.normalizeQuizQuestionCount(requestedQuestionCount);
         aiRequestQuotaService.checkAndRecord(user);
 
         List<QuizQuestion> questions = aiQuizService.generate(
