@@ -29,22 +29,6 @@
         
         currentMode = mode;
         document.getElementById('study-mode-input').value = mode;
-        
-        // UI feedback: animate chosen card to center
-        const container = element.closest('.sh-study-mode-grid');
-        const allCards = container.querySelectorAll('.sh-study-choice');
-        const rect = element.getBoundingClientRect();
-        const parentRect = container.getBoundingClientRect();
-        const slideX = (parentRect.left + parentRect.width/2) - (rect.left + rect.width/2);
-
-        allCards.forEach(card => {
-            if (card === element) {
-                card.style.setProperty('--slide-x', `${slideX}px`);
-                card.classList.add('is-selected-animating');
-            } else {
-                card.classList.add('is-unselected');
-            }
-        });
 
         // HTMX update picker for the new mode.
         // If no checkboxes exist yet (picker was hidden because mode was null on load),
@@ -64,30 +48,11 @@
             swap: 'outerHTML'
         });
 
-        setTimeout(() => {
-            goToStep(2);
-            // Reset animation classes after transition
-            setTimeout(() => {
-                allCards.forEach(c => {
-                    c.classList.remove('is-selected-animating', 'is-unselected');
-                    c.style.removeProperty('--slide-x');
-                });
-            }, 800);
-        }, 900);
+        goToStep(2);
     };
 
     function goToStep(step) {
         if (currentStep === step) return;
-
-        const activePanel = document.querySelector('.sh-wizard-panel.is-active');
-        if (activePanel) {
-            activePanel.classList.remove('is-active-fade');
-            activePanel.classList.add('is-fading-out');
-            activePanel.classList.remove('is-active');
-            setTimeout(() => {
-                activePanel.classList.remove('is-fading-out');
-            }, 500);
-        }
         switchContent(step);
     }
 
@@ -111,12 +76,6 @@
             }
             
             panel.classList.toggle('is-active', isTarget);
-            if (isTarget) {
-                panel.offsetHeight; // trigger reflow
-                panel.classList.add('is-active-fade');
-            } else {
-                panel.classList.remove('is-active-fade');
-            }
         });
 
         updateStepIndicator();

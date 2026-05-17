@@ -123,6 +123,27 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void studyWizardDoesNotUseAnimationHooksOrDelayedStepSwitching() throws IOException {
+        String styles = resource("static/css/styles.css");
+        String wizardJs = resource("static/js/study-wizard.js");
+
+        assertThat(wizardJs)
+            .doesNotContain("setTimeout")
+            .doesNotContain("is-selected-animating")
+            .doesNotContain("is-unselected")
+            .doesNotContain("is-active-fade")
+            .doesNotContain("is-fading-out")
+            .doesNotContain("--slide-x");
+
+        assertThat(styles)
+            .doesNotContain(".sh-study-choice.is-unselected")
+            .doesNotContain(".sh-study-choice.is-selected-animating")
+            .doesNotContain(".sh-wizard-panel.is-active-fade")
+            .doesNotContain(".sh-wizard-panel.is-fading-out")
+            .doesNotContain("transition: opacity 0.5s cubic-bezier");
+    }
+
+    @Test
     void studyWizardDoesNotRenderStandalonePageHeader() throws IOException {
         String template = resource("templates/fragments/study-setup.html");
 
