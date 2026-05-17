@@ -47,6 +47,24 @@
     cursor: pointer;
 }
 
+.sh-ps-zoom-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.sh-ps-zoom-reset {
+    min-width: 3.25rem;
+    height: 2rem;
+    border: 1px solid var(--border-light, #e2e8f0);
+    border-radius: 0.5rem;
+    background: var(--bg, #fff);
+    color: var(--text, #0f172a);
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
 .sh-ps-body {
     position: relative;
     flex: 1;
@@ -76,7 +94,8 @@
     overflow: auto;
     padding: 1.25rem;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    --sh-ps-page-width: 320px;
+    grid-template-columns: repeat(auto-fill, minmax(var(--sh-ps-page-width), 1fr));
     gap: 2.5rem;
     align-content: start;
 }

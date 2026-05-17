@@ -9,12 +9,18 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/lib/pdfjs/pdf.worker.min.mjs';
 const $id = (id) => document.getElementById(id);
 const THUMB_WIDTH = 300;
 const TINT_COUNT = 6;
+const PAGE_ZOOM_DEFAULT = 1;
+const PAGE_ZOOM_MIN = 0.6;
+const PAGE_ZOOM_MAX = 1.6;
+const PAGE_ZOOM_STEP = 0.2;
+const PAGE_WIDTH_BASE = 320;
 
 let _pdf = null;        // PDFDocumentProxy
 let _opts = null;       // { fileId, url, name }
 let _numPages = 0;
 let _breaks = new Set();  // page numbers AFTER which a split occurs
 let _selectedPartIndexes = new Set();
+let _pageZoom = PAGE_ZOOM_DEFAULT;
 let _wired = false;
 const _historyKey = { ps: true };
 
@@ -47,13 +53,32 @@ function _showFooterError(msg) {
     el.style.display = msg ? '' : 'none';
 }
 
+function _setPageZoom(nextZoom) {
+    _pageZoom = Math.min(PAGE_ZOOM_MAX, Math.max(PAGE_ZOOM_MIN, nextZoom));
+    _pageZoom = Math.round(_pageZoom * 10) / 10;
+    _applyPageZoom();
+}
+
+function _applyPageZoom() {
+    const grid = $id('sh-ps-pages');
+    const reset = $id('sh-ps-zoom-reset');
+    const zoomOut = $id('sh-ps-zoom-out');
+    const zoomIn = $id('sh-ps-zoom-in');
+    if (grid) grid.style.setProperty('--sh-ps-page-width', Math.round(PAGE_WIDTH_BASE * _pageZoom) + 'px');
+    if (reset) reset.textContent = Math.round(_pageZoom * 100) + '%';
+    if (zoomOut) zoomOut.disabled = _pageZoom <= PAGE_ZOOM_MIN;
+    if (zoomIn) zoomIn.disabled = _pageZoom >= PAGE_ZOOM_MAX;
+}
+
 async function open(opts) {
     _opts = opts || {};
     _breaks = new Set();
     _selectedPartIndexes = new Set();
+    _pageZoom = PAGE_ZOOM_DEFAULT;
     const modal = $id('sh-ps-modal');
     if (!modal) { console.error('PdfSplitter: #sh-ps-modal not found'); return; }
     _wire();
+    _applyPageZoom();
     $id('sh-ps-title').textContent = 'Split \u2014 ' + (_opts.name || 'PDF');
     $id('sh-ps-pages').innerHTML = '';
     $id('sh-ps-parts').innerHTML = '';
@@ -292,6 +317,9 @@ function _wire() {
     $id('sh-ps-close-btn').addEventListener('click', close);
     $id('sh-ps-cancel-btn').addEventListener('click', close);
     $id('sh-ps-save-btn').addEventListener('click', _save);
+    $id('sh-ps-zoom-out').addEventListener('click', () => _setPageZoom(_pageZoom - PAGE_ZOOM_STEP));
+    $id('sh-ps-zoom-reset').addEventListener('click', () => _setPageZoom(PAGE_ZOOM_DEFAULT));
+    $id('sh-ps-zoom-in').addEventListener('click', () => _setPageZoom(_pageZoom + PAGE_ZOOM_STEP));
     document.addEventListener('keydown', _onKeydown);
     window.addEventListener('popstate', () => { if (_isOpen()) close(); });
 }

@@ -555,15 +555,23 @@ class UiResourceRegressionTests {
             .contains("id=\"sh-ps-modal\"")
             .contains("id=\"sh-ps-pages\"")
             .contains("id=\"sh-ps-parts\"")
-            .contains("id=\"sh-ps-save-btn\"");
+            .contains("id=\"sh-ps-save-btn\"")
+            .contains("id=\"sh-ps-zoom-out\"")
+            .contains("id=\"sh-ps-zoom-reset\"")
+            .contains("id=\"sh-ps-zoom-in\"");
         assertThat(css)
             .contains(".sh-ps-modal")
-            .contains(".sh-ps-part.is-discarded");
+            .contains(".sh-ps-part.is-discarded")
+            .contains("--sh-ps-page-width")
+            .contains(".sh-ps-zoom-controls");
         assertThat(js)
             .contains("import * as pdfjsLib from '/js/lib/pdfjs/pdf.min.mjs'")
             .contains("window.PdfSplitter")
             .contains("sh-ps-part-keep")
-            .contains("_selectedPartIndexes");
+            .contains("_selectedPartIndexes")
+            .contains("let _pageZoom")
+            .contains("_applyPageZoom")
+            .contains("sh-ps-zoom-reset");
     }
 
     @Test
