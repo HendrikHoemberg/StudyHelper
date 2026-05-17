@@ -33,10 +33,22 @@
           class="sh-quiz-answer-form"
           th:data-question-type="${currentQuestion.type}">
 
-        <div class="sh-quiz-answer-hint" th:switch="${currentQuestion.type.name()}">
-            <span th:case="'MULTIPLE_SELECT'">Select all correct answers — more than one is correct.</span>
-            <span th:case="'TRUE_FALSE'">Select True or False.</span>
-            <span th:case="*">Select one answer.</span>
+        <div class="sh-quiz-answer-hint">
+            <div th:if="${currentQuestion.type.name() == 'MULTIPLE_SELECT'}" class="sh-quiz-type-badge sh-quiz-type-badge--multiple">
+                <iconify-icon icon="lucide:list-checks"></iconify-icon>
+                <span>Multiple answers</span>
+            </div>
+            <div th:if="${currentQuestion.type.name() == 'TRUE_FALSE'}" class="sh-quiz-type-badge">
+                <iconify-icon icon="lucide:toggle-left"></iconify-icon>
+                <span>True or false</span>
+            </div>
+            <div th:if="${currentQuestion.type.name() != 'MULTIPLE_SELECT' and currentQuestion.type.name() != 'TRUE_FALSE'}" class="sh-quiz-type-badge">
+                <iconify-icon icon="lucide:check"></iconify-icon>
+                <span>Single answer</span>
+            </div>
+            <span th:if="${currentQuestion.type.name() == 'MULTIPLE_SELECT'}" class="sh-quiz-answer-hint-text">Select all correct answers — more than one is correct.</span>
+            <span th:if="${currentQuestion.type.name() == 'TRUE_FALSE'}" class="sh-quiz-answer-hint-text">Select True or False.</span>
+            <span th:if="${currentQuestion.type.name() != 'MULTIPLE_SELECT' and currentQuestion.type.name() != 'TRUE_FALSE'}" class="sh-quiz-answer-hint-text">Select one answer.</span>
         </div>
 
         <div class="sh-quiz-options">
@@ -44,6 +56,9 @@
                     type="button"
                     class="sh-quiz-option"
                     th:data-index="${iter.index}">
+                <span th:if="${currentQuestion.type.name() == 'MULTIPLE_SELECT'}" class="sh-quiz-option-check" aria-hidden="true">
+                    <iconify-icon icon="lucide:check"></iconify-icon>
+                </span>
                 <span class="sh-quiz-option-letter" th:text="${{'A','B','C','D'}[iter.index]}">A</span>
                 <span class="sh-quiz-option-text" th:text="${option}">Option text</span>
             </button>

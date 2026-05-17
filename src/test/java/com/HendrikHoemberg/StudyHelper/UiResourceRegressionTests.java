@@ -732,6 +732,24 @@ class UiResourceRegressionTests {
             .contains("sh-quiz-answer-hint");
     }
 
+    @Test
+    void quizQuestionShowsDistinctMultipleSelectVisualCueWithoutChangingSingleChoiceMarkers() throws IOException {
+        String template = resource("templates/fragments/quiz-question.html");
+        String styles = resource("static/css/quiz.css");
+
+        assertThat(template)
+            .contains("sh-quiz-type-badge")
+            .contains("lucide:list-checks")
+            .contains("Multiple answers")
+            .contains("th:if=\"${currentQuestion.type.name() == 'MULTIPLE_SELECT'}\"")
+            .contains("sh-quiz-option-check");
+
+        assertThat(styles)
+            .contains(".sh-quiz-answer-form[data-question-type=\"MULTIPLE_SELECT\"] .sh-quiz-option")
+            .contains(".sh-quiz-option-check")
+            .contains(".sh-quiz-answer-form[data-question-type=\"MULTIPLE_SELECT\"] .sh-quiz-option.is-selected .sh-quiz-option-check");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }
