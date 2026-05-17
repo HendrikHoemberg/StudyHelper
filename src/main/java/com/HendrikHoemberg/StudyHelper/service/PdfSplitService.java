@@ -83,24 +83,21 @@ public class PdfSplitService {
     }
 
     private void validate(List<SplitPart> parts, int pageCount) {
-        if (parts == null || parts.size() < 2) {
-            throw new IllegalArgumentException("A split needs at least two parts.");
+        if (parts == null || parts.isEmpty()) {
+            throw new IllegalArgumentException("At least one part must be selected.");
         }
-        int expectedStart = 1;
+        int previousEnd = 0;
         for (SplitPart part : parts) {
             if (part.name() == null || part.name().isBlank()) {
                 throw new IllegalArgumentException("Every part needs a name.");
             }
-            if (part.startPage() != expectedStart) {
-                throw new IllegalArgumentException("Parts must cover the document without gaps.");
+            if (part.startPage() <= previousEnd) {
+                throw new IllegalArgumentException("Parts must be ordered and cannot overlap.");
             }
-            if (part.endPage() < part.startPage() || part.endPage() > pageCount) {
+            if (part.startPage() < 1 || part.endPage() < part.startPage() || part.endPage() > pageCount) {
                 throw new IllegalArgumentException("A part's page range is out of bounds.");
             }
-            expectedStart = part.endPage() + 1;
-        }
-        if (expectedStart != pageCount + 1) {
-            throw new IllegalArgumentException("Parts must cover every page of the document.");
+            previousEnd = part.endPage();
         }
     }
 

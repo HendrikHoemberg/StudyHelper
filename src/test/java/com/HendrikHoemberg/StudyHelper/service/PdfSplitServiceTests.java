@@ -100,19 +100,54 @@ class PdfSplitServiceTests {
     }
 
     @Test
-    void splitPdfRejectsRangesThatDoNotCoverEveryPage() throws IOException {
+    void splitPdfAllowsNonContiguousRangesWhenMiddlePartIsDiscarded() throws IOException {
         List<SplitPart> parts = List.of(
-            new SplitPart("a.pdf", 1, 2),
-            new SplitPart("b.pdf", 3, 4)
+            new SplitPart("intro.pdf", 1, 2),
+            new SplitPart("appendix.pdf", 5, 5)
         );
+
+        Long folderId = service.splitPdf(7L, parts, user);
+
+        assertThat(folderId).isEqualTo(42L);
+        ArgumentCaptor<byte[]> bytesCaptor = ArgumentCaptor.forClass(byte[].class);
+        verify(fileStorageService, times(2)).storeBytes(bytesCaptor.capture(), eq(".pdf"));
+        assertThat(pageCount(bytesCaptor.getAllValues().get(0))).isEqualTo(2);
+        assertThat(pageCount(bytesCaptor.getAllValues().get(1))).isEqualTo(1);
+    }
+
+    @Test
+    void splitPdfRejectsOverlappingRanges() throws IOException {
+        List<SplitPart> parts = List.of(
+            new SplitPart("a.pdf", 1, 3),
+            new SplitPart("b.pdf", 3, 5)
+        );
+
+        assertThatThrownBy(() -> service.splitPdf(7L, parts, user))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Parts must be ordered and cannot overlap.");
+    }
+
+    @Test
+    void splitPdfRejectsEmptyParts() throws IOException {
+        List<SplitPart> parts = List.of();
 
         assertThatThrownBy(() -> service.splitPdf(7L, parts, user))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void splitPdfRejectsFewerThanTwoParts() throws IOException {
+    void splitPdfAllowsOneSelectedPartWhenOtherSplitPartsAreDiscarded() throws IOException {
         List<SplitPart> parts = List.of(new SplitPart("a.pdf", 1, 5));
+
+        Long folderId = service.splitPdf(7L, parts, user);
+
+        assertThat(folderId).isEqualTo(42L);
+        verify(fileStorageService).storeBytes(any(), eq(".pdf"));
+    }
+
+    @Test
+    void splitPdfRejectsOutOfBoundsRanges() throws IOException {
+        List<SplitPart> parts = List.of(new SplitPart("a.pdf", 0, 5));
 
         assertThatThrownBy(() -> service.splitPdf(7L, parts, user))
             .isInstanceOf(IllegalArgumentException.class);

@@ -556,10 +556,14 @@ class UiResourceRegressionTests {
             .contains("id=\"sh-ps-pages\"")
             .contains("id=\"sh-ps-parts\"")
             .contains("id=\"sh-ps-save-btn\"");
-        assertThat(css).contains(".sh-ps-modal");
+        assertThat(css)
+            .contains(".sh-ps-modal")
+            .contains(".sh-ps-part.is-discarded");
         assertThat(js)
             .contains("import * as pdfjsLib from '/js/lib/pdfjs/pdf.min.mjs'")
-            .contains("window.PdfSplitter");
+            .contains("window.PdfSplitter")
+            .contains("sh-ps-part-keep")
+            .contains("_selectedPartIndexes");
     }
 
     @Test

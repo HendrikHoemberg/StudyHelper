@@ -14,6 +14,7 @@ let _pdf = null;        // PDFDocumentProxy
 let _opts = null;       // { fileId, url, name }
 let _numPages = 0;
 let _breaks = new Set();  // page numbers AFTER which a split occurs
+let _selectedPartIndexes = new Set();
 let _wired = false;
 const _historyKey = { ps: true };
 
@@ -49,6 +50,7 @@ function _showFooterError(msg) {
 async function open(opts) {
     _opts = opts || {};
     _breaks = new Set();
+    _selectedPartIndexes = new Set();
     const modal = $id('sh-ps-modal');
     if (!modal) { console.error('PdfSplitter: #sh-ps-modal not found'); return; }
     _wire();
@@ -121,6 +123,12 @@ function _toggleBreak(afterPage) {
     _refreshParts();
 }
 
+function _togglePart(index, selected) {
+    if (selected) _selectedPartIndexes.add(index);
+    else _selectedPartIndexes.delete(index);
+    _refreshParts();
+}
+
 function _computeParts() {
     const sorted = Array.from(_breaks).sort((a, b) => a - b);
     const ranges = [];
@@ -131,6 +139,10 @@ function _computeParts() {
     });
     ranges.push({ startPage: start, endPage: _numPages });
     return ranges;
+}
+
+function _rangeKey(range) {
+    return range.startPage + '-' + range.endPage;
 }
 
 function _refreshParts() {
@@ -146,32 +158,58 @@ function _refreshParts() {
 
     const panel = $id('sh-ps-parts');
     const prev = [];
+    const prevSelected = new Map();
     panel.querySelectorAll('.sh-ps-part-name').forEach((inp) => prev.push(inp.value));
+    panel.querySelectorAll('.sh-ps-part').forEach((row) => {
+        const checkbox = row.querySelector('.sh-ps-part-keep input');
+        if (row.dataset.range && checkbox) prevSelected.set(row.dataset.range, checkbox.checked);
+    });
     panel.innerHTML = '';
+    _selectedPartIndexes = new Set();
     const base = _baseName(_opts.name);
     ranges.forEach((r, i) => {
-        const row = document.createElement('div');
-        row.className = 'sh-ps-part';
-        row.dataset.part = String(i % TINT_COUNT);
+        const rangeKey = _rangeKey(r);
+        const selected = prevSelected.has(rangeKey) ? prevSelected.get(rangeKey) : true;
+        if (selected) _selectedPartIndexes.add(i);
+        else _selectedPartIndexes.delete(i);
 
-        const head = document.createElement('div');
+        const row = document.createElement('div');
+        row.className = 'sh-ps-part' + (selected ? '' : ' is-discarded');
+        row.dataset.part = String(i % TINT_COUNT);
+        row.dataset.range = rangeKey;
+
+        const label = document.createElement('label');
+        label.className = 'sh-ps-part-keep';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = selected;
+        checkbox.setAttribute('aria-label', 'Save part ' + (i + 1));
+        checkbox.addEventListener('change', () => _togglePart(i, checkbox.checked));
+        label.appendChild(checkbox);
+
+        const head = document.createElement('span');
         head.className = 'sh-ps-part-head';
         head.textContent = r.endPage > r.startPage
             ? 'Part ' + (i + 1) + ' \u00b7 pages ' + r.startPage + '\u2013' + r.endPage
             : 'Part ' + (i + 1) + ' \u00b7 page ' + r.startPage;
-        row.appendChild(head);
+        label.appendChild(head);
+        row.appendChild(label);
 
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'sh-input sh-ps-part-name';
         input.value = prev[i] !== undefined ? prev[i] : base + '-' + (i + 1) + '.pdf';
+        input.disabled = !selected;
         row.appendChild(input);
 
         panel.appendChild(row);
     });
 
-    $id('sh-ps-save-count').textContent = String(ranges.length);
-    $id('sh-ps-save-btn').disabled = ranges.length < 2;
+    const selectedCount = _selectedPartIndexes.size;
+    $id('sh-ps-save-count').textContent = String(selectedCount);
+    $id('sh-ps-save-label').textContent = selectedCount === 1 ? 'part' : 'parts';
+    $id('sh-ps-save-btn').disabled = ranges.length < 2 || selectedCount < 1;
 }
 
 function _csrfHeaders() {
@@ -207,12 +245,15 @@ function _save() {
     if (ranges.length < 2) return;
     const inputs = document.querySelectorAll('#sh-ps-parts .sh-ps-part-name');
     const base = _baseName(_opts.name);
-    const parts = ranges.map((r, i) => {
+    const parts = ranges.reduce((out, r, i) => {
+        if (!_selectedPartIndexes.has(i)) return out;
         let name = (inputs[i] ? inputs[i].value : '').trim();
         if (name === '') name = base + '-' + (i + 1) + '.pdf';
         if (!/\.pdf$/i.test(name)) name += '.pdf';
-        return { name: name, startPage: r.startPage, endPage: r.endPage };
-    });
+        out.push({ name: name, startPage: r.startPage, endPage: r.endPage });
+        return out;
+    }, []);
+    if (parts.length < 1) return;
 
     _showFooterError('');
     $id('sh-ps-save-btn').disabled = true;
@@ -264,6 +305,7 @@ function close() {
     if (pages) pages.innerHTML = '';
     if (parts) parts.innerHTML = '';
     _breaks = new Set();
+    _selectedPartIndexes = new Set();
     _opts = null;
 }
 

@@ -161,8 +161,27 @@
     background: var(--bg, #fff);
 }
 
-.sh-ps-part-head {
+.sh-ps-part.is-discarded {
+    opacity: 0.55;
+}
+
+.sh-ps-part.is-discarded .sh-ps-part-name {
+    cursor: not-allowed;
+}
+
+.sh-ps-part-keep {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
     margin-bottom: 0.4rem;
+    cursor: pointer;
+}
+
+.sh-ps-part-keep input {
+    flex: 0 0 auto;
+}
+
+.sh-ps-part-head {
     font-size: 0.8125rem;
     font-weight: 600;
 }
