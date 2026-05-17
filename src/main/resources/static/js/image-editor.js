@@ -1461,20 +1461,24 @@
             if (!btn) return;
             e.preventDefault();
 
-            var fileId   = btn.dataset.editImage;
-            var url      = btn.dataset.editUrl;
-            var folderId = btn.dataset.editFolder;
-            var filename = btn.dataset.editFilename || 'image.png';
+            openFileEdit(btn);
+        });
+    }
 
-            ImageEditor.open({
-                source:   url + (url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now(),
-                filename: filename,
-                mode:     'file-existing',
-                onSave:   function(blob, choice, customName) {
-                    var saveFilename = customName || filename;
-                    return _saveFileEdit(blob, choice, fileId, folderId, saveFilename);
-                },
-            });
+    function openFileEdit(btn) {
+        var fileId   = btn.dataset.editImage;
+        var url      = btn.dataset.editUrl;
+        var folderId = btn.dataset.editFolder;
+        var filename = btn.dataset.editFilename || 'image.png';
+
+        open({
+            source:   url + (url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now(),
+            filename: filename,
+            mode:     'file-existing',
+            onSave:   function(blob, choice, customName) {
+                var saveFilename = customName || filename;
+                return _saveFileEdit(blob, choice, fileId, folderId, saveFilename);
+            },
         });
     }
 
@@ -1484,5 +1488,5 @@
         _initFolderDetailEdit();
     });
 
-    window.ImageEditor = { open: open, close: close };
+    window.ImageEditor = { open: open, close: close, openFileEdit: openFileEdit };
 }());

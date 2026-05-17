@@ -153,6 +153,8 @@ function _toSplitter() {
     close();
     if (window.PdfSplitter) {
         window.PdfSplitter.open(opts);
+    } else if (window.ensurePdfSplitter) {
+        window.ensurePdfSplitter().then((splitter) => splitter.open(opts));
     } else {
         console.error('PdfViewer: PdfSplitter is not available');
     }
@@ -191,16 +193,5 @@ function close() {
     if (pages) pages.innerHTML = '';
     _opts = null;
 }
-
-document.addEventListener('click', (e) => {
-    const trigger = e.target.closest('.sh-pdf-viewer-trigger');
-    if (!trigger) return;
-    e.preventDefault();
-    open({
-        fileId: trigger.dataset.fileId,
-        url: trigger.dataset.fileUrl,
-        name: trigger.dataset.fileName,
-    });
-});
 
 window.PdfViewer = { open, close };

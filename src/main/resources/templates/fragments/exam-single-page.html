@@ -5,7 +5,7 @@
          class="sh-exam-timer" 
          th:data-started-at="${state.startedAt()}"
          th:data-timer-minutes="${state.config().timerMinutes()}">
-        <i class="fa-solid fa-clock"></i>
+        <iconify-icon icon="lucide:clock"></iconify-icon>
         <span>--:--</span>
     </div>
 
@@ -27,7 +27,7 @@
 
         <div class="d-flex justify-content-center py-4">
             <button type="submit" class="sh-btn sh-btn-success sh-btn-lg">
-                <i class="fa-solid fa-paper-plane me-2"></i> Submit Exam
+                <iconify-icon icon="lucide:send"></iconify-icon> Submit Exam
             </button>
         </div>
     </form>

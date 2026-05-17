@@ -267,15 +267,4 @@ function close() {
     _opts = null;
 }
 
-document.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-split-file-id]');
-    if (!btn) return;
-    e.preventDefault();
-    open({
-        fileId: btn.dataset.splitFileId,
-        url: btn.dataset.splitUrl,
-        name: btn.dataset.splitFilename,
-    });
-});
-
 window.PdfSplitter = { open, close };

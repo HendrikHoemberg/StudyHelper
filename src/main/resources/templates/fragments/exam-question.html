@@ -9,7 +9,7 @@
          class="sh-exam-timer" 
          th:data-started-at="${state.startedAt()}"
          th:data-timer-minutes="${state.config().timerMinutes()}">
-        <i class="fa-solid fa-clock"></i>
+        <iconify-icon icon="lucide:clock"></iconify-icon>
         <span>--:--</span>
     </div>
 
@@ -35,7 +35,7 @@
                         th:hx-vals="${'js:{currentIndex: ' + currentIndex + '}'}"
                         hx-target="#exam-runtime"
                         hx-swap="outerHTML">
-                    <i class="fa-solid fa-chevron-left me-2"></i> Previous
+                    <iconify-icon icon="lucide:chevron-left"></iconify-icon> Previous
                 </button>
             </div>
 
@@ -47,7 +47,7 @@
                         hx-target="#exam-runtime"
                         hx-swap="outerHTML"
                         hx-disabled-elt="this">
-                    Next <i class="fa-solid fa-chevron-right ms-2"></i>
+                    Next <iconify-icon icon="lucide:chevron-right"></iconify-icon>
                 </button>
 
                 <button th:if="${isLast}"
@@ -58,7 +58,7 @@
                         hx-swap="outerHTML"
                         hx-indicator="#grading-loader"
                         hx-disabled-elt="this">
-                    <i class="fa-solid fa-paper-plane me-2"></i> Submit Exam
+                    <iconify-icon icon="lucide:send"></iconify-icon> Submit Exam
                 </button>
             </div>
         </div>

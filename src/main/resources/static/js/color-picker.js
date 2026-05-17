@@ -472,5 +472,5 @@
     document.addEventListener('DOMContentLoaded', autoInit);
     document.addEventListener('htmx:afterSwap', autoInit);
 
-    window.ColorPicker = { attach: attach, open: open, close: close, parse: parseColor, format: rgbToHex };
+    window.ColorPicker = { attach: attach, open: open, close: close, parse: parseColor, format: rgbToHex, autoInit: autoInit };
 }());

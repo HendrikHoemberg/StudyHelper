@@ -205,7 +205,13 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', init);
+    window.initExamRuntime = init;
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
     document.addEventListener('htmx:afterSwap', init);
 
 })();

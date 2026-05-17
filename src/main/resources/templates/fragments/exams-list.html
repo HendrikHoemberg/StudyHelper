@@ -12,14 +12,14 @@
         <div class="sh-page-actions">
             <a href="/study/start?mode=EXAM" class="sh-btn sh-btn-primary"
                hx-get="/study/start?mode=EXAM" hx-target="#explorer-detail" hx-push-url="true">
-                <i class="fa-solid fa-pencil-line me-2"></i> Take New Exam
+                <iconify-icon icon="lucide:pencil-line"></iconify-icon> Take New Exam
             </a>
         </div>
     </div>
 
     <div th:if="${#lists.isEmpty(exams)}" class="sh-empty mt-5">
         <div class="sh-empty-icon">
-            <i class="fa-solid fa-clipboard-list"></i>
+            <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
         </div>
         <p class="sh-empty-text">No exams taken yet</p>
         <p class="sh-empty-hint">Start an exam session to see your progress and AI feedback here.</p>
@@ -39,7 +39,7 @@
                 <div class="sh-exam-card-title-group">
                     <h3 class="sh-exam-card-title" th:text="${exam.title}">Exam Title</h3>
                     <div class="sh-exam-card-meta">
-                        <span><i class="fa-solid fa-calendar-day"></i> <span th:text="${#temporals.format(exam.completedAt, 'd MMM yyyy')}">12 May 2026</span></span>
+                        <span><iconify-icon icon="lucide:calendar-days"></iconify-icon> <span th:text="${#temporals.format(exam.completedAt, 'd MMM yyyy')}">12 May 2026</span></span>
                     </div>
                 </div>
             </div>
@@ -52,14 +52,14 @@
                 <a th:href="@{/exams/{id}(id=${exam.id})}" class="sh-btn sh-btn-secondary sh-btn-sm"
                    hx-get th:hx-get="@{/exams/{id}(id=${exam.id})}"
                    hx-target="#explorer-detail" hx-push-url="true">
-                    <i class="fa-solid fa-eye me-1"></i> View Report
+                    <iconify-icon icon="lucide:eye"></iconify-icon> View Report
                 </a>
                 <button class="sh-btn sh-btn-ghost sh-btn-icon sh-btn-sm ms-auto text-danger"
                         th:hx-delete="@{/exams/{id}(id=${exam.id})}"
                         hx-target="closest .sh-exam-card"
                         hx-swap="outerHTML"
                         hx-confirm="Delete this exam result? This cannot be undone.">
-                    <i class="fa-solid fa-trash-can"></i>
+                    <iconify-icon icon="lucide:trash-2"></iconify-icon>
                 </button>
             </div>
         </div>

@@ -11,16 +11,16 @@
         <div class="sh-exam-result-info">
             <h1 th:text="${exam.title}">Exam Results</h1>
             <div class="sh-exam-result-meta">
-                <span><i class="fa-solid fa-calendar-day"></i> <span th:text="${#temporals.format(exam.completedAt, 'd MMM yyyy, HH:mm')}">12 May 2026</span></span>
-                <span><i class="fa-solid fa-layer-group"></i> <span th:text="${exam.questionSize}">MEDIUM</span> depth</span>
-                <span><i class="fa-solid fa-list-ol"></i> <span th:text="${exam.questionCount}">10</span> questions</span>
-                <span th:if="${exam.timerMinutes != null}"><i class="fa-solid fa-clock"></i> <span th:text="${exam.timerMinutes}">30</span> min limit</span>
+                <span><iconify-icon icon="lucide:calendar-days"></iconify-icon> <span th:text="${#temporals.format(exam.completedAt, 'd MMM yyyy, HH:mm')}">12 May 2026</span></span>
+                <span><iconify-icon icon="lucide:layers"></iconify-icon> <span th:text="${exam.questionSize}">MEDIUM</span> depth</span>
+                <span><iconify-icon icon="lucide:list-ordered"></iconify-icon> <span th:text="${exam.questionCount}">10</span> questions</span>
+                <span th:if="${exam.timerMinutes != null}"><iconify-icon icon="lucide:clock"></iconify-icon> <span th:text="${exam.timerMinutes}">30</span> min limit</span>
             </div>
         </div>
 
         <div class="ms-auto">
             <a th:href="@{/exams/{id}(id=${exam.id})}" class="sh-btn sh-btn-primary">
-                <i class="fa-solid fa-list me-2"></i> View Past Exams
+                <iconify-icon icon="lucide:list"></iconify-icon> View Past Exams
             </a>
         </div>
     </div>
@@ -28,25 +28,25 @@
     <!-- AI Report Grid -->
     <div class="sh-exam-report-grid" th:if="${report != null}">
         <div class="sh-exam-report-panel panel-strengths">
-            <h3><i class="fa-solid fa-circle-check"></i> Strengths</h3>
+            <h3><iconify-icon icon="lucide:circle-check"></iconify-icon> Strengths</h3>
             <ul>
                 <li th:each="s : ${report.strengths()}" th:text="${s}">Strength text</li>
             </ul>
         </div>
         <div class="sh-exam-report-panel panel-weaknesses">
-            <h3><i class="fa-solid fa-circle-xmark"></i> Weaknesses</h3>
+            <h3><iconify-icon icon="lucide:circle-x"></iconify-icon> Weaknesses</h3>
             <ul>
                 <li th:each="w : ${report.weaknesses()}" th:text="${w}">Weakness text</li>
             </ul>
         </div>
         <div class="sh-exam-report-panel panel-topics">
-            <h3><i class="fa-solid fa-book-open"></i> Topics to Revisit</h3>
+            <h3><iconify-icon icon="lucide:book-open"></iconify-icon> Topics to Revisit</h3>
             <ul>
                 <li th:each="t : ${report.topicsToRevisit()}" th:text="${t}">Topic name</li>
             </ul>
         </div>
         <div class="sh-exam-report-panel panel-next-steps">
-            <h3><i class="fa-solid fa-forward-step"></i> Next Steps</h3>
+            <h3><iconify-icon icon="lucide:step-forward"></iconify-icon> Next Steps</h3>
             <ul>
                 <li th:each="n : ${report.suggestedNextSteps()}" th:text="${n}">Actionable step</li>
             </ul>
@@ -66,7 +66,7 @@
                         </div>
                         <span th:text="${#strings.abbreviate(q.questionText, 80)}">Question preview...</span>
                     </div>
-                    <i class="fa-solid fa-chevron-down text-muted"></i>
+                    <iconify-icon icon="lucide:chevron-down" class="text-muted"></iconify-icon>
                 </summary>
                 <div class="sh-exam-q-body">
                     <div class="sh-exam-q-section">

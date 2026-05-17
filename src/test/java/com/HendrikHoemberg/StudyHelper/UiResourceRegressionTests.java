@@ -258,6 +258,58 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void sharedLayoutDoesNotLoadUnusedIconOrHeavyFeatureScriptsEagerly() throws IOException {
+        String layout = resource("templates/fragments/layout.html");
+        String examsList = resource("templates/fragments/exams-list.html");
+        String examSinglePage = resource("templates/fragments/exam-single-page.html");
+        String login = resource("templates/login.html");
+        String register = resource("templates/register.html");
+        String styles = resource("static/css/styles.css");
+        String appJs = resource("static/js/app.js");
+
+        assertThat(layout)
+            .contains("https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js")
+            .doesNotContain("font-awesome")
+            .doesNotContain("/js/lib/fabric.min.js")
+            .doesNotContain("/js/color-picker.js")
+            .doesNotContain("/js/image-editor.js")
+            .doesNotContain("/js/exam.js")
+            .doesNotContain("type=\"module\" src=\"/js/pdf-viewer.js\"")
+            .doesNotContain("type=\"module\" src=\"/js/pdf-splitter.js\"");
+
+        assertThat(examsList)
+            .doesNotContain("fa-")
+            .contains("<iconify-icon icon=\"lucide:pencil-line\"")
+            .contains("<iconify-icon icon=\"lucide:clipboard-list\"")
+            .contains("<iconify-icon icon=\"lucide:calendar-days\"")
+            .contains("<iconify-icon icon=\"lucide:eye\"")
+            .contains("<iconify-icon icon=\"lucide:trash-2\"");
+        assertThat(examSinglePage)
+            .doesNotContain("fa-")
+            .contains("<iconify-icon icon=\"lucide:clock\"")
+            .contains("<iconify-icon icon=\"lucide:send\"");
+
+        assertThat(login).doesNotContain("lucide.min.js");
+        assertThat(register).doesNotContain("lucide.min.js");
+
+        assertThat(styles).doesNotContain("@import url('https://fonts.googleapis.com");
+        assertThat(layout)
+            .contains("rel=\"preconnect\" href=\"https://fonts.googleapis.com\"")
+            .contains("rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin")
+            .contains("fonts.googleapis.com/css2?family=Manrope");
+
+        assertThat(appJs)
+            .contains("loadFeatureScript('/js/lib/fabric.min.js')")
+            .contains("import('/js/pdf-viewer.js')")
+            .contains("import('/js/pdf-splitter.js')")
+            .contains("ensureColorPicker")
+            .contains("ensureImageEditor")
+            .contains("ensurePdfViewer")
+            .contains("ensurePdfSplitter")
+            .contains("ensureExamRuntime");
+    }
+
+    @Test
     void studyWizardDesktopHidesSidebarAndCentersConstrainedSetupPanels() throws IOException {
         String styles = resource("static/css/styles.css");
 
@@ -489,7 +541,6 @@ class UiResourceRegressionTests {
         assertThat(js)
             .contains("import * as pdfjsLib from '/js/lib/pdfjs/pdf.min.mjs'")
             .contains("GlobalWorkerOptions.workerSrc")
-            .contains("sh-pdf-viewer-trigger")
             .contains("window.PdfViewer");
     }
 
@@ -508,21 +559,24 @@ class UiResourceRegressionTests {
         assertThat(css).contains(".sh-ps-modal");
         assertThat(js)
             .contains("import * as pdfjsLib from '/js/lib/pdfjs/pdf.min.mjs'")
-            .contains("data-split-file-id")
             .contains("window.PdfSplitter");
     }
 
     @Test
     void layoutWiresPdfViewerAndSplitterAssets() throws IOException {
         String layout = resource("templates/fragments/layout.html");
+        String appJs = resource("static/js/app.js");
 
         assertThat(layout)
             .contains("<link href=\"/css/pdf-viewer.css\" rel=\"stylesheet\">")
             .contains("<link href=\"/css/pdf-splitter.css\" rel=\"stylesheet\">")
-            .contains("<script type=\"module\" src=\"/js/pdf-viewer.js\"></script>")
-            .contains("<script type=\"module\" src=\"/js/pdf-splitter.js\"></script>")
             .contains("~{fragments/pdf-viewer :: modal}")
             .contains("~{fragments/pdf-splitter :: modal}");
+        assertThat(appJs)
+            .contains("sh-pdf-viewer-trigger")
+            .contains("data-split-file-id")
+            .contains("import('/js/pdf-viewer.js')")
+            .contains("import('/js/pdf-splitter.js')");
     }
 
     @Test

@@ -2,6 +2,108 @@
    StudyHelper — App JavaScript (HTMX Simplified)
    ============================================================ */
 
+const featureScriptPromises = new Map();
+let colorPickerPromise = null;
+let imageEditorPromise = null;
+let pdfViewerPromise = null;
+let pdfSplitterPromise = null;
+let examRuntimePromise = null;
+
+function loadFeatureScript(src) {
+    if (featureScriptPromises.has(src)) return featureScriptPromises.get(src);
+
+    const promise = new Promise((resolve, reject) => {
+        const existing = document.querySelector('script[src="' + src + '"]');
+        if (existing) {
+            if (existing.dataset.loaded === 'true') {
+                resolve();
+            } else {
+                existing.addEventListener('load', resolve, { once: true });
+                existing.addEventListener('error', reject, { once: true });
+            }
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.addEventListener('load', () => {
+            script.dataset.loaded = 'true';
+            resolve();
+        }, { once: true });
+        script.addEventListener('error', () => reject(new Error('Could not load ' + src)), { once: true });
+        document.head.appendChild(script);
+    });
+
+    featureScriptPromises.set(src, promise);
+    return promise;
+}
+
+function ensureColorPicker() {
+    if (window.ColorPicker) {
+        if (typeof window.ColorPicker.autoInit === 'function') window.ColorPicker.autoInit();
+        return Promise.resolve(window.ColorPicker);
+    }
+    if (!colorPickerPromise) {
+        colorPickerPromise = loadFeatureScript('/js/color-picker.js').then(() => {
+            if (window.ColorPicker && typeof window.ColorPicker.autoInit === 'function') {
+                window.ColorPicker.autoInit();
+            }
+            return window.ColorPicker;
+        });
+    }
+    return colorPickerPromise;
+}
+
+function ensureImageEditor() {
+    if (window.ImageEditor && !window.ImageEditor._lazyStub) return Promise.resolve(window.ImageEditor);
+    if (!imageEditorPromise) {
+        imageEditorPromise = loadFeatureScript('/js/lib/fabric.min.js')
+            .then(() => ensureColorPicker())
+            .then(() => loadFeatureScript('/js/image-editor.js'))
+            .then(() => window.ImageEditor);
+    }
+    return imageEditorPromise;
+}
+
+function ensurePdfViewer() {
+    if (window.PdfViewer) return Promise.resolve(window.PdfViewer);
+    if (!pdfViewerPromise) {
+        pdfViewerPromise = import('/js/pdf-viewer.js').then(() => window.PdfViewer);
+    }
+    return pdfViewerPromise;
+}
+
+function ensurePdfSplitter() {
+    if (window.PdfSplitter) return Promise.resolve(window.PdfSplitter);
+    if (!pdfSplitterPromise) {
+        pdfSplitterPromise = import('/js/pdf-splitter.js').then(() => window.PdfSplitter);
+    }
+    return pdfSplitterPromise;
+}
+
+function ensureExamRuntime() {
+    if (window.initExamRuntime) return Promise.resolve(window.initExamRuntime);
+    if (!examRuntimePromise) {
+        examRuntimePromise = loadFeatureScript('/js/exam.js').then(() => window.initExamRuntime);
+    }
+    return examRuntimePromise;
+}
+
+window.ensureColorPicker = ensureColorPicker;
+window.ensureImageEditor = ensureImageEditor;
+window.ensurePdfViewer = ensurePdfViewer;
+window.ensurePdfSplitter = ensurePdfSplitter;
+window.ensureExamRuntime = ensureExamRuntime;
+
+if (!window.ImageEditor) {
+    window.ImageEditor = {
+        _lazyStub: true,
+        open: (opts) => ensureImageEditor().then((editor) => editor.open(opts)),
+        close: () => ensureImageEditor().then((editor) => editor.close()),
+    };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     registerServiceWorker();
     initTheme();
@@ -12,10 +114,70 @@ document.addEventListener('DOMContentLoaded', () => {
     initFolderToggleButtons();
     initCsrf();
     initLightbox();
+    initLazyFeatureLoaders();
     initShDialog();
     initQuizAnswerForm();
+    initLazyExamRuntime(document);
     if (window.initCustomSteppers) window.initCustomSteppers(document);
 });
+
+function initLazyFeatureLoaders() {
+    document.body.addEventListener('click', (e) => {
+        const trigger = e.target.closest('[data-color-picker]');
+        if (!trigger || (window.ColorPicker && trigger._shCpAttached)) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        ensureColorPicker()
+            .then(() => trigger.click())
+            .catch((err) => console.error('Color picker failed to load', err));
+    }, true);
+
+    document.body.addEventListener('click', (e) => {
+        const trigger = e.target.closest('.sh-pdf-viewer-trigger');
+        if (!trigger) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        ensurePdfViewer()
+            .then((viewer) => viewer.open({
+                fileId: trigger.dataset.fileId,
+                url: trigger.dataset.fileUrl,
+                name: trigger.dataset.fileName,
+            }))
+            .catch((err) => console.error('PDF viewer failed to load', err));
+    }, true);
+
+    document.body.addEventListener('click', (e) => {
+        const trigger = e.target.closest('[data-split-file-id]');
+        if (!trigger) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        ensurePdfSplitter()
+            .then((splitter) => splitter.open({
+                fileId: trigger.dataset.splitFileId,
+                url: trigger.dataset.splitUrl,
+                name: trigger.dataset.splitFilename,
+            }))
+            .catch((err) => console.error('PDF splitter failed to load', err));
+    }, true);
+
+    document.body.addEventListener('click', (e) => {
+        const trigger = e.target.closest('[data-edit-image]');
+        if (!trigger) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        ensureImageEditor()
+            .then((editor) => editor.openFileEdit(trigger))
+            .catch((err) => console.error('Image editor failed to load', err));
+    }, true);
+}
+
+function initLazyExamRuntime(root) {
+    const scope = root || document;
+    if (!scope.querySelector || !scope.querySelector('#exam-runtime, .sh-exam-timer, .sh-exam-answer, .sh-exam-loader-text')) {
+        return;
+    }
+    ensureExamRuntime().catch((err) => console.error('Exam runtime failed to load', err));
+}
 
 function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
@@ -29,6 +191,7 @@ function registerServiceWorker() {
 document.body.addEventListener('htmx:afterSwap', () => {
     if (window.initCustomSteppers) window.initCustomSteppers(document);
     initQuizAnswerForm();
+    initLazyExamRuntime(document);
 });
 
 // Optional fade-in animation after settle

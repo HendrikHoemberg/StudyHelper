@@ -1,9 +1,6 @@
 /* ============================================================
    StudyHelper — Design System & Global Styles
    ============================================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-
 /* ---------- Theme Tokens ---------- */
 :root {
     --font-body: 'Manrope', 'Segoe UI', system-ui, sans-serif;
