@@ -742,7 +742,10 @@ class UiResourceRegressionTests {
             .contains("lucide:list-checks")
             .contains("Multiple answers")
             .contains("th:if=\"${currentQuestion.type.name() == 'MULTIPLE_SELECT'}\"")
-            .contains("sh-quiz-option-check");
+            .contains("sh-quiz-option-check")
+            .doesNotContain("Select all correct answers")
+            .doesNotContain("Select True or False.")
+            .doesNotContain("Select one answer.");
 
         assertThat(styles)
             .contains(".sh-quiz-answer-form[data-question-type=\"MULTIPLE_SELECT\"] .sh-quiz-option")

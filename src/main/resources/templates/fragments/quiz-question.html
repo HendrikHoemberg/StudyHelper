@@ -46,9 +46,6 @@
                 <iconify-icon icon="lucide:check"></iconify-icon>
                 <span>Single answer</span>
             </div>
-            <span th:if="${currentQuestion.type.name() == 'MULTIPLE_SELECT'}" class="sh-quiz-answer-hint-text">Select all correct answers — more than one is correct.</span>
-            <span th:if="${currentQuestion.type.name() == 'TRUE_FALSE'}" class="sh-quiz-answer-hint-text">Select True or False.</span>
-            <span th:if="${currentQuestion.type.name() != 'MULTIPLE_SELECT' and currentQuestion.type.name() != 'TRUE_FALSE'}" class="sh-quiz-answer-hint-text">Select one answer.</span>
         </div>
 
         <div class="sh-quiz-options">

@@ -391,10 +391,6 @@
     border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
 }
 
-.sh-quiz-answer-hint-text {
-    line-height: 1.4;
-}
-
 .sh-quiz-option.is-selected {
     border-color: var(--accent);
     background: color-mix(in srgb, var(--accent) 6%, var(--surface));
