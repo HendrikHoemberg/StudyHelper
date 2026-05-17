@@ -25,13 +25,15 @@
     transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.sh-quiz-option:hover:not(.sh-quiz-option--disabled) {
-    border-color: var(--sh-primary, #6366f1);
-}
+@media (hover: hover) {
+    .sh-quiz-option:hover:not(.sh-quiz-option--disabled) {
+        border-color: var(--sh-primary, #6366f1);
+    }
 
-.sh-quiz-option:hover:not(.sh-quiz-option--disabled) .sh-quiz-option-letter {
-    background: var(--sh-primary, #6366f1);
-    color: #fff;
+    .sh-quiz-option:hover:not(.sh-quiz-option--disabled) .sh-quiz-option-letter {
+        background: var(--sh-primary, #6366f1);
+        color: #fff;
+    }
 }
 
 .sh-quiz-option--correct {
@@ -424,8 +426,10 @@
     height: 0.875rem;
 }
 
-.sh-quiz-answer-form[data-question-type="MULTIPLE_SELECT"] .sh-quiz-option:hover .sh-quiz-option-check {
-    border-color: var(--accent);
+@media (hover: hover) {
+    .sh-quiz-answer-form[data-question-type="MULTIPLE_SELECT"] .sh-quiz-option:hover .sh-quiz-option-check {
+        border-color: var(--accent);
+    }
 }
 
 .sh-quiz-answer-form[data-question-type="MULTIPLE_SELECT"] .sh-quiz-option.is-selected .sh-quiz-option-check {
