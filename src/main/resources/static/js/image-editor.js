@@ -37,6 +37,7 @@
     var _isPanning  = false;   // actively panning
     var _panLastX   = 0;       // last pointer X during pan
     var _panLastY   = 0;       // last pointer Y during pan
+    var _touchGesture = null;  // active two-finger pan/zoom gesture snapshot
 
     var ZOOM_MIN = 0.1;
     var ZOOM_MAX = 8;
@@ -54,6 +55,16 @@
 
     // ── DOM helper ───────────────────────────────────────────────────
     function $id(id) { return document.getElementById(id); }
+
+    function _getClientPoint(e) {
+        var touch = e && e.touches && e.touches[0]
+            ? e.touches[0]
+            : (e && e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : e);
+        return {
+            x: touch && typeof touch.clientX === 'number' ? touch.clientX : 0,
+            y: touch && typeof touch.clientY === 'number' ? touch.clientY : 0,
+        };
+    }
 
     // ── History ──────────────────────────────────────────────────────
     function _histPush() {
@@ -509,7 +520,8 @@
             var el = document.createElement('div');
             el.className = 'sh-ie-handle';
             el.dataset.dir = dir;
-            el.addEventListener('mousedown', function (e) { _startHandleDrag(e, dir); });
+            el.style.setProperty('touch-action', 'none');
+            el.addEventListener('pointerdown', function (e) { _startHandleDrag(e, dir); });
             layer.appendChild(el);
             return el;
         });
@@ -543,19 +555,22 @@
         e.stopPropagation();
         _hbDir     = dir;
         _hbStartAb = { x: _artboard.x, y: _artboard.y, w: _artboard.w, h: _artboard.h };
-        _hbStartX  = e.clientX;
-        _hbStartY  = e.clientY;
-        document.addEventListener('mousemove', _handleDragMove);
-        document.addEventListener('mouseup',   _handleDragUp);
+        var p      = _getClientPoint(e);
+        _hbStartX  = p.x;
+        _hbStartY  = p.y;
+        document.addEventListener('pointermove', _handleDragMove);
+        document.addEventListener('pointerup',   _handleDragUp);
+        document.addEventListener('pointercancel', _handleDragUp);
         var readout = $id('sh-ie-handle-readout');
         if (readout) readout.style.display = '';
     }
 
     function _handleDragMove(e) {
         if (!_hbDir) return;
+        var p  = _getClientPoint(e);
         var z  = _fc.viewportTransform[0];
-        var dx = (e.clientX - _hbStartX) / z;
-        var dy = (e.clientY - _hbStartY) / z;
+        var dx = (p.x - _hbStartX) / z;
+        var dy = (p.y - _hbStartY) / z;
         _resizeArtboard(_hbDir, dx, dy);
         _syncClipPath();
         _updateHandles();
@@ -570,8 +585,9 @@
     function _handleDragUp() {
         if (!_hbDir) return;
         _hbDir = null;
-        document.removeEventListener('mousemove', _handleDragMove);
-        document.removeEventListener('mouseup',   _handleDragUp);
+        document.removeEventListener('pointermove', _handleDragMove);
+        document.removeEventListener('pointerup',   _handleDragUp);
+        document.removeEventListener('pointercancel', _handleDragUp);
         var readout = $id('sh-ie-handle-readout');
         if (readout) readout.style.display = 'none';
         _histPush();
@@ -668,6 +684,64 @@
             if (e.button !== 1) return;  // middle button only
             e.preventDefault();
             _startPan(e.clientX, e.clientY, wrap);
+        });
+    }
+
+    function _touchCenter(touches) {
+        return {
+            x: (touches[0].clientX + touches[1].clientX) / 2,
+            y: (touches[0].clientY + touches[1].clientY) / 2,
+        };
+    }
+
+    function _touchDistance(touches) {
+        var dx = touches[0].clientX - touches[1].clientX;
+        var dy = touches[0].clientY - touches[1].clientY;
+        return Math.max(1, Math.hypot(dx, dy));
+    }
+
+    function _bindTouchPanZoom(wrap) {
+        if (wrap._shIeTouchBound) return;
+        wrap._shIeTouchBound = true;
+        wrap.style.setProperty('touch-action', 'none');
+
+        wrap.addEventListener('touchstart', function (e) {
+            if (!_fc || e.touches.length !== 2) return;
+            e.preventDefault();
+            _touchGesture = {
+                distance: _touchDistance(e.touches),
+                center:   _touchCenter(e.touches),
+                zoom:     _zoom,
+            };
+        }, { passive: false });
+
+        wrap.addEventListener('touchmove', function (e) {
+            if (!_fc || !_touchGesture || e.touches.length !== 2) return;
+            e.preventDefault();
+
+            var center = _touchCenter(e.touches);
+            var nextZoom = Math.max(
+                ZOOM_MIN,
+                Math.min(ZOOM_MAX, _touchGesture.zoom * (_touchDistance(e.touches) / _touchGesture.distance))
+            );
+
+            var container = _fc.wrapperEl || _fc.getElement().parentNode;
+            var rect = container.getBoundingClientRect();
+            _fc.zoomToPoint(new fabric.Point(center.x - rect.left, center.y - rect.top), nextZoom);
+            _zoom = nextZoom;
+
+            _fc.relativePan(new fabric.Point(center.x - _touchGesture.center.x, center.y - _touchGesture.center.y));
+            _touchGesture.center = center;
+
+            _updateZoomDisplay();
+            _updateHandles();
+        }, { passive: false });
+
+        wrap.addEventListener('touchend', function (e) {
+            if (!e.touches || e.touches.length < 2) _touchGesture = null;
+        });
+        wrap.addEventListener('touchcancel', function () {
+            _touchGesture = null;
         });
     }
 
@@ -1311,6 +1385,7 @@
         wrap.innerHTML = '';
         _makeCanvas(wrap);
         _bindZoomPan(wrap);
+        _bindTouchPanZoom(wrap);
         _applyTool('brush');
         _buildHandles();
 

@@ -10,6 +10,7 @@
     z-index: 1200;
     display: flex;
     flex-direction: column;
+    height: 100dvh;
     background: var(--bg);
     overflow: hidden;
 }
@@ -456,14 +457,69 @@
 
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 767px) {
+    .sh-ie-body {
+        flex-direction: column;
+    }
+
     .sh-ie-toolbar {
-        display: none;
+        order: 2;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        height: 56px;
+        padding: 6px 0.5rem;
+        border-right: 0;
+        border-top: 1px solid var(--border);
+        gap: 4px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+    }
+
+    .sh-ie-canvas-area {
+        order: 1;
+    }
+
+    .sh-ie-tool-btn,
+    .sh-ie-color-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .sh-ie-sep {
+        width: 1px;
+        height: 28px;
+        margin: 0 4px;
+    }
+
+    .sh-ie-options {
+        left: 0.75rem;
+        right: 0.75rem;
+        top: 0.75rem;
+        transform: none;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        max-height: 34dvh;
+        overflow: auto;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .sh-ie-opt-group {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .sh-ie-handle {
+        width: 24px;
+        height: 24px;
+        margin: -12px 0 0 -12px;
     }
 
     .sh-ie-footer {
         flex-wrap: wrap;
         height: auto;
-        padding: 0.5rem 0.75rem;
+        padding: 0.5rem 0.75rem max(0.5rem, env(safe-area-inset-bottom));
         gap: 0.5rem;
     }
 
@@ -589,4 +645,3 @@
                         var(--danger) 55%, transparent 55%),
         #fff;
 }
-

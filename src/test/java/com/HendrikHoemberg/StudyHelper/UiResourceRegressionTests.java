@@ -575,6 +575,20 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void pdfSplitterHasMobileStackedWorkspaceAndTouchSizedControls() throws IOException {
+        String css = resource("static/css/pdf-splitter.css");
+
+        assertThat(css)
+            .contains("@media (max-width: 767px)")
+            .contains(".sh-ps-workspace {\n        flex-direction: column;")
+            .contains(".sh-ps-sidebar {\n        width: 100%;")
+            .contains("minmax(min(100%, var(--sh-ps-page-width)), 1fr)")
+            .contains(".sh-ps-break {\n        right: 0.6rem;")
+            .contains("min-height: 2.75rem")
+            .contains("padding-bottom: max(0.75rem, env(safe-area-inset-bottom))");
+    }
+
+    @Test
     void layoutWiresPdfViewerAndSplitterAssets() throws IOException {
         String layout = resource("templates/fragments/layout.html");
         String appJs = resource("static/js/app.js");
@@ -723,6 +737,27 @@ class UiResourceRegressionTests {
         String js = resource("static/js/image-editor.js");
 
         assertThat(js).contains("globalCompositeOperation = 'destination-out'");
+    }
+
+    @Test
+    void imageEditorKeepsToolsAccessibleAndSupportsTouchGesturesOnMobile() throws IOException {
+        String css = resource("static/css/image-editor.css");
+        String js = resource("static/js/image-editor.js");
+
+        assertThat(css)
+            .contains("height: 100dvh")
+            .contains(".sh-ie-toolbar {\n        order: 2;")
+            .contains("overflow-x: auto")
+            .contains(".sh-ie-body {\n        flex-direction: column;")
+            .contains(".sh-ie-options {\n        left: 0.75rem;")
+            .contains(".sh-ie-handle {\n        width: 24px;");
+
+        assertThat(js)
+            .contains("function _getClientPoint(")
+            .contains("addEventListener('pointerdown'")
+            .contains("addEventListener('touchstart'")
+            .contains("function _bindTouchPanZoom(")
+            .contains("touch-action");
     }
 
     @Test
