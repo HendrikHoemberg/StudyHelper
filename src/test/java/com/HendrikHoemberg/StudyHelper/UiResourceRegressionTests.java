@@ -583,7 +583,9 @@ class UiResourceRegressionTests {
             .contains(".sh-ps-workspace {\n        flex-direction: column;")
             .contains(".sh-ps-sidebar {\n        width: 100%;")
             .contains("minmax(min(100%, var(--sh-ps-page-width)), 1fr)")
-            .contains(".sh-ps-break {\n        right: 0.6rem;")
+            .contains(".sh-ps-break {\n        left: 50%;")
+            .contains("bottom: 0.6rem")
+            .contains("transform: translateX(-50%)")
             .contains("min-height: 2.75rem")
             .contains("padding-bottom: max(0.75rem, env(safe-area-inset-bottom))");
     }

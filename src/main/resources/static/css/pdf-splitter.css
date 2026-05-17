@@ -263,9 +263,11 @@
     }
 
     .sh-ps-break {
-        right: 0.6rem;
-        top: 0.6rem;
-        transform: none;
+        left: 50%;
+        right: auto;
+        top: auto;
+        bottom: 0.6rem;
+        transform: translateX(-50%);
         width: 2.75rem;
         height: 2.75rem;
         box-shadow: 0 1px 8px rgba(15, 23, 42, 0.22);
