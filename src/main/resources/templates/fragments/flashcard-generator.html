@@ -6,7 +6,7 @@
     <div class="sh-page-header">
         <div>
             <h1 class="sh-page-title">AI Flashcards</h1>
-            <p class="sh-page-subtitle">Generate flashcards from one uploaded PDF.</p>
+            <p class="sh-page-subtitle">Generate flashcards from one or more uploaded PDFs.</p>
         </div>
         <div class="sh-page-actions">
             <a href="/dashboard" class="sh-btn sh-btn-secondary"
@@ -37,7 +37,7 @@
         <div class="sh-card-body">
             <div class="sh-ai-flashcard-grid">
                 <section>
-                    <div class="sh-section-title">Choose one PDF</div>
+                    <div class="sh-section-title">Choose PDFs</div>
                     <div class="sh-study-search-wrap mb-3">
                         <iconify-icon icon="lucide:search" class="sh-study-search-icon"></iconify-icon>
                         <input type="text" class="sh-study-search-input" id="ai-pdf-search" placeholder="Search PDFs..." autocomplete="off">
@@ -48,32 +48,33 @@
                         <p class="sh-empty-hint">Upload a PDF under 10 MB first.</p>
                     </div>
 
+                    <div class="vb-pdf-mode sh-ai-global-pdf-mode">
+                        <input type="hidden" name="documentMode" th:value="${selectedDocumentMode ?: T(com.HendrikHoemberg.StudyHelper.dto.DocumentMode).TEXT}">
+                        <button type="button" class="vb-pdf-mode-btn" th:classappend="${selectedDocumentMode == null || #strings.toString(selectedDocumentMode) == 'TEXT'} ? ' is-active' : ''" data-mode="TEXT" th:attr="aria-pressed=${selectedDocumentMode == null || #strings.toString(selectedDocumentMode) == 'TEXT'}">Text</button>
+                        <button type="button" class="vb-pdf-mode-btn" th:classappend="${#strings.toString(selectedDocumentMode) == 'FULL_PDF'} ? ' is-active' : ''" data-mode="FULL_PDF" th:attr="aria-pressed=${#strings.toString(selectedDocumentMode) == 'FULL_PDF'}" title="Send the full PDFs with figures, diagrams, and layout.">Full PDF</button>
+                    </div>
+
                     <div class="sh-quiz-warn-banner sh-ai-pdf-size-warning" hidden>
                         <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
                         <span>Large PDF — generation may be slow.</span>
                     </div>
 
                     <div class="sh-ai-pdf-list" th:if="${!#lists.isEmpty(pdfOptions)}">
-                        <label th:each="pdf : ${pdfOptions}"
-                               class="sh-ai-pdf-row"
-                               th:classappend="${selectedFileId == pdf.id} ? ' is-selected' : ''"
-                               th:data-name="${pdf.filename + ' ' + pdf.folderPath}"
-                               th:data-deck-name="${pdf.filename}"
-                               th:data-folder-id="${pdf.folderId}"
-                               th:data-file-size="${pdf.fileSizeBytes}"
-                               th:style="'--folder-color:' + ${pdf.folderColorHex}">
-                            <input type="radio" name="fileId" th:value="${pdf.id}" th:checked="${selectedFileId == pdf.id}">
-                            <span class="vb-file-icon"><iconify-icon icon="lucide:file-text"></iconify-icon></span>
-                            <span class="sh-ai-pdf-main">
-                                <span class="sh-ai-pdf-name" th:text="${pdf.filename}">lecture.pdf</span>
-                                <span class="sh-ai-pdf-meta" th:text="${pdf.folderPath}">Folder</span>
-                            </span>
-                            <span class="vb-pdf-mode sh-ai-pdf-mode" th:data-file-id="${pdf.id}">
-                                <input type="hidden" name="documentMode" th:value="${selectedDocumentMode ?: T(com.HendrikHoemberg.StudyHelper.dto.DocumentMode).TEXT}">
-                                <button type="button" class="vb-pdf-mode-btn" th:classappend="${selectedDocumentMode == null || #strings.toString(selectedDocumentMode) == 'TEXT'} ? ' is-active' : ''" data-mode="TEXT" th:attr="aria-pressed=${selectedDocumentMode == null || #strings.toString(selectedDocumentMode) == 'TEXT'}">Text</button>
-                                <button type="button" class="vb-pdf-mode-btn" th:classappend="${#strings.toString(selectedDocumentMode) == 'FULL_PDF'} ? ' is-active' : ''" data-mode="FULL_PDF" th:attr="aria-pressed=${#strings.toString(selectedDocumentMode) == 'FULL_PDF'}" title="Send the full PDF with figures, diagrams, and layout.">Full PDF</button>
-                            </span>
-                        </label>
+                         <label th:each="pdf : ${pdfOptions}"
+                                class="sh-ai-pdf-row"
+                                th:classappend="${selectedFileIds != null ? #lists.contains(selectedFileIds, pdf.id) : selectedFileId == pdf.id} ? ' is-selected' : ''"
+                                th:data-name="${pdf.filename + ' ' + pdf.folderPath}"
+                                th:data-deck-name="${pdf.filename}"
+                                th:data-folder-id="${pdf.folderId}"
+                                th:data-file-size="${pdf.fileSizeBytes}"
+                                th:style="'--folder-color:' + ${pdf.folderColorHex}">
+                             <input class="sh-checkbox" type="checkbox" name="fileId" th:value="${pdf.id}" th:checked="${selectedFileIds != null ? #lists.contains(selectedFileIds, pdf.id) : selectedFileId == pdf.id}">
+                             <span class="vb-file-icon"><iconify-icon icon="lucide:file-text"></iconify-icon></span>
+                             <span class="sh-ai-pdf-main">
+                                 <span class="sh-ai-pdf-name" th:text="${pdf.filename}">lecture.pdf</span>
+                                 <span class="sh-ai-pdf-meta" th:text="${pdf.folderPath}">Folder</span>
+                             </span>
+                         </label>
                     </div>
                 </section>
 

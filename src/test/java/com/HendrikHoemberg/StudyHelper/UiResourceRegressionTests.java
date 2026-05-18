@@ -516,18 +516,18 @@ class UiResourceRegressionTests {
             .contains("class=\"sh-upload-file-input\"")
             .contains("class=\"sh-upload-chooser\"")
             .contains("lucide:upload-cloud")
-            .contains("Choose file")
+            .contains("Choose files")
             .contains("id=\"upload-file-name\"")
-            .contains("No file selected")
+            .contains("No files selected")
             .contains("class=\"sh-upload-selected\"")
             .contains("lucide:check-circle")
             .contains("id=\"upload-submit\"")
             .contains("<button type=\"submit\" class=\"sh-btn sh-btn-primary\" id=\"upload-submit\" disabled>Upload</button>")
             .contains("chooser.classList.toggle('is-selected', hasFile);")
-            .contains("chooserText.textContent = hasFile ? 'Change file' : 'Choose file';")
+            .contains("chooserText.textContent = hasFile ? 'Change files' : 'Choose files';")
             .contains("submitButton.disabled = !hasFile;")
             .contains("Maximum file size: 100 MB")
-            .contains("selectedFileName.textContent = fileInput.files[0] ? fileInput.files[0].name : 'No file selected';")
+            .contains("selectedFileName.textContent = files[0].name;")
             .doesNotContain("Ready to upload")
             .doesNotContain("style=\"color:var(--text-muted); font-size:0.8125rem; margin-top:0.5rem; margin-bottom:0;\"");
 
@@ -804,6 +804,19 @@ class UiResourceRegressionTests {
             .contains("sh-quiz-submit-btn")
             .contains("Submit Answer")
             .contains("sh-quiz-answer-hint");
+    }
+
+    @Test
+    void flashcardGenerator_UsesCustomCheckboxesForPdfSelection() throws IOException {
+        String template = resource("templates/fragments/flashcard-generator.html");
+        String css = resource("static/css/styles.css");
+
+        assertThat(template).contains("type=\"checkbox\" name=\"fileId\"");
+        assertThat(template).contains("class=\"sh-checkbox");
+        assertThat(template).contains("th:classappend=\"${selectedFileIds != null ? #lists.contains(selectedFileIds, pdf.id) : selectedFileId == pdf.id} ? ' is-selected' : ''\"");
+        assertThat(template).doesNotContain("type=\"radio\" name=\"fileId\"");
+        assertThat(css).contains("appearance: none");
+        assertThat(css).contains(".sh-checkbox:checked::after");
     }
 
     @Test

@@ -40,13 +40,26 @@ public class AiFlashcardService {
 
     public List<GeneratedFlashcard> generate(DocumentInput document, int cardCount, String additionalInstructions) {
         if (document == null) {
-            throw new IllegalArgumentException("Flashcard generation requires one PDF input.");
+            throw new IllegalArgumentException("Flashcard generation requires at least one PDF input.");
+        }
+        return generate(List.of(document), cardCount, additionalInstructions);
+    }
+
+    public List<GeneratedFlashcard> generate(List<DocumentInput> documents, int cardCount, String additionalInstructions) {
+        if (documents == null || documents.isEmpty()) {
+            throw new IllegalArgumentException("Flashcard generation requires at least one PDF input.");
         }
 
-        List<DocumentInput> documents = List.of(document);
-        String docContent = AiGenerationSupport.textDocuments(documents);
-        String pdfListing = AiGenerationSupport.pdfListing(documents);
-        Media[] pdfMedia = AiGenerationSupport.pdfMedia(documents);
+        List<DocumentInput> usableDocuments = documents.stream()
+            .filter(document -> document != null)
+            .toList();
+        if (usableDocuments.isEmpty()) {
+            throw new IllegalArgumentException("Flashcard generation requires at least one PDF input.");
+        }
+
+        String docContent = AiGenerationSupport.textDocuments(usableDocuments);
+        String pdfListing = AiGenerationSupport.pdfListing(usableDocuments);
+        Media[] pdfMedia = AiGenerationSupport.pdfMedia(usableDocuments);
 
         if (docContent.isBlank() && pdfMedia.length == 0) {
             throw new IllegalArgumentException(

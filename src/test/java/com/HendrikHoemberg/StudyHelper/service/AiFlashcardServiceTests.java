@@ -59,7 +59,7 @@ class AiFlashcardServiceTests {
                 capturedPrompt.set(a.getArgument(0));
                 return userSpec;
             });
-            when(userSpec.media(any(org.springframework.ai.content.Media.class))).thenAnswer(a -> {
+            when(userSpec.media(any(org.springframework.ai.content.Media[].class))).thenAnswer(a -> {
                 for (Object arg : a.getRawArguments()) {
                     if (arg instanceof org.springframework.ai.content.Media m) {
                         capturedMedia.add(m);
@@ -265,6 +265,60 @@ class AiFlashcardServiceTests {
         service.generate(new TextDocument("notes.txt", "topic"), "   ");
 
         assertThat(capturedPrompt.get()).doesNotContain("USER INSTRUCTIONS:");
+    }
+
+    @Test
+    void generate_MultipleTextDocuments_ReturnsCombinedCards() {
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("Front 1", "Back 1"),
+            new GeneratedFlashcard("Front 2", "Back 2")
+        ));
+
+        List<GeneratedFlashcard> result = service.generate(List.of(
+            new TextDocument("notes1.txt", "Content one"),
+            new TextDocument("notes2.txt", "Content two")
+        ), 20, null);
+
+        assertThat(result).hasSize(2);
+        assertThat(capturedPrompt.get()).contains("notes1.txt");
+        assertThat(capturedPrompt.get()).contains("notes2.txt");
+    }
+
+    @Test
+    void generate_TwoPdfsViaSingleDocOverload_ReturnsCards() {
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("Front 1", "Back 1"),
+            new GeneratedFlashcard("Front 2", "Back 2")
+        ));
+
+        // Use the single-doc overload with a PdfDocument - internally creates List.of(1 doc)
+        List<GeneratedFlashcard> result = service.generate(
+            new PdfDocument("single.pdf", new ByteArrayResource(new byte[] {0x25, 0x50, 0x44, 0x46}))
+        );
+
+        assertThat(result).hasSize(2);
+        assertThat(capturedMedia).hasSize(1);
+    }
+
+    @Test
+    void generate_MultiplePdfDocuments_AttachesAllPdfMediaInOneRequest() {
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("Front 1", "Back 1"),
+            new GeneratedFlashcard("Front 2", "Back 2")
+        ));
+
+        List<GeneratedFlashcard> result = service.generate(List.of(
+            new PdfDocument("chapter1.pdf", new ByteArrayResource(new byte[] {0x25, 0x50, 0x44, 0x46})),
+            new PdfDocument("chapter2.pdf", new ByteArrayResource(new byte[] {0x25, 0x50, 0x44, 0x46}))
+        ), 20, "focus on formulas");
+
+        assertThat(result).hasSize(2);
+        assertThat(capturedPrompt.get()).contains("chapter1.pdf");
+        assertThat(capturedPrompt.get()).contains("chapter2.pdf");
+        assertThat(capturedPrompt.get()).contains("focus on formulas");
+        assertThat(capturedMedia).hasSize(2);
+        assertThat(capturedMedia).allSatisfy(media ->
+            assertThat(media.getMimeType().toString()).isEqualTo("application/pdf"));
     }
 
     @Test

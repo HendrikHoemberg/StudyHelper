@@ -1099,11 +1099,62 @@ textarea.sh-input {
 
 /* Checkbox */
 .sh-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
     width: 16px;
     height: 16px;
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface);
     cursor: pointer;
-    accent-color: var(--accent);
     flex-shrink: 0;
+    display: inline-grid;
+    place-content: center;
+    transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.sh-checkbox::after {
+    content: "";
+    width: 8px;
+    height: 5px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) scale(0);
+    transform-origin: center;
+    transition: transform var(--transition-fast);
+}
+
+.sh-checkbox:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.sh-checkbox:checked::after {
+    transform: rotate(-45deg) scale(1);
+}
+
+.sh-checkbox:indeterminate {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.sh-checkbox:indeterminate::after {
+    width: 8px;
+    height: 2px;
+    border-left: 0;
+    border-bottom: 2px solid #fff;
+    transform: rotate(0deg) scale(1);
+}
+
+.sh-checkbox:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.sh-checkbox:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
 }
 
 /* ============================================================
@@ -4954,7 +5005,8 @@ iconify-icon {
     background: rgba(var(--accent-rgb), 0.08);
 }
 
-.sh-ai-pdf-row input[type="radio"] {
+.sh-ai-pdf-row input[type="radio"],
+.sh-ai-pdf-row input[type="checkbox"] {
     margin: 0;
 }
 
@@ -4981,6 +5033,11 @@ iconify-icon {
 .sh-ai-pdf-mode {
     margin-left: auto;
     flex-shrink: 0;
+}
+
+.sh-ai-global-pdf-mode {
+    margin-bottom: 0.75rem;
+    width: fit-content;
 }
 
 .sh-ai-pdf-size-warning {

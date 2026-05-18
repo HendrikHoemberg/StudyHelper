@@ -11,12 +11,16 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -91,5 +95,72 @@ class FileEntryServiceTests {
         fileEntryService.replaceContents(10L, replacement, user);
 
         verify(storageQuotaService, times(1)).assertWithinQuota(user, 120L, 300L);
+    }
+
+    @Test
+    void uploadAll_StoresEachFileAndChecksQuotaWithCombinedBytes() throws IOException {
+        User user = new User();
+        user.setUsername("alice");
+        Folder folder = new Folder();
+        folder.setId(1L);
+
+        MultipartFile first = new MockMultipartFile("file", "notes.pdf", "application/pdf", new byte[250]);
+        MultipartFile second = new MockMultipartFile("file", "diagram.png", "image/png", new byte[150]);
+
+        when(folderRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(folder));
+        when(uploadValidator.validateUpload(first)).thenReturn("application/pdf");
+        when(uploadValidator.validateUpload(second)).thenReturn("image/png");
+        when(fileStorageService.store(first)).thenReturn("stored-notes.pdf");
+        when(fileStorageService.store(second)).thenReturn("stored-diagram.png");
+        when(fileEntryRepository.save(any(FileEntry.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        List<FileEntry> entries = fileEntryService.uploadAll(List.of(first, second), 1L, user);
+
+        assertThat(entries).hasSize(2);
+        assertThat(entries).extracting(FileEntry::getOriginalFilename).containsExactly("notes.pdf", "diagram.png");
+        assertThat(entries).extracting(FileEntry::getStoredFilename).containsExactly("stored-notes.pdf", "stored-diagram.png");
+        verify(folderRepository, times(1)).findByIdAndUser(1L, user);
+        verify(uploadValidator, times(1)).validateUpload(first);
+        verify(uploadValidator, times(1)).validateUpload(second);
+        verify(storageQuotaService, times(1)).assertWithinQuota(user, 0L, 400L);
+        verify(fileEntryRepository, times(2)).save(any(FileEntry.class));
+    }
+
+    @Test
+    void uploadAll_RejectsEmptySelectionBeforeQuotaOrStorage() throws IOException {
+        User user = new User();
+        user.setUsername("alice");
+
+        assertThatThrownBy(() -> fileEntryService.uploadAll(List.of(), 1L, user))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Please choose at least one file to upload.");
+
+        verify(storageQuotaService, never()).assertWithinQuota(any(), anyLong(), anyLong());
+        verify(fileStorageService, never()).store(any(MultipartFile.class));
+        verify(fileEntryRepository, never()).save(any(FileEntry.class));
+    }
+
+    @Test
+    void uploadAll_WhenLaterStorageFails_CleansUpAndDoesNotSavePartialEntries() throws IOException {
+        User user = new User();
+        user.setUsername("alice");
+        Folder folder = new Folder();
+        folder.setId(1L);
+
+        MultipartFile first = new MockMultipartFile("file", "notes.pdf", "application/pdf", new byte[250]);
+        MultipartFile second = new MockMultipartFile("file", "diagram.png", "image/png", new byte[150]);
+
+        when(folderRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(folder));
+        when(uploadValidator.validateUpload(first)).thenReturn("application/pdf");
+        when(uploadValidator.validateUpload(second)).thenReturn("image/png");
+        when(fileStorageService.store(first)).thenReturn("stored-notes.pdf");
+        when(fileStorageService.store(second)).thenThrow(new IOException("disk full"));
+
+        assertThatThrownBy(() -> fileEntryService.uploadAll(List.of(first, second), 1L, user))
+            .isInstanceOf(IOException.class)
+            .hasMessage("disk full");
+
+        verify(fileStorageService).delete("stored-notes.pdf");
+        verify(fileEntryRepository, never()).save(any(FileEntry.class));
     }
 }

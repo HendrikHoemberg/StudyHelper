@@ -882,12 +882,9 @@ document.addEventListener('input', (event) => {
 
 document.addEventListener('change', (event) => {
     if (event.target.matches('.sh-ai-pdf-row input[name="fileId"]')) {
-        document.querySelectorAll('.sh-ai-pdf-row').forEach(row => row.classList.remove('is-selected'));
         const row = event.target.closest('.sh-ai-pdf-row');
-        row?.classList.add('is-selected');
-        prefillAiNewDeckNameForPdf(row);
-        preselectAiNewDeckFolderForPdf(row);
-        updateAiPdfSizeWarning(row);
+        row?.classList.toggle('is-selected', event.target.checked);
+        syncAiFolderSelectionWithSelectedPdf();
     }
     if (event.target.matches('input[name="destination"]')) {
         updateAiFlashcardDestinationPanels();
@@ -903,10 +900,10 @@ document.addEventListener('change', (event) => {
 });
 
 document.addEventListener('click', (event) => {
-    const btn = event.target.closest('.sh-ai-pdf-mode .vb-pdf-mode-btn');
+    const btn = event.target.closest('.sh-ai-global-pdf-mode .vb-pdf-mode-btn');
     if (!btn) return;
     event.preventDefault();
-    const group = btn.closest('.sh-ai-pdf-mode');
+    const group = btn.closest('.sh-ai-global-pdf-mode');
     const hidden = group?.querySelector('input[name="documentMode"]');
     if (hidden) hidden.value = btn.dataset.mode;
     group?.querySelectorAll('.vb-pdf-mode-btn').forEach(option => {
@@ -914,7 +911,7 @@ document.addEventListener('click', (event) => {
         option.classList.toggle('is-active', selected);
         option.setAttribute('aria-pressed', selected ? 'true' : 'false');
     });
-    updateAiPdfSizeWarning(group?.closest('.sh-ai-pdf-row'));
+    updateAiPdfSizeWarning();
 });
 
 document.body.addEventListener('click', (e) => {
@@ -1062,20 +1059,32 @@ function prefillAiNewDeckNameForPdf(pdfRow) {
     deckNameInput.value = filename.replace(/\.pdf$/i, '');
 }
 
-function updateAiPdfSizeWarning(pdfRow) {
+function updateAiPdfSizeWarning() {
     const warning = document.querySelector('.sh-ai-pdf-size-warning');
     if (!warning) return;
 
-    const selectedPdf = pdfRow || document.querySelector('.sh-ai-pdf-row input[name="fileId"]:checked')?.closest('.sh-ai-pdf-row');
-    const fileSize = Number(selectedPdf?.dataset?.fileSize || 0);
-    const showWarning = fileSize >= AI_PDF_SLOW_WARNING_BYTES;
+    const selectedRows = Array.from(document.querySelectorAll('.sh-ai-pdf-row input[name="fileId"]:checked'))
+        .map(input => input.closest('.sh-ai-pdf-row'))
+        .filter(Boolean);
+    const showWarning = selectedRows.some(row => Number(row?.dataset?.fileSize || 0) >= AI_PDF_SLOW_WARNING_BYTES);
     warning.hidden = !showWarning;
 }
 
 function syncAiFolderSelectionWithSelectedPdf() {
-    const selectedPdf = document.querySelector('.sh-ai-pdf-row input[name="fileId"]:checked')?.closest('.sh-ai-pdf-row');
-    if (!selectedPdf) return;
-    prefillAiNewDeckNameForPdf(selectedPdf);
-    preselectAiNewDeckFolderForPdf(selectedPdf);
-    updateAiPdfSizeWarning(selectedPdf);
+    const selectedRows = Array.from(document.querySelectorAll('.sh-ai-pdf-row input[name="fileId"]:checked'))
+        .map(input => input.closest('.sh-ai-pdf-row'))
+        .filter(Boolean);
+    document.querySelectorAll('.sh-ai-pdf-row').forEach(row => {
+        const checkbox = row.querySelector('input[name="fileId"]');
+        row.classList.toggle('is-selected', !!checkbox?.checked);
+    });
+
+    if (selectedRows.length === 1) {
+        prefillAiNewDeckNameForPdf(selectedRows[0]);
+        preselectAiNewDeckFolderForPdf(selectedRows[0]);
+    } else if (selectedRows.length > 1) {
+        const deckNameInput = document.querySelector('.sh-ai-flashcard-form input[name="newDeckName"]');
+        if (deckNameInput && !deckNameInput.value.trim()) deckNameInput.value = 'Generated Flashcards';
+    }
+    updateAiPdfSizeWarning();
 }

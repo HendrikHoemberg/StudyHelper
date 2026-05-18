@@ -22,12 +22,17 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.IOException;
+import java.util.List;
+
+import org.springframework.mock.web.MockMultipartFile;
 
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -134,5 +139,23 @@ class FileControllerTests {
                 .content("{\"parts\":[{\"name\":\"a.pdf\",\"startPage\":1,\"endPage\":4}]}"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("A split needs at least two parts."));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void upload_AcceptsMultipleFilesAndDelegatesToService() throws Exception {
+        MockMultipartFile first = new MockMultipartFile("file", "notes.pdf", "application/pdf", new byte[] {1, 2});
+        MockMultipartFile second = new MockMultipartFile("file", "diagram.png", "image/png", new byte[] {3});
+        when(fileEntryService.uploadAll(anyList(), eq(42L), eq(user))).thenReturn(List.of());
+
+        mockMvc.perform(multipart("/folders/42/files")
+                .file(first)
+                .file(second)
+                .with(csrf())
+                .principal(() -> "alice"))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(header().string("Location", "/folders/42?tab=files"));
+
+        verify(fileEntryService).uploadAll(anyList(), eq(42L), eq(user));
     }
 }

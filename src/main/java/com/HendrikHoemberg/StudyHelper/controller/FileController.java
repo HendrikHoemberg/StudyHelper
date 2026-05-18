@@ -25,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -67,7 +68,7 @@ public class FileController {
 
     @PostMapping("/folders/{folderId}/files")
     public String upload(@PathVariable Long folderId,
-                         @RequestParam("file") MultipartFile file,
+                         @RequestParam("file") List<MultipartFile> files,
                          Principal principal,
                          Model model,
                          RedirectAttributes redirectAttributes,
@@ -75,7 +76,7 @@ public class FileController {
                          @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         try {
-            fileEntryService.upload(file, folderId, user);
+            fileEntryService.uploadAll(files, folderId, user);
             if (hxRequest != null) {
                 response.addHeader("HX-Trigger", "refresh-quota");
                 response.addHeader("HX-Redirect", "/folders/" + folderId + "?tab=files");

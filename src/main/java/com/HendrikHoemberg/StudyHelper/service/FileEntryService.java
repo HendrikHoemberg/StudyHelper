@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import com.HendrikHoemberg.StudyHelper.exception.ResourceNotFoundException;
@@ -37,15 +38,49 @@ public class FileEntryService {
         this.uploadValidator = uploadValidator;
     }
 
-    @Transactional
+    @Transactional(rollbackFor = IOException.class)
     public FileEntry upload(MultipartFile file, Long folderId, User user) throws IOException {
+        return uploadAll(List.of(file), folderId, user).get(0);
+    }
+
+    @Transactional(rollbackFor = IOException.class)
+    public List<FileEntry> uploadAll(List<MultipartFile> files, Long folderId, User user) throws IOException {
+        List<MultipartFile> uploadFiles = files == null ? List.of() : files.stream()
+            .filter(file -> file != null && !file.isEmpty())
+            .toList();
+        if (uploadFiles.isEmpty()) {
+            throw new IllegalArgumentException("Please choose at least one file to upload.");
+        }
+
         Folder folder = folderRepository.findByIdAndUser(folderId, user)
             .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
 
-        String validatedMime = uploadValidator.validateUpload(file);
-        storageQuotaService.assertWithinQuota(user, 0L, file.getSize());
-        String storedFilename = fileStorageService.store(file);
+        List<String> validatedMimeTypes = new ArrayList<>(uploadFiles.size());
+        long addedBytes = 0L;
+        for (MultipartFile file : uploadFiles) {
+            validatedMimeTypes.add(uploadValidator.validateUpload(file));
+            addedBytes += file.getSize();
+        }
+        storageQuotaService.assertWithinQuota(user, 0L, addedBytes);
 
+        List<String> storedFilenames = new ArrayList<>(uploadFiles.size());
+        List<FileEntry> savedEntries = new ArrayList<>(uploadFiles.size());
+        try {
+            for (MultipartFile file : uploadFiles) {
+                storedFilenames.add(fileStorageService.store(file));
+            }
+            for (int i = 0; i < uploadFiles.size(); i++) {
+                savedEntries.add(fileEntryRepository.save(newFileEntry(uploadFiles.get(i), validatedMimeTypes.get(i), storedFilenames.get(i), folder, user)));
+            }
+        } catch (IOException | RuntimeException e) {
+            cleanupStoredFiles(storedFilenames);
+            throw e;
+        }
+
+        return Collections.unmodifiableList(savedEntries);
+    }
+
+    private FileEntry newFileEntry(MultipartFile file, String validatedMime, String storedFilename, Folder folder, User user) {
         FileEntry entry = new FileEntry();
         entry.setOriginalFilename(file.getOriginalFilename());
         entry.setStoredFilename(storedFilename);
@@ -53,8 +88,20 @@ public class FileEntryService {
         entry.setFileSizeBytes(file.getSize());
         entry.setFolder(folder);
         entry.setUser(user);
+        return entry;
+    }
 
-        return fileEntryRepository.save(entry);
+    private void cleanupStoredFiles(List<String> storedFilenames) throws IOException {
+        IOException cleanupFailure = null;
+        for (String storedFilename : storedFilenames) {
+            try {
+                fileStorageService.delete(storedFilename);
+            } catch (IOException e) {
+                if (cleanupFailure == null) cleanupFailure = e;
+                else cleanupFailure.addSuppressed(e);
+            }
+        }
+        if (cleanupFailure != null) throw cleanupFailure;
     }
 
     @Transactional(readOnly = true)

@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -68,14 +69,16 @@ public class FlashcardGenerationController {
     }
 
     @GetMapping("/flashcards/generate")
-    public String showGenerator(@RequestParam(required = false) Long fileId,
+    public String showGenerator(@RequestParam(name = "fileId", required = false) List<Long> fileIds,
                                 Model model,
                                 Principal principal,
                                 @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         List<FlashcardPdfOption> pdfOptions = prepareGeneratorModel(model, user);
-        model.addAttribute("selectedFileId", fileId);
-        model.addAttribute("newDeckName", defaultDeckNameForSelectedPdf(pdfOptions, fileId));
+        List<Long> selectedFileIds = safeFileIds(fileIds);
+        model.addAttribute("selectedFileIds", selectedFileIds);
+        model.addAttribute("selectedFileId", firstFileId(fileIds));
+        model.addAttribute("newDeckName", defaultDeckNameForSelectedPdfs(pdfOptions, selectedFileIds));
         if (hxRequest != null) return "fragments/flashcard-generator :: generator";
         model.addAttribute("username", user.getUsername());
         model.addAttribute("sidebarTree", folderService.getSidebarTree(user));
@@ -83,7 +86,7 @@ public class FlashcardGenerationController {
     }
 
     @PostMapping("/flashcards/generate")
-    public String generate(@RequestParam(required = false) Long fileId,
+    public String generate(@RequestParam(name = "fileId", required = false) List<Long> fileIds,
                            @RequestParam(defaultValue = "TEXT") DocumentMode documentMode,
                            @RequestParam(required = false) String additionalInstructions,
                            @RequestParam(required = false, defaultValue = "20") int cardCount,
@@ -97,10 +100,10 @@ public class FlashcardGenerationController {
                            @RequestHeader(value = "HX-Request", required = false) String hxRequest) throws Exception {
         User user = userService.getByUsername(principal.getName());
         try {
-            DocumentInput input = validateAndBuildInput(fileId, documentMode, destination, existingDeckId, newDeckFolderId, newDeckName, user);
+            List<DocumentInput> inputs = validateAndBuildInputs(fileIds, documentMode, destination, existingDeckId, newDeckFolderId, newDeckName, user);
             aiRequestQuotaService.checkAndRecord(user);
             response.addHeader("HX-Trigger", "refresh-quota");
-            List<GeneratedFlashcard> generated = aiFlashcardService.generate(input, cardCount, additionalInstructions);
+            List<GeneratedFlashcard> generated = aiFlashcardService.generate(inputs, cardCount, additionalInstructions);
             Deck savedDeck = persistenceService.saveGeneratedCards(
                 destination,
                 existingDeckId,
@@ -116,7 +119,7 @@ public class FlashcardGenerationController {
             model.addAttribute("username", principal.getName());
             model.addAttribute("refreshSidebar", true);
             model.addAttribute("sidebarTree", folderService.getSidebarTree(user, deck.getFolder().getId()));
-            model.addAttribute("successMessage", successMessage(generated.size(), input.filename()));
+            model.addAttribute("successMessage", successMessage(generated.size(), inputs));
             if (hxRequest != null) {
                 response.setHeader("HX-Push-Url", "/decks/" + deck.getId());
                 return "fragments/deck :: deckDetail";
@@ -127,7 +130,8 @@ public class FlashcardGenerationController {
             prepareGeneratorModel(model, user);
             model.addAttribute("generationError", ex.getMessage());
             model.addAttribute("generationDetails", generationDetails("FLASHCARDS", ex));
-            model.addAttribute("selectedFileId", fileId);
+            model.addAttribute("selectedFileIds", safeFileIds(fileIds));
+            model.addAttribute("selectedFileId", firstFileId(fileIds));
             model.addAttribute("selectedDocumentMode", documentMode);
             model.addAttribute("additionalInstructions", additionalInstructions);
             model.addAttribute("cardCount", cardCount);
@@ -143,7 +147,7 @@ public class FlashcardGenerationController {
     }
 
     @PostMapping("/flashcards/generate/preflight")
-    public String preflightGenerate(@RequestParam(required = false) Long fileId,
+    public String preflightGenerate(@RequestParam(name = "fileId", required = false) List<Long> fileIds,
                                     @RequestParam(defaultValue = "TEXT") DocumentMode documentMode,
                                     @RequestParam(required = false) FlashcardGenerationDestination destination,
                                     @RequestParam(required = false) Long existingDeckId,
@@ -155,7 +159,7 @@ public class FlashcardGenerationController {
                                     @RequestHeader(value = "HX-Request", required = false) String hxRequest) throws Exception {
         User user = userService.getByUsername(principal.getName());
         try {
-            validateAndBuildInput(fileId, documentMode, destination, existingDeckId, newDeckFolderId, newDeckName, user);
+            validateAndBuildInputs(fileIds, documentMode, destination, existingDeckId, newDeckFolderId, newDeckName, user);
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             return null;
         } catch (Exception ex) {
@@ -163,7 +167,8 @@ public class FlashcardGenerationController {
             prepareGeneratorModel(model, user);
             model.addAttribute("generationError", ex.getMessage());
             model.addAttribute("generationDetails", generationDetails("FLASHCARDS", ex));
-            model.addAttribute("selectedFileId", fileId);
+            model.addAttribute("selectedFileIds", safeFileIds(fileIds));
+            model.addAttribute("selectedFileId", firstFileId(fileIds));
             model.addAttribute("selectedDocumentMode", documentMode);
             model.addAttribute("selectedDestination", destination);
             model.addAttribute("selectedExistingDeckId", existingDeckId);
@@ -176,22 +181,39 @@ public class FlashcardGenerationController {
         }
     }
 
-    private DocumentInput validateAndBuildInput(Long fileId,
-                                                DocumentMode documentMode,
-                                                FlashcardGenerationDestination destination,
-                                                Long existingDeckId,
-                                                Long newDeckFolderId,
-                                                String newDeckName,
-                                                User user) throws Exception {
-        if (fileId == null) throw new IllegalArgumentException("Please select one PDF.");
+    private List<DocumentInput> validateAndBuildInputs(List<Long> fileIds,
+                                                       DocumentMode documentMode,
+                                                       FlashcardGenerationDestination destination,
+                                                       Long existingDeckId,
+                                                       Long newDeckFolderId,
+                                                       String newDeckName,
+                                                       User user) throws Exception {
+        List<Long> selectedIds = safeFileIds(fileIds);
+        if (selectedIds.isEmpty()) throw new IllegalArgumentException("Please select at least one PDF.");
         if (destination == null) throw new IllegalArgumentException("Please choose where to save the generated flashcards.");
         persistenceService.validateDestination(destination, existingDeckId, newDeckFolderId, newDeckName, user);
 
-        FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-        if (!isPdf(file) || !documentExtractionService.isSupported(file)) {
-            throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
+        List<DocumentInput> inputs = new ArrayList<>(selectedIds.size());
+        for (Long selectedId : selectedIds) {
+            FileEntry file = fileEntryService.getByIdAndUser(selectedId, user);
+            if (!isPdf(file) || !documentExtractionService.isSupported(file)) {
+                throw new IllegalArgumentException("Please select only supported PDFs under 10 MB.");
+            }
+            inputs.add(buildDocumentInput(file, documentMode));
         }
-        return buildDocumentInput(file, documentMode);
+        return inputs;
+    }
+
+    private List<Long> safeFileIds(List<Long> fileIds) {
+        if (fileIds == null) return List.of();
+        return fileIds.stream()
+            .filter(id -> id != null)
+            .distinct()
+            .toList();
+    }
+
+    private Long firstFileId(List<Long> fileIds) {
+        return safeFileIds(fileIds).stream().findFirst().orElse(null);
     }
 
     private String generationDetails(String type, Exception ex) {
@@ -206,7 +228,7 @@ public class FlashcardGenerationController {
             case TEXT -> {
                 String text = documentExtractionService.extractText(file);
                 if (text == null || text.isBlank()) {
-                    throw new IllegalArgumentException("This PDF has no extractable text. Try Full PDF mode.");
+                    throw new IllegalArgumentException(file.getOriginalFilename() + " has no extractable text. Try Full PDF mode.");
                 }
                 yield new TextDocument(file.getOriginalFilename(), text);
             }
@@ -234,6 +256,12 @@ public class FlashcardGenerationController {
             .orElse("");
     }
 
+    private String defaultDeckNameForSelectedPdfs(List<FlashcardPdfOption> pdfOptions, List<Long> fileIds) {
+        if (fileIds == null || fileIds.isEmpty()) return "";
+        if (fileIds.size() > 1) return "Generated Flashcards";
+        return defaultDeckNameForSelectedPdf(pdfOptions, fileIds.get(0));
+    }
+
     private String deckNameFromPdfFilename(String filename) {
         if (filename == null) return "";
         return filename.replaceFirst("(?i)\\.pdf$", "");
@@ -244,8 +272,12 @@ public class FlashcardGenerationController {
         return filename != null && filename.toLowerCase().endsWith(".pdf");
     }
 
-    private String successMessage(int count, String filename) {
-        return "Generated " + count + " flashcard" + (count == 1 ? "" : "s") + " from " + filename + ".";
+    private String successMessage(int count, List<DocumentInput> inputs) {
+        String cardLabel = " flashcard" + (count == 1 ? "" : "s");
+        if (inputs.size() == 1) {
+            return "Generated " + count + cardLabel + " from " + inputs.get(0).filename() + ".";
+        }
+        return "Generated " + count + cardLabel + " from " + inputs.size() + " PDFs.";
     }
 
 }

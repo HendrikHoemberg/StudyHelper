@@ -16,10 +16,10 @@
                   enctype="multipart/form-data">
                 <div class="sh-modal-body">
                     <div class="sh-upload-field">
-                        <input type="file" name="file" id="upload-file-input" class="sh-upload-file-input" required>
+                        <input type="file" name="file" id="upload-file-input" class="sh-upload-file-input" multiple required>
                         <button type="button" class="sh-upload-chooser" id="upload-file-chooser">
                             <iconify-icon icon="lucide:upload-cloud"></iconify-icon>
-                            <span>Choose file</span>
+                            <span>Choose files</span>
                         </button>
                         <div class="sh-upload-selected" id="upload-selected-file">
                             <iconify-icon icon="lucide:check-circle"></iconify-icon>
@@ -51,11 +51,20 @@
             });
 
             function updateUploadState() {
-                var hasFile = !!fileInput.files[0];
-                selectedFileName.textContent = fileInput.files[0] ? fileInput.files[0].name : 'No file selected';
+                var files = Array.prototype.slice.call(fileInput.files || []);
+                var hasFile = files.length > 0;
+                if (files.length === 1) {
+                    selectedFileName.textContent = files[0].name;
+                } else if (files.length > 1) {
+                    selectedFileName.textContent = files.length + ' files selected: ' + files.map(function(file) {
+                        return file.name;
+                    }).join(', ');
+                } else {
+                    selectedFileName.textContent = 'No files selected';
+                }
                 selectedFile.classList.toggle('is-visible', hasFile);
                 chooser.classList.toggle('is-selected', hasFile);
-                chooserText.textContent = hasFile ? 'Change file' : 'Choose file';
+                chooserText.textContent = hasFile ? 'Change files' : 'Choose files';
                 submitButton.disabled = !hasFile;
             }
 
