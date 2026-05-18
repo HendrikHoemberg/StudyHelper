@@ -824,6 +824,9 @@ a {
     font-weight: 700;
     font-size: 0.95rem;
     letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .sh-deck-meta {
@@ -1801,6 +1804,8 @@ textarea.sh-input {
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .sh-file-tile-actions {
