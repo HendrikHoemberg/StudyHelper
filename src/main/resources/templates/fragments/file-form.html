@@ -16,14 +16,19 @@
                   enctype="multipart/form-data">
                 <div class="sh-modal-body">
                     <div class="sh-upload-field">
-                        <input type="file" name="file" id="upload-file-input" class="sh-upload-file-input" multiple required>
+                        <input type="file" name="file" id="upload-file-input" class="sh-upload-file-input" 
+                               accept=".pdf,.txt,.md,.png,.jpg,.jpeg,.gif,.webp" multiple required>
                         <button type="button" class="sh-upload-chooser" id="upload-file-chooser">
                             <iconify-icon icon="lucide:upload-cloud"></iconify-icon>
                             <span>Choose files</span>
                         </button>
                         <div class="sh-upload-selected" id="upload-selected-file">
-                            <iconify-icon icon="lucide:check-circle"></iconify-icon>
+                            <iconify-icon icon="lucide:check-circle" id="upload-status-icon"></iconify-icon>
                             <div class="sh-upload-file-name" id="upload-file-name">No file selected</div>
+                        </div>
+                        <div id="upload-error-message" style="display: none; color: #ff4d4f; margin-top: 8px; font-size: 0.875rem; align-items: center; gap: 4px;">
+                            <iconify-icon icon="lucide:alert-circle"></iconify-icon>
+                            <span>Unsupported file type selected. Allowed: .pdf, .txt, .md, .png, .jpg, .jpeg, .gif, .webp</span>
                         </div>
                     </div>
                     <p class="sh-upload-limit">Maximum file size: 100 MB</p>
@@ -44,7 +49,12 @@
             var selectedFileName = document.getElementById('upload-file-name');
             var selectedFile = document.getElementById('upload-selected-file');
             var submitButton = document.getElementById('upload-submit');
-            if (!fileInput || !chooser || !chooserText || !selectedFileName || !selectedFile || !submitButton) return;
+            var errorMsg = document.getElementById('upload-error-message');
+            var statusIcon = document.getElementById('upload-status-icon');
+            
+            if (!fileInput || !chooser || !chooserText || !selectedFileName || !selectedFile || !submitButton || !errorMsg || !statusIcon) return;
+
+            var allowedExtensions = ['.pdf', '.txt', '.md', '.png', '.jpg', '.jpeg', '.gif', '.webp'];
 
             chooser.addEventListener('click', function() {
                 fileInput.click();
@@ -53,6 +63,14 @@
             function updateUploadState() {
                 var files = Array.prototype.slice.call(fileInput.files || []);
                 var hasFile = files.length > 0;
+                
+                var invalidFiles = files.filter(function(file) {
+                    var ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                    return allowedExtensions.indexOf(ext) === -1;
+                });
+                
+                var hasInvalidFiles = invalidFiles.length > 0;
+
                 if (files.length === 1) {
                     selectedFileName.textContent = files[0].name;
                 } else if (files.length > 1) {
@@ -62,10 +80,22 @@
                 } else {
                     selectedFileName.textContent = 'No files selected';
                 }
+                
                 selectedFile.classList.toggle('is-visible', hasFile);
                 chooser.classList.toggle('is-selected', hasFile);
                 chooserText.textContent = hasFile ? 'Change files' : 'Choose files';
-                submitButton.disabled = !hasFile;
+                
+                if (hasInvalidFiles) {
+                    errorMsg.style.display = 'flex';
+                    statusIcon.setAttribute('icon', 'lucide:alert-circle');
+                    selectedFile.style.color = '#ff4d4f';
+                    submitButton.disabled = true;
+                } else {
+                    errorMsg.style.display = 'none';
+                    statusIcon.setAttribute('icon', 'lucide:check-circle');
+                    selectedFile.style.color = '';
+                    submitButton.disabled = !hasFile;
+                }
             }
 
             fileInput.addEventListener('change', updateUploadState);
