@@ -1,5 +1,13 @@
 # StudyHelper
 
+![Java 21](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)
+![Spring Boot 4.0.6](https://img.shields.io/badge/Spring%20Boot-4.0.6-6DB33F?style=flat&logo=springboot&logoColor=white)
+![Spring AI 2.0.0-M5](https://img.shields.io/badge/Spring%20AI-2.0.0--M5-6DB33F?style=flat&logo=spring&logoColor=white)
+![MySQL 8.4](https://img.shields.io/badge/MySQL-8.4-4479A1?style=flat&logo=mysql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat&logo=docker&logoColor=white)
+![Thymeleaf](https://img.shields.io/badge/Thymeleaf-templates-005F0F?style=flat&logo=thymeleaf&logoColor=white)
+![Maven Wrapper](https://img.shields.io/badge/Maven-wrapper-C71A36?style=flat&logo=apachemaven&logoColor=white)
+
 StudyHelper is a self-hosted study application for organizing learning material, building flashcard decks, generating AI-assisted study content, and running flashcard, quiz, and exam sessions from saved sources.
 
 The app is built with Spring Boot, Thymeleaf, HTMX-style server-rendered interactions, MySQL, and Spring AI with Google GenAI. It includes Docker-based local and production deployment options, upload storage, invite-based registration, per-user quotas, and an admin panel.
