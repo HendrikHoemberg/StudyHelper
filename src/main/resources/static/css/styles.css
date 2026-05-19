@@ -2287,6 +2287,32 @@ textarea.sh-input {
     transform: scale(1.08);
 }
 
+.sh-study-btn-flip {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.sh-study-btn-flip:hover {
+    background: var(--bg-subtle);
+    color: var(--text);
+    border-color: var(--border-strong);
+    transform: scale(1.08);
+}
+
+.sh-study-btn-flip iconify-icon {
+    font-size: 1.25rem;
+}
+
 /* Setup page */
 .sh-study-setup-card {
     border-radius: var(--radius-lg);

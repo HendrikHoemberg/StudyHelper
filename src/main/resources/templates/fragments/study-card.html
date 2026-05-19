@@ -72,6 +72,12 @@
                             </button>
                         </form>
 
+                        <button type="button" class="sh-study-btn-flip" 
+                                title="Flip back"
+                                onclick="this.closest('.sh-flip-card').classList.remove('flipped')">
+                            <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
+                        </button>
+
                         <form method="post"
                                hx-post="/session/answer"
                                hx-target="#study-session-content"
