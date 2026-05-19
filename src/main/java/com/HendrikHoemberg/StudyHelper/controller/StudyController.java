@@ -372,7 +372,6 @@ public class StudyController {
         model.addAttribute("currentCard", currentCard);
         model.addAttribute("currentCardNumber", state.currentIndex() + 1);
         model.addAttribute("totalCards", state.queue().size());
-        model.addAttribute("isDeckByDeck", state.config().sessionMode() == SessionMode.DECK_BY_DECK);
         if (hxRequest != null) return "fragments/study-card :: studyCard";
         model.addAttribute("studyStateView", "card");
         return "study-page";

@@ -186,7 +186,6 @@ public class StudySessionController {
         model.addAttribute("currentCard", currentCard);
         model.addAttribute("currentCardNumber", state.currentIndex() + 1);
         model.addAttribute("totalCards", state.queue().size());
-        model.addAttribute("isDeckByDeck", state.config().sessionMode() == SessionMode.DECK_BY_DECK);
         model.addAttribute("studyError", error);
     }
 
