@@ -13,6 +13,7 @@ import com.HendrikHoemberg.StudyHelper.service.AiExamService;
 import com.HendrikHoemberg.StudyHelper.service.ExamService;
 import com.HendrikHoemberg.StudyHelper.service.ExamSessionService;
 import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
+import com.HendrikHoemberg.StudyHelper.service.StudyLogService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,7 @@ class ExamControllerTests {
     private ExamSessionService examSessionService;
     private AiRequestQuotaService aiRequestQuotaService;
     private SavedSessionService savedSessionService;
+    private StudyLogService studyLogService;
     private User user;
 
     @BeforeEach
@@ -54,6 +56,7 @@ class ExamControllerTests {
         examSessionService = mock(ExamSessionService.class);
         aiRequestQuotaService = mock(AiRequestQuotaService.class);
         savedSessionService = mock(SavedSessionService.class);
+        studyLogService = mock(StudyLogService.class);
         when(savedSessionService.loadExam(any())).thenReturn(Optional.empty());
         controller = new ExamController(
             examSessionService,
@@ -61,7 +64,8 @@ class ExamControllerTests {
             userService,
             aiExamService,
             aiRequestQuotaService,
-            savedSessionService
+            savedSessionService,
+            studyLogService
         );
 
         user = new User();

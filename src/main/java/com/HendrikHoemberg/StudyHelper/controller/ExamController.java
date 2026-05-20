@@ -27,6 +27,7 @@ public class ExamController {
     private final AiExamService aiExamService;
     private final AiRequestQuotaService aiRequestQuotaService;
     private final SavedSessionService savedSessionService;
+    private final StudyLogService studyLogService;
 
     @Autowired
     public ExamController(ExamSessionService examSessionService,
@@ -34,13 +35,15 @@ public class ExamController {
                           UserService userService,
                           AiExamService aiExamService,
                           AiRequestQuotaService aiRequestQuotaService,
-                          SavedSessionService savedSessionService) {
+                          SavedSessionService savedSessionService,
+                          StudyLogService studyLogService) {
         this.examSessionService = examSessionService;
         this.examService = examService;
         this.userService = userService;
         this.aiExamService = aiExamService;
         this.aiRequestQuotaService = aiRequestQuotaService;
         this.savedSessionService = savedSessionService;
+        this.studyLogService = studyLogService;
     }
 
     @PostMapping("/exam/session")
@@ -278,6 +281,14 @@ public class ExamController {
             );
 
             Exam saved = examService.saveCompleted(user, finalState, grading);
+            try {
+                List<Long> involvedDeckIds = state.config() == null || state.config().deckIds() == null
+                    ? List.of()
+                    : List.copyOf(state.config().deckIds());
+                studyLogService.recordExam(user, saved, involvedDeckIds);
+            } catch (Exception ignored) {
+                // Never block the result view because of bookkeeping.
+            }
             session.removeAttribute(SESSION_KEY);
             savedSessionService.discard(user);
 
