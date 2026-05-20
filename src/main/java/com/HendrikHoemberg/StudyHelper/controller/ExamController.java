@@ -13,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.*;
 import java.util.*;
 
 @Controller
@@ -63,7 +64,8 @@ public class ExamController {
                 questionSize, count, timerMinutes, layout, user
             );
             response.addHeader("HX-Trigger", "refresh-quota");
-            stashAndPersist(session, user, result.state());
+            session.setAttribute(SESSION_KEY, result.state());
+            savedSessionService.saveExam(user, result.state());
 
             if ("true".equals(hxRequest)) {
                 model.addAttribute("state", result.state());
@@ -104,9 +106,20 @@ public class ExamController {
         }
     }
 
-    private void stashAndPersist(HttpSession session, User user, ExamSessionState state) {
-        session.setAttribute(SESSION_KEY, state);
-        savedSessionService.saveExam(user, state);
+    private ExamSessionState pauseAndPersist(HttpSession session, User user, ExamSessionState state) {
+        Instant now = Instant.now();
+        long delta = Math.max(0, java.time.Duration.between(state.resumedAt(), now).toSeconds());
+        ExamSessionState paused = new ExamSessionState(
+            state.config(),
+            state.questions(),
+            state.answers(),
+            now,
+            state.elapsedBeforeResume() + delta,
+            state.sourceSummary()
+        );
+        session.setAttribute(SESSION_KEY, paused);
+        savedSessionService.saveExam(user, paused);
+        return paused;
     }
 
     private ExamSessionState getState(HttpSession session, User user) {
@@ -146,18 +159,19 @@ public class ExamController {
                              @RequestParam String answer,
                              HttpSession session, Model model, Principal principal) {
         User user = userService.getByUsername(principal.getName());
-        ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
+        ExamSessionState state = getState(session, user);
         if (state == null) return "redirect:/study/start";
 
         Map<Integer, String> newAnswers = new HashMap<>(state.answers());
         newAnswers.put(index, answer);
 
         ExamSessionState newState = new ExamSessionState(
-            state.config(), state.questions(), newAnswers, state.resumedAt(), state.elapsedBeforeResume(), state.sourceSummary()
+            state.config(), state.questions(), newAnswers,
+            state.resumedAt(), state.elapsedBeforeResume(), state.sourceSummary()
         );
-        stashAndPersist(session, user, newState);
+        ExamSessionState persisted = pauseAndPersist(session, user, newState);
 
-        model.addAttribute("state", newState);
+        model.addAttribute("state", persisted);
         model.addAttribute("currentIndex", index + 1);
         return "fragments/exam-question :: exam-question";
     }
@@ -167,8 +181,8 @@ public class ExamController {
         User user = userService.getByUsername(principal.getName());
         ExamSessionState state = getState(session, user);
         if (state == null) return "redirect:/study/start";
-
-        model.addAttribute("state", state);
+        ExamSessionState persisted = pauseAndPersist(session, user, state);
+        model.addAttribute("state", persisted);
         model.addAttribute("currentIndex", currentIndex + 1);
         return "fragments/exam-question :: exam-question";
     }
@@ -178,8 +192,8 @@ public class ExamController {
         User user = userService.getByUsername(principal.getName());
         ExamSessionState state = getState(session, user);
         if (state == null) return "redirect:/study/start";
-
-        model.addAttribute("state", state);
+        ExamSessionState persisted = pauseAndPersist(session, user, state);
+        model.addAttribute("state", persisted);
         model.addAttribute("currentIndex", currentIndex - 1);
         return "fragments/exam-question :: exam-question";
     }
