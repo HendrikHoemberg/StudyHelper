@@ -59,7 +59,7 @@
                         <span>Large PDF — generation may be slow.</span>
                     </div>
 
-                    <div th:if="${!#lists.isEmpty(pdfFolderTree)}" class="vb-list sh-ai-tree">
+                    <div th:if="${!#lists.isEmpty(pdfFolderTree)}" class="vb-list sh-ai-tree" style="max-height: 560px;">
                         <div th:each="node : ${pdfFolderTree}" class="vb-group" th:style="'--folder-color: ' + ${node.colorHex}">
                             <div class="vb-group-head" style="cursor:default;">
                                 <span class="vb-group-cap">
@@ -133,7 +133,7 @@
                                 <div th:if="${!#lists.isEmpty(folderTree)}" class="vb-list sh-ai-tree">
                                     <div th:each="node : ${folderTree}" class="vb-group" th:style="'--folder-color: ' + ${node.colorHex}">
                                         <label class="vb-group-head sh-ai-tree-folder">
-                                            <input class="sh-ai-tree-radio" type="radio" name="newDeckFolderId" th:value="${node.id}" th:checked="${selectedNewDeckFolderId == node.id}">
+                                            <input class="sh-checkbox" type="checkbox" name="newDeckFolderId" th:value="${node.id}" th:checked="${selectedNewDeckFolderId == node.id}">
                                             <span class="vb-group-cap">
                                                 <iconify-icon th:attr="icon=${node.iconName.contains(':') ? node.iconName : 'lucide:' + node.iconName}"></iconify-icon>
                                             </span>
@@ -141,7 +141,7 @@
                                         </label>
                                         <div th:if="${!#lists.isEmpty(node.children)}" class="vb-group-body">
                                             <label th:each="child : ${node.children}" class="vb-subgroup-head sh-ai-tree-folder" th:style="'--folder-color: ' + ${child.colorHex}">
-                                                <input class="sh-ai-tree-radio" type="radio" name="newDeckFolderId" th:value="${child.id}" th:checked="${selectedNewDeckFolderId == child.id}">
+                                                <input class="sh-checkbox" type="checkbox" name="newDeckFolderId" th:value="${child.id}" th:checked="${selectedNewDeckFolderId == child.id}">
                                                 <span class="vb-subgroup-cap">
                                                     <iconify-icon th:attr="icon=${child.iconName.contains(':') ? child.iconName : 'lucide:' + child.iconName}"></iconify-icon>
                                                 </span>

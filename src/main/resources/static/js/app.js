@@ -897,6 +897,13 @@ document.addEventListener('change', (event) => {
     if (event.target.matches('input[name="destination"]')) {
         updateAiFlashcardDestinationPanels();
     }
+    if (event.target.matches('input[name="newDeckFolderId"]') && event.target.checked) {
+        document.querySelectorAll('input[name="newDeckFolderId"]').forEach(cb => {
+            if (cb !== event.target) {
+                cb.checked = false;
+            }
+        });
+    }
     if (event.target.matches('input[name="existingDeckId"]') || event.target.matches('input[name="newDeckFolderId"]')) {
         const card = event.target.closest('.sh-ai-destination-card');
         const head = card?.querySelector('.sh-ai-destination-head input[name="destination"]');

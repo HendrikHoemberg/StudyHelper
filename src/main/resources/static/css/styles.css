@@ -5418,12 +5418,14 @@ iconify-icon {
     border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 50%, transparent);
 }
 
-.sh-ai-tree .vb-group-head:has(> .sh-ai-tree-radio:checked) {
+.sh-ai-tree .vb-group-head:has(> .sh-ai-tree-radio:checked),
+.sh-ai-tree .vb-group-head:has(> .sh-checkbox:checked) {
     background: color-mix(in srgb, var(--folder-color, var(--accent)) 14%, var(--surface));
     border-bottom-color: color-mix(in srgb, var(--folder-color, var(--accent)) 30%, var(--border-light));
 }
 
-.sh-ai-tree .vb-subgroup-head:has(> .sh-ai-tree-radio:checked) {
+.sh-ai-tree .vb-subgroup-head:has(> .sh-ai-tree-radio:checked),
+.sh-ai-tree .vb-subgroup-head:has(> .sh-checkbox:checked) {
     background: color-mix(in srgb, var(--folder-color, var(--accent)) 14%, transparent);
     border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 55%, transparent);
     border-style: solid;
