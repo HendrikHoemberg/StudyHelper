@@ -688,7 +688,7 @@ a {
 }
 
 .sh-deck-cover {
-    height: 120px;
+    height: 100px;
     border-radius: 16px;
     background:
         linear-gradient(135deg,
@@ -5846,7 +5846,7 @@ iconify-icon {
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 1rem;
     border-radius: 1rem;
     background: var(--surface-raised);
     color: var(--text);
@@ -5857,7 +5857,7 @@ iconify-icon {
 }
 
 .sh-action-tile iconify-icon {
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 
 .sh-action-tile:hover {
@@ -5908,7 +5908,7 @@ iconify-icon {
 
 .sh-deck-rail {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     gap: 1rem;
 }
 
