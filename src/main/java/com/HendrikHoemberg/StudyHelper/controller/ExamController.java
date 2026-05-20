@@ -122,6 +122,35 @@ public class ExamController {
         return paused;
     }
 
+    @GetMapping("/exam/resume")
+    public String resume(Model model, HttpSession session, Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        return savedSessionService.loadExam(user).map(saved -> {
+            ExamSessionState resumed = new ExamSessionState(
+                saved.config(), saved.questions(), saved.answers(),
+                java.time.Instant.now(), saved.elapsedBeforeResume(), saved.sourceSummary()
+            );
+            long timeLimitSeconds = saved.config().timerMinutes() == null
+                ? Long.MAX_VALUE
+                : saved.config().timerMinutes() * 60L;
+            if (saved.elapsedBeforeResume() >= timeLimitSeconds) {
+                savedSessionService.discard(user);
+                return "redirect:/exams";
+            }
+            session.setAttribute(SESSION_KEY, resumed);
+            savedSessionService.saveExam(user, resumed);
+            int firstUnansweredIndex = 0;
+            for (int i = 0; i < resumed.questions().size(); i++) {
+                if (!resumed.answers().containsKey(i)) { firstUnansweredIndex = i; break; }
+            }
+            model.addAttribute("state", resumed);
+            model.addAttribute("currentIndex", firstUnansweredIndex);
+            return resumed.config().layout() == ExamLayout.PER_PAGE
+                ? "fragments/exam-question :: exam-question"
+                : "fragments/exam-single-page :: exam-single-page";
+        }).orElse("redirect:/study/start?mode=EXAM");
+    }
+
     private ExamSessionState getState(HttpSession session, User user) {
         Object raw = session.getAttribute(SESSION_KEY);
         if (raw instanceof ExamSessionState s) return s;

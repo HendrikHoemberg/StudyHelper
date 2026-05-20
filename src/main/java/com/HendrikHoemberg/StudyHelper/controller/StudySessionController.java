@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
 import java.util.NoSuchElementException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * Handles flashcard session runtime endpoints (next, answer, redo).
@@ -49,6 +50,30 @@ public class StudySessionController {
         this.savedSessionService = savedSessionService;
     }
 
+    @GetMapping("/study/resume")
+    public String resume(Model model,
+                         Principal principal,
+                         HttpSession httpSession,
+                         RedirectAttributes redirect) {
+        User user = userService.getByUsername(principal.getName());
+        return savedSessionService.loadFlashcards(user).map(saved -> {
+            SavedSessionService.ReconcileResult result = savedSessionService.reconcileFlashcards(saved, user);
+            if (result.state().queue().isEmpty()) {
+                savedSessionService.discard(user);
+                redirect.addFlashAttribute("studyError",
+                    "The cards in your saved session are no longer available.");
+                return SETUP_REDIRECT;
+            }
+            httpSession.setAttribute(SESSION_KEY, result.state());
+            savedSessionService.saveFlashcards(user, result.state());
+            if (result.removedCount() > 0) {
+                httpSession.setAttribute("studyResumeNotice",
+                    result.removedCount() + " card(s) were removed since you paused.");
+            }
+            return "redirect:/session/next";
+        }).orElse(SETUP_REDIRECT);
+    }
+
     @GetMapping("/session/next")
     public String nextCard(Model model,
                            Principal principal,
@@ -57,6 +82,11 @@ public class StudySessionController {
                            @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
+        Object notice = httpSession.getAttribute("studyResumeNotice");
+        if (notice != null) {
+            model.addAttribute("studyResumeNotice", notice);
+            httpSession.removeAttribute("studyResumeNotice");
+        }
         StudySessionState state = getState(httpSession, user);
 
         if (state == null) {

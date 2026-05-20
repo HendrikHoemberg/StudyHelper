@@ -37,6 +37,19 @@ public class QuizController {
         this.savedSessionService = savedSessionService;
     }
 
+    @GetMapping("/quiz/resume")
+    public String resume(Model model,
+                         HttpSession httpSession,
+                         Principal principal,
+                         @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        User user = userService.getByUsername(principal.getName());
+        return savedSessionService.loadQuiz(user).map(state -> {
+            httpSession.setAttribute(SESSION_KEY, state);
+            if (state.isComplete()) return renderSummary(model, state, hxRequest);
+            return renderQuestion(model, state, hxRequest);
+        }).orElse("redirect:/study/start?mode=QUIZ");
+    }
+
     @PostMapping("/quiz/answer")
     public String answer(
             @RequestParam(required = false) java.util.List<Integer> selectedOptions,
