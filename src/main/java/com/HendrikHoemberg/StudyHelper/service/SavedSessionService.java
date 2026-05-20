@@ -152,6 +152,52 @@ public class SavedSessionService {
         return state.answers().size() + " / " + state.questions().size() + " answered";
     }
 
+    public record ReconcileResult(StudySessionState state, int removedCount) {}
+
+    @Transactional(readOnly = true)
+    public ReconcileResult reconcileFlashcards(StudySessionState state, User user) {
+        Set<Long> savedIds = new HashSet<>();
+        for (StudyCardView card : state.queue()) savedIds.add(card.cardId());
+        if (savedIds.isEmpty()) {
+            return new ReconcileResult(state, 0);
+        }
+
+        Set<Long> alive = new HashSet<>(flashcardRepository.findExistingIdsByIdIn(savedIds));
+        int before = state.queue().size();
+
+        List<StudyCardView> newQueue = state.queue().stream()
+            .filter(c -> alive.contains(c.cardId()))
+            .toList();
+
+        Map<Long, List<StudyCardView>> newByDeck = new LinkedHashMap<>();
+        for (var entry : state.cardsByDeck().entrySet()) {
+            List<StudyCardView> filtered = entry.getValue().stream()
+                .filter(c -> alive.contains(c.cardId()))
+                .toList();
+            if (!filtered.isEmpty()) newByDeck.put(entry.getKey(), filtered);
+        }
+
+        List<Long> newIncorrect = state.incorrectCardIds().stream()
+            .filter(alive::contains)
+            .toList();
+
+        int clampedIndex = Math.min(state.currentIndex(), Math.max(0, newQueue.size() - 1));
+        if (newQueue.isEmpty()) clampedIndex = 0;
+
+        StudySessionState newState = new StudySessionState(
+            state.config(),
+            newByDeck,
+            newQueue,
+            clampedIndex,
+            state.totalAnswered(),
+            state.correctAnswers(),
+            state.incorrectAnswers(),
+            newIncorrect
+        );
+
+        return new ReconcileResult(newState, before - newQueue.size());
+    }
+
     private static String truncate(String s, int max) {
         if (s == null) return "";
         return s.length() <= max ? s : s.substring(0, max);
