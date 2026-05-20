@@ -10,6 +10,7 @@ import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,16 +30,23 @@ public class StudySessionService {
 
     private final DeckService deckService;
     private final FlashcardService flashcardService;
+    private final FlashcardRepository flashcardRepository;
     private final Random random;
 
     @Autowired
-    public StudySessionService(DeckService deckService, FlashcardService flashcardService) {
-        this(deckService, flashcardService, new Random());
+    public StudySessionService(DeckService deckService,
+                               FlashcardService flashcardService,
+                               FlashcardRepository flashcardRepository) {
+        this(deckService, flashcardService, flashcardRepository, new Random());
     }
 
-    StudySessionService(DeckService deckService, FlashcardService flashcardService, Random random) {
+    StudySessionService(DeckService deckService,
+                        FlashcardService flashcardService,
+                        FlashcardRepository flashcardRepository,
+                        Random random) {
         this.deckService = deckService;
         this.flashcardService = flashcardService;
+        this.flashcardRepository = flashcardRepository;
         this.random = random;
     }
 
@@ -75,6 +83,7 @@ public class StudySessionService {
         return state.queue().get(state.currentIndex());
     }
 
+    @Transactional
     public StudySessionState recordAnswer(StudySessionState state, Long cardId, boolean isCorrect) {
         if (state == null) {
             throw new IllegalArgumentException("No active study session.");
@@ -87,6 +96,16 @@ public class StudySessionService {
         if (!current.cardId().equals(cardId)) {
             throw new IllegalArgumentException("Answer does not match the current card.");
         }
+
+        flashcardRepository.findById(cardId).ifPresent(fc -> {
+            if (isCorrect) {
+                Integer cur = fc.getCorrectStreak();
+                fc.setCorrectStreak((cur == null ? 0 : cur) + 1);
+            } else {
+                fc.setCorrectStreak(0);
+            }
+            flashcardRepository.save(fc);
+        });
 
         int nextCorrect = state.correctAnswers() + (isCorrect ? 1 : 0);
         int nextIncorrect = state.incorrectAnswers() + (isCorrect ? 0 : 1);

@@ -2,6 +2,7 @@ package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.DeckOrderMode;
 import com.HendrikHoemberg.StudyHelper.dto.SessionMode;
+import com.HendrikHoemberg.StudyHelper.dto.StudyCardView;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionConfig;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionState;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionStats;
@@ -9,23 +10,27 @@ import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class StudySessionServiceTests {
 
     private DeckService deckService;
     private FlashcardService flashcardService;
+    private FlashcardRepository flashcardRepository;
     private StudySessionService studySessionService;
     private User user;
 
@@ -33,7 +38,8 @@ class StudySessionServiceTests {
     void setUp() {
         deckService = mock(DeckService.class);
         flashcardService = mock(FlashcardService.class);
-        studySessionService = new StudySessionService(deckService, flashcardService, new Random(42));
+        flashcardRepository = mock(FlashcardRepository.class);
+        studySessionService = new StudySessionService(deckService, flashcardService, flashcardRepository, new Random(42));
 
         user = new User();
         user.setId(1L);
@@ -175,6 +181,82 @@ class StudySessionServiceTests {
         assertThat(redo.queue().stream().map(card -> card.cardId()).collect(Collectors.toSet()))
             .isEqualTo(first.queue().stream().map(card -> card.cardId()).collect(Collectors.toSet()));
         assertThat(redo.queue()).isNotEqualTo(first.queue());
+    }
+
+    @Test
+    void recordAnswer_incorrect_persistsStreakZeroImmediately() {
+        Deck deck = deck(1L, "Test Deck", "Root");
+        Flashcard card = card(100L, deck);
+        StudyCardView view = new StudyCardView(
+            card.getId(), "Front", "Back",
+            deck.getId(), deck.getName(), "Root",
+            "#000", "layers", null, null
+        );
+
+        StudySessionState state = new StudySessionState(
+            new StudySessionConfig(List.of(1L), SessionMode.SHUFFLED, DeckOrderMode.SELECTED_ORDER),
+            Map.of(1L, List.of(view)),
+            List.of(view),
+            0, 0, 0, 0, List.of()
+        );
+
+        when(flashcardRepository.findById(100L)).thenReturn(Optional.of(card));
+
+        studySessionService.recordAnswer(state, 100L, false);
+
+        assertThat(card.getCorrectStreak()).isZero();
+        verify(flashcardRepository).save(card);
+    }
+
+    @Test
+    void recordAnswer_correct_persistsIncrementedStreak() {
+        Deck deck = deck(1L, "Test Deck", "Root");
+        Flashcard card = card(100L, deck);
+        StudyCardView view = new StudyCardView(
+            card.getId(), "Front", "Back",
+            deck.getId(), deck.getName(), "Root",
+            "#000", "layers", null, null
+        );
+
+        StudySessionState state = new StudySessionState(
+            new StudySessionConfig(List.of(1L), SessionMode.SHUFFLED, DeckOrderMode.SELECTED_ORDER),
+            Map.of(1L, List.of(view)),
+            List.of(view),
+            0, 0, 0, 0, List.of()
+        );
+
+        when(flashcardRepository.findById(100L)).thenReturn(Optional.of(card));
+
+        studySessionService.recordAnswer(state, 100L, true);
+
+        assertThat(card.getCorrectStreak()).isEqualTo(1);
+        verify(flashcardRepository).save(card);
+    }
+
+    @Test
+    void recordAnswer_correct_incrementsExistingStreak() {
+        Deck deck = deck(1L, "Test Deck", "Root");
+        Flashcard card = card(100L, deck);
+        card.setCorrectStreak(3);
+        StudyCardView view = new StudyCardView(
+            card.getId(), "Front", "Back",
+            deck.getId(), deck.getName(), "Root",
+            "#000", "layers", null, null
+        );
+
+        StudySessionState state = new StudySessionState(
+            new StudySessionConfig(List.of(1L), SessionMode.SHUFFLED, DeckOrderMode.SELECTED_ORDER),
+            Map.of(1L, List.of(view)),
+            List.of(view),
+            0, 0, 0, 0, List.of()
+        );
+
+        when(flashcardRepository.findById(100L)).thenReturn(Optional.of(card));
+
+        studySessionService.recordAnswer(state, 100L, true);
+
+        assertThat(card.getCorrectStreak()).isEqualTo(4);
+        verify(flashcardRepository).save(card);
     }
 
     private Deck deck(Long id, String name, String pathTail) {

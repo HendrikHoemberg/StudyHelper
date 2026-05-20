@@ -83,20 +83,15 @@ class StudyLogServiceTests {
     }
 
     @Test
-    void recordFlashcards_writesLogAndUpdatesStreakAndLastStudiedAt() {
+    void recordFlashcards_writesLogAndUpdatesLastStudiedAt() {
         StudyCardView v1 = new StudyCardView(card1.getId(), "F1", "B1", deck.getId(), "Anatomy", "Root / Anatomy", "#000", "layers", null, null);
         StudyCardView v2 = new StudyCardView(card2.getId(), "F2", "B2", deck.getId(), "Anatomy", "Root / Anatomy", "#000", "layers", null, null);
 
-        // card1 answered correctly, card2 answered incorrectly
         StudySessionState state = new StudySessionState(
             new StudySessionConfig(List.of(deck.getId()), com.HendrikHoemberg.StudyHelper.dto.SessionMode.DECK_BY_DECK, com.HendrikHoemberg.StudyHelper.dto.DeckOrderMode.SELECTED_ORDER),
             Map.of(deck.getId(), List.of(v1, v2)),
             List.of(v1, v2),
-            2,    // currentIndex (complete)
-            2,    // totalAnswered
-            1,    // correctAnswers
-            1,    // incorrectAnswers
-            List.of(card2.getId())  // incorrectCardIds
+            2, 2, 1, 1, List.of(card2.getId())
         );
 
         studyLogService.recordFlashcards(user, state);
@@ -112,11 +107,11 @@ class StudyLogServiceTests {
         assertThat(log.getCompletedAt()).isNotNull();
         assertThat(log.getTitle()).contains("Anatomy");
 
-        // Streak updated: card1 -> 1, card2 -> 0
+        // Streaks are NOT touched by recordFlashcards
         Flashcard reloaded1 = flashcardRepository.findById(card1.getId()).orElseThrow();
         Flashcard reloaded2 = flashcardRepository.findById(card2.getId()).orElseThrow();
-        assertThat(reloaded1.getCorrectStreak()).isEqualTo(1);
-        assertThat(reloaded2.getCorrectStreak()).isEqualTo(0);
+        assertThat(reloaded1.getCorrectStreak()).isNull();
+        assertThat(reloaded2.getCorrectStreak()).isNull();
 
         // Deck lastStudiedAt updated
         Deck reloadedDeck = deckRepository.findById(deck.getId()).orElseThrow();
@@ -124,23 +119,27 @@ class StudyLogServiceTests {
     }
 
     @Test
-    void recordFlashcards_secondCorrectIncrementsStreak() {
-        // Pre-set streak to 1
-        card1.setCorrectStreak(1);
+    void recordFlashcards_doesNotTouchStreaks() {
+        // Pre-set streaks
+        card1.setCorrectStreak(3);
+        card2.setCorrectStreak(0);
         flashcardRepository.save(card1);
+        flashcardRepository.save(card2);
 
         StudyCardView v1 = new StudyCardView(card1.getId(), "F1", "B1", deck.getId(), "Anatomy", "Root / Anatomy", "#000", "layers", null, null);
+        StudyCardView v2 = new StudyCardView(card2.getId(), "F2", "B2", deck.getId(), "Anatomy", "Root / Anatomy", "#000", "layers", null, null);
         StudySessionState state = new StudySessionState(
             new StudySessionConfig(List.of(deck.getId()), com.HendrikHoemberg.StudyHelper.dto.SessionMode.DECK_BY_DECK, com.HendrikHoemberg.StudyHelper.dto.DeckOrderMode.SELECTED_ORDER),
-            Map.of(deck.getId(), List.of(v1)),
-            List.of(v1),
-            1, 1, 1, 0, List.of()
+            Map.of(deck.getId(), List.of(v1, v2)),
+            List.of(v1, v2),
+            2, 2, 1, 1, List.of(card2.getId())
         );
 
         studyLogService.recordFlashcards(user, state);
 
-        Flashcard reloaded = flashcardRepository.findById(card1.getId()).orElseThrow();
-        assertThat(reloaded.getCorrectStreak()).isEqualTo(2);  // graduated to mastered
+        // Streaks unchanged
+        assertThat(flashcardRepository.findById(card1.getId()).orElseThrow().getCorrectStreak()).isEqualTo(3);
+        assertThat(flashcardRepository.findById(card2.getId()).orElseThrow().getCorrectStreak()).isEqualTo(0);
     }
 
     @Test

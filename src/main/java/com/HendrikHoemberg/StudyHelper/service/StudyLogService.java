@@ -5,12 +5,10 @@ import com.HendrikHoemberg.StudyHelper.dto.StudyCardView;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionState;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Exam;
-import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.SavedSessionType;
 import com.HendrikHoemberg.StudyHelper.entity.StudyLog;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.repository.DeckRepository;
-import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
 import com.HendrikHoemberg.StudyHelper.repository.StudyLogRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,33 +24,20 @@ public class StudyLogService {
 
     private final StudyLogRepository studyLogRepository;
     private final DeckRepository deckRepository;
-    private final FlashcardRepository flashcardRepository;
 
     public StudyLogService(StudyLogRepository studyLogRepository,
-                           DeckRepository deckRepository,
-                           FlashcardRepository flashcardRepository) {
+                           DeckRepository deckRepository) {
         this.studyLogRepository = studyLogRepository;
         this.deckRepository = deckRepository;
-        this.flashcardRepository = flashcardRepository;
     }
 
     @Transactional
     public void recordFlashcards(User user, StudySessionState state) {
         if (state == null || state.queue().isEmpty()) return;
 
-        Set<Long> incorrectIds = new HashSet<>(state.incorrectCardIds());
         Set<Long> deckIds = new HashSet<>();
         for (StudyCardView v : state.queue()) {
             deckIds.add(v.deckId());
-            Flashcard fc = flashcardRepository.findById(v.cardId()).orElse(null);
-            if (fc == null) continue;
-            if (incorrectIds.contains(v.cardId())) {
-                fc.setCorrectStreak(0);
-            } else {
-                Integer cur = fc.getCorrectStreak();
-                fc.setCorrectStreak((cur == null ? 0 : cur) + 1);
-            }
-            flashcardRepository.save(fc);
         }
 
         touchDecks(deckIds);
