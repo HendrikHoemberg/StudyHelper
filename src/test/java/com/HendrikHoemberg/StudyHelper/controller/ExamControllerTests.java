@@ -12,6 +12,7 @@ import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.AiExamService;
 import com.HendrikHoemberg.StudyHelper.service.ExamService;
 import com.HendrikHoemberg.StudyHelper.service.ExamSessionService;
+import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import org.springframework.ui.ExtendedModelMap;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -41,6 +43,7 @@ class ExamControllerTests {
     private AiExamService aiExamService;
     private ExamSessionService examSessionService;
     private AiRequestQuotaService aiRequestQuotaService;
+    private SavedSessionService savedSessionService;
     private User user;
 
     @BeforeEach
@@ -50,12 +53,15 @@ class ExamControllerTests {
         userService = mock(UserService.class);
         examSessionService = mock(ExamSessionService.class);
         aiRequestQuotaService = mock(AiRequestQuotaService.class);
+        savedSessionService = mock(SavedSessionService.class);
+        when(savedSessionService.loadExam(any())).thenReturn(Optional.empty());
         controller = new ExamController(
             examSessionService,
             examService,
             userService,
             aiExamService,
-            aiRequestQuotaService
+            aiRequestQuotaService,
+            savedSessionService
         );
 
         user = new User();

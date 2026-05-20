@@ -25,18 +25,21 @@ public class ExamController {
     private final UserService userService;
     private final AiExamService aiExamService;
     private final AiRequestQuotaService aiRequestQuotaService;
+    private final SavedSessionService savedSessionService;
 
     @Autowired
     public ExamController(ExamSessionService examSessionService,
                           ExamService examService,
                           UserService userService,
                           AiExamService aiExamService,
-                          AiRequestQuotaService aiRequestQuotaService) {
+                          AiRequestQuotaService aiRequestQuotaService,
+                          SavedSessionService savedSessionService) {
         this.examSessionService = examSessionService;
         this.examService = examService;
         this.userService = userService;
         this.aiExamService = aiExamService;
         this.aiRequestQuotaService = aiRequestQuotaService;
+        this.savedSessionService = savedSessionService;
     }
 
     @PostMapping("/exam/session")
@@ -60,7 +63,7 @@ public class ExamController {
                 questionSize, count, timerMinutes, layout, user
             );
             response.addHeader("HX-Trigger", "refresh-quota");
-            session.setAttribute(SESSION_KEY, result.state());
+            stashAndPersist(session, user, result.state());
 
             if ("true".equals(hxRequest)) {
                 model.addAttribute("state", result.state());
@@ -101,6 +104,20 @@ public class ExamController {
         }
     }
 
+    private void stashAndPersist(HttpSession session, User user, ExamSessionState state) {
+        session.setAttribute(SESSION_KEY, state);
+        savedSessionService.saveExam(user, state);
+    }
+
+    private ExamSessionState getState(HttpSession session, User user) {
+        Object raw = session.getAttribute(SESSION_KEY);
+        if (raw instanceof ExamSessionState s) return s;
+        return savedSessionService.loadExam(user).map(loaded -> {
+            session.setAttribute(SESSION_KEY, loaded);
+            return loaded;
+        }).orElse(null);
+    }
+
     private String renderGenerationError(Model model, HttpServletResponse response, Exception exception) {
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         // An AI generation failure means the provider was reached after quota
@@ -127,7 +144,8 @@ public class ExamController {
     @PostMapping("/exam/answer")
     public String saveAnswer(@RequestParam int index,
                              @RequestParam String answer,
-                             HttpSession session, Model model) {
+                             HttpSession session, Model model, Principal principal) {
+        User user = userService.getByUsername(principal.getName());
         ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
         if (state == null) return "redirect:/study/start";
 
@@ -137,7 +155,7 @@ public class ExamController {
         ExamSessionState newState = new ExamSessionState(
             state.config(), state.questions(), newAnswers, state.resumedAt(), state.elapsedBeforeResume(), state.sourceSummary()
         );
-        session.setAttribute(SESSION_KEY, newState);
+        stashAndPersist(session, user, newState);
 
         model.addAttribute("state", newState);
         model.addAttribute("currentIndex", index + 1);
@@ -145,8 +163,9 @@ public class ExamController {
     }
 
     @GetMapping("/exam/next")
-    public String next(@RequestParam int currentIndex, HttpSession session, Model model) {
-        ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
+    public String next(@RequestParam int currentIndex, HttpSession session, Model model, Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        ExamSessionState state = getState(session, user);
         if (state == null) return "redirect:/study/start";
 
         model.addAttribute("state", state);
@@ -155,8 +174,9 @@ public class ExamController {
     }
 
     @GetMapping("/exam/prev")
-    public String prev(@RequestParam int currentIndex, HttpSession session, Model model) {
-        ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
+    public String prev(@RequestParam int currentIndex, HttpSession session, Model model, Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        ExamSessionState state = getState(session, user);
         if (state == null) return "redirect:/study/start";
 
         model.addAttribute("state", state);
@@ -171,7 +191,7 @@ public class ExamController {
                          Model model, Principal principal, HttpSession session, HttpServletResponse response) {
         User user = userService.getByUsername(principal.getName());
 
-        ExamSessionState state = (ExamSessionState) session.getAttribute(SESSION_KEY);
+        ExamSessionState state = getState(session, user);
         if (state == null) return "<div>Session expired</div>";
 
         // Update answers one last time if they came in with the submit
@@ -202,6 +222,7 @@ public class ExamController {
 
             Exam saved = examService.saveCompleted(user, finalState, grading);
             session.removeAttribute(SESSION_KEY);
+            savedSessionService.discard(user);
 
             model.addAttribute("exam", saved);
             model.addAttribute("report", grading.overall());
