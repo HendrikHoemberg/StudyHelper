@@ -9,6 +9,7 @@ import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.RegistrationCodeService;
+import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,6 +65,9 @@ class AdminControllerTests {
 
     @MockitoBean
     private StorageQuotaService storageQuotaService;
+
+    @MockitoBean
+    private SavedSessionService savedSessionService;
 
     @BeforeEach
     void setUp() {

@@ -10,6 +10,7 @@ import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.FolderView;
+import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,6 +60,9 @@ class FolderControllerTests {
 
     @MockitoBean
     private StorageQuotaService storageQuotaService;
+
+    @MockitoBean
+    private SavedSessionService savedSessionService;
 
     private User user;
     private Folder folder;

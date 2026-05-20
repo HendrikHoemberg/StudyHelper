@@ -56,9 +56,10 @@ class StudyControllerPdfModeTests {
         ExamSessionService examSessionService = new ExamSessionService(
                 aiExamService, deckService, flashcardService, fileEntryService,
                 documentExtractionService, aiRequestQuotaService);
+        SavedSessionService savedSessionService = mock(SavedSessionService.class);
         controller = new StudyController(
                 studySessionService, quizSessionService, deckService, folderService,
-                userService, documentExtractionService, fileEntryService, examSessionService);
+                userService, documentExtractionService, fileEntryService, examSessionService, savedSessionService);
 
         user = new User();
         user.setId(1L);
@@ -213,6 +214,7 @@ class StudyControllerPdfModeTests {
                 5,
                 null,
                 ExamLayout.PER_PAGE,
+                false,
                 new ExtendedModelMap(),
                 () -> "alice",
                 new MockHttpSession(),
@@ -271,6 +273,7 @@ class StudyControllerPdfModeTests {
                 3,
                 null,
                 ExamLayout.PER_PAGE,
+                false,
                 new ExtendedModelMap(),
                 () -> "alice",
                 new MockHttpSession(),
@@ -313,6 +316,7 @@ class StudyControllerPdfModeTests {
                 5,
                 null,
                 ExamLayout.PER_PAGE,
+                false,
                 new ExtendedModelMap(),
                 () -> "alice",
                 new MockHttpSession(),
@@ -350,6 +354,7 @@ class StudyControllerPdfModeTests {
                 5,
                 null,
                 ExamLayout.PER_PAGE,
+                false,
                 new ExtendedModelMap(),
                 () -> "alice",
                 new MockHttpSession(),
@@ -392,6 +397,7 @@ class StudyControllerPdfModeTests {
                 5,
                 null,
                 ExamLayout.PER_PAGE,
+                false,
                 model,
                 () -> "alice",
                 new MockHttpSession(),
@@ -436,6 +442,7 @@ class StudyControllerPdfModeTests {
                 5,
                 null,
                 ExamLayout.PER_PAGE,
+                false,
                 model,
                 () -> "alice",
                 new MockHttpSession(),
@@ -484,6 +491,7 @@ class StudyControllerPdfModeTests {
                 5,
                 null,
                 ExamLayout.PER_PAGE,
+                false,
                 model,
                 () -> "alice",
                 new MockHttpSession(),
@@ -530,6 +538,7 @@ class StudyControllerPdfModeTests {
                 5,
                 null,
                 ExamLayout.PER_PAGE,
+                false,
                 model,
                 () -> "alice",
                 new MockHttpSession(),

@@ -6,9 +6,7 @@ import com.HendrikHoemberg.StudyHelper.entity.SavedSessionType;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
 import com.HendrikHoemberg.StudyHelper.repository.SavedSessionRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -32,9 +30,7 @@ class SavedSessionServiceTests {
     void setUp() {
         repository = mock(SavedSessionRepository.class);
         flashcardRepository = mock(FlashcardRepository.class);
-        objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper = new ObjectMapper();
         service = new SavedSessionService(repository, flashcardRepository, objectMapper);
 
         user = new User();

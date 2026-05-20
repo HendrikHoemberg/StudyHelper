@@ -5,6 +5,7 @@ import com.HendrikHoemberg.StudyHelper.repository.UserRepository;
 import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
+import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,9 @@ class QuotaControllerTests {
 
     @MockitoBean
     UserRepository userRepository;
+
+    @MockitoBean
+    SavedSessionService savedSessionService;
 
     @Test
     @WithMockUser

@@ -10,6 +10,7 @@ import com.HendrikHoemberg.StudyHelper.service.FileStorageService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.PdfSplitService;
 import com.HendrikHoemberg.StudyHelper.service.PdfThumbnailService;
+import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,6 +69,9 @@ class FileControllerTests {
 
     @MockitoBean
     private StorageQuotaService storageQuotaService;
+
+    @MockitoBean
+    private SavedSessionService savedSessionService;
 
     @MockitoBean
     private PdfSplitService pdfSplitService;
