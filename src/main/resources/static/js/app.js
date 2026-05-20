@@ -192,6 +192,14 @@ document.body.addEventListener('htmx:afterSwap', () => {
     if (window.initCustomSteppers) window.initCustomSteppers(document);
     initQuizAnswerForm();
     initLazyExamRuntime(document);
+
+    // Toggle sidebar visibility class to prevent flashing
+    const shell = document.querySelector('.sh-explorer-shell');
+    if (shell) {
+        const hasStudy = document.getElementById('study-session-content') !== null ||
+                         document.getElementById('quiz-session-content') !== null;
+        shell.classList.toggle('sh-hide-sidebar', hasStudy);
+    }
 });
 
 // Optional fade-in animation after settle

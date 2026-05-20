@@ -491,6 +491,16 @@ a {
     display: none;
 }
 
+/* Hide sidebar helper rule to prevent flashing during active transitions */
+.sh-explorer-shell.sh-hide-sidebar:has(.sh-study-session-active) {
+    grid-template-columns: 1fr;
+    gap: 0;
+}
+
+.sh-explorer-shell.sh-hide-sidebar:has(.sh-study-session-active) .sh-dashboard-sidebar {
+    display: none;
+}
+
 @media (min-width: 769px) {
     .sh-explorer-shell:has(.sh-study-setup-card) {
         grid-template-columns: 1fr;
@@ -498,6 +508,15 @@ a {
     }
 
     .sh-explorer-shell:has(.sh-study-setup-card) .sh-dashboard-sidebar {
+        display: none;
+    }
+
+    .sh-explorer-shell.sh-hide-sidebar {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .sh-explorer-shell.sh-hide-sidebar .sh-dashboard-sidebar {
         display: none;
     }
 
