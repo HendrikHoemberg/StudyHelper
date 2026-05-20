@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.config.AppDefaults;
+import com.HendrikHoemberg.StudyHelper.dto.SavedSessionSummary;
 import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
 import com.HendrikHoemberg.StudyHelper.dto.UserQuotaSummary;
 import com.HendrikHoemberg.StudyHelper.entity.User;
@@ -8,6 +9,7 @@ import com.HendrikHoemberg.StudyHelper.entity.UserRole;
 import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
+import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -27,19 +29,22 @@ public class GlobalControllerAdvice {
     private final UserService userService;
     private final AiRequestQuotaService aiRequestQuotaService;
     private final StorageQuotaService storageQuotaService;
+    private final SavedSessionService savedSessionService;
     private final HttpServletRequest request;
 
     public GlobalControllerAdvice(FolderService folderService,
-                                  DeckService deckService,
-                                  UserService userService,
-                                  AiRequestQuotaService aiRequestQuotaService,
-                                  StorageQuotaService storageQuotaService,
-                                  HttpServletRequest request) {
+                                   DeckService deckService,
+                                   UserService userService,
+                                   AiRequestQuotaService aiRequestQuotaService,
+                                   StorageQuotaService storageQuotaService,
+                                   SavedSessionService savedSessionService,
+                                   HttpServletRequest request) {
         this.folderService = folderService;
         this.deckService = deckService;
         this.userService = userService;
         this.aiRequestQuotaService = aiRequestQuotaService;
         this.storageQuotaService = storageQuotaService;
+        this.savedSessionService = savedSessionService;
         this.request = request;
     }
 
@@ -97,5 +102,12 @@ public class GlobalControllerAdvice {
             aiRequestQuotaService.todayUsed(user),
             user.getDailyAiRequestLimit()
         );
+    }
+
+    @ModelAttribute("savedSession")
+    public SavedSessionSummary addSavedSession(Principal principal) {
+        if (principal == null) return null;
+        User user = userService.getByUsername(principal.getName());
+        return savedSessionService.findForUser(user).orElse(null);
     }
 }
