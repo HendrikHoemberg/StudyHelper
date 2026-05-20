@@ -209,6 +209,7 @@ public class StudyController {
                 StudySessionState state = studySessionService.buildSession(config, user);
                 savedSessionService.discard(user);
                 session.setAttribute("studySessionState", state);
+                savedSessionService.saveFlashcards(user, state);
                 return delegateToFlashcards(model, user, state, hxRequest);
             } catch (Exception ex) {
                 return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex, model, user, session, response, hxRequest);
@@ -223,6 +224,7 @@ public class StudyController {
                 savedSessionService.discard(user);
                 model.addAttribute("mode", mode);
                 session.setAttribute("quizSessionState", state);
+                savedSessionService.saveQuiz(user, state);
                 return delegateToQuiz(model, state, hxRequest);
             } catch (Exception ex) {
                 return handleError(mode, selectedDeckIds, selectedFileIds, pdfMode, ex, model, user, session, response, hxRequest);
