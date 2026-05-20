@@ -2320,6 +2320,7 @@ textarea.sh-input {
     cursor: pointer;
     min-height: 260px;
     aspect-ratio: 1 / 1;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (max-width: 768px) {
@@ -2341,11 +2342,13 @@ textarea.sh-input {
     background: var(--accent);
     color: #fff;
     box-shadow: 0 4px 12px var(--accent-glow);
+    transform: scale(1.05);
 }
 
 .sh-study-choice:hover {
     border-color: var(--accent);
     box-shadow: var(--shadow-lg), 0 0 20px var(--accent-glow);
+    transform: translateY(-3px);
 }
 
 .sh-study-choice:has(input:checked) {
@@ -2371,6 +2374,7 @@ textarea.sh-input {
     justify-content: center;
     margin-bottom: 1.5rem;
     color: var(--text-secondary);
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sh-study-choice-icon iconify-icon,
