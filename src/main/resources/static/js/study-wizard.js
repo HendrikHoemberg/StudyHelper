@@ -63,7 +63,20 @@
         const direction = (previousStep === null) ? 'none' : (step > previousStep ? 'forward' : 'backward');
         previousStep = step;
         currentStep = step;
-        
+
+        // When navigating back to a gateway step (1 or 2), clear its radio selection
+        // so the card no longer appears selected and clicking it re-fires `change`
+        // to advance the wizard.
+        if (direction === 'backward' && (step === 1 || step === 2)) {
+            document.querySelectorAll(`.sh-wizard-panel[data-step="${step}"]`).forEach(panel => {
+                const panelMode = panel.dataset.mode;
+                if (panelMode && panelMode !== currentMode) return;
+                panel.querySelectorAll('input[type="radio"]').forEach(radio => {
+                    radio.checked = false;
+                });
+            });
+        }
+
         // Toggle visibility of panels based on step AND mode
         document.querySelectorAll('.sh-wizard-panel').forEach(panel => {
             const panelStep = panel.dataset.sourceStep === 'true'
