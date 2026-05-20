@@ -33,6 +33,7 @@ public class StudyController {
     private final DocumentExtractionService documentExtractionService;
     private final FileEntryService fileEntryService;
     private final ExamSessionService examSessionService;
+    private final SavedSessionService savedSessionService;
 
     @Autowired
     public StudyController(StudySessionService studySessionService,
@@ -42,7 +43,8 @@ public class StudyController {
                            UserService userService,
                            DocumentExtractionService documentExtractionService,
                            FileEntryService fileEntryService,
-                           ExamSessionService examSessionService) {
+                           ExamSessionService examSessionService,
+                           SavedSessionService savedSessionService) {
         this.studySessionService = studySessionService;
         this.quizSessionService = quizSessionService;
         this.deckService = deckService;
@@ -51,6 +53,7 @@ public class StudyController {
         this.documentExtractionService = documentExtractionService;
         this.fileEntryService = fileEntryService;
         this.examSessionService = examSessionService;
+        this.savedSessionService = savedSessionService;
     }
 
     @GetMapping("/study/start")
@@ -178,6 +181,7 @@ public class StudyController {
                                 @RequestParam(defaultValue = "5") int count,
                                 @RequestParam(required = false) Integer timerMinutes,
                                 @RequestParam(defaultValue = "PER_PAGE") ExamLayout layout,
+                                @RequestParam(name = "confirmDiscard", defaultValue = "false") boolean confirmDiscard,
                                 Model model,
                                 Principal principal,
                                 HttpSession session,
@@ -186,11 +190,22 @@ public class StudyController {
         Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
         User user = userService.getByUsername(principal.getName());
 
+        if (!confirmDiscard) {
+            var existing = savedSessionService.findForUser(user);
+            if (existing.isPresent()) {
+                model.addAttribute("savedSession", existing.get());
+                model.addAttribute("startNewMode", mode);
+                response.setStatus(HttpServletResponse.SC_OK);
+                return "fragments/saved-session :: conflict";
+            }
+        }
+
         if (mode == StudyMode.FLASHCARDS) {
             try {
                 List<Long> orderedSelection = resolveOrderedSelection(selectedDeckIds, orderedDeckIds, sessionMode);
                 StudySessionConfig config = new StudySessionConfig(orderedSelection, sessionMode, deckOrderMode);
                 StudySessionState state = studySessionService.buildSession(config, user);
+                savedSessionService.discard(user);
                 session.setAttribute("studySessionState", state);
                 return delegateToFlashcards(model, user, state, hxRequest);
             } catch (Exception ex) {
@@ -203,6 +218,7 @@ public class StudyController {
                     quizQuestionMode, difficulty, additionalInstructions, user
                 );
                 response.addHeader("HX-Trigger", "refresh-quota");
+                savedSessionService.discard(user);
                 model.addAttribute("mode", mode);
                 session.setAttribute("quizSessionState", state);
                 return delegateToQuiz(model, state, hxRequest);
@@ -216,6 +232,7 @@ public class StudyController {
                     questionSize, count, timerMinutes, layout, user
                 );
                 response.addHeader("HX-Trigger", "refresh-quota");
+                savedSessionService.discard(user);
                 session.setAttribute("examSession", result.state());
                 model.addAttribute("mode", mode);
                 if (hxRequest != null) {
@@ -247,6 +264,7 @@ public class StudyController {
                                          @RequestParam(defaultValue = "5") int count,
                                          @RequestParam(required = false) Integer timerMinutes,
                                          @RequestParam(defaultValue = "PER_PAGE") ExamLayout layout,
+                                         @RequestParam(name = "confirmDiscard", defaultValue = "false") boolean confirmDiscard,
                                          Model model,
                                          Principal principal,
                                          HttpSession session,
@@ -254,6 +272,16 @@ public class StudyController {
                                          @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         Map<Long, DocumentMode> pdfMode = DocumentModeResolver.parseFromRequest(request);
         User user = userService.getByUsername(principal.getName());
+
+        if (!confirmDiscard) {
+            var existing = savedSessionService.findForUser(user);
+            if (existing.isPresent()) {
+                model.addAttribute("savedSession", existing.get());
+                model.addAttribute("startNewMode", mode);
+                response.setStatus(HttpServletResponse.SC_OK);
+                return "fragments/saved-session :: conflict";
+            }
+        }
 
         try {
             if (mode == StudyMode.QUIZ) {

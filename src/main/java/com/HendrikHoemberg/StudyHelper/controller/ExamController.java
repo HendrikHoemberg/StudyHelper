@@ -53,10 +53,21 @@ public class ExamController {
             @RequestParam(defaultValue = "5") int count,
             @RequestParam(required = false) Integer timerMinutes,
             @RequestParam(defaultValue = "PER_PAGE") ExamLayout layout,
+            @RequestParam(name = "confirmDiscard", defaultValue = "false") boolean confirmDiscard,
             Model model, Principal principal, HttpSession session, HttpServletResponse response,
             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
 
         User user = userService.getByUsername(principal.getName());
+
+        if (!confirmDiscard) {
+            var existing = savedSessionService.findForUser(user);
+            if (existing.isPresent()) {
+                model.addAttribute("savedSession", existing.get());
+                model.addAttribute("startNewMode", StudyMode.EXAM);
+                response.setStatus(HttpServletResponse.SC_OK);
+                return "fragments/saved-session :: conflict";
+            }
+        }
 
         try {
             ExamSessionService.ExamSessionResult result = examSessionService.createSession(
@@ -64,6 +75,7 @@ public class ExamController {
                 questionSize, count, timerMinutes, layout, user
             );
             response.addHeader("HX-Trigger", "refresh-quota");
+            savedSessionService.discard(user);
             session.setAttribute(SESSION_KEY, result.state());
             savedSessionService.saveExam(user, result.state());
 
