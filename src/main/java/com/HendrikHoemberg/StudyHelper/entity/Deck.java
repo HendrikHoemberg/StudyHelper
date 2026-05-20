@@ -35,6 +35,9 @@ public class Deck {
     @Column(name = "pinned", nullable = false)
     private boolean pinned = false;
 
+    @Column(name = "last_studied_at")
+    private LocalDateTime lastStudiedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
