@@ -12,6 +12,7 @@ import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
+import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.StudySessionService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
@@ -60,6 +61,9 @@ class StudySessionControllerTests {
 
     @MockitoBean
     private StorageQuotaService storageQuotaService;
+
+    @MockitoBean
+    private SavedSessionService savedSessionService;
 
     private User user;
 

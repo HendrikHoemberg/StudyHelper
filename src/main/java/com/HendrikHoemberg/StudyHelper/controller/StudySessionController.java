@@ -7,6 +7,7 @@ import com.HendrikHoemberg.StudyHelper.dto.StudySessionState;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionStats;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
+import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
 import com.HendrikHoemberg.StudyHelper.service.StudySessionService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -36,13 +37,16 @@ public class StudySessionController {
     private final StudySessionService studySessionService;
     private final FlashcardService flashcardService;
     private final UserService userService;
+    private final SavedSessionService savedSessionService;
 
     public StudySessionController(StudySessionService studySessionService,
                                   FlashcardService flashcardService,
-                                  UserService userService) {
+                                  UserService userService,
+                                  SavedSessionService savedSessionService) {
         this.studySessionService = studySessionService;
         this.flashcardService = flashcardService;
         this.userService = userService;
+        this.savedSessionService = savedSessionService;
     }
 
     @GetMapping("/session/next")
@@ -53,7 +57,7 @@ public class StudySessionController {
                            @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
-        StudySessionState state = getState(httpSession);
+        StudySessionState state = getState(httpSession, user);
 
         if (state == null) {
             return SETUP_REDIRECT;
@@ -76,7 +80,7 @@ public class StudySessionController {
                          @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
-        StudySessionState state = getState(httpSession);
+        StudySessionState state = getState(httpSession, user);
 
         if (state == null) {
             return SETUP_REDIRECT;
@@ -85,7 +89,7 @@ public class StudySessionController {
         try {
             flashcardService.getFlashcardForUser(cardId, user);
             StudySessionState nextState = studySessionService.recordAnswer(state, cardId, isCorrect);
-            httpSession.setAttribute(SESSION_KEY, nextState);
+            stashAndPersist(httpSession, user, nextState);
             return renderCurrentState(model, user, nextState, hxRequest);
         } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException ex) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -115,7 +119,7 @@ public class StudySessionController {
                        @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
-        StudySessionState state = getState(httpSession);
+        StudySessionState state = getState(httpSession, user);
 
         if (state == null) {
             return SETUP_REDIRECT;
@@ -123,7 +127,7 @@ public class StudySessionController {
 
         try {
             StudySessionState rebuilt = studySessionService.buildSession(state.config(), user);
-            httpSession.setAttribute(SESSION_KEY, rebuilt);
+            stashAndPersist(httpSession, user, rebuilt);
             return renderCurrentState(model, user, rebuilt, hxRequest);
         } catch (IllegalArgumentException | NoSuchElementException ex) {
             return SETUP_REDIRECT;
@@ -138,7 +142,7 @@ public class StudySessionController {
                                 @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
-        StudySessionState state = getState(httpSession);
+        StudySessionState state = getState(httpSession, user);
 
         if (state == null) {
             return SETUP_REDIRECT;
@@ -146,7 +150,7 @@ public class StudySessionController {
 
         try {
             StudySessionState rebuilt = studySessionService.redoIncorrect(state);
-            httpSession.setAttribute(SESSION_KEY, rebuilt);
+            stashAndPersist(httpSession, user, rebuilt);
             return renderCurrentState(model, user, rebuilt, hxRequest);
         } catch (IllegalArgumentException | NoSuchElementException ex) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -197,11 +201,23 @@ public class StudySessionController {
         model.addAttribute("incorrectCardCount", state.incorrectCardIds().size());
     }
 
-    private StudySessionState getState(HttpSession httpSession) {
+    private StudySessionState getState(HttpSession httpSession, User user) {
         Object raw = httpSession.getAttribute(SESSION_KEY);
         if (raw instanceof StudySessionState state) {
             return state;
         }
-        return null;
+        return savedSessionService.loadFlashcards(user).map(loaded -> {
+            httpSession.setAttribute(SESSION_KEY, loaded);
+            return loaded;
+        }).orElse(null);
+    }
+
+    private void stashAndPersist(HttpSession httpSession, User user, StudySessionState state) {
+        httpSession.setAttribute(SESSION_KEY, state);
+        if (studySessionService.isComplete(state)) {
+            savedSessionService.discard(user);
+        } else {
+            savedSessionService.saveFlashcards(user, state);
+        }
     }
 }
