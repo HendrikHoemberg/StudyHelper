@@ -39,44 +39,6 @@ public class FolderController {
         this.userService = userService;
     }
 
-    @GetMapping("/dashboard")
-    public String listFolders(Model model, Principal principal,
-                              @RequestParam(required = false) String q,
-                              @RequestHeader(value = "HX-Request", required = false) String hxRequest,
-                              @RequestHeader(value = "HX-Target", required = false) String hxTarget) {
-        User user = userService.getByUsername(principal.getName());
-        List<Folder> folders = folderService.getRootFolders(user);
-
-        List<StudyDeckOption> deckOptions = deckService.getStudyDeckOptions(user);
-        List<FileSummary> fileSummaries = fileEntryService.getFileSummaries(user);
-
-        if (q != null && !q.isBlank()) {
-            String query = q.toLowerCase();
-            deckOptions = deckOptions.stream()
-                .filter(d -> d.deckName().toLowerCase().contains(query) || d.folderPath().toLowerCase().contains(query))
-                .toList();
-            fileSummaries = fileSummaries.stream()
-                .filter(f -> f.originalFilename().toLowerCase().contains(query) || f.folderPath().toLowerCase().contains(query))
-                .toList();
-        }
-
-        model.addAttribute("folders", folders);
-
-        model.addAttribute("deckOptions", deckOptions);
-        model.addAttribute("fileSummaries", fileSummaries);
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("query", q);
-
-        if (hxRequest != null) {
-            if ("library-grid-container".equals(hxTarget)) {
-                return "fragments/explorer :: libraryGrid";
-            }
-            model.addAttribute("refreshSidebar", true);
-            return "fragments/explorer :: dashboardContent";
-        }
-        return "dashboard";
-    }
-
     @PostMapping("/folders")
     public String createRootFolder(@RequestParam String name,
                                    @RequestParam(defaultValue = AppDefaults.DEFAULT_COLOR_HEX) String colorHex,
