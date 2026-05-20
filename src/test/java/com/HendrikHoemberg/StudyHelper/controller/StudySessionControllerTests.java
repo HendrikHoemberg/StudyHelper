@@ -28,6 +28,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -129,6 +133,59 @@ class StudySessionControllerTests {
                 .param("isCorrect", "true"))
             .andExpect(status().isOk())
             .andExpect(view().name("fragments/study-complete :: studyComplete"));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void answer_persistsNewStateViaSavedSessionService() throws Exception {
+        User user = new User(); user.setId(1L); user.setUsername("alice");
+        when(userService.getByUsername("alice")).thenReturn(user);
+
+        StudyCardView card = new StudyCardView(101L, "f", "b", 10L, "Deck", "Root", "#fff", null, null, null);
+        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER);
+        StudySessionState before = new StudySessionState(config, Map.of(10L, List.of(card)), List.of(card), 0, 0, 0, 0, List.of());
+        StudySessionState after = new StudySessionState(config, Map.of(10L, List.of(card)), List.of(card), 1, 1, 1, 0, List.of());
+
+        when(studySessionService.recordAnswer(any(), eq(101L), eq(true))).thenReturn(after);
+        when(studySessionService.isComplete(after)).thenReturn(true);
+        when(flashcardService.getFlashcardForUser(eq(101L), eq(user))).thenReturn(new Flashcard());
+
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("studySessionState", before);
+
+        mockMvc.perform(post("/session/answer").session(session).with(csrf())
+                .param("cardId", "101").param("isCorrect", "true"))
+            .andExpect(status().isOk());
+
+        verify(savedSessionService).discard(user);
+        verify(savedSessionService, never()).saveFlashcards(any(), any());
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void answer_inProgress_callsSaveFlashcards() throws Exception {
+        User user = new User(); user.setId(1L); user.setUsername("alice");
+        when(userService.getByUsername("alice")).thenReturn(user);
+
+        StudyCardView c1 = new StudyCardView(101L, "f1", "b1", 10L, "Deck", "Root", "#fff", null, null, null);
+        StudyCardView c2 = new StudyCardView(102L, "f2", "b2", 10L, "Deck", "Root", "#fff", null, null, null);
+        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER);
+        StudySessionState before = new StudySessionState(config, Map.of(10L, List.of(c1, c2)), List.of(c1, c2), 0, 0, 0, 0, List.of());
+        StudySessionState after = new StudySessionState(config, Map.of(10L, List.of(c1, c2)), List.of(c1, c2), 1, 1, 1, 0, List.of());
+
+        when(studySessionService.recordAnswer(any(), eq(101L), eq(true))).thenReturn(after);
+        when(studySessionService.isComplete(after)).thenReturn(false);
+        when(flashcardService.getFlashcardForUser(eq(101L), eq(user))).thenReturn(new Flashcard());
+
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("studySessionState", before);
+
+        mockMvc.perform(post("/session/answer").session(session).with(csrf())
+                .param("cardId", "101").param("isCorrect", "true"))
+            .andExpect(status().isOk());
+
+        verify(savedSessionService).saveFlashcards(user, after);
+        verify(savedSessionService, never()).discard(any());
     }
 
     private StudySessionState activeState() {
