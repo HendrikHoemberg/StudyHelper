@@ -5974,6 +5974,22 @@ iconify-icon {
     }
 }
 
+@media (max-width: 767px) {
+    .sh-dashboard-cockpit {
+        padding: 1rem 0;
+        gap: 1.25rem;
+    }
+
+    .sh-deck-rail {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .sh-deck-cover {
+        height: 90px;
+    }
+}
+
 @media (max-width: 480px) {
     .sh-review-card {
         flex-direction: column;
@@ -5985,9 +6001,8 @@ iconify-icon {
         align-self: flex-end;
     }
 
-    .sh-dashboard-cockpit {
-        padding: 1rem 0.75rem;
-        gap: 1.25rem;
+    .sh-deck-rail {
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .sh-dashboard-greeting .sh-page-title {
