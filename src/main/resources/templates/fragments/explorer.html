@@ -28,6 +28,11 @@
 
         <div class="sh-cockpit-primary">
 
+            <!-- Resume card (only if saved session exists) — always visible above action tiles -->
+            <th:block th:if="${vm.resume().isPresent()}">
+                <th:block th:replace="~{fragments/saved-session :: card}"></th:block>
+            </th:block>
+
             <!-- Action tiles row wrapped in an extra container for better visibility and coherence -->
             <div class="sh-action-tiles-wrapper">
                 <div class="sh-action-tile-row">
@@ -57,11 +62,6 @@
 
             <!-- Mobile/Splitscreen Alerts & High Priority CTAs -->
             <div class="sh-dashboard-alerts-mobile">
-                <!-- Resume card (only if saved session exists) -->
-                <th:block th:if="${vm.resume().isPresent()}">
-                    <th:block th:replace="~{fragments/saved-session :: card}"></th:block>
-                </th:block>
-
                 <!-- Review mistakes card (Mobile/Splitscreen version) -->
                 <a th:if="${vm.reviewMistakesCount() > 0}"
                    class="sh-review-card sh-review-card-mobile"
