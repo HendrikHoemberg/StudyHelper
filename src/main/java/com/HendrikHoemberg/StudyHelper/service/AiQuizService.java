@@ -148,7 +148,7 @@ public class AiQuizService {
         List<Integer> indices = q.correctOptionIndices().stream().distinct().sorted().toList();
 
         return switch (type) {
-            case MULTIPLE_CHOICE -> {
+            case SINGLE_CHOICE, MULTIPLE_CHOICE -> {
                 if (q.options().size() != 4) yield null;
                 if (indices.size() != 1) yield null;
                 if (indices.get(0) < 0 || indices.get(0) > 3) yield null;
