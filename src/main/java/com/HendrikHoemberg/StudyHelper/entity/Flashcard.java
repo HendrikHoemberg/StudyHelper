@@ -34,6 +34,9 @@ public class Flashcard {
     @Column(name = "back_image_size_bytes")
     private Long backImageSizeBytes;
 
+    @Column(name = "correct_streak")
+    private Integer correctStreak;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deck_id", nullable = false)
     private Deck deck;
