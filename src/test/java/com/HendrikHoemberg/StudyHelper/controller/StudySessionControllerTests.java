@@ -14,6 +14,7 @@ import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
+import com.HendrikHoemberg.StudyHelper.service.StudyLogService;
 import com.HendrikHoemberg.StudyHelper.service.StudySessionService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,6 +72,9 @@ class StudySessionControllerTests {
 
     @MockitoBean
     private SavedSessionService savedSessionService;
+
+    @MockitoBean
+    private StudyLogService studyLogService;
 
     private User user;
 

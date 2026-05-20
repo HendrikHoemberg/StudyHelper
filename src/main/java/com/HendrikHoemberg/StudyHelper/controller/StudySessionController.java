@@ -8,6 +8,7 @@ import com.HendrikHoemberg.StudyHelper.dto.StudySessionStats;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
+import com.HendrikHoemberg.StudyHelper.service.StudyLogService;
 import com.HendrikHoemberg.StudyHelper.service.StudySessionService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,15 +40,18 @@ public class StudySessionController {
     private final FlashcardService flashcardService;
     private final UserService userService;
     private final SavedSessionService savedSessionService;
+    private final StudyLogService studyLogService;
 
     public StudySessionController(StudySessionService studySessionService,
                                   FlashcardService flashcardService,
                                   UserService userService,
-                                  SavedSessionService savedSessionService) {
+                                  SavedSessionService savedSessionService,
+                                  StudyLogService studyLogService) {
         this.studySessionService = studySessionService;
         this.flashcardService = flashcardService;
         this.userService = userService;
         this.savedSessionService = savedSessionService;
+        this.studyLogService = studyLogService;
     }
 
     @GetMapping("/study/resume")
@@ -243,9 +247,18 @@ public class StudySessionController {
     }
 
     private void stashAndPersist(HttpSession httpSession, User user, StudySessionState state) {
+        Object prior = httpSession.getAttribute(SESSION_KEY);
+        boolean wasComplete = prior instanceof StudySessionState s && studySessionService.isComplete(s);
         httpSession.setAttribute(SESSION_KEY, state);
         if (studySessionService.isComplete(state)) {
             savedSessionService.discard(user);
+            if (!wasComplete) {
+                try {
+                    studyLogService.recordFlashcards(user, state);
+                } catch (Exception ignored) {
+                    // Never block the user's completion view because of bookkeeping.
+                }
+            }
         } else {
             savedSessionService.saveFlashcards(user, state);
         }
