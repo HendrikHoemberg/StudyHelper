@@ -108,13 +108,13 @@ ALTER TABLE flashcards ADD COLUMN correct_streak INT NULL;
 ```
 
 - `NULL` = never answered. `0` = wrong at last sighting. `N >= 1` = right N times in a row.
-- Updated after every answer in **flashcard study mode** and in **quiz mode** (for quiz questions that map back to a flashcard — see below). Exams do not update `correctStreak`; they are tested separately and the mapping back to source cards is not 1:1.
+- Updated after every answer in **flashcard study mode** only. Quizzes and exams do not update `correctStreak`.
+  - **Why flashcard-only:** quiz and exam questions are AI-generated and do not carry a 1:1 back-reference to a source flashcard. Adding one would require changing the AI prompt, trusting the model to return valid card IDs, and handling drift. Out of scope for this iteration. The review-mistakes deck is itself studied in flashcard mode, so this restriction does not weaken the review loop.
 - Update rule:
   - Wrong → `0`
   - Right → `(correctStreak ?? 0) + 1`
 - "Review mistakes" virtual deck = `SELECT f FROM Flashcard f WHERE f.deck.user = :user AND f.correctStreak = 0`.
 - "Mastered" per deck = `count(f) where f.correctStreak >= 2`.
-- Quiz-mode mapping: the existing quiz already generates questions from selected decks, but the generated question DTOs do not currently carry a back-reference to the source flashcard. Add a nullable `sourceFlashcardId` to the quiz question DTO (and persist it in the in-flight quiz session state) as part of this work. When the quiz is graded, questions with a non-null `sourceFlashcardId` update that flashcard's `correctStreak`; questions sourced from files do not update any streak.
 
 ### 4. `Deck.pinned`
 
@@ -165,7 +165,7 @@ void recordExam(User user, Exam exam);
 Each method:
 
 1. Inserts one `StudySession` row.
-2. For flashcards and quiz: updates `correctStreak` on every flashcard touched. (Exam does not update streaks.)
+2. For flashcards: updates `correctStreak` on every flashcard touched (right → `+1`, wrong → `0`). Quiz and exam do not update streaks.
 3. Updates `lastStudiedAt = now()` on every deck that contributed cards to the session.
 
 All three steps run in a single `@Transactional` block. If any step fails, none commit, and the user sees the normal completion screen with no recorded history. This is preferable to half-written stats.
