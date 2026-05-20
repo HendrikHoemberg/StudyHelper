@@ -20,13 +20,13 @@
 
     <main class="sh-dashboard-main sh-dashboard-cockpit">
 
-        <div class="sh-cockpit-primary">
+        <!-- Greeting header -->
+        <header class="sh-dashboard-greeting">
+            <h1 class="sh-page-title" th:text="'Welcome back, ' + ${vm.greetingName()}">Welcome back</h1>
+            <p class="sh-page-subtitle">What do you want to study today?</p>
+        </header>
 
-            <!-- Greeting header -->
-            <header class="sh-dashboard-greeting">
-                <h1 class="sh-page-title" th:text="'Welcome back, ' + ${vm.greetingName()}">Welcome back</h1>
-                <p class="sh-page-subtitle">What do you want to study today?</p>
-            </header>
+        <div class="sh-cockpit-primary">
 
             <!-- Action tiles row (always shown) -->
             <div class="sh-action-tile-row">

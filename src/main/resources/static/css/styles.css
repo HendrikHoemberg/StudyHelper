@@ -5810,6 +5810,11 @@ iconify-icon {
         width: 100%;
     }
 
+    .sh-dashboard-greeting {
+        grid-column: 1 / -1;
+        margin-bottom: 1.5rem;
+    }
+
     .sh-cockpit-primary {
         padding-right: 2rem;
     }
