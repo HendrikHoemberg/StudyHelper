@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
+import com.HendrikHoemberg.StudyHelper.entity.SavedSessionType;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class StudyControllerTests {
@@ -30,6 +32,8 @@ class StudyControllerTests {
     private StudySessionService studySessionService;
     private QuizSessionService quizSessionService;
     private ExamSessionService examSessionService;
+    private SavedSessionService savedSessionService;
+    private UserService userService;
     private User user;
 
     @BeforeEach
@@ -38,11 +42,12 @@ class StudyControllerTests {
         quizSessionService = mock(QuizSessionService.class);
         DeckService deckService = mock(DeckService.class);
         FolderService folderService = mock(FolderService.class);
-        UserService userService = mock(UserService.class);
+        userService = mock(UserService.class);
         DocumentExtractionService documentExtractionService = mock(DocumentExtractionService.class);
         FileEntryService fileEntryService = mock(FileEntryService.class);
         examSessionService = mock(ExamSessionService.class);
 
+        savedSessionService = mock(SavedSessionService.class);
         controller = new StudyController(
             studySessionService,
             quizSessionService,
@@ -51,7 +56,8 @@ class StudyControllerTests {
             userService,
             documentExtractionService,
             fileEntryService,
-            examSessionService
+            examSessionService,
+            savedSessionService
         );
 
         user = new User();
@@ -104,6 +110,7 @@ class StudyControllerTests {
             5,
             null,
             ExamLayout.PER_PAGE,
+            false,
             model,
             () -> "alice",
             session,
@@ -151,6 +158,7 @@ class StudyControllerTests {
             5,
             null,
             ExamLayout.PER_PAGE,
+            false,
             model,
             () -> "alice",
             new MockHttpSession(),
@@ -184,6 +192,7 @@ class StudyControllerTests {
             5,
             null,
             ExamLayout.PER_PAGE,
+            false,
             model,
             () -> "alice",
             new MockHttpSession(),
@@ -226,6 +235,7 @@ class StudyControllerTests {
             5,
             null,
             ExamLayout.PER_PAGE,
+            false,
             model,
             () -> "alice",
             new MockHttpSession(),
@@ -267,6 +277,7 @@ class StudyControllerTests {
             5,
             null,
             ExamLayout.PER_PAGE,
+            false,
             model,
             () -> "alice",
             new MockHttpSession(),
@@ -278,5 +289,53 @@ class StudyControllerTests {
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("studyError")).isEqualTo("Please select at least one deck.");
         verify(studySessionService).buildSession(any(StudySessionConfig.class), eq(user));
+    }
+
+    @Test
+    void createSession_withSavedSession_returnsConflictFragment() {
+        when(userService.getByUsername("alice")).thenReturn(user);
+        when(savedSessionService.findForUser(user)).thenReturn(java.util.Optional.of(
+            new SavedSessionSummary(SavedSessionType.FLASHCARDS, "Flashcards · Deck A",
+                "0 / 3 answered", java.time.Instant.now(), "/study/resume")
+        ));
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.createSession(
+            StudyMode.FLASHCARDS, List.of(10L), List.of(), null,
+            new MockHttpServletRequest(), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER,
+            null, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, 5,
+            ExamQuestionSize.MEDIUM, 5, null, ExamLayout.PER_PAGE,
+            false, model, () -> "alice", new MockHttpSession(), response, "true"
+        );
+
+        assertThat(view).isEqualTo("fragments/saved-session :: conflict");
+        assertThat(model.get("savedSession")).isNotNull();
+        verifyNoInteractions(studySessionService);
+    }
+
+    @Test
+    void createSession_withConfirmDiscard_discardsAndProceeds() throws Exception {
+        when(userService.getByUsername("alice")).thenReturn(user);
+        when(studySessionService.buildSession(any(), eq(user))).thenReturn(
+            new StudySessionState(
+                new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER),
+                Map.of(), List.of(), 0, 0, 0, 0, List.of())
+        );
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.createSession(
+            StudyMode.FLASHCARDS, List.of(10L), List.of(), null,
+            new MockHttpServletRequest(), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER,
+            null, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, 5,
+            ExamQuestionSize.MEDIUM, 5, null, ExamLayout.PER_PAGE,
+            true, model, () -> "alice", new MockHttpSession(), response, "true"
+        );
+
+        verify(savedSessionService).discard(user);
+        verify(savedSessionService, never()).findForUser(any());
     }
 }
