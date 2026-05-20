@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
+import com.HendrikHoemberg.StudyHelper.service.StudyLogService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import java.security.Principal;
 import java.util.HashMap;
@@ -31,10 +32,12 @@ public class QuizController {
 
     private final UserService userService;
     private final SavedSessionService savedSessionService;
+    private final StudyLogService studyLogService;
 
-    public QuizController(UserService userService, SavedSessionService savedSessionService) {
+    public QuizController(UserService userService, SavedSessionService savedSessionService, StudyLogService studyLogService) {
         this.userService = userService;
         this.savedSessionService = savedSessionService;
+        this.studyLogService = studyLogService;
     }
 
     @GetMapping("/quiz/resume")
@@ -160,9 +163,15 @@ public class QuizController {
     }
 
     private void stashAndPersist(HttpSession httpSession, User user, QuizSessionState state) {
+        Object prior = httpSession.getAttribute(SESSION_KEY);
+        boolean wasComplete = prior instanceof QuizSessionState s && s.isComplete();
         httpSession.setAttribute(SESSION_KEY, state);
         if (state.isComplete()) {
             savedSessionService.discard(user);
+            if (!wasComplete) {
+                try { studyLogService.recordQuiz(user, state); }
+                catch (Exception ignored) {}
+            }
         } else {
             savedSessionService.saveQuiz(user, state);
         }
