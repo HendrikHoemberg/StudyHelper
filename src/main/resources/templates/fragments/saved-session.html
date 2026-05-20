@@ -60,16 +60,12 @@
 <!-- Conflict modal — included inline in the study wizard when a saved session exists.
      Self-removes via id; works both inline and when retargeted to #modal-placeholder. -->
 <div th:fragment="conflict" class="sh-modal is-open" id="saved-session-conflict-modal" role="dialog" aria-modal="true">
-    <div class="sh-modal-backdrop"
-         onclick="document.getElementById('saved-session-conflict-modal')?.remove()"></div>
+    <div class="sh-modal-backdrop"></div>
     <div class="sh-modal-dialog">
         <div class="sh-modal-content">
             <div class="sh-modal-header">
                 <h5 class="sh-modal-title">Saved session in progress</h5>
-                <button type="button" class="sh-modal-close" aria-label="Close"
-                        onclick="document.getElementById('saved-session-conflict-modal')?.remove()">
-                    <iconify-icon icon="lucide:x"></iconify-icon>
-                </button>
+
             </div>
             <div class="sh-modal-body">
                 <p style="margin:0;color:var(--text-muted);font-size:0.875rem;">
@@ -85,7 +81,7 @@
             </div>
             <div class="sh-modal-footer">
                 <button type="button" class="sh-btn sh-btn-secondary"
-                        onclick="document.getElementById('saved-session-conflict-modal')?.remove()">
+                        onclick="window.history.back()">
                     Cancel
                 </button>
                 <button type="button" class="sh-btn sh-btn-danger"
