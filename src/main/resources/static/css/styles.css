@@ -664,7 +664,11 @@ a {
     width: 100%;
 }
 
-
+.sh-deck-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 1rem;
+}
 
 .sh-deck-tile {
     position: relative;
@@ -4508,6 +4512,10 @@ iconify-icon {
     .vb-source-scroll {
         max-height: min(44vh, 28rem);
         padding-bottom: 0.5rem;
+    }
+
+    .sh-deck-grid {
+        grid-template-columns: 1fr;
     }
 }
 
