@@ -83,12 +83,14 @@ public class ExamService {
         return examRepository.findAllByUserOrderByCreatedAtDesc(user);
     }
 
+    @Transactional(readOnly = true)
     public Exam getOwnedById(User user, Long examId) {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
         if (!exam.getUser().getId().equals(user.getId())) {
             throw new ResourceNotFoundException("Exam not found or access denied");
         }
+        exam.getQuestions().size();
         return exam;
     }
 
