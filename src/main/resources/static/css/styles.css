@@ -3282,6 +3282,7 @@ textarea.sh-input {
     gap: 0;
     padding-bottom: 0;
     position: relative;
+    overflow-x: hidden;
 }
 
 .sh-wizard-panel {
@@ -3294,6 +3295,52 @@ textarea.sh-input {
 .sh-wizard-panel.is-active {
     display: flex;
     opacity: 1;
+}
+
+/* ---- Study Wizard transitions ---- */
+@keyframes wizardSlideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes wizardSlideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes wizardFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sh-wizard-panel.slide-from-right {
+    animation: wizardSlideInRight 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.sh-wizard-panel.slide-from-left {
+    animation: wizardSlideInLeft 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.sh-wizard-panel.fade-in-up {
+    animation: wizardFadeInUp 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .sh-wizard-footer {

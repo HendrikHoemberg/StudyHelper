@@ -3,6 +3,7 @@
     let currentMode = 'FLASHCARDS';
     let sourceTreeScrollTop = 0;
     let expandedFolderIds = null;
+    let previousStep = null;
 
     const STEP_LABELS = {
         FLASHCARDS: ["Mode", "Type", "Decks", "Order"],
@@ -59,6 +60,8 @@
     }
 
     function switchContent(step) {
+        const direction = (previousStep === null) ? 'none' : (step > previousStep ? 'forward' : 'backward');
+        previousStep = step;
         currentStep = step;
         
         // Toggle visibility of panels based on step AND mode
@@ -77,7 +80,19 @@
                 }
             }
             
-            panel.classList.toggle('is-active', isTarget);
+            if (isTarget) {
+                panel.classList.remove('slide-from-right', 'slide-from-left', 'fade-in-up');
+                if (direction === 'forward') {
+                    panel.classList.add('slide-from-right');
+                } else if (direction === 'backward') {
+                    panel.classList.add('slide-from-left');
+                } else {
+                    panel.classList.add('fade-in-up');
+                }
+                panel.classList.add('is-active');
+            } else {
+                panel.classList.remove('is-active');
+            }
         });
 
         updateStepIndicator();
@@ -491,6 +506,7 @@
 
         // Reset state for fresh load
         currentStep = 1;
+        previousStep = null;
         currentMode = 'FLASHCARDS';
         expandedFolderIds = null;
 

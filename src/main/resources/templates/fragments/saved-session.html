@@ -15,8 +15,7 @@
     <div class="sh-saved-session-body">
         <div class="sh-saved-session-eyebrow">
             <span class="sh-saved-session-tag" th:text="${savedSession.type()}">FLASHCARDS</span>
-            <span class="sh-saved-session-paused"
-                  th:text="'Paused ' + ${#temporals.format(savedSession.updatedAt(), 'HH:mm')}">Paused 09:44</span>
+            <span class="sh-saved-session-paused">Paused</span>
         </div>
         <div class="sh-saved-session-title" th:text="${savedSession.title()}">Title</div>
         <div class="sh-saved-session-progress" th:text="${savedSession.progressLabel()}">0 / 0 answered</div>
