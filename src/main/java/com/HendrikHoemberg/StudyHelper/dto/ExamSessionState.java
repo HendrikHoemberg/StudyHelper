@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.dto;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -10,5 +11,5 @@ public record ExamSessionState(
     Map<Integer, String> answers,
     Instant startedAt,
     String sourceSummary
-) {
+) implements Serializable {
 }

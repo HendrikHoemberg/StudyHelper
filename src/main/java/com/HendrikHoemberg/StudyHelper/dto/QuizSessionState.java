@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.dto;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,7 @@ public record QuizSessionState(
     List<QuizQuestion> questions,
     int currentIndex,
     Map<Integer, List<Integer>> answers
-) {
+) implements Serializable {
     public boolean isAnswered(int index) {
         return answers.containsKey(index);
     }
