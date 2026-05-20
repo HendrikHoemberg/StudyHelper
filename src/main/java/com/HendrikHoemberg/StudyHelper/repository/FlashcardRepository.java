@@ -42,7 +42,8 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     @Query("""
         select f
         from Flashcard f
-        where f.deck.user = :user and f.correctStreak = 0
+        join fetch f.deck d
+        where d.user = :user and f.correctStreak = 0
         order by f.id asc
         """)
     List<Flashcard> findMistakesByUser(@Param("user") User user);
