@@ -3,6 +3,7 @@ package com.HendrikHoemberg.StudyHelper.service;
 import com.HendrikHoemberg.StudyHelper.config.AppDefaults;
 import com.HendrikHoemberg.StudyHelper.dto.FlashcardPdfOption;
 import com.HendrikHoemberg.StudyHelper.dto.FolderOption;
+import com.HendrikHoemberg.StudyHelper.dto.PdfFolderNode;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
@@ -80,5 +81,49 @@ public class FlashcardGenerationViewService {
         return folder.getColorHex() != null && !folder.getColorHex().isBlank()
             ? folder.getColorHex()
             : AppDefaults.DEFAULT_COLOR_HEX;
+    }
+
+    @Transactional(readOnly = true)
+    public List<PdfFolderNode> getPdfFolderTree(User user) {
+        List<Folder> roots = folderRepository.findByUserAndParentFolderIsNull(user);
+        return roots.stream()
+            .map(this::toPdfFolderNode)
+            .filter(node -> !node.pdfs().isEmpty() || !node.children().isEmpty())
+            .toList();
+    }
+
+    private PdfFolderNode toPdfFolderNode(Folder folder) {
+        List<FlashcardPdfOption> pdfs = folder.getFiles().stream()
+            .filter(this::isSupportedPdf)
+            .map(file -> new FlashcardPdfOption(
+                file.getId(),
+                file.getOriginalFilename(),
+                file.getFolder().getId(),
+                buildFolderPath(file.getFolder()),
+                colorOf(file.getFolder()),
+                file.getFileSizeBytes()
+            ))
+            .sorted(Comparator.comparing(FlashcardPdfOption::filename, String.CASE_INSENSITIVE_ORDER))
+            .toList();
+
+        List<PdfFolderNode> children = folder.getSubFolders().stream()
+            .map(this::toPdfFolderNode)
+            .filter(node -> !node.pdfs().isEmpty() || !node.children().isEmpty())
+            .toList();
+
+        return new PdfFolderNode(
+            folder.getId(),
+            folder.getName(),
+            colorOf(folder),
+            iconOf(folder),
+            pdfs,
+            children
+        );
+    }
+
+    private String iconOf(Folder folder) {
+        return folder.getIconName() != null && !folder.getIconName().isBlank()
+            ? folder.getIconName()
+            : "folder";
     }
 }

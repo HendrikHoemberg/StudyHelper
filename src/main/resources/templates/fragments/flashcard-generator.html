@@ -43,38 +43,71 @@
                         <input type="text" class="sh-study-search-input" id="ai-pdf-search" placeholder="Search PDFs..." autocomplete="off">
                     </div>
 
-                    <div th:if="${#lists.isEmpty(pdfOptions)}" class="sh-empty" style="padding:1.25rem 1rem;">
+                    <div th:if="${#lists.isEmpty(pdfFolderTree)}" class="sh-empty" style="padding:1.25rem 1rem;">
                         <p class="sh-empty-text mb-1">No supported PDFs available</p>
                         <p class="sh-empty-hint">Upload a PDF under 10 MB first.</p>
                     </div>
 
-                    <div class="vb-pdf-mode sh-ai-global-pdf-mode">
+                    <div class="vb-pdf-mode sh-ai-global-pdf-mode" th:if="${!#lists.isEmpty(pdfFolderTree)}">
                         <input type="hidden" name="documentMode" th:value="${selectedDocumentMode ?: T(com.HendrikHoemberg.StudyHelper.dto.DocumentMode).TEXT}">
                         <button type="button" class="vb-pdf-mode-btn" th:classappend="${selectedDocumentMode == null || #strings.toString(selectedDocumentMode) == 'TEXT'} ? ' is-active' : ''" data-mode="TEXT" th:attr="aria-pressed=${selectedDocumentMode == null || #strings.toString(selectedDocumentMode) == 'TEXT'}">Text</button>
                         <button type="button" class="vb-pdf-mode-btn" th:classappend="${#strings.toString(selectedDocumentMode) == 'FULL_PDF'} ? ' is-active' : ''" data-mode="FULL_PDF" th:attr="aria-pressed=${#strings.toString(selectedDocumentMode) == 'FULL_PDF'}" title="Send the full PDFs with figures, diagrams, and layout.">Full PDF</button>
                     </div>
 
-                    <div class="sh-quiz-warn-banner sh-ai-pdf-size-warning" hidden>
+                    <div class="sh-quiz-warn-banner sh-ai-pdf-size-warning" hidden th:if="${!#lists.isEmpty(pdfFolderTree)}">
                         <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
                         <span>Large PDF — generation may be slow.</span>
                     </div>
 
-                    <div class="sh-ai-pdf-list" th:if="${!#lists.isEmpty(pdfOptions)}">
-                         <label th:each="pdf : ${pdfOptions}"
-                                class="sh-ai-pdf-row"
-                                th:classappend="${selectedFileIds != null ? #lists.contains(selectedFileIds, pdf.id) : selectedFileId == pdf.id} ? ' is-selected' : ''"
-                                th:data-name="${pdf.filename + ' ' + pdf.folderPath}"
-                                th:data-deck-name="${pdf.filename}"
-                                th:data-folder-id="${pdf.folderId}"
-                                th:data-file-size="${pdf.fileSizeBytes}"
-                                th:style="'--folder-color:' + ${pdf.folderColorHex}">
-                             <input class="sh-checkbox" type="checkbox" name="fileId" th:value="${pdf.id}" th:checked="${selectedFileIds != null ? #lists.contains(selectedFileIds, pdf.id) : selectedFileId == pdf.id}">
-                             <span class="vb-file-icon"><iconify-icon icon="lucide:file-text"></iconify-icon></span>
-                             <span class="sh-ai-pdf-main">
-                                 <span class="sh-ai-pdf-name" th:text="${pdf.filename}">lecture.pdf</span>
-                                 <span class="sh-ai-pdf-meta" th:text="${pdf.folderPath}">Folder</span>
-                             </span>
-                         </label>
+                    <div th:if="${!#lists.isEmpty(pdfFolderTree)}" class="vb-list sh-ai-tree">
+                        <div th:each="node : ${pdfFolderTree}" class="vb-group" th:style="'--folder-color: ' + ${node.colorHex}">
+                            <div class="vb-group-head" style="cursor:default;">
+                                <span class="vb-group-cap">
+                                    <iconify-icon th:attr="icon=${node.iconName.contains(':') ? node.iconName : 'lucide:' + node.iconName}"></iconify-icon>
+                                </span>
+                                <div class="vb-group-title" th:text="${node.name}">Folder</div>
+                            </div>
+                            <div class="vb-group-body">
+                                <!-- PDFs directly in root folder -->
+                                <label th:each="pdf : ${node.pdfs}"
+                                       class="sh-ai-pdf-row vb-deck"
+                                       th:classappend="${selectedFileIds != null ? #lists.contains(selectedFileIds, pdf.id) : selectedFileId == pdf.id} ? ' is-selected' : ''"
+                                       th:data-name="${pdf.filename + ' ' + pdf.folderPath}"
+                                       th:data-deck-name="${pdf.filename}"
+                                       th:data-folder-id="${pdf.folderId}"
+                                       th:data-file-size="${pdf.fileSizeBytes}"
+                                       th:style="'--folder-color:' + ${pdf.folderColorHex}">
+                                    <input class="sh-checkbox" type="checkbox" name="fileId" th:value="${pdf.id}" th:checked="${selectedFileIds != null ? #lists.contains(selectedFileIds, pdf.id) : selectedFileId == pdf.id}">
+                                    <span class="vb-file-icon"><iconify-icon icon="lucide:file-text"></iconify-icon></span>
+                                    <span class="vb-deck-name" th:text="${pdf.filename}">lecture.pdf</span>
+                                </label>
+
+                                <!-- Subfolders containing PDFs -->
+                                <div th:each="child : ${node.children}" class="vb-subgroup" th:style="'--folder-color: ' + ${child.colorHex}">
+                                    <div class="vb-subgroup-head" style="cursor:default;">
+                                        <span class="vb-subgroup-cap">
+                                            <iconify-icon th:attr="icon=${child.iconName.contains(':') ? child.iconName : 'lucide:' + child.iconName}"></iconify-icon>
+                                        </span>
+                                        <span class="vb-subgroup-name" th:text="${child.name}">Subfolder</span>
+                                    </div>
+                                    <div class="vb-subgroup-body">
+                                        <!-- PDFs inside this subfolder -->
+                                        <label th:each="pdf : ${child.pdfs}"
+                                               class="sh-ai-pdf-row vb-deck"
+                                               th:classappend="${selectedFileIds != null ? #lists.contains(selectedFileIds, pdf.id) : selectedFileId == pdf.id} ? ' is-selected' : ''"
+                                               th:data-name="${pdf.filename + ' ' + pdf.folderPath}"
+                                               th:data-deck-name="${pdf.filename}"
+                                               th:data-folder-id="${pdf.folderId}"
+                                               th:data-file-size="${pdf.fileSizeBytes}"
+                                               th:style="'--folder-color:' + ${pdf.folderColorHex}">
+                                            <input class="sh-checkbox" type="checkbox" name="fileId" th:value="${pdf.id}" th:checked="${selectedFileIds != null ? #lists.contains(selectedFileIds, pdf.id) : selectedFileId == pdf.id}">
+                                            <span class="vb-file-icon"><iconify-icon icon="lucide:file-text"></iconify-icon></span>
+                                            <span class="vb-deck-name" th:text="${pdf.filename}">lecture.pdf</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 

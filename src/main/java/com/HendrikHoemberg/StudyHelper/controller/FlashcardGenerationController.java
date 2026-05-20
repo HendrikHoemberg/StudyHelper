@@ -4,6 +4,7 @@ import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
 import com.HendrikHoemberg.StudyHelper.dto.DocumentMode;
 import com.HendrikHoemberg.StudyHelper.dto.FlashcardGenerationDestination;
 import com.HendrikHoemberg.StudyHelper.dto.FlashcardPdfOption;
+import com.HendrikHoemberg.StudyHelper.dto.PdfFolderNode;
 import com.HendrikHoemberg.StudyHelper.dto.GeneratedFlashcard;
 import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
@@ -239,6 +240,7 @@ public class FlashcardGenerationController {
     private List<FlashcardPdfOption> prepareGeneratorModel(Model model, User user) {
         List<FlashcardPdfOption> pdfOptions = viewService.getPdfOptions(user);
         model.addAttribute("pdfOptions", pdfOptions);
+        model.addAttribute("pdfFolderTree", viewService.getPdfFolderTree(user));
         model.addAttribute("deckTree", folderService.getStudyFolderTree(user));
         model.addAttribute("folderTree", folderService.getFolderPickerTree(user));
         model.addAttribute("destinations", FlashcardGenerationDestination.values());
