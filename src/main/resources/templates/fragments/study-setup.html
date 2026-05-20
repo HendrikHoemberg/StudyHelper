@@ -108,7 +108,9 @@
     <!-- Saved-session conflict modal — appears immediately on wizard open if a
          saved session exists, so the user picks Resume / Discard / Cancel before
          configuring anything. The submit-time conflict check still acts as a safety net. -->
-    <div th:if="${savedSession != null}" th:replace="~{fragments/saved-session :: conflict}"></div>
+    <th:block th:if="${savedSession != null}">
+        <div th:replace="~{fragments/saved-session :: conflict}"></div>
+    </th:block>
 
     <!-- AI Generation Modal (shown during quiz/exam AI generation) -->
     <div id="ai-generating-modal" class="sh-ai-gen-modal" role="dialog" aria-modal="true">
