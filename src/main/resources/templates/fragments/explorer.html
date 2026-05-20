@@ -32,17 +32,23 @@
             <div class="sh-action-tile-row">
                 <a class="sh-action-tile" href="/study/start"
                    hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
-                    <iconify-icon icon="lucide:book-open"></iconify-icon>
+                    <div class="sh-action-tile-icon">
+                        <iconify-icon icon="lucide:book-open"></iconify-icon>
+                    </div>
                     <span class="sh-action-tile-label">Start studying</span>
                 </a>
                 <a class="sh-action-tile" href="/flashcards/generate"
                    hx-get="/flashcards/generate" hx-target="#explorer-detail" hx-push-url="true">
-                    <iconify-icon icon="lucide:sparkles"></iconify-icon>
+                    <div class="sh-action-tile-icon">
+                        <iconify-icon icon="lucide:sparkles"></iconify-icon>
+                    </div>
                     <span class="sh-action-tile-label">Generate flashcards</span>
                 </a>
                 <a class="sh-action-tile" th:href="@{/study/start(mode='EXAM')}"
                    th:hx-get="@{/study/start(mode='EXAM')}" hx-target="#explorer-detail" hx-push-url="true">
-                    <iconify-icon icon="lucide:file-edit"></iconify-icon>
+                    <div class="sh-action-tile-icon">
+                        <iconify-icon icon="lucide:file-edit"></iconify-icon>
+                    </div>
                     <span class="sh-action-tile-label">Take an exam</span>
                 </a>
             </div>
