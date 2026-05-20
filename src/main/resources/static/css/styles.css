@@ -5890,3 +5890,56 @@ iconify-icon {
         grid-template-columns: 1fr;
     }
 }
+
+/* ─── Dashboard mobile polish ─────────────────────────────── */
+
+/* On touch devices, deck-tile action buttons are always visible.
+   Hover-reveal patterns hide critical affordances (pin/edit/delete)
+   on phones where there is no hover state. */
+@media (hover: none) and (pointer: coarse) {
+    .sh-deck-tile .sh-file-tile-actions {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    .sh-deck-tile .sh-deck-edit-btn {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0.5rem;
+    }
+
+    .sh-deck-tile .sh-deck-edit-btn iconify-icon {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sh-review-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .sh-review-card-cta {
+        align-self: flex-end;
+    }
+
+    .sh-dashboard-cockpit {
+        padding: 1rem 0.75rem;
+        gap: 1.25rem;
+    }
+
+    .sh-dashboard-greeting .sh-page-title {
+        font-size: 1.5rem;
+        line-height: 1.2;
+    }
+
+    .sh-dashboard-greeting .sh-page-subtitle {
+        font-size: 0.95rem;
+    }
+
+    .sh-dashboard-section .sh-section-title {
+        font-size: 1rem;
+    }
+}
