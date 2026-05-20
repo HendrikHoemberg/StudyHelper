@@ -5806,6 +5806,10 @@ iconify-icon {
         padding-right: 2rem;
     }
 
+    .sh-dashboard-cockpit .sh-deck-rail {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .sh-cockpit-secondary {
         padding-left: 2rem;
         border-left: 1px solid var(--border-light);
