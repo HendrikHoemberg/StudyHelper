@@ -5762,12 +5762,40 @@ iconify-icon {
 /* ─── Dashboard cockpit ───────────────────────────────────── */
 
 .sh-dashboard-cockpit {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 1.5rem 1rem;
+    padding: 1.5rem;
+}
+
+.sh-cockpit-primary,
+.sh-cockpit-secondary {
+    display: contents;
+}
+
+.sh-cockpit-primary > * + *,
+.sh-cockpit-secondary > * + * {
+    margin-top: 1.5rem;
+}
+
+@media (min-width: 1200px) {
+    .sh-dashboard-cockpit {
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 0;
+    }
+
+    .sh-cockpit-primary,
+    .sh-cockpit-secondary {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        min-width: 0;
+    }
+
+    .sh-cockpit-primary > * + *,
+    .sh-cockpit-secondary > * + * {
+        margin-top: 0;
+    }
 }
 
 .sh-dashboard-greeting .sh-page-title {
