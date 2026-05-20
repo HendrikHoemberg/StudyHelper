@@ -11,6 +11,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
+import com.HendrikHoemberg.StudyHelper.service.UserService;
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,13 +29,23 @@ public class QuizController {
     private static final String VIEW_QUESTION = "question";
     private static final String VIEW_COMPLETE = "complete";
 
+    private final UserService userService;
+    private final SavedSessionService savedSessionService;
+
+    public QuizController(UserService userService, SavedSessionService savedSessionService) {
+        this.userService = userService;
+        this.savedSessionService = savedSessionService;
+    }
+
     @PostMapping("/quiz/answer")
     public String answer(
             @RequestParam(required = false) java.util.List<Integer> selectedOptions,
             Model model,
             HttpSession httpSession,
-            @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        QuizSessionState state = getState(httpSession);
+            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+            Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        QuizSessionState state = getState(httpSession, user);
         if (state == null) {
             return "redirect:/study/start?mode=QUIZ";
         }
@@ -54,7 +68,7 @@ public class QuizController {
         QuizSessionState newState = new QuizSessionState(
             state.config(), state.questions(), idx, newAnswers
         );
-        httpSession.setAttribute(SESSION_KEY, newState);
+        stashAndPersist(httpSession, user, newState);
         return renderQuestion(model, newState, hxRequest);
     }
 
@@ -62,8 +76,10 @@ public class QuizController {
     public String nextQuestion(
             Model model,
             HttpSession httpSession,
-            @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
-        QuizSessionState state = getState(httpSession);
+            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+            Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        QuizSessionState state = getState(httpSession, user);
         if (state == null) {
             return "redirect:/study/start?mode=QUIZ";
         }
@@ -71,7 +87,7 @@ public class QuizController {
         QuizSessionState newState = new QuizSessionState(
             state.config(), state.questions(), state.currentIndex() + 1, state.answers()
         );
-        httpSession.setAttribute(SESSION_KEY, newState);
+        stashAndPersist(httpSession, user, newState);
 
         if (newState.isComplete()) {
             return renderSummary(model, newState, hxRequest);
@@ -121,8 +137,21 @@ public class QuizController {
         return "study-page";
     }
 
-    private QuizSessionState getState(HttpSession session) {
+    private QuizSessionState getState(HttpSession session, User user) {
         Object raw = session.getAttribute(SESSION_KEY);
-        return raw instanceof QuizSessionState s ? s : null;
+        if (raw instanceof QuizSessionState s) return s;
+        return savedSessionService.loadQuiz(user).map(loaded -> {
+            session.setAttribute(SESSION_KEY, loaded);
+            return loaded;
+        }).orElse(null);
+    }
+
+    private void stashAndPersist(HttpSession httpSession, User user, QuizSessionState state) {
+        httpSession.setAttribute(SESSION_KEY, state);
+        if (state.isComplete()) {
+            savedSessionService.discard(user);
+        } else {
+            savedSessionService.saveQuiz(user, state);
+        }
     }
 }
