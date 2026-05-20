@@ -23,7 +23,8 @@
     </div>
 
     <!-- Single form wrapping all panels -->
-    <form class="sh-card sh-study-setup-card"
+    <form id="wizard-form"
+          class="sh-card sh-study-setup-card"
           method="post"
           hx-post="/study/session"
           hx-target="#study-session-content"
@@ -103,6 +104,11 @@
             </div>
         </div>
     </form>
+
+    <!-- Saved-session conflict modal — appears immediately on wizard open if a
+         saved session exists, so the user picks Resume / Discard / Cancel before
+         configuring anything. The submit-time conflict check still acts as a safety net. -->
+    <div th:if="${savedSession != null}" th:replace="~{fragments/saved-session :: conflict}"></div>
 
     <!-- AI Generation Modal (shown during quiz/exam AI generation) -->
     <div id="ai-generating-modal" class="sh-ai-gen-modal" role="dialog" aria-modal="true">

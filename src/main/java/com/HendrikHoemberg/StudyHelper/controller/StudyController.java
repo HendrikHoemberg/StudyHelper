@@ -196,6 +196,8 @@ public class StudyController {
                 model.addAttribute("savedSession", existing.get());
                 model.addAttribute("startNewMode", mode);
                 response.setStatus(HttpServletResponse.SC_OK);
+                response.setHeader("HX-Retarget", "#modal-placeholder");
+                response.setHeader("HX-Reswap", "innerHTML");
                 return "fragments/saved-session :: conflict";
             }
         }
@@ -279,6 +281,8 @@ public class StudyController {
                 model.addAttribute("savedSession", existing.get());
                 model.addAttribute("startNewMode", mode);
                 response.setStatus(HttpServletResponse.SC_OK);
+                response.setHeader("HX-Retarget", "#modal-placeholder");
+                response.setHeader("HX-Reswap", "innerHTML");
                 return "fragments/saved-session :: conflict";
             }
         }

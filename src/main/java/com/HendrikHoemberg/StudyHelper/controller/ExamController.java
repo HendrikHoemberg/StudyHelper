@@ -65,6 +65,8 @@ public class ExamController {
                 model.addAttribute("savedSession", existing.get());
                 model.addAttribute("startNewMode", StudyMode.EXAM);
                 response.setStatus(HttpServletResponse.SC_OK);
+                response.setHeader("HX-Retarget", "#modal-placeholder");
+                response.setHeader("HX-Reswap", "innerHTML");
                 return "fragments/saved-session :: conflict";
             }
         }

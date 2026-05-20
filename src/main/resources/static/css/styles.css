@@ -3716,6 +3716,147 @@ textarea.sh-input {
 }
 
 /* ============================================================
+   SAVED SESSION (resume) — dashboard card, nav badge, conflict recap
+   ============================================================ */
+
+.sh-saved-session-card {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--accent) 10%, var(--surface)) 0%,
+        var(--surface) 70%
+    );
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border-light));
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    margin-bottom: 0.5rem;
+}
+
+.sh-saved-session-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px var(--accent-glow);
+    flex-shrink: 0;
+}
+
+.sh-saved-session-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+.sh-saved-session-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+}
+
+.sh-saved-session-tag {
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+}
+
+.sh-saved-session-paused {
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.sh-saved-session-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sh-saved-session-progress {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.sh-saved-session-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+    .sh-saved-session-card {
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        row-gap: 0.75rem;
+    }
+    .sh-saved-session-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+}
+
+/* Top-nav resume badge */
+.topnav-saved-badge {
+    position: relative;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.topnav-saved-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+    animation: shSavedPulse 2s ease-in-out infinite;
+}
+
+@keyframes shSavedPulse {
+    0%, 100% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+    50%      { box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 8%, transparent); }
+}
+
+/* Conflict-modal recap block */
+.sh-saved-session-recap {
+    padding: 0.75rem 0.875rem;
+    border-radius: 10px;
+    background: var(--surface-hover);
+    border: 1px solid var(--border-light);
+}
+
+.sh-saved-session-recap-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text);
+    margin-bottom: 0.125rem;
+}
+
+.sh-saved-session-recap-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* ============================================================
    ICON PICKER
    ============================================================ */
 

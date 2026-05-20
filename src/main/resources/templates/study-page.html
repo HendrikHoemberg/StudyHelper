@@ -5,6 +5,8 @@
 </head>
 <body>
 
+<div id="modal-placeholder"></div>
+
 <div class="app-layout">
     <nav th:replace="~{fragments/layout :: topnav}"></nav>
     <div id="main-content" class="app-main-content">
@@ -28,28 +30,6 @@
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('saved-session-discard-confirmed', function() {
-    const form = document.querySelector('#study-setup-form, #wizard-form, form[data-study-setup]');
-    if (!form) return;
-    let input = form.querySelector('input[name="confirmDiscard"]');
-    if (!input) {
-        input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'confirmDiscard';
-        input.value = 'true';
-        form.appendChild(input);
-    } else {
-        input.value = 'true';
-    }
-    if (window.htmx) {
-        window.htmx.trigger(form, 'submit');
-    } else {
-        form.requestSubmit();
-    }
-});
-</script>
 
 <div th:replace="~{fragments/layout :: scripts}"></div>
 </body>
