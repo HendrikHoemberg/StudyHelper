@@ -5773,11 +5773,6 @@ iconify-icon {
     display: contents;
 }
 
-.sh-cockpit-primary > * + *,
-.sh-cockpit-secondary > * + * {
-    margin-top: 1.5rem;
-}
-
 @media (min-width: 1200px) {
     .sh-dashboard-cockpit {
         grid-template-columns: minmax(0, 1fr) 320px;
@@ -5806,6 +5801,32 @@ iconify-icon {
         max-height: calc(100vh - 16rem);
         overflow-y: auto;
         gap: 0.5rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .sh-cockpit-secondary .sh-review-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+
+    .sh-cockpit-secondary .sh-review-card-icon {
+        align-self: flex-start;
+    }
+
+    .sh-cockpit-secondary .sh-review-card-body {
+        flex: none;
+    }
+
+    .sh-cockpit-secondary .sh-review-card-cta {
+        align-self: stretch;
+        text-align: center;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        background: rgba(255, 120, 80, 0.12);
+        margin-top: 0.25rem;
     }
 }
 
