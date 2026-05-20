@@ -5,6 +5,7 @@ import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.ActiveTab;
 import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
+import com.HendrikHoemberg.StudyHelper.service.DashboardService;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
@@ -53,6 +54,9 @@ class FolderControllerTests {
 
     @MockitoBean
     private FileEntryService fileEntryService;
+
+    @MockitoBean
+    private DashboardService dashboardService;
 
     @MockitoBean
     private AiRequestQuotaService aiRequestQuotaService;

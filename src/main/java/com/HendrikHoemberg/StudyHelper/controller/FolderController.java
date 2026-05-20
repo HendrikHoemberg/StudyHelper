@@ -1,14 +1,11 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.config.AppDefaults;
-import com.HendrikHoemberg.StudyHelper.dto.FileSummary;
 import com.HendrikHoemberg.StudyHelper.dto.SidebarFolderNode;
-import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.ActiveTab;
-import com.HendrikHoemberg.StudyHelper.service.DeckService;
-import com.HendrikHoemberg.StudyHelper.service.FileEntryService;
+import com.HendrikHoemberg.StudyHelper.service.DashboardService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.FolderView;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
@@ -25,17 +22,14 @@ import java.util.List;
 public class FolderController {
 
     private final FolderService folderService;
-    private final DeckService deckService;
-    private final FileEntryService fileEntryService;
+    private final DashboardService dashboardService;
     private final UserService userService;
 
     public FolderController(FolderService folderService,
-                            DeckService deckService,
-                            FileEntryService fileEntryService,
+                            DashboardService dashboardService,
                             UserService userService) {
         this.folderService = folderService;
-        this.deckService = deckService;
-        this.fileEntryService = fileEntryService;
+        this.dashboardService = dashboardService;
         this.userService = userService;
     }
 
@@ -164,14 +158,9 @@ public class FolderController {
 
         if (hxRequest != null) {
             response.setHeader("HX-Push-Url", "/dashboard");
-            List<Folder> folders = folderService.getRootFolders(user);
-            model.addAttribute("folders", folders);
-            model.addAttribute("deckOptions", deckService.getStudyDeckOptions(user));
-            model.addAttribute("fileSummaries", fileEntryService.getFileSummaries(user));
+            model.addAttribute("vm", dashboardService.buildFor(user));
             model.addAttribute("username", principal.getName());
-            model.addAttribute("query", null);
             model.addAttribute("refreshSidebar", true);
-            model.addAttribute("sidebarTree", folderService.getSidebarTree(user, null));
             if (error != null) {
                 model.addAttribute("error", error);
             }
