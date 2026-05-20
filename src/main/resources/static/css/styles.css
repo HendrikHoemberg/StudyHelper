@@ -5796,6 +5796,17 @@ iconify-icon {
     .sh-cockpit-secondary > * + * {
         margin-top: 0;
     }
+
+    .sh-cockpit-secondary {
+        padding-left: 2rem;
+        border-left: 1px solid var(--border-light);
+    }
+
+    .sh-cockpit-secondary .sh-activity-list {
+        max-height: calc(100vh - 16rem);
+        overflow-y: auto;
+        gap: 0.5rem;
+    }
 }
 
 .sh-dashboard-greeting .sh-page-title {
