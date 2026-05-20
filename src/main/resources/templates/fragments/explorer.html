@@ -4,196 +4,140 @@
 
 <!-- Dashboard main content fragment — swapped into #explorer-detail -->
 <div th:fragment="dashboardContent" class="sh-dashboard-content sh-fade-in">
+
     <!-- Sidebar OOB refresh (rendered when refreshSidebar flag is set on mutation responses) -->
     <th:block th:if="${refreshSidebar}">
         <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
     </th:block>
 
     <!-- Alert for errors -->
-    <div th:if="${error}" class="sh-alert sh-alert-danger" style="grid-column: 1 / -1; margin-bottom: 1rem;">
+    <div th:if="${error}" class="sh-alert sh-alert-danger" style="margin-bottom: 1rem;">
         <div class="sh-alert-body" th:text="${error}"></div>
         <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
             <iconify-icon icon="lucide:x"></iconify-icon>
         </button>
     </div>
 
-    <th:block th:replace="~{fragments/saved-session :: card}"></th:block>
+    <main class="sh-dashboard-main sh-dashboard-cockpit">
 
-    <main class="sh-dashboard-main">
-        <div class="sh-page-header">
-            <div>
-                <h1 class="sh-page-title">My Library</h1>
-                <p class="sh-page-subtitle">All decks and files at a glance.</p>
-            </div>
-            <div class="sh-page-actions">
-                <a href="/flashcards/generate" class="sh-btn sh-btn-secondary"
-                   hx-get="/flashcards/generate" hx-target="#explorer-detail" hx-push-url="true">
-                    <iconify-icon icon="lucide:sparkles"></iconify-icon>
-                    AI Flashcards
-                </a>
-                <a href="/study/start" class="sh-btn sh-btn-secondary"
-                   hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
-                    <iconify-icon icon="lucide:book-open"></iconify-icon>
-                    Start Studying
-                </a>
-            </div>
-            <div class="sh-search-bar sh-search-bar-lg">
-                <span class="sh-search-icon">
-                    <iconify-icon icon="lucide:search"></iconify-icon>
+        <!-- Greeting header -->
+        <header class="sh-dashboard-greeting">
+            <h1 class="sh-page-title" th:text="'Welcome back, ' + ${vm.greetingName()}">Welcome back</h1>
+            <p class="sh-page-subtitle">What do you want to study today?</p>
+        </header>
+
+        <!-- Resume card (only if saved session exists) -->
+        <th:block th:if="${vm.resume().isPresent()}">
+            <th:block th:replace="~{fragments/saved-session :: card}"></th:block>
+        </th:block>
+
+        <!-- Review mistakes card -->
+        <a th:if="${vm.reviewMistakesCount() > 0}"
+           class="sh-review-card"
+           href="#"
+           hx-post="/study/review-mistakes"
+           hx-target="#explorer-detail"
+           hx-push-url="true">
+            <span class="sh-review-card-icon">
+                <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
+            </span>
+            <span class="sh-review-card-body">
+                <span class="sh-review-card-title">Review mistakes</span>
+                <span class="sh-review-card-meta">
+                    <span th:text="${vm.reviewMistakesCount()}">0</span>
+                    <span th:text="${vm.reviewMistakesCount() == 1 ? 'card to review' : 'cards to review'}">cards to review</span>
                 </span>
-                <input type="text" name="q" class="sh-input sh-search-input" placeholder="Search decks and files..."
-                       hx-get="/dashboard"
-                       hx-trigger="keyup changed delay:150ms"
-                       hx-target="#library-grid-container"
-                       th:value="${query}">
-            </div>
+            </span>
+            <span class="sh-review-card-cta">Study now</span>
+        </a>
+
+        <!-- Action tiles row (always shown) -->
+        <div class="sh-action-tile-row">
+            <a class="sh-action-tile" href="/study/start"
+               hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
+                <iconify-icon icon="lucide:book-open"></iconify-icon>
+                <span class="sh-action-tile-label">Start studying</span>
+            </a>
+            <a class="sh-action-tile" href="/flashcards/generate"
+               hx-get="/flashcards/generate" hx-target="#explorer-detail" hx-push-url="true">
+                <iconify-icon icon="lucide:sparkles"></iconify-icon>
+                <span class="sh-action-tile-label">Generate flashcards</span>
+            </a>
+            <a class="sh-action-tile" th:href="@{/study/start(mode='EXAM')}"
+               th:hx-get="@{/study/start(mode='EXAM')}" hx-target="#explorer-detail" hx-push-url="true">
+                <iconify-icon icon="lucide:file-edit"></iconify-icon>
+                <span class="sh-action-tile-label">Take an exam</span>
+            </a>
         </div>
 
-        <div class="sh-section-title">Library Items</div>
-
-        <div th:if="${#lists.isEmpty(deckOptions)} and ${#lists.isEmpty(fileSummaries)}" class="sh-empty">
-            <div class="sh-empty-icon">
-                <iconify-icon icon="lucide:layers"></iconify-icon>
+        <!-- Pinned decks rail -->
+        <section th:if="${!vm.pinnedDecks().isEmpty()}" class="sh-dashboard-section">
+            <h2 class="sh-section-title">Pinned</h2>
+            <div class="sh-deck-rail">
+                <div th:each="d : ${vm.pinnedDecks()}"
+                     th:replace="~{fragments/explorer :: dashboardDeckTile(${d})}"></div>
             </div>
-            <p class="sh-empty-text">No decks or files yet</p>
-            <p class="sh-empty-hint">Create a deck or upload a file to see it here.</p>
-        </div>
+        </section>
 
-        <div id="library-grid-container">
-            <div th:fragment="libraryGrid" th:if="${!#lists.isEmpty(deckOptions)} or ${!#lists.isEmpty(fileSummaries)}" class="sh-deck-grid">
-                <div th:each="deck : ${deckOptions}"
-                     class="sh-deck-tile sh-library-filter-item"
-                     th:data-name="${deck.deckName + ' ' + deck.folderPath}"
-                     th:style="'--folder-color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
-                    <a th:href="@{/decks/{id}(id=${deck.deckId})}"
-                       class="sh-deck-cover"
-                       hx-get th:hx-get="@{/decks/{id}(id=${deck.deckId})}"
-                       hx-target="#explorer-detail" hx-push-url="true">
-                        <span class="sh-deck-cover-icon">
-                            <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
-                        </span>
-                    </a>
-                    <div class="sh-deck-body">
-                        <div class="sh-deck-title" th:text="${deck.deckName}">Deck Name</div>
-                        <div class="sh-deck-meta" th:text="${deck.folderPath}">Folder</div>
-                        <div class="sh-deck-meta" th:text="${deck.cardCount} + ' cards'">0 cards</div>
-                    </div>
-                    <div class="sh-file-tile-actions">
-                        <button class="sh-deck-edit-btn" title="Edit Deck"
-                                th:hx-get="@{/decks/{id}/rename(id=${deck.deckId})}"
-                                hx-target="#modal-placeholder">
-                            <iconify-icon icon="lucide:pencil"></iconify-icon>
-                        </button>
-                        <button class="sh-deck-edit-btn sh-file-delete-btn"
-                                title="Delete"
-                                aria-label="Delete deck"
-                                th:hx-post="@{/decks/{id}/delete(id=${deck.deckId})}"
-                                hx-confirm="Delete this deck and all its flashcards? This action cannot be undone."
-                                hx-target="#explorer-detail">
-                            <iconify-icon icon="lucide:trash-2"></iconify-icon>
-                        </button>
-                    </div>
-                </div>
-
-                <div th:each="file : ${fileSummaries}"
-                     class="sh-deck-tile sh-library-filter-item"
-                     th:data-name="${file.originalFilename + ' ' + file.folderPath}"
-                     th:style="'--folder-color:' + ${file.folderColorHex}">
-                    <a th:href="@{/files/{id}/view(id=${file.id})}"
-                       target="_blank"
-                       th:classappend="${#strings.startsWith(file.mimeType, 'image/') ? 'sh-lightbox-trigger' : (file.mimeType == 'application/pdf' ? 'sh-pdf-viewer-trigger' : '')}"
-                       class="sh-deck-cover"
-                       th:data-file-id="${file.id}"
-                       th:data-file-url="@{/files/{id}/view(id=${file.id})}"
-                       th:data-file-name="${file.originalFilename}"
-                       th:data-file-folder-id="${file.folderId}">
-                        <img th:if="${#strings.startsWith(file.mimeType, 'image/')}"
-                             th:src="@{/files/{id}/view(id=${file.id})}"
-                             class="sh-deck-cover-img" alt="Preview">
-                        <img th:if="${file.mimeType == 'application/pdf'}"
-                             th:src="@{/files/{id}/thumbnail(id=${file.id})}"
-                             class="sh-deck-cover-img sh-pdf-cover-img" alt="PDF preview">
-                        <span th:unless="${#strings.startsWith(file.mimeType, 'image/') || file.mimeType == 'application/pdf'}" class="sh-deck-cover-icon">
-                            <iconify-icon icon="lucide:file"></iconify-icon>
-                        </span>
-                    </a>
-                    <div class="sh-deck-body">
-                        <div class="sh-deck-title" th:text="${file.originalFilename}">filename.pdf</div>
-                        <div class="sh-deck-meta" th:text="${file.folderPath}">Folder</div>
-                        <div class="sh-deck-meta"
-                             th:text="${#numbers.formatDecimal(file.fileSizeBytes / 1024.0, 1, 1) + ' KB'}">0 KB</div>
-                    </div>
-                    <div class="sh-file-tile-actions">
-                        <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.txt') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.md')}"
-                           class="sh-deck-test-btn" title="Quiz this"
-                           th:href="@{'/study/start'(mode='QUIZ', fileId=${file.id})}"
-                           hx-get="/study/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
-                           hx-target="#explorer-detail" hx-push-url="true">
-                            <iconify-icon icon="lucide:sparkles"></iconify-icon>
-                        </a>
-                        <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf')}"
-                           class="sh-deck-test-btn sh-deck-ai-flashcards-btn" title="Generate flashcards"
-                           th:href="@{'/flashcards/generate'(fileId=${file.id})}"
-                           hx-get="/flashcards/generate" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
-                           hx-target="#explorer-detail" hx-push-url="true">
-                            <iconify-icon icon="lucide:badge-plus"></iconify-icon>
-                        </a>
-                        <button class="sh-deck-edit-btn" title="Edit Options"
-                                th:hx-get="@{/files/{id}/edit-options(id=${file.id})}"
-                                hx-target="#modal-placeholder">
-                            <iconify-icon icon="lucide:pencil"></iconify-icon>
-                        </button>
-                        <button class="sh-deck-edit-btn sh-file-delete-btn"
-                                title="Delete"
-                                aria-label="Delete file"
-                                th:hx-post="@{/files/{id}/delete(id=${file.id})}"
-                                hx-confirm="Delete this file?"
-                                hx-target="#explorer-detail">
-                            <iconify-icon icon="lucide:trash-2"></iconify-icon>
-                        </button>
-                    </div>
-                </div>
+        <!-- Recent decks rail -->
+        <section th:if="${!vm.recentDecks().isEmpty()}" class="sh-dashboard-section">
+            <h2 class="sh-section-title">Recently studied</h2>
+            <div class="sh-deck-rail">
+                <div th:each="d : ${vm.recentDecks()}"
+                     th:replace="~{fragments/explorer :: dashboardDeckTile(${d})}"></div>
             </div>
-        </div>
-    </main>
+        </section>
 
-    <aside class="sh-dashboard-aside">
-        <div class="sh-side-card">
-            <div class="sh-side-card-title">Recent Activity</div>
+        <!-- Recent activity -->
+        <section th:if="${!vm.recentActivity().isEmpty()}" class="sh-dashboard-section">
+            <h2 class="sh-section-title">Recent activity</h2>
             <ul class="sh-activity-list">
-                <li class="sh-activity-item">
-                    <span class="sh-activity-dot"></span>
-                    <div>
-                        <div class="sh-activity-title">Study Session</div>
-                        <div class="sh-activity-meta">21 cards - 10:50 pm</div>
-                    </div>
-                </li>
-                <li class="sh-activity-item">
-                    <span class="sh-activity-dot"></span>
-                    <div>
-                        <div class="sh-activity-title">Study Session</div>
-                        <div class="sh-activity-meta">13 cards - 10:40 pm</div>
-                    </div>
-                </li>
-                <li class="sh-activity-item">
-                    <span class="sh-activity-dot"></span>
-                    <div>
-                        <div class="sh-activity-title">Study Session</div>
-                        <div class="sh-activity-meta">21 cards - 10:30 pm</div>
+                <li th:each="row : ${vm.recentActivity()}" class="sh-activity-row">
+                    <span class="sh-activity-icon">
+                        <iconify-icon th:attr="icon=${row.type().name() == 'EXAM' ? 'lucide:file-edit' : (row.type().name() == 'QUIZ' ? 'lucide:list-checks' : 'lucide:book-open')}"></iconify-icon>
+                    </span>
+                    <div class="sh-activity-body">
+                        <div class="sh-activity-title" th:text="${row.title()}">Title</div>
+                        <div class="sh-activity-meta">
+                            <span th:text="${row.correctCount()} + ' / ' + ${row.cardCount()}">0 / 0</span>
+                            <span> · </span>
+                            <span th:text="${#temporals.format(row.completedAt(), 'MMM d, HH:mm')}">date</span>
+                        </div>
                     </div>
                 </li>
             </ul>
-        </div>
+        </section>
 
-        <div class="sh-side-card">
-            <div class="sh-side-card-title">Daily Goal</div>
-            <div class="sh-goal-stat">
-                <div class="sh-goal-value">4/5</div>
-                <div class="sh-goal-label">Decks studied today</div>
-            </div>
-        </div>
-    </aside>
+    </main>
+</div>
 
+<!-- Reusable tile fragment for both rails -->
+<div th:fragment="dashboardDeckTile(d)"
+     class="sh-deck-tile"
+     th:style="'--folder-color:' + (${d.colorHex()} ?: '#888')">
+    <a th:href="@{/decks/{id}(id=${d.deckId()})}"
+       hx-get th:hx-get="@{/decks/{id}(id=${d.deckId()})}"
+       hx-target="#explorer-detail" hx-push-url="true"
+       class="sh-deck-cover">
+        <span class="sh-deck-cover-icon">
+            <iconify-icon th:attr="icon=${d.iconName() != null ? (d.iconName().contains(':') ? d.iconName() : 'lucide:' + d.iconName()) : 'lucide:layers'}"></iconify-icon>
+        </span>
+    </a>
+    <div class="sh-deck-body">
+        <div class="sh-deck-title" th:text="${d.deckName()}">Name</div>
+        <div class="sh-deck-meta" th:text="${d.folderPath()}">Folder</div>
+        <div class="sh-deck-meta"
+             th:text="${d.masteredCards()} + ' / ' + ${d.totalCards()} + ' mastered'">0 / 0 mastered</div>
+    </div>
+    <div class="sh-file-tile-actions">
+        <button class="sh-deck-edit-btn"
+                th:title="${d.pinned() ? 'Unpin' : 'Pin'}"
+                th:hx-post="@{/decks/{id}/pin(id=${d.deckId()})}"
+                hx-target="#explorer-detail"
+                hx-trigger="click">
+            <iconify-icon th:attr="icon=${d.pinned() ? 'lucide:pin-off' : 'lucide:pin'}"></iconify-icon>
+        </button>
+    </div>
 </div>
 
 </body>

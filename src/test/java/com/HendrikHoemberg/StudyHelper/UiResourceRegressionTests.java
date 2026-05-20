@@ -653,10 +653,7 @@ class UiResourceRegressionTests {
             .contains("th:data-file-url=\"@{/files/{id}/view(id=${file.id})}\"")
             .contains("th:data-file-name=\"${file.originalFilename}\"");
         assertThat(explorer)
-            .contains("'sh-pdf-viewer-trigger'")
-            .contains("th:data-file-id=\"${file.id}\"")
-            .contains("th:data-file-url=\"@{/files/{id}/view(id=${file.id})}\"")
-            .contains("th:data-file-name=\"${file.originalFilename}\"");
+            .contains("dashboardDeckTile");
     }
 
     @Test
