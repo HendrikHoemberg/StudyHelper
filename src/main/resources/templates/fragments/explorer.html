@@ -74,8 +74,9 @@
         <section th:if="${!vm.pinnedDecks().isEmpty()}" class="sh-dashboard-section">
             <h2 class="sh-section-title">Pinned</h2>
             <div class="sh-deck-rail">
-                <div th:each="d : ${vm.pinnedDecks()}"
-                     th:replace="~{fragments/explorer :: dashboardDeckTile(${d})}"></div>
+                <th:block th:each="deck : ${vm.pinnedDecks()}">
+                    <div th:replace="~{fragments/explorer :: dashboardDeckTile(${deck})}"></div>
+                </th:block>
             </div>
         </section>
 
@@ -83,8 +84,9 @@
         <section th:if="${!vm.recentDecks().isEmpty()}" class="sh-dashboard-section">
             <h2 class="sh-section-title">Recently studied</h2>
             <div class="sh-deck-rail">
-                <div th:each="d : ${vm.recentDecks()}"
-                     th:replace="~{fragments/explorer :: dashboardDeckTile(${d})}"></div>
+                <th:block th:each="deck : ${vm.recentDecks()}">
+                    <div th:replace="~{fragments/explorer :: dashboardDeckTile(${deck})}"></div>
+                </th:block>
             </div>
         </section>
 
