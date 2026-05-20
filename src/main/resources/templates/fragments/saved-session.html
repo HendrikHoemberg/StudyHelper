@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<!-- Dashboard "Continue session" card -->
+<section th:fragment="card" id="saved-session-card"
+         th:if="${savedSession != null}"
+         class="sh-saved-session-card">
+    <div class="sh-saved-session-header">
+        <div class="sh-saved-session-type">
+            <iconify-icon th:icon="${savedSession.type().name() == 'FLASHCARDS' ? 'lucide:book-open'
+                                  : savedSession.type().name() == 'QUIZ' ? 'lucide:list-checks'
+                                  : 'lucide:clipboard-list'}"></iconify-icon>
+            <span th:text="${savedSession.type()}">FLASHCARDS</span>
+        </div>
+        <div class="sh-saved-session-title" th:text="${savedSession.title()}">Title</div>
+        <div class="sh-saved-session-progress" th:text="${savedSession.progressLabel()}">0 / 0 answered</div>
+        <div class="sh-saved-session-updated" th:text="'Paused ' + ${#temporals.format(savedSession.updatedAt(), 'HH:mm')}">Paused now</div>
+    </div>
+    <div class="sh-saved-session-actions">
+        <a class="sh-btn sh-btn-primary"
+           th:href="@{${savedSession.resumeUrl()}}"
+           th:attr="hx-get=@{${savedSession.resumeUrl()}}"
+           hx-target="#explorer-detail"
+           hx-push-url="true">
+            <iconify-icon icon="lucide:play"></iconify-icon>
+            Resume
+        </a>
+        <button type="button" class="sh-btn sh-btn-secondary"
+                hx-post="/sessions/saved/discard"
+                hx-target="#saved-session-card"
+                hx-swap="outerHTML">
+            <iconify-icon icon="lucide:x"></iconify-icon>
+            Discard
+        </button>
+    </div>
+</section>
+
+<!-- Empty replacement after discard -->
+<div th:fragment="empty" id="saved-session-card" style="display:none"></div>
+
+<!-- Top-nav badge -->
+<a th:fragment="navBadge"
+   th:if="${savedSession != null}"
+   class="topnav-link topnav-saved-badge"
+   th:href="@{/sessions/saved/resume}"
+   th:title="${savedSession.title() + ' — ' + savedSession.progressLabel()}">
+    <iconify-icon icon="lucide:bookmark"></iconify-icon>
+    <span>Resume</span>
+</a>
+
+<!-- Conflict modal/fragment shown when user tries to start a new session while one is saved.
+     Returned by POST /study/session and POST /exam/session when no confirmDiscard. -->
+<div th:fragment="conflict" class="sh-modal sh-modal-active">
+    <div class="sh-modal-body">
+        <h3>You have a saved session</h3>
+        <p th:text="${savedSession.title() + ' — ' + savedSession.progressLabel()}">Saved session</p>
+        <div class="sh-modal-actions">
+            <a class="sh-btn sh-btn-primary"
+               th:href="@{${savedSession.resumeUrl()}}"
+               th:attr="hx-get=@{${savedSession.resumeUrl()}}"
+               hx-target="#explorer-detail"
+               hx-push-url="true">Resume</a>
+            <button type="button" class="sh-btn sh-btn-danger"
+                    onclick="document.dispatchEvent(new CustomEvent('saved-session-discard-confirmed'))">
+                Discard &amp; start new
+            </button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
