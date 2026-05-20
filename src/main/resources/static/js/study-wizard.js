@@ -2,6 +2,7 @@
     let currentStep = 1;
     let currentMode = 'FLASHCARDS';
     let sourceTreeScrollTop = 0;
+    let expandedFolderIds = null;
 
     const STEP_LABELS = {
         FLASHCARDS: ["Mode", "Type", "Decks", "Order"],
@@ -366,10 +367,17 @@
     }
 
     window.openFoldersWithSelection = function() {
+        const hasSavedState = expandedFolderIds !== null;
         document.querySelectorAll('.vb-group, .vb-subgroup').forEach(folder => {
-            const hasSelection = !!folder.querySelector(':scope > .vb-folder-content .sh-source-checkbox:checked, :scope > .vb-group-head .sh-source-folder-checkbox:checked, :scope > .vb-subgroup-head .sh-source-folder-checkbox:checked');
-            if (hasSelection) setSourceFolderExpanded(folder, true);
-            else syncSourceFolderToggle(folder);
+            const folderId = folder.dataset.sourceFolderId;
+            if (hasSavedState) {
+                const shouldExpand = expandedFolderIds.includes(folderId);
+                setSourceFolderExpanded(folder, shouldExpand);
+            } else {
+                const hasSelection = !!folder.querySelector(':scope > .vb-folder-content .sh-source-checkbox:checked, :scope > .vb-group-head .sh-source-folder-checkbox:checked, :scope > .vb-subgroup-head .sh-source-folder-checkbox:checked');
+                if (hasSelection) setSourceFolderExpanded(folder, true);
+                else syncSourceFolderToggle(folder);
+            }
         });
     };
 
@@ -484,6 +492,7 @@
         // Reset state for fresh load
         currentStep = 1;
         currentMode = 'FLASHCARDS';
+        expandedFolderIds = null;
 
         const nextBtn = document.getElementById('wizard-btn-next');
         const backBtn = document.getElementById('wizard-btn-back');
@@ -596,6 +605,15 @@
         if (e.detail.target?.id !== 'setup-picker') return;
         const scroll = e.detail.target.querySelector('.vb-source-scroll');
         if (scroll) sourceTreeScrollTop = scroll.scrollTop;
+
+        // Capture expanded folders
+        expandedFolderIds = [];
+        e.detail.target.querySelectorAll('.vb-group:not(.is-collapsed), .vb-subgroup:not(.is-collapsed)').forEach(folder => {
+            const folderId = folder.dataset.sourceFolderId;
+            if (folderId) {
+                expandedFolderIds.push(folderId);
+            }
+        });
     });
 
     document.body.addEventListener('htmx:afterSwap', function (e) {

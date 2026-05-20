@@ -7,6 +7,7 @@ import com.HendrikHoemberg.StudyHelper.dto.StudyDeckGroup;
 import com.HendrikHoemberg.StudyHelper.dto.StudyDeckOption;
 import com.HendrikHoemberg.StudyHelper.dto.QuizFileOption;
 import com.HendrikHoemberg.StudyHelper.dto.QuizSourceGroup;
+import com.HendrikHoemberg.StudyHelper.dto.StudyMode;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
@@ -117,32 +118,45 @@ public class FolderService {
 
     @Transactional(readOnly = true)
     public FolderSources getAllSourcesInFolder(Long folderId, User user) {
+        return getAllSourcesInFolder(folderId, null, user);
+    }
+
+    @Transactional(readOnly = true)
+    public FolderSources getAllSourcesInFolder(Long folderId, StudyMode mode, User user) {
         Folder folder = folderRepository.findByIdAndUserWithSubFolders(folderId, user)
             .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
         List<Long> deckIds = new ArrayList<>();
         List<Long> fileIds = new ArrayList<>();
-        collectSourcesRecursively(folder, deckIds, fileIds);
+        collectSourcesRecursively(folder, mode, deckIds, fileIds);
         return new FolderSources(deckIds, fileIds);
     }
 
-    private void collectSourcesRecursively(Folder folder, List<Long> deckIds, List<Long> fileIds) {
+    private void collectSourcesRecursively(Folder folder, StudyMode mode, List<Long> deckIds, List<Long> fileIds) {
         for (Deck deck : folder.getDecks()) {
-            int usable = (int) deck.getFlashcards().stream()
-                .filter(flashcardService::hasUsableTextForAi).count();
-            if (usable > 0) {
-                deckIds.add(deck.getId());
+            if (mode == StudyMode.FLASHCARDS) {
+                if (!deck.getFlashcards().isEmpty()) {
+                    deckIds.add(deck.getId());
+                }
+            } else {
+                int usable = (int) deck.getFlashcards().stream()
+                    .filter(flashcardService::hasUsableTextForAi).count();
+                if (usable > 0) {
+                    deckIds.add(deck.getId());
+                }
             }
         }
-        for (FileEntry file : folder.getFiles()) {
-            String ext = DocumentExtractionService.extension(file.getOriginalFilename());
-            boolean supported = DocumentExtractionService.SUPPORTED_EXTENSIONS.contains(ext)
-                && file.getFileSizeBytes() <= DocumentExtractionService.MAX_FILE_SIZE_BYTES;
-            if (supported) {
-                fileIds.add(file.getId());
+        if (mode != StudyMode.FLASHCARDS) {
+            for (FileEntry file : folder.getFiles()) {
+                String ext = DocumentExtractionService.extension(file.getOriginalFilename());
+                boolean supported = DocumentExtractionService.SUPPORTED_EXTENSIONS.contains(ext)
+                    && file.getFileSizeBytes() <= DocumentExtractionService.MAX_FILE_SIZE_BYTES;
+                if (supported) {
+                    fileIds.add(file.getId());
+                }
             }
         }
         for (Folder sub : folder.getSubFolders()) {
-            collectSourcesRecursively(sub, deckIds, fileIds);
+            collectSourcesRecursively(sub, mode, deckIds, fileIds);
         }
     }
 

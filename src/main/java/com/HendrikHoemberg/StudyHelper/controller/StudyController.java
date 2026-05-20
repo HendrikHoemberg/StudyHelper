@@ -140,7 +140,7 @@ public class StudyController {
             files.remove(removeFileId);
             pdfMode.remove(removeFileId);
         } else if (toggledFolderId != null) {
-            FolderService.FolderSources sources = folderService.getAllSourcesInFolder(toggledFolderId, user);
+            FolderService.FolderSources sources = folderService.getAllSourcesInFolder(toggledFolderId, mode, user);
             List<Long> folderDecks = sources.deckIds();
             List<Long> folderFiles = sources.fileIds();
 

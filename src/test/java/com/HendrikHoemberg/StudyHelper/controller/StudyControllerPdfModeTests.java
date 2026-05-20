@@ -146,7 +146,7 @@ class StudyControllerPdfModeTests {
 
     @Test
     void updateSetup_folderUnselect_removesFolderFilePdfModes() {
-        when(folderService.getAllSourcesInFolder(99L, user))
+        when(folderService.getAllSourcesInFolder(99L, StudyMode.QUIZ, user))
                 .thenReturn(new FolderService.FolderSources(List.of(10L), List.of(42L, 43L)));
 
         MockHttpServletRequest request = new MockHttpServletRequest();
