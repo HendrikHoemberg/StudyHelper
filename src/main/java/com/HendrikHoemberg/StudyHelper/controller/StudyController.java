@@ -34,6 +34,7 @@ public class StudyController {
     private final FileEntryService fileEntryService;
     private final ExamSessionService examSessionService;
     private final SavedSessionService savedSessionService;
+    private static final String DEFAULT_STUDY_CANCEL_URL = "/dashboard";
 
     @Autowired
     public StudyController(StudySessionService studySessionService,
@@ -64,9 +65,12 @@ public class StudyController {
                         Model model,
                         Principal principal,
                         HttpSession session,
+                        @RequestHeader(value = "HX-Current-URL", required = false) String currentUrl,
+                        @RequestHeader(value = "Referer", required = false) String referer,
                         @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         model.addAttribute("username", user.getUsername());
+        model.addAttribute("studyWizardCancelUrl", resolveStudyWizardCancelUrl(currentUrl, referer));
 
         List<Long> preselectedDeckIds = new ArrayList<>();
         List<Long> preselectedFileIds = new ArrayList<>();
@@ -195,6 +199,10 @@ public class StudyController {
             if (existing.isPresent()) {
                 model.addAttribute("savedSession", existing.get());
                 model.addAttribute("startNewMode", mode);
+                model.addAttribute("studyWizardCancelUrl", resolveStudyWizardCancelUrl(
+                    request.getHeader("HX-Current-URL"),
+                    request.getHeader("Referer")
+                ));
                 response.setStatus(HttpServletResponse.SC_OK);
                 response.setHeader("HX-Retarget", "#modal-placeholder");
                 response.setHeader("HX-Reswap", "innerHTML");
@@ -282,6 +290,10 @@ public class StudyController {
             if (existing.isPresent()) {
                 model.addAttribute("savedSession", existing.get());
                 model.addAttribute("startNewMode", mode);
+                model.addAttribute("studyWizardCancelUrl", resolveStudyWizardCancelUrl(
+                    request.getHeader("HX-Current-URL"),
+                    request.getHeader("Referer")
+                ));
                 response.setStatus(HttpServletResponse.SC_OK);
                 response.setHeader("HX-Retarget", "#modal-placeholder");
                 response.setHeader("HX-Reswap", "innerHTML");
@@ -430,5 +442,34 @@ public class StudyController {
         List<Long> resolved = new ArrayList<>(manual.stream().filter(normalized::contains).toList());
         normalized.stream().filter(id -> !resolved.contains(id)).forEach(resolved::add);
         return resolved;
+    }
+
+    private String resolveStudyWizardCancelUrl(String currentUrl, String referer) {
+        String fromCurrentUrl = internalReturnUrl(currentUrl);
+        if (fromCurrentUrl != null) {
+            return fromCurrentUrl;
+        }
+        String fromReferer = internalReturnUrl(referer);
+        return fromReferer != null ? fromReferer : DEFAULT_STUDY_CANCEL_URL;
+    }
+
+    private String internalReturnUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isBlank()) {
+            return null;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(rawUrl.trim());
+            String path = uri.getPath();
+            if (path == null || path.isBlank() || !path.startsWith("/") || path.startsWith("//")) {
+                return null;
+            }
+            if ("/study/start".equals(path)) {
+                return null;
+            }
+            String query = uri.getRawQuery();
+            return query == null || query.isBlank() ? path : path + "?" + query;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

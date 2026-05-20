@@ -80,10 +80,15 @@
                 </div>
             </div>
             <div class="sh-modal-footer">
-                <button type="button" class="sh-btn sh-btn-secondary"
-                        onclick="window.history.back()">
+                <a class="sh-btn sh-btn-secondary"
+                   th:with="cancelUrl=${studyWizardCancelUrl ?: '/dashboard'}"
+                   th:href="@{${cancelUrl}}"
+                   th:attr="hx-get=@{${cancelUrl}}"
+                   hx-target="#explorer-detail"
+                   hx-replace-url="true"
+                   hx-on::after-request="var modal=document.getElementById('saved-session-conflict-modal'); if (modal) modal.remove();">
                     Cancel
-                </button>
+                </a>
                 <button type="button" class="sh-btn sh-btn-danger"
                         hx-post="/sessions/saved/discard"
                         hx-target="#saved-session-conflict-modal"

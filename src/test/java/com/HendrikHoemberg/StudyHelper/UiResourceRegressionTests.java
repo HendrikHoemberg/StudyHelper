@@ -154,6 +154,16 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void savedSessionConflictCancelUsesExplicitReturnUrlInsteadOfBrowserBack() throws IOException {
+        String template = resource("templates/fragments/saved-session.html");
+
+        assertThat(template)
+            .contains("studyWizardCancelUrl")
+            .contains("hx-replace-url=\"true\"")
+            .doesNotContain("window.history.back()");
+    }
+
+    @Test
     void studyWizardSourceTreeIsScrollableAndCollapsible() throws IOException {
         String template = resource("templates/fragments/wizard-source-picker.html");
         String styles = resource("static/css/styles.css");

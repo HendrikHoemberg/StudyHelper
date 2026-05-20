@@ -69,6 +69,47 @@ class StudyControllerTests {
     }
 
     @Test
+    void start_UsesHtmxCurrentUrlAsStudyWizardCancelUrl() {
+        ExtendedModelMap model = new ExtendedModelMap();
+
+        String view = controller.start(
+            null,
+            null,
+            null,
+            null,
+            model,
+            () -> "alice",
+            new MockHttpSession(),
+            "http://localhost:8080/folders/42?tab=decks",
+            null,
+            "true"
+        );
+
+        assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
+        assertThat(model.get("studyWizardCancelUrl")).isEqualTo("/folders/42?tab=decks");
+    }
+
+    @Test
+    void start_FallsBackToDashboardWhenCurrentUrlIsStudyWizard() {
+        ExtendedModelMap model = new ExtendedModelMap();
+
+        controller.start(
+            null,
+            null,
+            null,
+            null,
+            model,
+            () -> "alice",
+            new MockHttpSession(),
+            "http://localhost:8080/study/start",
+            "http://localhost:8080/study/start",
+            "true"
+        );
+
+        assertThat(model.get("studyWizardCancelUrl")).isEqualTo("/dashboard");
+    }
+
+    @Test
     void createSession_ExamDelegatesToExamSessionServiceAndStoresSession() throws Exception {
         ExamSessionState state = new ExamSessionState(
             new ExamConfig(List.of(10L), List.of(), ExamQuestionSize.MEDIUM, 5, null, ExamLayout.PER_PAGE),
