@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,4 +28,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
 
     @Query("select c.backImageFilename from Flashcard c where c.deck.user = :user and c.backImageFilename is not null")
     List<String> findBackImageFilenamesByUser(@Param("user") User user);
+
+    @Query("select c.id from Flashcard c where c.id in :ids")
+    List<Long> findExistingIdsByIdIn(@Param("ids") Collection<Long> ids);
 }
