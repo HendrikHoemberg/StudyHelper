@@ -31,4 +31,19 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
 
     @Query("select c.id from Flashcard c where c.id in :ids")
     List<Long> findExistingIdsByIdIn(@Param("ids") Collection<Long> ids);
+
+    @Query("""
+        select count(f)
+        from Flashcard f
+        where f.deck.user = :user and f.correctStreak = 0
+        """)
+    long countMistakesByUser(@Param("user") User user);
+
+    @Query("""
+        select f
+        from Flashcard f
+        where f.deck.user = :user and f.correctStreak = 0
+        order by f.id asc
+        """)
+    List<Flashcard> findMistakesByUser(@Param("user") User user);
 }
