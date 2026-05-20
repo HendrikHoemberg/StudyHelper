@@ -178,7 +178,7 @@ class UiResourceRegressionTests {
         assertThat(styles)
             .contains(".vb-source-scroll")
             .contains("overflow-y: auto")
-            .contains(".vb-group.is-collapsed:not(.is-search-expanded) > .vb-folder-content")
+            .contains(".vb-group.is-collapsed:not(.is-search-expanded)>.vb-folder-content")
             .contains(".vb-folder-toggle iconify-icon");
         assertThat(wizardJs)
             .contains("initSourceFolderTree")
@@ -285,7 +285,7 @@ class UiResourceRegressionTests {
 
         assertThat(styles)
             .contains("position: static")
-            .contains(".sh-wizard-footer > div")
+            .contains(".sh-wizard-footer>div")
             .contains("margin-left: 0 !important")
             .contains(".sh-wizard-footer #wizard-btn-submit-with-instructions")
             .contains("flex: 1 1 12rem")
