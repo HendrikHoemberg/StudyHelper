@@ -660,7 +660,7 @@ a {
     justify-content: center;
 }
 
-.sh-page-header > .sh-search-bar {
+.sh-page-header>.sh-search-bar {
     width: 100%;
 }
 
@@ -2799,20 +2799,20 @@ textarea.sh-input {
     gap: 0.35rem;
 }
 
-.vb-group.is-collapsed:not(.is-search-expanded) > .vb-folder-content,
-.vb-subgroup.is-collapsed:not(.is-search-expanded) > .vb-folder-content {
+.vb-group.is-collapsed:not(.is-search-expanded)>.vb-folder-content,
+.vb-subgroup.is-collapsed:not(.is-search-expanded)>.vb-folder-content {
     display: none;
 }
 
-.vb-group.is-collapsed:not(.is-search-expanded) > .vb-group-head,
-.vb-subgroup.is-collapsed:not(.is-search-expanded) > .vb-subgroup-head {
+.vb-group.is-collapsed:not(.is-search-expanded)>.vb-group-head,
+.vb-subgroup.is-collapsed:not(.is-search-expanded)>.vb-subgroup-head {
     border-bottom-color: transparent;
 }
 
-.vb-group:not(.is-collapsed) > .vb-group-head .vb-folder-toggle iconify-icon,
-.vb-subgroup:not(.is-collapsed) > .vb-subgroup-head .vb-folder-toggle iconify-icon,
-.vb-group.is-search-expanded > .vb-group-head .vb-folder-toggle iconify-icon,
-.vb-subgroup.is-search-expanded > .vb-subgroup-head .vb-folder-toggle iconify-icon {
+.vb-group:not(.is-collapsed)>.vb-group-head .vb-folder-toggle iconify-icon,
+.vb-subgroup:not(.is-collapsed)>.vb-subgroup-head .vb-folder-toggle iconify-icon,
+.vb-group.is-search-expanded>.vb-group-head .vb-folder-toggle iconify-icon,
+.vb-subgroup.is-search-expanded>.vb-subgroup-head .vb-folder-toggle iconify-icon {
     transform: rotate(90deg);
 }
 
@@ -3246,6 +3246,7 @@ textarea.sh-input {
         opacity: 0;
         transform: translateX(24px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -3257,6 +3258,7 @@ textarea.sh-input {
         opacity: 0;
         transform: translateX(-24px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -3268,6 +3270,7 @@ textarea.sh-input {
         opacity: 0;
         transform: translateY(16px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -3735,11 +3738,9 @@ textarea.sh-input {
     align-items: center;
     gap: 1rem;
     padding: 1rem 1.25rem;
-    background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--accent) 10%, var(--surface)) 0%,
-        var(--surface) 70%
-    );
+    background: linear-gradient(135deg,
+            color-mix(in srgb, var(--accent) 10%, var(--surface)) 0%,
+            var(--surface) 70%);
     border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border-light));
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow);
@@ -3818,6 +3819,7 @@ textarea.sh-input {
         grid-template-rows: auto auto;
         row-gap: 0.75rem;
     }
+
     .sh-saved-session-actions {
         grid-column: 1 / -1;
         justify-content: flex-end;
@@ -3841,8 +3843,15 @@ textarea.sh-input {
 }
 
 @keyframes shSavedPulse {
-    0%, 100% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
-    50%      { box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 8%, transparent); }
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+    }
+
+    50% {
+        box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 8%, transparent);
+    }
 }
 
 /* Conflict-modal recap block */
@@ -4488,7 +4497,7 @@ iconify-icon {
         align-items: stretch;
     }
 
-    .sh-wizard-footer > div {
+    .sh-wizard-footer>div {
         flex: 1 1 100%;
         min-width: 0;
         margin-left: 0 !important;
@@ -5100,6 +5109,7 @@ iconify-icon {
     flex: 1;
     cursor: pointer;
 }
+
 .vb-pdf-mode {
     display: inline-flex;
     border: 1px solid var(--border);
@@ -5107,6 +5117,7 @@ iconify-icon {
     overflow: hidden;
     font-size: 0.85rem;
 }
+
 .vb-pdf-mode-btn {
     padding: 0.25rem 0.6rem;
     background: transparent;
@@ -5114,6 +5125,7 @@ iconify-icon {
     cursor: pointer;
     color: var(--text-muted);
 }
+
 .vb-pdf-mode-btn:hover {
     background: var(--surface-hover);
 }
@@ -5124,10 +5136,12 @@ iconify-icon {
     position: relative;
     z-index: 1;
 }
+
 .vb-pdf-mode-btn.is-active {
     background: var(--accent);
     color: white;
 }
+
 .vb-file.is-disabled .vb-pdf-mode-btn,
 .vb-pdf-mode.is-disabled .vb-pdf-mode-btn,
 .vb-pdf-mode-btn:disabled {
@@ -5282,7 +5296,8 @@ iconify-icon {
 }
 
 .sh-ai-tree {
-    max-height: 280px; /* Slightly reduced to fit better in common viewports */
+    max-height: 280px;
+    /* Slightly reduced to fit better in common viewports */
     overflow-y: auto;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -5364,7 +5379,8 @@ iconify-icon {
 
 .sh-admin-page {
     padding: 2rem 1.5rem;
-    max-width: 1200px; /* Slightly tighter for better focus */
+    max-width: 1200px;
+    /* Slightly tighter for better focus */
     width: 100%;
     margin: 0 auto;
     display: flex;
@@ -5461,7 +5477,8 @@ iconify-icon {
     border-radius: var(--radius-lg);
     gap: 0.25rem;
     width: fit-content;
-    margin: 0 auto 2rem auto; /* Center the tabs */
+    margin: 0 auto 2rem auto;
+    /* Center the tabs */
     border: 1px solid var(--border-light);
 }
 
@@ -5521,7 +5538,8 @@ iconify-icon {
 
 .sh-admin-table-wrap {
     overflow-x: auto;
-    border: none; /* Border is now on the card container */
+    border: none;
+    /* Border is now on the card container */
     background: transparent;
     padding: 0;
 }
@@ -5784,8 +5802,8 @@ iconify-icon {
     min-width: 0;
 }
 
-.sh-cockpit-primary > * + *,
-.sh-cockpit-secondary > * + * {
+.sh-cockpit-primary>*+*,
+.sh-cockpit-secondary>*+* {
     margin-top: 0;
 }
 
@@ -5912,8 +5930,8 @@ iconify-icon {
 }
 
 [data-theme="dark"] .sh-action-tiles-wrapper {
-    background: linear-gradient(135deg, var(--surface) 0%, rgba(35, 39, 52, 0.6) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--surface);
+    border: 1px solid var(--border);
 }
 
 @media (max-width: 767px) {
@@ -5937,17 +5955,17 @@ iconify-icon {
     gap: 1.25rem;
     padding: 1.75rem 1.25rem;
     border-radius: var(--radius-xl);
-    background: var(--bg);
+    background: var(--surface);
     color: var(--text);
     text-decoration: none;
-    border: 1px solid var(--border-light);
+    border: 2px solid var(--border);
     transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sh-action-tile-icon {
     width: 64px;
     height: 64px;
-    background: var(--surface);
+    background: var(--bg);
     border-radius: 18px;
     display: flex;
     align-items: center;
@@ -5977,7 +5995,6 @@ iconify-icon {
 }
 
 .sh-action-tile:hover {
-    background: var(--surface);
     border-color: var(--accent);
     box-shadow: var(--shadow-lg), 0 0 20px var(--accent-glow);
     transform: translateY(-3px);
