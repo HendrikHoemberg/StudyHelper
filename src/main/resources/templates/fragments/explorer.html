@@ -47,6 +47,34 @@
                 </a>
             </div>
 
+            <!-- Mobile/Splitscreen Alerts & High Priority CTAs -->
+            <div class="sh-dashboard-alerts-mobile">
+                <!-- Resume card (only if saved session exists) -->
+                <th:block th:if="${vm.resume().isPresent()}">
+                    <th:block th:replace="~{fragments/saved-session :: card}"></th:block>
+                </th:block>
+
+                <!-- Review mistakes card (Mobile/Splitscreen version) -->
+                <a th:if="${vm.reviewMistakesCount() > 0}"
+                   class="sh-review-card sh-review-card-mobile"
+                   href="#"
+                   hx-post="/study/review-mistakes"
+                   hx-target="#explorer-detail"
+                   hx-push-url="true">
+                    <span class="sh-review-card-icon">
+                        <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
+                    </span>
+                    <span class="sh-review-card-body">
+                        <span class="sh-review-card-title">Review mistakes</span>
+                        <span class="sh-review-card-meta">
+                            <span th:text="${vm.reviewMistakesCount()}">0</span>
+                            <span th:text="${vm.reviewMistakesCount() == 1 ? 'card to review' : 'cards to review'}">cards to review</span>
+                        </span>
+                    </span>
+                    <span class="sh-review-card-cta">Study now</span>
+                </a>
+            </div>
+
             <!-- Pinned decks rail -->
             <section th:if="${!vm.pinnedDecks().isEmpty()}" class="sh-dashboard-section">
                 <h2 class="sh-section-title">Pinned</h2>
@@ -71,14 +99,9 @@
 
         <div class="sh-cockpit-secondary">
 
-            <!-- Resume card (only if saved session exists) -->
-            <th:block th:if="${vm.resume().isPresent()}">
-                <th:block th:replace="~{fragments/saved-session :: card}"></th:block>
-            </th:block>
-
-            <!-- Review mistakes card -->
+            <!-- Review mistakes card (Desktop Sidebar version) -->
             <a th:if="${vm.reviewMistakesCount() > 0}"
-               class="sh-review-card"
+               class="sh-review-card sh-review-card-desktop"
                href="#"
                hx-post="/study/review-mistakes"
                hx-target="#explorer-detail"

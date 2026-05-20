@@ -5839,6 +5839,32 @@ iconify-icon {
     }
 }
 
+/* --- High-Priority Dashboard Alert Cards --- */
+.sh-dashboard-alerts-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+.sh-review-card-desktop {
+    display: none !important;
+}
+
+.sh-review-card-mobile {
+    display: flex !important;
+}
+
+@media (min-width: 1300px) {
+    .sh-dashboard-alerts-mobile {
+        display: none !important;
+    }
+
+    .sh-review-card-desktop {
+        display: flex !important;
+    }
+}
+
 .sh-dashboard-greeting .sh-page-title {
     margin-bottom: 0.25rem;
 }
