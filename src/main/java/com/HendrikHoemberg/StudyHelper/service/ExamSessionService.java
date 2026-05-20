@@ -89,7 +89,7 @@ public class ExamSessionService {
 
         ExamSessionState state = new ExamSessionState(
             new ExamConfig(deckIds, fileIds, questionSize, qCount, timerMinutes, layout),
-            questions, new HashMap<>(), Instant.now(), sourceSummary
+            questions, new HashMap<>(), Instant.now(), 0L, sourceSummary
         );
         return new ExamSessionResult(state, layout);
     }

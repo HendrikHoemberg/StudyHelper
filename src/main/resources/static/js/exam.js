@@ -19,12 +19,14 @@
         // Avoid duplicate timers
         if (timerInterval) return;
 
-        const startedAtStr = timerEl.dataset.startedAt;
+        const resumedAtStr = timerEl.dataset.resumedAt;
+        const elapsedBeforeResume = parseInt(timerEl.dataset.elapsedBeforeResume || '0');
         const timerMinutes = parseInt(timerEl.dataset.timerMinutes);
-        if (!startedAtStr || isNaN(timerMinutes)) return;
+        if (!resumedAtStr || isNaN(timerMinutes)) return;
 
-        const startedAt = new Date(startedAtStr).getTime();
-        const endsAt = startedAt + (timerMinutes * 60 * 1000);
+        const resumedAt = new Date(resumedAtStr).getTime();
+        const elapsedMs = elapsedBeforeResume * 1000 + (Date.now() - resumedAt);
+        const remaining = (timerMinutes * 60 * 1000) - elapsedMs;
 
         const updateTimer = () => {
             const now = Date.now();

@@ -69,6 +69,7 @@ class StudyControllerTests {
             List.of(new ExamQuestion("Q", "rubric")),
             Map.of(),
             Instant.now(),
+            0L,
             "source"
         );
         when(examSessionService.createSession(

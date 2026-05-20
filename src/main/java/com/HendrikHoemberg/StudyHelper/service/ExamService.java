@@ -37,7 +37,7 @@ public class ExamService {
         String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("d MMM yyyy"));
         exam.setTitle("Exam · " + state.sourceSummary() + " · " + dateStr);
         
-        exam.setCreatedAt(LocalDateTime.ofInstant(state.startedAt(), ZoneId.systemDefault()));
+        exam.setCreatedAt(LocalDateTime.ofInstant(state.resumedAt(), ZoneId.systemDefault()));
         exam.setCompletedAt(LocalDateTime.now());
         exam.setQuestionSize(state.config().size());
         exam.setQuestionCount(state.config().count());

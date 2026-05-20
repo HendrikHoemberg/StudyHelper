@@ -215,6 +215,7 @@ class ExamControllerTests {
             List.of(new ExamQuestion("Q", "rubric")),
             new HashMap<>(),
             Instant.now(),
+            0L,
             "source"
         );
         session.setAttribute("examSession", state);

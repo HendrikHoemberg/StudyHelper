@@ -135,7 +135,7 @@ public class ExamController {
         newAnswers.put(index, answer);
 
         ExamSessionState newState = new ExamSessionState(
-            state.config(), state.questions(), newAnswers, state.startedAt(), state.sourceSummary()
+            state.config(), state.questions(), newAnswers, state.resumedAt(), state.elapsedBeforeResume(), state.sourceSummary()
         );
         session.setAttribute(SESSION_KEY, newState);
 
@@ -197,7 +197,7 @@ public class ExamController {
 
             // Create a new state with final answers for saving
             ExamSessionState finalState = new ExamSessionState(
-                state.config(), state.questions(), finalAnswers, state.startedAt(), state.sourceSummary()
+                state.config(), state.questions(), finalAnswers, state.resumedAt(), state.elapsedBeforeResume(), state.sourceSummary()
             );
 
             Exam saved = examService.saveCompleted(user, finalState, grading);

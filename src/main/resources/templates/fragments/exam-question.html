@@ -7,7 +7,7 @@
     <!-- Timer Header -->
     <div th:if="${state.config().timerMinutes() != null}" 
          class="sh-exam-timer" 
-         th:data-started-at="${state.startedAt()}"
+         th:data-resumed-at="${state.resumedAt()}" th:data-elapsed-before-resume="${state.elapsedBeforeResume()}"
          th:data-timer-minutes="${state.config().timerMinutes()}">
         <iconify-icon icon="lucide:clock"></iconify-icon>
         <span>--:--</span>
