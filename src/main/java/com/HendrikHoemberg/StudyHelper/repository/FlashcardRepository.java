@@ -47,4 +47,11 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
         order by f.id asc
         """)
     List<Flashcard> findMistakesByUser(@Param("user") User user);
+
+    @Query("""
+        select count(f)
+        from Flashcard f
+        where f.deck.user = :user and f.correctStreak < 2
+        """)
+    long countNotMasteredByUser(@Param("user") User user);
 }
