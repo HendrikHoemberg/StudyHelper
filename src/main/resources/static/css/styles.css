@@ -1610,13 +1610,20 @@ textarea.sh-input {
     padding: 0;
     margin: 0;
     flex-shrink: 0;
-    background: var(--folder-color, var(--accent));
-    color: #fff;
+    background: var(--folder-tint, color-mix(in srgb, var(--folder-color, var(--accent)) 12%, var(--surface)));
+    color: var(--folder-color, var(--accent));
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: filter var(--transition-fast);
+    transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast), filter var(--transition-fast);
+}
+
+.sh-d-pill-cap:hover,
+.sh-d-pill:hover .sh-d-pill-cap,
+.sh-d-folder.is-active .sh-d-pill-cap {
+    background: var(--folder-color, var(--accent));
+    color: #fff;
 }
 
 .sh-d-pill-cap:hover {
