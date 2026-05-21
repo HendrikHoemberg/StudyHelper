@@ -2385,22 +2385,8 @@ textarea.sh-input {
 
 .sh-study-choice:has(input:checked) {
     border-color: var(--choice-color, var(--accent));
-    border-width: 3px;
     background: var(--choice-bg, var(--accent-light));
-    box-shadow: 0 0 0 4px var(--choice-glow, var(--accent-glow)), var(--shadow-lg);
-    animation: pulse-selected 0.3s ease-out;
-}
-
-@keyframes pulse-selected {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.02);
-    }
-    100% {
-        transform: scale(1);
-    }
+    box-shadow: 0 0 0 4px var(--choice-glow, var(--accent-glow));
 }
 
 .sh-study-choice input[type="radio"] {
