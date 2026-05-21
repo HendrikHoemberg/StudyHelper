@@ -2467,7 +2467,7 @@ textarea.sh-input {
     justify-content: center;
     text-align: center;
     padding: 2rem 1.25rem;
-    border: 2px solid var(--border);
+    border: 2px solid color-mix(in srgb, var(--choice-color, var(--accent)) 35%, var(--border));
     border-radius: var(--radius-xl);
     background: var(--surface);
     cursor: pointer;
@@ -2537,7 +2537,7 @@ textarea.sh-input {
 }
 
 .sh-study-choice:hover {
-    border-color: var(--choice-color, var(--accent));
+    border-color: color-mix(in srgb, var(--choice-color, var(--accent)) 60%, var(--border));
     box-shadow: var(--shadow-lg), 0 0 20px var(--choice-glow, var(--accent-glow));
     transform: translateY(-3px);
 }
@@ -6209,7 +6209,7 @@ iconify-icon {
     background: var(--surface);
     color: var(--text);
     text-decoration: none;
-    border: 1px solid var(--border-soft);
+    border: 1px solid color-mix(in srgb, var(--tile-color, var(--accent)) 35%, var(--border-soft));
     transition: all 150ms ease;
     -webkit-tap-highlight-color: transparent;
 }
@@ -6247,7 +6247,7 @@ iconify-icon {
 }
 
 .sh-action-tile:hover {
-    border-color: var(--tile-color, var(--accent));
+    border-color: color-mix(in srgb, var(--tile-color, var(--accent)) 60%, var(--border-soft));
     background: var(--surface);
     transform: translateY(-1px);
     box-shadow: none;
