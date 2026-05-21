@@ -118,12 +118,13 @@ class SavedSessionServiceTests {
         row.setPayload(asJson(answeredState));
         row.setTitle("t");
         row.setProgressLabel("p");
+        row.setUpdatedAt(java.time.Instant.now());
 
         when(repository.findByUser(user)).thenReturn(Optional.of(row));
 
         service.discard(user);
 
-        verify(studyLogService).recordFlashcardsPartial(eq(user), any(StudySessionState.class));
+        verify(studyLogService).recordFlashcardsPartial(eq(user), any(StudySessionState.class), any(java.time.LocalDateTime.class));
         verify(repository).deleteByUser(user);
     }
 

@@ -54,7 +54,7 @@ public class StudyLogService {
     }
 
     @Transactional
-    public void recordFlashcardsPartial(User user, StudySessionState state) {
+    public void recordFlashcardsPartial(User user, StudySessionState state, LocalDateTime completedAt) {
         if (state == null || state.totalAnswered() <= 0) return;
 
         Set<Long> deckIds = new HashSet<>();
@@ -71,7 +71,7 @@ public class StudyLogService {
         log.setCardCount(state.totalAnswered());
         log.setCorrectCount(state.correctAnswers());
         log.setDurationSec(null);
-        log.setCompletedAt(LocalDateTime.now());
+        log.setCompletedAt(completedAt != null ? completedAt : LocalDateTime.now());
         studyLogRepository.save(log);
     }
 
@@ -96,7 +96,7 @@ public class StudyLogService {
     }
 
     @Transactional
-    public void recordQuizPartial(User user, QuizSessionState state) {
+    public void recordQuizPartial(User user, QuizSessionState state, LocalDateTime completedAt) {
         if (state == null || state.answers() == null || state.answers().isEmpty()) return;
 
         Set<Long> deckIds = state.config().selectedDeckIds() == null
@@ -119,7 +119,7 @@ public class StudyLogService {
         log.setCardCount(answeredCount);
         log.setCorrectCount(correctCount);
         log.setDurationSec(null);
-        log.setCompletedAt(LocalDateTime.now());
+        log.setCompletedAt(completedAt != null ? completedAt : LocalDateTime.now());
         studyLogRepository.save(log);
     }
 

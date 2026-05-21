@@ -73,15 +73,16 @@ public class SavedSessionService {
     public void discard(User user) {
         repository.findByUser(user).ifPresent(row -> {
             try {
+                java.time.LocalDateTime completedAt = java.time.LocalDateTime.ofInstant(row.getUpdatedAt(), java.time.ZoneId.systemDefault());
                 if (row.getType() == SavedSessionType.FLASHCARDS) {
                     StudySessionState state = read(row.getPayload(), StudySessionState.class);
                     if (state != null && state.totalAnswered() > 0) {
-                        studyLogService.recordFlashcardsPartial(user, state);
+                        studyLogService.recordFlashcardsPartial(user, state, completedAt);
                     }
                 } else if (row.getType() == SavedSessionType.QUIZ) {
                     QuizSessionState state = read(row.getPayload(), QuizSessionState.class);
                     if (state != null && state.answers() != null && !state.answers().isEmpty()) {
-                        studyLogService.recordQuizPartial(user, state);
+                        studyLogService.recordQuizPartial(user, state, completedAt);
                     }
                 }
             } catch (Exception e) {
