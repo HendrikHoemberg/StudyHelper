@@ -14,7 +14,7 @@ public record DashboardViewModel(
     long dueTodayCount,
     int todayMinutes,
     int dailyMinuteGoal,
-    int weeklyAccuracyPercent,
+    Integer todayAccuracyPercent,
     int cardsReviewedToday,
     int weeklyMinutes,
     List<HeatmapEntry> heatmap,

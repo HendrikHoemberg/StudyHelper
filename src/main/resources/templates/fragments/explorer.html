@@ -154,7 +154,7 @@
                                     th:text="${vm.todayMinutes()} + ' / ' + ${vm.dailyMinuteGoal()} + ' min'">0 / 60
                                     min</span>
                                 <span class="sh-stat-hint">
-                                    <span th:text="${vm.weeklyAccuracyPercent()} + '% accuracy'">0% accuracy</span>
+                                    <span th:text="${vm.todayAccuracyPercent() != null ? vm.todayAccuracyPercent() + '% accuracy' : '—% accuracy'}">—% accuracy</span>
                                     <span> · </span>
                                     <span th:text="${vm.cardsReviewedToday()} + ' cards reviewed'">0 cards
                                         reviewed</span>

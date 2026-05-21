@@ -88,6 +88,7 @@ public class DashboardService {
 
         long todaySec = studyLogRepository.sumDurationSecBetween(user, startOfToday, endOfToday);
         long todayCards = studyLogRepository.sumCardCountBetween(user, startOfToday, endOfToday);
+        long todayCorrect = studyLogRepository.sumCorrectCountBetween(user, startOfToday, endOfToday);
 
         long weekSec = studyLogRepository.sumDurationSecBetween(user, startOfWeek, endOfWeek);
         long weekCards = studyLogRepository.sumCardCountBetween(user, startOfWeek, endOfWeek);
@@ -96,9 +97,9 @@ public class DashboardService {
         int todayMinutes = (int) (todaySec / 60);
         int weeklyMinutes = (int) (weekSec / 60);
         int cardsReviewedToday = (int) todayCards;
-        int weeklyAccuracyPercent = weekCards == 0
-            ? 0
-            : (int) Math.round((weekCorrect * 100.0) / weekCards);
+        Integer todayAccuracyPercent = todayCards == 0
+            ? null
+            : (int) Math.round((todayCorrect * 100.0) / todayCards);
 
         List<HeatmapEntry> heatmap = buildHeatmap(user, today);
         int heatmapTotalSessions = heatmap.stream().mapToInt(HeatmapEntry::sessions).sum();
@@ -113,7 +114,7 @@ public class DashboardService {
             dueTodayCount,
             todayMinutes,
             DAILY_MINUTE_GOAL,
-            weeklyAccuracyPercent,
+            todayAccuracyPercent,
             cardsReviewedToday,
             weeklyMinutes,
             heatmap,

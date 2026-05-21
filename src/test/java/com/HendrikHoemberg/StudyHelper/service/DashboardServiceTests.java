@@ -45,7 +45,7 @@ class DashboardServiceTests {
         assertThat(vm.dueTodayCount()).isZero();
         assertThat(vm.todayMinutes()).isZero();
         assertThat(vm.dailyMinuteGoal()).isEqualTo(60);
-        assertThat(vm.weeklyAccuracyPercent()).isZero();
+        assertThat(vm.todayAccuracyPercent()).isNull();
         assertThat(vm.cardsReviewedToday()).isZero();
         assertThat(vm.heatmap()).hasSize(119);
         assertThat(vm.heatmapTotalSessions()).isZero();
@@ -84,7 +84,7 @@ class DashboardServiceTests {
         assertThat(vm.dueTodayCount()).isEqualTo(1);          // 1 card with correctStreak < 2
         assertThat(vm.todayMinutes()).isEqualTo(10);
         assertThat(vm.cardsReviewedToday()).isEqualTo(2);
-        assertThat(vm.weeklyAccuracyPercent()).isEqualTo(50); // 1 of 2
+        assertThat(vm.todayAccuracyPercent()).isEqualTo(50); // 1 of 2
         assertThat(vm.streakDays()).isEqualTo(1);
         assertThat(vm.heatmapTotalSessions()).isEqualTo(1);
         assertThat(vm.heatmap().get(118).sessions()).isEqualTo(1);
