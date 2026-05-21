@@ -162,14 +162,18 @@
                             </div>
                         </div>
                         <div class="sh-heatmap">
-                            <div class="sh-heat-months">
-                                <span th:each="m : ${heatmapMonths}" th:text="${m}">Feb</span>
-                            </div>
-                            <div class="sh-heat-grid">
-                                <div th:each="col : ${heatmapColumns}" class="sh-heat-column">
-                                    <div th:each="entry : ${col}" class="sh-heat-cell"
-                                        th:classappend="${entry.today()} ? ' today' : ''"
-                                        th:attr="data-l=${entry.level()},title=${entry.sessions() + ' sessions on ' + entry.date()}">
+                            <div class="sh-heatmap-scroll">
+                                <div class="sh-heatmap-grid-wrapper">
+                                    <div class="sh-heat-months">
+                                        <span th:each="m : ${heatmapMonths}" th:text="${m}">Feb</span>
+                                    </div>
+                                    <div class="sh-heat-grid">
+                                        <div th:each="col : ${heatmapColumns}" class="sh-heat-column">
+                                            <div th:each="entry : ${col}" class="sh-heat-cell"
+                                                th:classappend="${entry.today()} ? ' today' : ''"
+                                                th:attr="data-l=${entry.level()},title=${entry.sessions() + ' sessions on ' + entry.date()}">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

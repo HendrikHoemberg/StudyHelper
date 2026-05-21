@@ -6232,11 +6232,11 @@ iconify-icon {
         order: 4;
     }
 
-    .sh-pinned-decks-section {
+    .sh-activity-panel {
         order: 5;
     }
 
-    .sh-activity-panel {
+    .sh-pinned-decks-section {
         order: 6;
     }
 
@@ -6486,12 +6486,34 @@ iconify-icon {
     gap: 8px;
 }
 
+.sh-heatmap-scroll {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px; /* subtle spacing so the outlines/shadows are not clipped */
+}
+
+.sh-heatmap-scroll::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.sh-heatmap-grid-wrapper {
+    min-width: 252px;
+    width: max-content;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .sh-heat-months {
     display: flex;
     font-size: 11px;
     color: var(--text-3);
     letter-spacing: 0.04em;
     padding-left: 4px;
+    width: 100%;
 }
 
 .sh-heat-months span {
@@ -6502,6 +6524,7 @@ iconify-icon {
 .sh-heat-grid {
     display: flex;
     gap: 3px;
+    width: 100%;
 }
 
 .sh-heat-column {
@@ -6560,17 +6583,4 @@ iconify-icon {
 .sh-heat-total {
     margin-left: auto;
     color: var(--text-2);
-}
-
-/* Mobile: drop first 4 heatmap columns to keep card narrow.
-   Existing breakpoint behaviour (sh-cockpit-secondary stacks below primary)
-   handles the column-collapse for the whole secondary rail. */
-@media (max-width: 760px) {
-    .sh-heat-grid .sh-heat-column:nth-child(-n+4) {
-        display: none;
-    }
-
-    .sh-heat-months span:first-child {
-        display: none;
-    }
 }
