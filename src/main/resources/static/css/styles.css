@@ -6483,7 +6483,7 @@ iconify-icon {
 .sh-heatmap {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
 }
 
 .sh-heatmap-scroll {
@@ -6492,7 +6492,8 @@ iconify-icon {
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none;  /* IE and Edge */
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px; /* subtle spacing so the outlines/shadows are not clipped */
+    padding-bottom: 6px; /* spacing so scaled outline and shadow are not clipped */
+    padding-top: 6px;
 }
 
 .sh-heatmap-scroll::-webkit-scrollbar {
@@ -6500,8 +6501,10 @@ iconify-icon {
 }
 
 .sh-heatmap-grid-wrapper {
-    width: 252px;
-    min-width: 252px;
+    width: 100%;
+    max-width: 330px;
+    min-width: 240px;
+    margin-inline: auto;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -6513,7 +6516,7 @@ iconify-icon {
     color: var(--text-3);
     letter-spacing: 0.04em;
     padding-left: 4px;
-    width: 252px;
+    width: 100%;
 }
 
 .sh-heat-months span {
@@ -6522,22 +6525,38 @@ iconify-icon {
 }
 
 .sh-heat-grid {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(17, 1fr);
     gap: 3px;
-    width: 252px;
+    width: 100%;
 }
 
 .sh-heat-column {
     display: grid;
-    grid-template-rows: repeat(7, auto);
+    grid-template-rows: repeat(7, 1fr);
     gap: 3px;
 }
 
 .sh-heat-cell {
-    width: 12px;
-    height: 12px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
     border-radius: 3px;
     background: var(--border-soft);
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), 
+                background-color 0.15s ease, 
+                box-shadow 0.15s ease,
+                outline-color 0.15s ease;
+}
+
+.sh-heat-grid .sh-heat-cell {
+    position: relative;
+    cursor: pointer;
+}
+
+.sh-heat-grid .sh-heat-cell:hover {
+    transform: scale(1.35);
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
 }
 
 .sh-heat-cell[data-l="0"] {
@@ -6573,6 +6592,9 @@ iconify-icon {
     font-size: 11px;
     color: var(--text-3);
     flex-wrap: wrap;
+    width: 100%;
+    max-width: 330px;
+    margin-inline: auto;
 }
 
 .sh-heat-legend-cells {
@@ -6580,7 +6602,26 @@ iconify-icon {
     gap: 3px;
 }
 
+.sh-heat-legend-cells .sh-heat-cell {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
 .sh-heat-total {
     margin-left: auto;
     color: var(--text-2);
+}
+
+@media (max-width: 480px) {
+    .sh-heat-legend {
+        justify-content: center;
+        gap: 6px;
+    }
+    .sh-heat-total {
+        margin-left: unset;
+        width: 100%;
+        text-align: center;
+        margin-top: 4px;
+    }
 }
