@@ -41,7 +41,6 @@ class DashboardServiceTests {
         assertThat(vm.reviewMistakesCount()).isZero();
         assertThat(vm.pinnedDecks()).isEmpty();
         assertThat(vm.recentDecks()).isEmpty();
-        assertThat(vm.recentActivity()).isEmpty();
         assertThat(vm.streakDays()).isZero();
         assertThat(vm.dueTodayCount()).isZero();
         assertThat(vm.todayMinutes()).isZero();
@@ -81,7 +80,6 @@ class DashboardServiceTests {
         assertThat(vm.recentDecks().get(0).totalCards()).isEqualTo(2);
         assertThat(vm.recentDecks().get(0).tagCode()).isEqualTo("INF");
         assertThat(vm.pinnedDecks().get(0).tagCode()).isEqualTo("INF");
-        assertThat(vm.recentActivity()).hasSize(1);
         assertThat(vm.recentDecks()).extracting("deckName").doesNotContain("Stale");
         assertThat(vm.dueTodayCount()).isEqualTo(1);          // 1 card with correctStreak < 2
         assertThat(vm.todayMinutes()).isEqualTo(10);

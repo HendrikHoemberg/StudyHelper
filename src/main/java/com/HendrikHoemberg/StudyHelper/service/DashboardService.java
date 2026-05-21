@@ -4,7 +4,6 @@ import com.HendrikHoemberg.StudyHelper.dto.DashboardDeckSummary;
 import com.HendrikHoemberg.StudyHelper.dto.DashboardViewModel;
 import com.HendrikHoemberg.StudyHelper.dto.DashboardViewModel.HeatmapEntry;
 import com.HendrikHoemberg.StudyHelper.dto.SavedSessionSummary;
-import com.HendrikHoemberg.StudyHelper.dto.StudyLogSummary;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.StudyLog;
@@ -31,7 +30,6 @@ import java.util.Optional;
 public class DashboardService {
 
     private static final int RECENT_DECK_LIMIT = 6;
-    private static final int RECENT_ACTIVITY_LIMIT = 5;
     private static final int HEATMAP_WEEKS = 17;
     private static final int HEATMAP_DAYS = HEATMAP_WEEKS * 7; // 119
     private static final int DAILY_MINUTE_GOAL = 60;
@@ -77,11 +75,7 @@ public class DashboardService {
             .map(this::toSummary)
             .toList();
 
-        List<StudyLogSummary> activity = studyLogRepository
-            .findByUserOrderByCompletedAtDesc(user, PageRequest.of(0, RECENT_ACTIVITY_LIMIT))
-            .stream()
-            .map(this::toSummary)
-            .toList();
+
 
         int streakDays = computeStreak(user);
         long dueTodayCount = flashcardRepository.countNotMasteredByUser(user);
@@ -115,7 +109,6 @@ public class DashboardService {
             mistakesCount,
             pinned,
             recent,
-            activity,
             streakDays,
             dueTodayCount,
             todayMinutes,
@@ -219,13 +212,4 @@ public class DashboardService {
         );
     }
 
-    private StudyLogSummary toSummary(StudyLog log) {
-        return new StudyLogSummary(
-            log.getType(),
-            log.getTitle(),
-            log.getCardCount(),
-            log.getCorrectCount(),
-            log.getCompletedAt()
-        );
-    }
 }

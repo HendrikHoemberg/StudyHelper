@@ -10,7 +10,6 @@ public record DashboardViewModel(
     long reviewMistakesCount,
     List<DashboardDeckSummary> pinnedDecks,
     List<DashboardDeckSummary> recentDecks,
-    List<StudyLogSummary> recentActivity,
     int streakDays,
     long dueTodayCount,
     int todayMinutes,

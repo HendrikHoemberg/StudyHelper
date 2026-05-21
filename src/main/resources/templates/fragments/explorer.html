@@ -1,97 +1,200 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
+
 <body>
 
-<!-- Dashboard main content fragment — swapped into #explorer-detail -->
-<div th:fragment="dashboardContent" class="sh-dashboard-content sh-fade-in">
+    <!-- Dashboard main content fragment — swapped into #explorer-detail -->
+    <div th:fragment="dashboardContent" class="sh-dashboard-content sh-fade-in">
 
-    <!-- Sidebar OOB refresh (rendered when refreshSidebar flag is set on mutation responses) -->
-    <th:block th:if="${refreshSidebar}">
-        <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
-    </th:block>
+        <!-- Sidebar OOB refresh (rendered when refreshSidebar flag is set on mutation responses) -->
+        <th:block th:if="${refreshSidebar}">
+            <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+        </th:block>
 
-    <!-- Alert for errors -->
-    <div th:if="${error}" class="sh-alert sh-alert-danger" style="margin-bottom: 1rem;">
-        <div class="sh-alert-body" th:text="${error}"></div>
-        <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
-            <iconify-icon icon="lucide:x"></iconify-icon>
-        </button>
-    </div>
+        <!-- Alert for errors -->
+        <div th:if="${error}" class="sh-alert sh-alert-danger" style="margin-bottom: 1rem;">
+            <div class="sh-alert-body" th:text="${error}"></div>
+            <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">
+                <iconify-icon icon="lucide:x"></iconify-icon>
+            </button>
+        </div>
 
-    <main class="sh-dashboard-main sh-dashboard-cockpit">
+        <main class="sh-dashboard-main sh-dashboard-cockpit">
 
-        <!-- Greeting header -->
-        <header class="sh-dashboard-greeting">
-            <div class="sh-greet-row">
-                <div class="sh-greet-text">
-                    <h1 class="sh-page-title" th:text="'Welcome back, ' + ${vm.greetingName()}">Welcome back</h1>
-                    <p class="sh-page-subtitle" th:text="${greetingSubtitle}">What do you want to study today?</p>
+            <!-- Greeting header -->
+            <header class="sh-dashboard-greeting">
+                <div class="sh-greet-row">
+                    <div class="sh-greet-text">
+                        <h1 class="sh-page-title" th:text="'Welcome back, ' + ${vm.greetingName()}">Welcome back</h1>
+                        <p class="sh-page-subtitle" th:text="${greetingSubtitle}">What do you want to study today?</p>
+                    </div>
+                    <div class="sh-greet-pills" th:if="${vm.streakDays() > 0 or vm.dueTodayCount() > 0}">
+                        <span class="sh-pill sh-pill-warm" th:if="${vm.streakDays() > 0}">
+                            <iconify-icon icon="lucide:flame"></iconify-icon>
+                            <span th:text="${vm.streakDays()} + ' day streak'">12 day streak</span>
+                        </span>
+                        <span class="sh-pill sh-pill-accent" th:if="${vm.dueTodayCount() > 0}">
+                            <iconify-icon icon="lucide:target"></iconify-icon>
+                            <span th:text="${vm.dueTodayCount()} + ' to master'">38 to master</span>
+                        </span>
+                    </div>
                 </div>
-                <div class="sh-greet-pills" th:if="${vm.streakDays() > 0 or vm.dueTodayCount() > 0}">
-                    <span class="sh-pill sh-pill-warm" th:if="${vm.streakDays() > 0}">
-                        <iconify-icon icon="lucide:flame"></iconify-icon>
-                        <span th:text="${vm.streakDays()} + ' day streak'">12 day streak</span>
-                    </span>
-                    <span class="sh-pill sh-pill-accent" th:if="${vm.dueTodayCount() > 0}">
-                        <iconify-icon icon="lucide:target"></iconify-icon>
-                        <span th:text="${vm.dueTodayCount()} + ' to master'">38 to master</span>
-                    </span>
+            </header>
+
+            <div class="sh-cockpit-primary">
+
+                <!-- Resume card (only if saved session exists) — always visible above action tiles -->
+                <th:block th:if="${vm.resume().isPresent()}">
+                    <th:block th:replace="~{fragments/saved-session :: card}"></th:block>
+                </th:block>
+
+                <!-- Action tiles row wrapped in an extra container for better visibility and coherence -->
+                <div class="sh-action-tiles-wrapper">
+                    <div class="sh-action-tile-row">
+                        <a class="sh-action-tile" href="/study/start" hx-get="/study/start" hx-target="#explorer-detail"
+                            hx-push-url="true">
+                            <div class="sh-action-tile-icon">
+                                <iconify-icon icon="lucide:book-open"></iconify-icon>
+                            </div>
+                            <div class="sh-action-tile-body">
+                                <span class="sh-action-tile-label">Start studying</span>
+                                <span class="sh-action-tile-hint">Mixed deck · spaced repetition</span>
+                            </div>
+                        </a>
+                        <a class="sh-action-tile" href="/flashcards/generate" hx-get="/flashcards/generate"
+                            hx-target="#explorer-detail" hx-push-url="true">
+                            <div class="sh-action-tile-icon">
+                                <iconify-icon icon="lucide:sparkles"></iconify-icon>
+                            </div>
+                            <div class="sh-action-tile-body">
+                                <span class="sh-action-tile-label">Generate flashcards</span>
+                                <span class="sh-action-tile-hint">From PDF, text, or images</span>
+                            </div>
+                        </a>
+                        <a class="sh-action-tile" th:href="@{/study/start(mode='EXAM')}"
+                            th:hx-get="@{/study/start(mode='EXAM')}" hx-target="#explorer-detail" hx-push-url="true">
+                            <div class="sh-action-tile-icon">
+                                <iconify-icon icon="lucide:file-edit"></iconify-icon>
+                            </div>
+                            <div class="sh-action-tile-body">
+                                <span class="sh-action-tile-label">Take an exam</span>
+                                <span class="sh-action-tile-hint">Single, set, or open questions</span>
+                            </div>
+                        </a>
+                    </div>
                 </div>
+
+                <!-- Mobile/Splitscreen Alerts & High Priority CTAs -->
+                <div class="sh-dashboard-alerts-mobile">
+                    <!-- Review mistakes card (Mobile/Splitscreen version) -->
+                    <a th:if="${vm.reviewMistakesCount() > 0}" class="sh-review-card sh-review-card-mobile" href="#"
+                        hx-post="/study/review-mistakes" hx-target="#explorer-detail" hx-push-url="true">
+                        <span class="sh-review-card-icon">
+                            <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
+                        </span>
+                        <span class="sh-review-card-body">
+                            <span class="sh-review-card-title">Review mistakes</span>
+                            <span class="sh-review-card-meta">
+                                <span th:text="${vm.reviewMistakesCount()}">0</span>
+                                <span
+                                    th:text="${vm.reviewMistakesCount() == 1 ? 'card to review' : 'cards to review'}">cards
+                                    to review</span>
+                            </span>
+                        </span>
+                        <span class="sh-review-card-cta">Study now</span>
+                    </a>
+                </div>
+
+                <!-- Pinned decks rail -->
+                <section th:if="${!vm.pinnedDecks().isEmpty()}" class="sh-dashboard-section">
+                    <h2 class="sh-section-title">Pinned</h2>
+                    <div class="sh-deck-rail">
+                        <th:block th:each="deck : ${vm.pinnedDecks()}">
+                            <div th:replace="~{fragments/explorer :: dashboardDeckTile(${deck})}"></div>
+                        </th:block>
+                    </div>
+                </section>
+
+                <!-- Recent decks rail -->
+                <section th:if="${!vm.recentDecks().isEmpty()}" class="sh-dashboard-section">
+                    <div class="sh-section-header">
+                        <h2 class="sh-section-title">Recently studied</h2>
+                        <span class="sh-section-rule"></span>
+                    </div>
+                    <div class="sh-deck-rail">
+                        <th:block th:each="deck : ${vm.recentDecks()}">
+                            <div th:replace="~{fragments/explorer :: dashboardDeckTile(${deck})}"></div>
+                        </th:block>
+                    </div>
+                </section>
+
             </div>
-        </header>
 
-        <div class="sh-cockpit-primary">
+            <div class="sh-cockpit-secondary">
 
-            <!-- Resume card (only if saved session exists) — always visible above action tiles -->
-            <th:block th:if="${vm.resume().isPresent()}">
-                <th:block th:replace="~{fragments/saved-session :: card}"></th:block>
-            </th:block>
+                <!-- Activity panel: today's progress + heatmap -->
+                <section class="sh-dashboard-section sh-activity-panel">
+                    <div class="sh-activity-card">
+                        <div class="sh-activity-top">
+                            <div class="sh-ring" th:with="goalMin=${vm.dailyMinuteGoal()}, todayMin=${vm.todayMinutes()},
+                                      capped=${todayMin >= goalMin ? goalMin : todayMin},
+                                      dashOffset=${251.327 - (goalMin == 0 ? 0 : (251.327 * capped / goalMin))}">
+                                <svg viewBox="0 0 96 96" aria-hidden="true">
+                                    <circle cx="48" cy="48" r="40" class="sh-ring-track"></circle>
+                                    <circle cx="48" cy="48" r="40" class="sh-ring-fill" stroke-dasharray="251.327"
+                                        th:attr="stroke-dashoffset=${dashOffset}"></circle>
+                                </svg>
+                                <div class="sh-ring-label">
+                                    <span class="sh-ring-num" th:text="${vm.todayMinutes()}">0</span>
+                                    <span class="sh-ring-unit">MIN</span>
+                                </div>
+                            </div>
+                            <div class="sh-activity-stats">
+                                <span class="sh-stat-label">Today's goal</span>
+                                <span class="sh-stat-value"
+                                    th:text="${vm.todayMinutes()} + ' / ' + ${vm.dailyMinuteGoal()} + ' min'">0 / 60
+                                    min</span>
+                                <span class="sh-stat-hint">
+                                    <span th:text="${vm.weeklyAccuracyPercent()} + '% accuracy'">0% accuracy</span>
+                                    <span> · </span>
+                                    <span th:text="${vm.cardsReviewedToday()} + ' cards reviewed'">0 cards
+                                        reviewed</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="sh-heatmap">
+                            <div class="sh-heat-months">
+                                <span th:each="m : ${heatmapMonths}" th:text="${m}">Feb</span>
+                            </div>
+                            <div class="sh-heat-grid">
+                                <div th:each="col : ${heatmapColumns}" class="sh-heat-column">
+                                    <div th:each="entry : ${col}" class="sh-heat-cell"
+                                        th:classappend="${entry.today()} ? ' today' : ''"
+                                        th:attr="data-l=${entry.level()},title=${entry.sessions() + ' sessions on ' + entry.date()}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sh-heat-legend">
+                                <span>Less</span>
+                                <div class="sh-heat-legend-cells">
+                                    <div class="sh-heat-cell" data-l="0"></div>
+                                    <div class="sh-heat-cell" data-l="1"></div>
+                                    <div class="sh-heat-cell" data-l="2"></div>
+                                    <div class="sh-heat-cell" data-l="3"></div>
+                                    <div class="sh-heat-cell" data-l="4"></div>
+                                </div>
+                                <span>More</span>
+                                <span class="sh-heat-total"
+                                    th:text="${vm.heatmapTotalSessions()} + ' sessions in the last 4 months'">0 sessions
+                                    in the last 4 months</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-            <!-- Action tiles row wrapped in an extra container for better visibility and coherence -->
-            <div class="sh-action-tiles-wrapper">
-                <div class="sh-action-tile-row">
-                    <a class="sh-action-tile" href="/study/start"
-                       hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
-                        <div class="sh-action-tile-icon">
-                            <iconify-icon icon="lucide:book-open"></iconify-icon>
-                        </div>
-                        <div class="sh-action-tile-body">
-                            <span class="sh-action-tile-label">Start studying</span>
-                            <span class="sh-action-tile-hint">Mixed deck · spaced repetition</span>
-                        </div>
-                    </a>
-                    <a class="sh-action-tile" href="/flashcards/generate"
-                       hx-get="/flashcards/generate" hx-target="#explorer-detail" hx-push-url="true">
-                        <div class="sh-action-tile-icon">
-                            <iconify-icon icon="lucide:sparkles"></iconify-icon>
-                        </div>
-                        <div class="sh-action-tile-body">
-                            <span class="sh-action-tile-label">Generate flashcards</span>
-                            <span class="sh-action-tile-hint">From PDF, text, or images</span>
-                        </div>
-                    </a>
-                    <a class="sh-action-tile" th:href="@{/study/start(mode='EXAM')}"
-                       th:hx-get="@{/study/start(mode='EXAM')}" hx-target="#explorer-detail" hx-push-url="true">
-                        <div class="sh-action-tile-icon">
-                            <iconify-icon icon="lucide:file-edit"></iconify-icon>
-                        </div>
-                        <div class="sh-action-tile-body">
-                            <span class="sh-action-tile-label">Take an exam</span>
-                            <span class="sh-action-tile-hint">Single, set, or open questions</span>
-                        </div>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Mobile/Splitscreen Alerts & High Priority CTAs -->
-            <div class="sh-dashboard-alerts-mobile">
-                <!-- Review mistakes card (Mobile/Splitscreen version) -->
-                <a th:if="${vm.reviewMistakesCount() > 0}"
-                   class="sh-review-card sh-review-card-mobile"
-                   href="#"
-                   hx-post="/study/review-mistakes"
-                   hx-target="#explorer-detail"
-                   hx-push-url="true">
+                <!-- Review mistakes card (Desktop Sidebar version) -->
+                <a th:if="${vm.reviewMistakesCount() > 0}" class="sh-review-card sh-review-card-desktop" href="#"
+                    hx-post="/study/review-mistakes" hx-target="#explorer-detail" hx-push-url="true">
                     <span class="sh-review-card-icon">
                         <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
                     </span>
@@ -99,182 +202,53 @@
                         <span class="sh-review-card-title">Review mistakes</span>
                         <span class="sh-review-card-meta">
                             <span th:text="${vm.reviewMistakesCount()}">0</span>
-                            <span th:text="${vm.reviewMistakesCount() == 1 ? 'card to review' : 'cards to review'}">cards to review</span>
+                            <span
+                                th:text="${vm.reviewMistakesCount() == 1 ? 'card to review' : 'cards to review'}">cards
+                                to review</span>
                         </span>
                     </span>
                     <span class="sh-review-card-cta">Study now</span>
                 </a>
+
+
+
             </div>
 
-            <!-- Pinned decks rail -->
-            <section th:if="${!vm.pinnedDecks().isEmpty()}" class="sh-dashboard-section">
-                <h2 class="sh-section-title">Pinned</h2>
-                <div class="sh-deck-rail">
-                    <th:block th:each="deck : ${vm.pinnedDecks()}">
-                        <div th:replace="~{fragments/explorer :: dashboardDeckTile(${deck})}"></div>
-                    </th:block>
-                </div>
-            </section>
+        </main>
+    </div>
 
-            <!-- Recent decks rail -->
-            <section th:if="${!vm.recentDecks().isEmpty()}" class="sh-dashboard-section">
-                <div class="sh-section-header">
-                    <h2 class="sh-section-title">Recently studied</h2>
-                    <span class="sh-section-rule"></span>
-                </div>
-                <div class="sh-deck-rail">
-                    <th:block th:each="deck : ${vm.recentDecks()}">
-                        <div th:replace="~{fragments/explorer :: dashboardDeckTile(${deck})}"></div>
-                    </th:block>
-                </div>
-            </section>
-
-        </div>
-
-        <div class="sh-cockpit-secondary">
-
-            <!-- Activity panel: today's progress + heatmap -->
-            <section class="sh-dashboard-section sh-activity-panel">
-                <h2 class="sh-section-title">Activity</h2>
-                <div class="sh-activity-card">
-                    <div class="sh-activity-top">
-                        <div class="sh-ring"
-                             th:with="goalMin=${vm.dailyMinuteGoal()}, todayMin=${vm.todayMinutes()},
-                                      capped=${todayMin >= goalMin ? goalMin : todayMin},
-                                      dashOffset=${251.327 - (goalMin == 0 ? 0 : (251.327 * capped / goalMin))}">
-                            <svg viewBox="0 0 96 96" aria-hidden="true">
-                                <circle cx="48" cy="48" r="40" class="sh-ring-track"></circle>
-                                <circle cx="48" cy="48" r="40" class="sh-ring-fill"
-                                        stroke-dasharray="251.327"
-                                        th:attr="stroke-dashoffset=${dashOffset}"></circle>
-                            </svg>
-                            <div class="sh-ring-label">
-                                <span class="sh-ring-num" th:text="${vm.todayMinutes()}">0</span>
-                                <span class="sh-ring-unit">MIN</span>
-                            </div>
-                        </div>
-                        <div class="sh-activity-stats">
-                            <span class="sh-stat-label">Today's goal</span>
-                            <span class="sh-stat-value"
-                                  th:text="${vm.todayMinutes()} + ' / ' + ${vm.dailyMinuteGoal()} + ' min'">0 / 60 min</span>
-                            <span class="sh-stat-hint">
-                                <span th:text="${vm.weeklyAccuracyPercent()} + '% accuracy'">0% accuracy</span>
-                                <span> · </span>
-                                <span th:text="${vm.cardsReviewedToday()} + ' cards reviewed'">0 cards reviewed</span>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="sh-heatmap">
-                        <div class="sh-heat-months">
-                            <span th:each="m : ${heatmapMonths}" th:text="${m}">Feb</span>
-                        </div>
-                        <div class="sh-heat-grid">
-                            <div th:each="col : ${heatmapColumns}" class="sh-heat-column">
-                                <div th:each="entry : ${col}"
-                                     class="sh-heat-cell"
-                                     th:classappend="${entry.today()} ? ' today' : ''"
-                                     th:attr="data-l=${entry.level()},title=${entry.sessions() + ' sessions on ' + entry.date()}"></div>
-                            </div>
-                        </div>
-                        <div class="sh-heat-legend">
-                            <span>Less</span>
-                            <div class="sh-heat-legend-cells">
-                                <div class="sh-heat-cell" data-l="0"></div>
-                                <div class="sh-heat-cell" data-l="1"></div>
-                                <div class="sh-heat-cell" data-l="2"></div>
-                                <div class="sh-heat-cell" data-l="3"></div>
-                                <div class="sh-heat-cell" data-l="4"></div>
-                            </div>
-                            <span>More</span>
-                            <span class="sh-heat-total"
-                                  th:text="${vm.heatmapTotalSessions()} + ' sessions in the last 4 months'">0 sessions in the last 4 months</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Review mistakes card (Desktop Sidebar version) -->
-            <a th:if="${vm.reviewMistakesCount() > 0}"
-               class="sh-review-card sh-review-card-desktop"
-               href="#"
-               hx-post="/study/review-mistakes"
-               hx-target="#explorer-detail"
-               hx-push-url="true">
-                <span class="sh-review-card-icon">
-                    <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
-                </span>
-                <span class="sh-review-card-body">
-                    <span class="sh-review-card-title">Review mistakes</span>
-                    <span class="sh-review-card-meta">
-                        <span th:text="${vm.reviewMistakesCount()}">0</span>
-                        <span th:text="${vm.reviewMistakesCount() == 1 ? 'card to review' : 'cards to review'}">cards to review</span>
-                    </span>
-                </span>
-                <span class="sh-review-card-cta">Study now</span>
-            </a>
-
-            <!-- Recent activity -->
-            <section th:if="${!vm.recentActivity().isEmpty()}" class="sh-dashboard-section">
-                <h2 class="sh-section-title">Recent activity</h2>
-                <ul class="sh-activity-list">
-                    <li th:each="row : ${vm.recentActivity()}" class="sh-activity-row">
-                        <span class="sh-activity-icon">
-                            <iconify-icon th:attr="icon=${row.type().name() == 'EXAM' ? 'lucide:file-edit' : (row.type().name() == 'QUIZ' ? 'lucide:list-checks' : 'lucide:book-open')}"></iconify-icon>
-                        </span>
-                        <div class="sh-activity-body">
-                            <div class="sh-activity-title" th:text="${row.title()}">Title</div>
-                            <div class="sh-activity-meta">
-                                <span th:text="${row.correctCount()} + ' / ' + ${row.cardCount()}">0 / 0</span>
-                                <span> · </span>
-                                <span th:text="${#temporals.format(row.completedAt(), 'MMM d, HH:mm')}">date</span>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </section>
-
-        </div>
-
-    </main>
-</div>
-
-<!-- Reusable tile fragment for both rails -->
-<div th:fragment="dashboardDeckTile(d)"
-     class="sh-deck-tile"
-     th:style="'--folder-color:' + (${d.colorHex()} ?: '#888')">
-    <a th:href="@{/decks/{id}(id=${d.deckId()})}"
-       hx-get th:hx-get="@{/decks/{id}(id=${d.deckId()})}"
-       hx-target="#explorer-detail" hx-push-url="true"
-       class="sh-deck-cover">
-        <span class="sh-deck-cover-icon">
-            <iconify-icon th:attr="icon=${d.iconName() != null ? (d.iconName().contains(':') ? d.iconName() : 'lucide:' + d.iconName()) : 'lucide:layers'}"></iconify-icon>
-        </span>
-    </a>
-    <div class="sh-deck-body">
-        <div class="sh-deck-tag-row" th:if="${d.tagCode() != null}">
-            <span class="sh-tag" th:style="'--folder-color:' + (${d.colorHex()} ?: '#888')">
-                <span class="sh-tag-dot"></span>
-                <span th:text="${d.tagCode()}">INF</span>
+    <!-- Reusable tile fragment for both rails -->
+    <div th:fragment="dashboardDeckTile(d)" class="sh-deck-tile"
+        th:style="'--folder-color:' + (${d.colorHex()} ?: '#888')">
+        <a th:href="@{/decks/{id}(id=${d.deckId()})}" hx-get th:hx-get="@{/decks/{id}(id=${d.deckId()})}"
+            hx-target="#explorer-detail" hx-push-url="true" class="sh-deck-cover">
+            <span class="sh-deck-cover-icon">
+                <iconify-icon
+                    th:attr="icon=${d.iconName() != null ? (d.iconName().contains(':') ? d.iconName() : 'lucide:' + d.iconName()) : 'lucide:layers'}"></iconify-icon>
             </span>
-            <span class="sh-deck-tag-pct"
-                  th:if="${d.totalCards() > 0}"
-                  th:text="${T(java.lang.Math).round(d.masteredCards() * 100.0 / d.totalCards())} + '%'">75%</span>
+        </a>
+        <div class="sh-deck-body">
+            <div class="sh-deck-tag-row" th:if="${d.tagCode() != null}">
+                <span class="sh-tag" th:style="'--folder-color:' + (${d.colorHex()} ?: '#888')">
+                    <span class="sh-tag-dot"></span>
+                    <span th:text="${d.tagCode()}">INF</span>
+                </span>
+                <span class="sh-deck-tag-pct" th:if="${d.totalCards() > 0}"
+                    th:text="${T(java.lang.Math).round(d.masteredCards() * 100.0 / d.totalCards())} + '%'">75%</span>
+            </div>
+            <div class="sh-deck-title" th:text="${d.deckName()}">Name</div>
+            <div class="sh-deck-meta" th:text="${d.folderPath()}">Folder</div>
+            <div class="sh-deck-meta" th:text="${d.masteredCards()} + ' / ' + ${d.totalCards()} + ' mastered'">0 / 0
+                mastered</div>
         </div>
-        <div class="sh-deck-title" th:text="${d.deckName()}">Name</div>
-        <div class="sh-deck-meta" th:text="${d.folderPath()}">Folder</div>
-        <div class="sh-deck-meta"
-             th:text="${d.masteredCards()} + ' / ' + ${d.totalCards()} + ' mastered'">0 / 0 mastered</div>
+        <div class="sh-file-tile-actions">
+            <button class="sh-deck-edit-btn" th:title="${d.pinned() ? 'Unpin' : 'Pin'}"
+                th:hx-post="@{/decks/{id}/pin(id=${d.deckId()})}" hx-target="#explorer-detail" hx-trigger="click">
+                <iconify-icon th:attr="icon=${d.pinned() ? 'lucide:pin-off' : 'lucide:pin'}"></iconify-icon>
+            </button>
+        </div>
     </div>
-    <div class="sh-file-tile-actions">
-        <button class="sh-deck-edit-btn"
-                th:title="${d.pinned() ? 'Unpin' : 'Pin'}"
-                th:hx-post="@{/decks/{id}/pin(id=${d.deckId()})}"
-                hx-target="#explorer-detail"
-                hx-trigger="click">
-            <iconify-icon th:attr="icon=${d.pinned() ? 'lucide:pin-off' : 'lucide:pin'}"></iconify-icon>
-        </button>
-    </div>
-</div>
 
 </body>
+
 </html>
