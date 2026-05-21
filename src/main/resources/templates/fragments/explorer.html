@@ -26,7 +26,6 @@
                 <div class="sh-greet-row">
                     <div class="sh-greet-text">
                         <h1 class="sh-page-title" th:text="'Welcome back, ' + ${vm.greetingName()}">Welcome back</h1>
-                        <p class="sh-page-subtitle" th:text="${greetingSubtitle}">What do you want to study today?</p>
                     </div>
                     <div class="sh-greet-pills" th:if="${vm.streakDays() > 0 or vm.dueTodayCount() > 0}">
                         <span class="sh-pill sh-pill-warm" th:if="${vm.streakDays() > 0}">
