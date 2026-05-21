@@ -830,7 +830,7 @@ a {
 .sh-deck-tile {
     position: relative;
     background: var(--surface);
-    border: 1px solid var(--border-light);
+    border: 1px solid color-mix(in srgb, var(--folder-color, var(--accent)) 35%, var(--border-light));
     border-radius: var(--radius-lg);
     padding: 0.75rem;
     display: flex;
@@ -845,7 +845,7 @@ a {
 .sh-deck-tile:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-md);
-    border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 35%, var(--border));
+    border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 60%, var(--border-light));
 }
 
 .sh-deck-cover {
@@ -6626,7 +6626,7 @@ iconify-icon {
 
 .sh-activity-card {
     background: var(--surface);
-    border: 1px solid var(--border-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border-soft));
     border-radius: 14px;
     padding: 16px;
     display: flex;
