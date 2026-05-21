@@ -182,12 +182,12 @@
         <span th:text="${username}">User</span>
     </span>
     <form th:action="@{/logout}" method="post">
-        <button type="submit" class="topnav-mobile-link">
+        <button type="submit" class="topnav-mobile-link topnav-logout-btn">
             <iconify-icon icon="lucide:log-out"></iconify-icon>
             Sign out
         </button>
     </form>
-    <button class="topnav-mobile-link" type="button" onclick="toggleTheme()">
+    <button class="topnav-mobile-link topnav-theme-btn" type="button" onclick="toggleTheme()">
         <iconify-icon icon="lucide:sun" class="theme-icon-light"></iconify-icon>
         <iconify-icon icon="lucide:moon" class="theme-icon-dark"></iconify-icon>
         Toggle theme

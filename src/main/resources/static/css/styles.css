@@ -358,18 +358,29 @@ a {
     -webkit-tap-highlight-color: transparent;
 }
 
-.app-topnav .topnav-theme-btn:hover,
-.app-topnav .topnav-logout-btn:hover {
-    background: transparent;
-    color: var(--accent);
+/* Theme Toggle Button Hover/Active */
+.topnav-theme-btn:hover {
+    background: transparent !important;
+    color: var(--warning) !important;
 }
 
-.app-topnav .topnav-theme-btn:active,
-.app-topnav .topnav-logout-btn:active {
+.topnav-theme-btn:active {
     transform: scale(0.96);
-    background: transparent;
+    background: transparent !important;
 }
 
+/* Sign Out Button Hover/Active */
+.topnav-logout-btn:hover {
+    background: transparent !important;
+    color: var(--danger) !important;
+}
+
+.topnav-logout-btn:active {
+    transform: scale(0.96);
+    background: transparent !important;
+}
+
+/* Common Icon Transitions */
 .topnav-theme-btn iconify-icon,
 .topnav-theme-btn svg,
 .topnav-logout-btn iconify-icon,
@@ -377,12 +388,39 @@ a {
     transition: transform var(--transition-fast) ease, color var(--transition-fast) ease;
 }
 
-.topnav-theme-btn:hover iconify-icon,
-.topnav-theme-btn:hover svg,
-.topnav-logout-btn:hover iconify-icon,
-.topnav-logout-btn:hover svg {
+/* Desktop Icon Hover Animations */
+.app-topnav .topnav-theme-btn:hover iconify-icon,
+.app-topnav .topnav-theme-btn:hover svg {
     transform: translateY(-1.5px) scale(1.06);
-    color: var(--accent);
+    color: var(--warning) !important;
+}
+
+.app-topnav .topnav-logout-btn:hover iconify-icon,
+.app-topnav .topnav-logout-btn:hover svg {
+    transform: translateY(-1.5px) scale(1.06);
+    color: var(--danger) !important;
+}
+
+/* Mobile Icon Hover Animations */
+.topnav-mobile-link.topnav-theme-btn:hover iconify-icon,
+.topnav-mobile-link.topnav-theme-btn:hover svg {
+    transform: translateX(3px);
+    color: var(--warning) !important;
+}
+
+.topnav-mobile-link.topnav-logout-btn:hover iconify-icon,
+.topnav-mobile-link.topnav-logout-btn:hover svg {
+    transform: translateX(3px);
+    color: var(--danger) !important;
+}
+
+/* Mobile Theme/Logout indicator stripe colors */
+.topnav-mobile-link.topnav-theme-btn::before {
+    background: var(--warning);
+}
+
+.topnav-mobile-link.topnav-logout-btn::before {
+    background: var(--danger);
 }
 
 /* Show/hide theme icons based on current theme */
