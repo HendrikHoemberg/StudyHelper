@@ -2514,6 +2514,10 @@ textarea.sh-input {
     -webkit-tap-highlight-color: transparent;
 }
 
+.sh-study-inline-choice:hover {
+    color: var(--text);
+}
+
 .sh-study-inline-choice input {
     accent-color: var(--accent);
 }
@@ -6126,6 +6130,12 @@ iconify-icon {
 .sh-review-card-meta {
     font-size: 0.875rem;
     opacity: 0.75;
+}
+
+.sh-review-card:hover {
+    border-color: rgba(255, 120, 80, 0.6);
+    background: linear-gradient(135deg, rgba(255, 120, 80, 0.16), rgba(255, 120, 80, 0.08));
+    transform: translateY(-1px);
 }
 
 .sh-review-card-cta {
