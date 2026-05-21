@@ -8,5 +8,6 @@ public record DashboardDeckSummary(
     String iconName,
     long totalCards,
     long masteredCards,
-    boolean pinned
+    boolean pinned,
+    String tagCode
 ) {}
