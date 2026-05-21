@@ -2339,6 +2339,7 @@ textarea.sh-input {
     --choice-bg: rgba(2, 132, 199, 0.12);
     --choice-glow: rgba(2, 132, 199, 0.25);
 }
+
 [data-theme="dark"] .sh-study-choice-study {
     --choice-color: #38bdf8;
     --choice-bg: rgba(56, 189, 248, 0.15);
@@ -2350,6 +2351,7 @@ textarea.sh-input {
     --choice-bg: rgba(124, 58, 237, 0.12);
     --choice-glow: rgba(124, 58, 237, 0.25);
 }
+
 [data-theme="dark"] .sh-study-choice-generate {
     --choice-color: #a78bfa;
     --choice-bg: rgba(167, 139, 250, 0.15);
@@ -2361,6 +2363,7 @@ textarea.sh-input {
     --choice-bg: rgba(225, 29, 72, 0.12);
     --choice-glow: rgba(225, 29, 72, 0.25);
 }
+
 [data-theme="dark"] .sh-study-choice-exam {
     --choice-color: #fb7185;
     --choice-bg: rgba(251, 113, 133, 0.15);
@@ -2627,6 +2630,7 @@ textarea.sh-input {
 .sh-study-drag-handle {
     width: 1.5rem;
     height: 1.5rem;
+    font-size: 1.1rem;
     color: var(--text-muted);
     flex-shrink: 0;
     cursor: grab;
@@ -2641,7 +2645,6 @@ textarea.sh-input {
 
 .sh-study-drag-item:hover .sh-study-drag-handle {
     color: var(--accent);
-    background: var(--accent-light);
 }
 
 .sh-study-order-name {
@@ -5998,6 +6001,7 @@ iconify-icon {
     --tile-color: #0284c7;
     --tile-bg: rgba(2, 132, 199, 0.12);
 }
+
 [data-theme="dark"] .sh-action-tile-study {
     --tile-color: #38bdf8;
     --tile-bg: rgba(56, 189, 248, 0.15);
@@ -6007,6 +6011,7 @@ iconify-icon {
     --tile-color: #7c3aed;
     --tile-bg: rgba(124, 58, 237, 0.12);
 }
+
 [data-theme="dark"] .sh-action-tile-generate {
     --tile-color: #a78bfa;
     --tile-bg: rgba(167, 139, 250, 0.15);
@@ -6016,6 +6021,7 @@ iconify-icon {
     --tile-color: #e11d48;
     --tile-bg: rgba(225, 29, 72, 0.12);
 }
+
 [data-theme="dark"] .sh-action-tile-exam {
     --tile-color: #fb7185;
     --tile-bg: rgba(251, 113, 133, 0.15);

@@ -293,7 +293,7 @@
             li.className = 'sh-study-drag-item';
             li.draggable = true;
             li.dataset.deckId = cb.value;
-            li.innerHTML = `<i data-lucide="grip-vertical" class="sh-study-drag-handle"></i><span class="sh-study-order-name">${deckName}</span>`;
+            li.innerHTML = `<iconify-icon icon="lucide:grip-vertical" class="sh-study-drag-handle"></iconify-icon><span class="sh-study-order-name">${deckName}</span>`;
             
             li.addEventListener('dragstart', e => { e.target.classList.add('is-dragging'); });
             li.addEventListener('dragend', e => { e.target.classList.remove('is-dragging'); updateOrderInput(); });
