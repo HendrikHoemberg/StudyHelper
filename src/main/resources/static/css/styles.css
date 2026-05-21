@@ -19,6 +19,8 @@
     --accent-hover: #134e4a;
     --accent-light: #ccfbf1;
     --accent-glow: rgba(15, 118, 110, 0.25);
+    --color-review: #ff7850;
+
 
     --success: #10b981;
     --success-light: rgba(16, 185, 129, 0.12);
@@ -68,6 +70,8 @@
     --text-secondary: #9ca3af;
     --text-muted: #6b7280;
     --accent-light: rgba(15, 118, 110, 0.15);
+    --color-review: #ff8e6e;
+
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.25);
@@ -6083,8 +6087,8 @@ iconify-icon {
     .sh-cockpit-secondary .sh-review-card {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.5rem;
-        padding: 1rem;
+        gap: 0.75rem;
+        padding: 1.25rem;
     }
 
     .sh-cockpit-secondary .sh-review-card-icon {
@@ -6098,9 +6102,10 @@ iconify-icon {
     .sh-cockpit-secondary .sh-review-card-cta {
         align-self: stretch;
         text-align: center;
-        padding: 0.5rem 0.75rem;
-        border-radius: 0.5rem;
-        background: rgba(255, 120, 80, 0.12);
+        padding: 0.55rem 0.75rem;
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--color-review) 12%, transparent);
+        color: var(--color-review);
         margin-top: 0.25rem;
     }
 }
@@ -6258,44 +6263,110 @@ iconify-icon {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1rem 1.25rem;
-    border-radius: 0.75rem;
-    background: linear-gradient(135deg, rgba(255, 120, 80, 0.12), rgba(255, 120, 80, 0.04));
-    border: 1px solid rgba(255, 120, 80, 0.35);
+    padding: 1.15rem 1.25rem;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--color-review) 35%, var(--border-soft));
+    box-shadow: var(--shadow-sm);
     color: inherit;
     text-decoration: none;
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
     -webkit-tap-highlight-color: transparent;
 }
 
+.sh-review-card:hover {
+    border-color: color-mix(in srgb, var(--color-review) 60%, var(--border-soft));
+    background: var(--surface-raised);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.sh-review-card-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--color-review) 12%, transparent);
+    color: var(--color-review);
+    flex-shrink: 0;
+    transition: all var(--transition);
+}
+
 .sh-review-card-icon iconify-icon {
-    font-size: 1.5rem;
-    color: rgb(255, 120, 80);
+    font-size: 1.25rem;
+    display: flex !important;
+}
+
+.sh-review-card:hover .sh-review-card-icon {
+    background: var(--color-review);
+    color: #fff;
 }
 
 .sh-review-card-body {
     display: flex;
     flex-direction: column;
+    gap: 0.25rem;
     flex: 1;
+    min-width: 0;
+}
+
+.sh-review-card-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .sh-review-card-title {
-    font-weight: 600;
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.sh-review-card-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-review) 12%, transparent);
+    color: var(--color-review);
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    text-transform: uppercase;
 }
 
 .sh-review-card-meta {
-    font-size: 0.875rem;
-    opacity: 0.75;
-}
-
-.sh-review-card:hover {
-    border-color: rgba(255, 120, 80, 0.6);
-    background: linear-gradient(135deg, rgba(255, 120, 80, 0.16), rgba(255, 120, 80, 0.08));
-    transform: translateY(-1px);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.3;
 }
 
 .sh-review-card-cta {
-    font-weight: 600;
-    color: rgb(255, 120, 80);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--color-review) 12%, transparent);
+    color: var(--color-review);
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: all var(--transition);
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.sh-review-card:hover .sh-review-card-cta {
+    background: var(--color-review);
+    color: #fff;
 }
 
 .sh-dashboard-section .sh-section-title {
@@ -6422,12 +6493,13 @@ iconify-icon {
 @media (max-width: 480px) {
     .sh-review-card {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
+        align-items: stretch;
+        gap: 0.75rem;
     }
 
     .sh-review-card-cta {
-        align-self: flex-end;
+        align-self: stretch;
+        text-align: center;
     }
 
     .sh-deck-rail {
@@ -6663,16 +6735,21 @@ iconify-icon {
 .sh-heatmap-scroll {
     width: 100%;
     overflow-x: auto;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
     -webkit-overflow-scrolling: touch;
-    padding-inline: 8px; /* Breathing room on left/right for hover scale and subpixel rendering */
-    padding-bottom: 6px; /* spacing so scaled outline and shadow are not clipped */
+    padding-inline: 8px;
+    /* Breathing room on left/right for hover scale and subpixel rendering */
+    padding-bottom: 6px;
+    /* spacing so scaled outline and shadow are not clipped */
     padding-top: 6px;
 }
 
 .sh-heatmap-scroll::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .sh-heatmap-grid-wrapper {
@@ -6717,10 +6794,10 @@ iconify-icon {
     aspect-ratio: 1 / 1;
     border-radius: 3px;
     background: var(--border-soft);
-    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), 
-                background-color 0.15s ease, 
-                box-shadow 0.15s ease,
-                outline-color 0.15s ease;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+        background-color 0.15s ease,
+        box-shadow 0.15s ease,
+        outline-color 0.15s ease;
 }
 
 .sh-heat-grid .sh-heat-cell {
@@ -6770,7 +6847,8 @@ iconify-icon {
     width: 100%;
     max-width: 330px;
     margin-inline: auto;
-    padding-inline: 8px; /* Align with horizontal padding of the grid container to prevent cut-offs */
+    padding-inline: 8px;
+    /* Align with horizontal padding of the grid container to prevent cut-offs */
 }
 
 .sh-heat-legend-cells {
@@ -6794,6 +6872,7 @@ iconify-icon {
         justify-content: center;
         gap: 6px;
     }
+
     .sh-heat-total {
         margin-left: unset;
         width: 100%;

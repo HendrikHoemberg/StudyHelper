@@ -92,12 +92,14 @@
                             <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
                         </span>
                         <span class="sh-review-card-body">
-                            <span class="sh-review-card-title">Review mistakes</span>
+                            <div class="sh-review-card-title-row">
+                                <span class="sh-review-card-title">Review mistakes</span>
+                                <span class="sh-review-card-badge">
+                                    <span th:text="${vm.reviewMistakesCount()}">0</span> due
+                                </span>
+                            </div>
                             <span class="sh-review-card-meta">
-                                <span th:text="${vm.reviewMistakesCount()}">0</span>
-                                <span
-                                    th:text="${vm.reviewMistakesCount() == 1 ? 'card to review' : 'cards to review'}">cards
-                                    to review</span>
+                                Practice cards you got wrong in previous sessions
                             </span>
                         </span>
                         <span class="sh-review-card-cta">Study now</span>
@@ -202,12 +204,14 @@
                         <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
                     </span>
                     <span class="sh-review-card-body">
-                        <span class="sh-review-card-title">Review mistakes</span>
+                        <div class="sh-review-card-title-row">
+                            <span class="sh-review-card-title">Review mistakes</span>
+                            <span class="sh-review-card-badge">
+                                <span th:text="${vm.reviewMistakesCount()}">0</span> due
+                            </span>
+                        </div>
                         <span class="sh-review-card-meta">
-                            <span th:text="${vm.reviewMistakesCount()}">0</span>
-                            <span
-                                th:text="${vm.reviewMistakesCount() == 1 ? 'card to review' : 'cards to review'}">cards
-                                to review</span>
+                            Practice incorrect cards
                         </span>
                     </span>
                     <span class="sh-review-card-cta">Study now</span>
