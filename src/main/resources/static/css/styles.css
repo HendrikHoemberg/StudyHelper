@@ -6583,7 +6583,7 @@ iconify-icon {
 
 .sh-heat-cell.today {
     outline: 1.5px solid var(--text);
-    outline-offset: 1px;
+    outline-offset: -1.5px;
 }
 
 .sh-heat-legend {
