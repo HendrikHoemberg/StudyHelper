@@ -40,6 +40,13 @@
     --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 
+    /* Composed dashboard aliases — map design tokens to existing palette */
+    --border-soft: var(--border);
+    --accent-tint: var(--accent-light);
+    --text-3: var(--text-muted);
+    --text-4: var(--text-muted);
+    --warm: var(--warning);
+
     /* Legacy aliases for inline styles in templates */
     --sh-danger: var(--danger);
     --sh-primary: var(--accent);
