@@ -293,10 +293,55 @@
             li.className = 'sh-study-drag-item';
             li.draggable = true;
             li.dataset.deckId = cb.value;
-            li.innerHTML = `<i data-lucide="grip-vertical" class="sh-study-drag-handle"></i><span>${deckName}</span>`;
+            li.innerHTML = `<i data-lucide="grip-vertical" class="sh-study-drag-handle"></i><span class="sh-study-order-name">${deckName}</span>`;
             
             li.addEventListener('dragstart', e => { e.target.classList.add('is-dragging'); });
             li.addEventListener('dragend', e => { e.target.classList.remove('is-dragging'); updateOrderInput(); });
+
+            // Mobile Touch Support for instant dragging via the handle
+            let currentDragItem = null;
+
+            li.addEventListener('touchstart', e => {
+                const handle = e.target.closest('.sh-study-drag-handle');
+                if (!handle) return;
+
+                // Stop native touch events from scrolling the viewport
+                e.preventDefault();
+
+                currentDragItem = li;
+                li.classList.add('is-dragging');
+                li.style.zIndex = '1000';
+            }, { passive: false });
+
+            li.addEventListener('touchmove', e => {
+                if (currentDragItem !== li) return;
+                e.preventDefault();
+
+                const touch = e.touches[0];
+                const draggingY = touch.clientY;
+
+                const afterElement = [...list.querySelectorAll('.sh-study-drag-item:not(.is-dragging)')].reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = draggingY - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+                    return closest;
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+
+                if (afterElement) {
+                    list.insertBefore(currentDragItem, afterElement);
+                } else {
+                    list.appendChild(currentDragItem);
+                }
+            }, { passive: false });
+
+            li.addEventListener('touchend', e => {
+                if (currentDragItem !== li) return;
+                li.classList.remove('is-dragging');
+                li.style.zIndex = '';
+                currentDragItem = null;
+                updateOrderInput();
+            });
+
             list.appendChild(li);
         });
 

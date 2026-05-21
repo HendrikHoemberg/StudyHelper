@@ -2587,11 +2587,13 @@ textarea.sh-input {
 
 .sh-study-order-list {
     list-style: none;
-    padding: 0;
+    padding: 0 4px 0 0;
     margin: 0;
     display: flex;
     flex-direction: column;
     gap: 0.375rem;
+    max-height: 280px;
+    overflow-y: auto;
 }
 
 .sh-study-drag-item {
@@ -2623,17 +2625,34 @@ textarea.sh-input {
 }
 
 .sh-study-drag-handle {
-    width: 1rem;
-    height: 1rem;
+    width: 1.5rem;
+    height: 1.5rem;
     color: var(--text-muted);
     flex-shrink: 0;
     cursor: grab;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    border-radius: 4px;
+    background: var(--bg-subtle);
+    transition: all var(--transition-fast);
+}
+
+.sh-study-drag-item:hover .sh-study-drag-handle {
+    color: var(--accent);
+    background: var(--accent-light);
 }
 
 .sh-study-order-name {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .sh-study-order-empty {
