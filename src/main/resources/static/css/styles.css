@@ -6031,6 +6031,7 @@ iconify-icon {
     text-decoration: none;
     border: 1px solid var(--border-soft);
     transition: all 150ms ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .sh-action-tile-icon {
