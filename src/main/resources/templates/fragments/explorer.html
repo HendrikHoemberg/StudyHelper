@@ -22,8 +22,22 @@
 
         <!-- Greeting header -->
         <header class="sh-dashboard-greeting">
-            <h1 class="sh-page-title" th:text="'Welcome back, ' + ${vm.greetingName()}">Welcome back</h1>
-            <p class="sh-page-subtitle">What do you want to study today?</p>
+            <div class="sh-greet-row">
+                <div class="sh-greet-text">
+                    <h1 class="sh-page-title" th:text="'Welcome back, ' + ${vm.greetingName()}">Welcome back</h1>
+                    <p class="sh-page-subtitle" th:text="${greetingSubtitle}">What do you want to study today?</p>
+                </div>
+                <div class="sh-greet-pills" th:if="${vm.streakDays() > 0 or vm.dueTodayCount() > 0}">
+                    <span class="sh-pill sh-pill-warm" th:if="${vm.streakDays() > 0}">
+                        <iconify-icon icon="lucide:flame"></iconify-icon>
+                        <span th:text="${vm.streakDays()} + ' day streak'">12 day streak</span>
+                    </span>
+                    <span class="sh-pill sh-pill-accent" th:if="${vm.dueTodayCount() > 0}">
+                        <iconify-icon icon="lucide:target"></iconify-icon>
+                        <span th:text="${vm.dueTodayCount()} + ' to master'">38 to master</span>
+                    </span>
+                </div>
+            </div>
         </header>
 
         <div class="sh-cockpit-primary">
@@ -41,21 +55,30 @@
                         <div class="sh-action-tile-icon">
                             <iconify-icon icon="lucide:book-open"></iconify-icon>
                         </div>
-                        <span class="sh-action-tile-label">Start studying</span>
+                        <div class="sh-action-tile-body">
+                            <span class="sh-action-tile-label">Start studying</span>
+                            <span class="sh-action-tile-hint">Mixed deck · spaced repetition</span>
+                        </div>
                     </a>
                     <a class="sh-action-tile" href="/flashcards/generate"
                        hx-get="/flashcards/generate" hx-target="#explorer-detail" hx-push-url="true">
                         <div class="sh-action-tile-icon">
                             <iconify-icon icon="lucide:sparkles"></iconify-icon>
                         </div>
-                        <span class="sh-action-tile-label">Generate flashcards</span>
+                        <div class="sh-action-tile-body">
+                            <span class="sh-action-tile-label">Generate flashcards</span>
+                            <span class="sh-action-tile-hint">From PDF, text, or images</span>
+                        </div>
                     </a>
                     <a class="sh-action-tile" th:href="@{/study/start(mode='EXAM')}"
                        th:hx-get="@{/study/start(mode='EXAM')}" hx-target="#explorer-detail" hx-push-url="true">
                         <div class="sh-action-tile-icon">
                             <iconify-icon icon="lucide:file-edit"></iconify-icon>
                         </div>
-                        <span class="sh-action-tile-label">Take an exam</span>
+                        <div class="sh-action-tile-body">
+                            <span class="sh-action-tile-label">Take an exam</span>
+                            <span class="sh-action-tile-hint">Single, set, or open questions</span>
+                        </div>
                     </a>
                 </div>
             </div>
@@ -106,6 +129,66 @@
         </div>
 
         <div class="sh-cockpit-secondary">
+
+            <!-- Activity panel: today's progress + heatmap -->
+            <section class="sh-dashboard-section sh-activity-panel">
+                <h2 class="sh-section-title">Activity</h2>
+                <div class="sh-activity-card">
+                    <div class="sh-activity-top">
+                        <div class="sh-ring"
+                             th:with="goalMin=${vm.dailyMinuteGoal()}, todayMin=${vm.todayMinutes()},
+                                      capped=${todayMin >= goalMin ? goalMin : todayMin},
+                                      dashOffset=${251.327 - (goalMin == 0 ? 0 : (251.327 * capped / goalMin))}">
+                            <svg viewBox="0 0 96 96" aria-hidden="true">
+                                <circle cx="48" cy="48" r="40" class="sh-ring-track"></circle>
+                                <circle cx="48" cy="48" r="40" class="sh-ring-fill"
+                                        stroke-dasharray="251.327"
+                                        th:attr="stroke-dashoffset=${dashOffset}"></circle>
+                            </svg>
+                            <div class="sh-ring-label">
+                                <span class="sh-ring-num" th:text="${vm.todayMinutes()}">0</span>
+                                <span class="sh-ring-unit">MIN</span>
+                            </div>
+                        </div>
+                        <div class="sh-activity-stats">
+                            <span class="sh-stat-label">Today's goal</span>
+                            <span class="sh-stat-value"
+                                  th:text="${vm.todayMinutes()} + ' / ' + ${vm.dailyMinuteGoal()} + ' min'">0 / 60 min</span>
+                            <span class="sh-stat-hint">
+                                <span th:text="${vm.weeklyAccuracyPercent()} + '% accuracy'">0% accuracy</span>
+                                <span> · </span>
+                                <span th:text="${vm.cardsReviewedToday()} + ' cards reviewed'">0 cards reviewed</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="sh-heatmap">
+                        <div class="sh-heat-months">
+                            <span th:each="m : ${heatmapMonths}" th:text="${m}">Feb</span>
+                        </div>
+                        <div class="sh-heat-grid">
+                            <div th:each="col : ${heatmapColumns}" class="sh-heat-column">
+                                <div th:each="entry : ${col}"
+                                     class="sh-heat-cell"
+                                     th:classappend="${entry.today()} ? ' today' : ''"
+                                     th:attr="data-l=${entry.level()},title=${entry.sessions() + ' sessions on ' + entry.date()}"></div>
+                            </div>
+                        </div>
+                        <div class="sh-heat-legend">
+                            <span>Less</span>
+                            <div class="sh-heat-legend-cells">
+                                <div class="sh-heat-cell" data-l="0"></div>
+                                <div class="sh-heat-cell" data-l="1"></div>
+                                <div class="sh-heat-cell" data-l="2"></div>
+                                <div class="sh-heat-cell" data-l="3"></div>
+                                <div class="sh-heat-cell" data-l="4"></div>
+                            </div>
+                            <span>More</span>
+                            <span class="sh-heat-total"
+                                  th:text="${vm.heatmapTotalSessions()} + ' sessions in the last 4 months'">0 sessions in the last 4 months</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <!-- Review mistakes card (Desktop Sidebar version) -->
             <a th:if="${vm.reviewMistakesCount() > 0}"
@@ -165,6 +248,15 @@
         </span>
     </a>
     <div class="sh-deck-body">
+        <div class="sh-deck-tag-row" th:if="${d.tagCode() != null}">
+            <span class="sh-tag" th:style="'--folder-color:' + (${d.colorHex()} ?: '#888')">
+                <span class="sh-tag-dot"></span>
+                <span th:text="${d.tagCode()}">INF</span>
+            </span>
+            <span class="sh-deck-tag-pct"
+                  th:if="${d.totalCards() > 0}"
+                  th:text="${T(java.lang.Math).round(d.masteredCards() * 100.0 / d.totalCards())} + '%'">75%</span>
+        </div>
         <div class="sh-deck-title" th:text="${d.deckName()}">Name</div>
         <div class="sh-deck-meta" th:text="${d.folderPath()}">Folder</div>
         <div class="sh-deck-meta"
