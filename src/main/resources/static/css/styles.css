@@ -220,8 +220,8 @@ a {
 }
 
 .topnav-link:hover {
-    background: var(--surface-hover);
-    color: var(--text);
+    background: transparent;
+    color: var(--accent);
 }
 
 .topnav-link.active {
@@ -239,21 +239,36 @@ a {
     background: var(--accent);
     border-radius: 99px;
     transform: scaleX(0);
-    transition: transform var(--transition) ease;
+    opacity: 0;
+    transition: transform var(--transition) ease, opacity var(--transition) ease;
+}
+
+.topnav-link:hover::after {
+    transform: scaleX(0.5);
+    opacity: 0.5;
 }
 
 .topnav-link.active::after {
     transform: scaleX(1);
+    opacity: 1;
 }
 
 .topnav-link:active {
     transform: scale(0.96);
 }
 
+.topnav-link iconify-icon,
 .topnav-link svg {
     width: 14px;
     height: 14px;
     flex-shrink: 0;
+    transition: transform var(--transition-fast) ease, color var(--transition-fast) ease;
+}
+
+.topnav-link:hover iconify-icon,
+.topnav-link:hover svg {
+    transform: translateY(-1.5px) scale(1.06);
+    color: var(--accent);
 }
 
 .topnav-right {
@@ -337,6 +352,39 @@ a {
     height: 15px;
 }
 
+.app-topnav .topnav-theme-btn,
+.app-topnav .topnav-logout-btn {
+    transition: transform var(--transition-fast) ease, color var(--transition-fast) ease, background-color var(--transition-fast) ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.app-topnav .topnav-theme-btn:hover,
+.app-topnav .topnav-logout-btn:hover {
+    background: transparent;
+    color: var(--accent);
+}
+
+.app-topnav .topnav-theme-btn:active,
+.app-topnav .topnav-logout-btn:active {
+    transform: scale(0.96);
+    background: transparent;
+}
+
+.topnav-theme-btn iconify-icon,
+.topnav-theme-btn svg,
+.topnav-logout-btn iconify-icon,
+.topnav-logout-btn svg {
+    transition: transform var(--transition-fast) ease, color var(--transition-fast) ease;
+}
+
+.topnav-theme-btn:hover iconify-icon,
+.topnav-theme-btn:hover svg,
+.topnav-logout-btn:hover iconify-icon,
+.topnav-logout-btn:hover svg {
+    transform: translateY(-1.5px) scale(1.06);
+    color: var(--accent);
+}
+
 /* Show/hide theme icons based on current theme */
 :root .theme-icon-dark,
 [data-theme="light"] .theme-icon-dark {
@@ -410,8 +458,8 @@ a {
 }
 
 .topnav-mobile-link:hover {
-    background: var(--surface-hover);
-    color: var(--text);
+    background: transparent;
+    color: var(--accent);
 }
 
 .topnav-mobile-link.active {
@@ -429,22 +477,37 @@ a {
     background: var(--accent);
     border-radius: 0 4px 4px 0;
     transform: scaleY(0);
-    transition: transform var(--transition) ease;
+    opacity: 0;
+    transition: transform var(--transition) ease, opacity var(--transition) ease;
+}
+
+.topnav-mobile-link:hover::before {
+    transform: scaleY(0.4);
+    opacity: 0.5;
 }
 
 .topnav-mobile-link.active::before {
     transform: scaleY(1);
+    opacity: 1;
 }
 
 .topnav-mobile-link:active {
     transform: scale(0.97);
-    background: var(--surface-hover);
+    background: transparent;
 }
 
+.topnav-mobile-link iconify-icon,
 .topnav-mobile-link svg {
     width: 15px;
     height: 15px;
     flex-shrink: 0;
+    transition: transform var(--transition-fast) ease, color var(--transition-fast) ease;
+}
+
+.topnav-mobile-link:hover iconify-icon,
+.topnav-mobile-link:hover svg {
+    transform: translateX(3px);
+    color: var(--accent);
 }
 
 .topnav-mobile-user {
