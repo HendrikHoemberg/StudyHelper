@@ -23,6 +23,7 @@
     line-height: 1.5;
     font-family: inherit;
     transition: border-color 0.15s ease, background-color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 @media (hover: hover) {
