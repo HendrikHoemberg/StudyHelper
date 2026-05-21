@@ -2374,13 +2374,13 @@ textarea.sh-input {
 .sh-study-choice-icon {
     width: 64px;
     height: 64px;
-    background: var(--bg);
+    background: var(--accent);
     border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 1.5rem;
-    color: var(--text-secondary);
+    color: var(--surface);
     transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -5964,11 +5964,11 @@ iconify-icon {
 .sh-action-tile-icon {
     width: 40px;
     height: 40px;
-    background: var(--accent-tint);
+    background: var(--accent);
     border-radius: 10px;
     display: grid;
     place-items: center;
-    color: var(--accent);
+    color: var(--surface);
     flex-shrink: 0;
     transition: all 150ms ease;
     box-shadow: none;
@@ -5995,7 +5995,7 @@ iconify-icon {
 
 .sh-action-tile:hover {
     border-color: var(--accent);
-    background: var(--accent-tint);
+    background: var(--surface);
     transform: translateY(-1px);
     box-shadow: none;
 }
@@ -6052,15 +6052,18 @@ iconify-icon {
     gap: 0.5rem;
     margin-bottom: 0.75rem;
 }
+
 .sh-section-header .sh-section-title {
     margin-bottom: 0;
     flex-shrink: 0;
 }
+
 .sh-section-rule {
     flex: 1;
     height: 1px;
     background: var(--border-soft);
 }
+
 .sh-section-link {
     color: var(--text-3);
     font-size: 11px;
@@ -6068,6 +6071,7 @@ iconify-icon {
     text-decoration: none;
     white-space: nowrap;
 }
+
 .sh-section-link:hover {
     color: var(--text);
 }
@@ -6200,23 +6204,49 @@ iconify-icon {
     gap: 24px;
     flex-wrap: wrap;
 }
-.sh-greet-text { min-width: 0; }
-.sh-greet-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.sh-greet-text {
+    min-width: 0;
+}
+
+.sh-greet-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 .sh-pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 10px; border-radius: 999px;
-    font-size: 12px; font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
     background: color-mix(in srgb, var(--folder-color, var(--accent)) 12%, transparent);
     color: var(--folder-color, var(--accent));
 }
-.sh-pill iconify-icon { font-size: 12px; }
-.sh-pill-warm { --folder-color: var(--warm); }
-.sh-pill-accent { --folder-color: var(--accent); }
+
+.sh-pill iconify-icon {
+    font-size: 12px;
+}
+
+.sh-pill-warm {
+    --folder-color: var(--warm);
+}
+
+.sh-pill-accent {
+    --folder-color: var(--accent);
+}
 
 /* Action tile two-line body (existing .sh-action-tile is row-flex) */
 .sh-action-tile-body {
-    display: flex; flex-direction: column; gap: 2px; min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
+
 .sh-action-tile-hint {
     font-size: 11.5px;
     color: var(--text-3);
@@ -6226,102 +6256,236 @@ iconify-icon {
 
 /* Deck tile subject tag row */
 .sh-deck-tag-row {
-    display: flex; align-items: center; gap: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin-bottom: 4px;
 }
+
 .sh-tag {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 2px 7px; border-radius: 999px;
-    font-size: 11px; font-weight: 600; letter-spacing: 0.005em;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.005em;
     background: color-mix(in srgb, var(--folder-color, var(--accent)) 12%, transparent);
     color: var(--folder-color, var(--accent));
 }
+
 .sh-tag-dot {
-    width: 6px; height: 6px; border-radius: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
     background: var(--folder-color, var(--accent));
 }
-.sh-deck-tag-pct { font-size: 11px; color: var(--text-4); font-variant-numeric: tabular-nums; }
+
+.sh-deck-tag-pct {
+    font-size: 11px;
+    color: var(--text-4);
+    font-variant-numeric: tabular-nums;
+}
 
 /* Activity panel */
-.sh-activity-panel .sh-section-title { margin-bottom: 10px; }
+.sh-activity-panel .sh-section-title {
+    margin-bottom: 10px;
+}
+
 .sh-activity-card {
     background: var(--surface);
     border: 1px solid var(--border-soft);
     border-radius: 14px;
     padding: 16px;
-    display: flex; flex-direction: column; gap: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
-.sh-activity-top { display: flex; align-items: center; gap: 16px; }
-.sh-activity-stats { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.sh-activity-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.sh-activity-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
 
 /* Progress ring */
-.sh-ring { position: relative; width: 84px; height: 84px; flex-shrink: 0; }
-.sh-ring svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-.sh-ring-track { fill: none; stroke: var(--border-soft); stroke-width: 8; }
+.sh-ring {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    flex-shrink: 0;
+}
+
+.sh-ring svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+}
+
+.sh-ring-track {
+    fill: none;
+    stroke: var(--border-soft);
+    stroke-width: 8;
+}
+
 .sh-ring-fill {
-    fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round;
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 8;
+    stroke-linecap: round;
     transition: stroke-dashoffset 0.4s ease;
 }
+
 .sh-ring-label {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     font-family: var(--font-display, inherit);
 }
+
 .sh-ring-num {
-    font-weight: 700; font-size: 20px; letter-spacing: -0.02em;
-    color: var(--text); font-variant-numeric: tabular-nums; line-height: 1;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
 }
+
 .sh-ring-unit {
-    font-size: 9.5px; color: var(--text-3); margin-top: 2px;
-    letter-spacing: 0.08em; text-transform: uppercase;
+    font-size: 9.5px;
+    color: var(--text-3);
+    margin-top: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 /* Stat labels */
 .sh-stat-label {
-    font-size: 11px; color: var(--text-3); font-weight: 600;
-    letter-spacing: 0.06em; text-transform: uppercase;
+    font-size: 11px;
+    color: var(--text-3);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
+
 .sh-stat-value {
-    font-size: 20px; font-weight: 700; color: var(--text);
-    letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
 }
-.sh-stat-hint { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+
+.sh-stat-hint {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 4px;
+}
 
 /* Heatmap */
-.sh-heatmap { display: flex; flex-direction: column; gap: 8px; }
-.sh-heat-months {
-    display: flex; font-size: 11px; color: var(--text-3);
-    letter-spacing: 0.04em; padding-left: 4px;
+.sh-heatmap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
-.sh-heat-months span { flex: 1; text-align: left; }
-.sh-heat-grid { display: flex; gap: 3px; }
-.sh-heat-column { display: grid; grid-template-rows: repeat(7, auto); gap: 3px; }
+
+.sh-heat-months {
+    display: flex;
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+    padding-left: 4px;
+}
+
+.sh-heat-months span {
+    flex: 1;
+    text-align: left;
+}
+
+.sh-heat-grid {
+    display: flex;
+    gap: 3px;
+}
+
+.sh-heat-column {
+    display: grid;
+    grid-template-rows: repeat(7, auto);
+    gap: 3px;
+}
+
 .sh-heat-cell {
-    width: 12px; height: 12px;
+    width: 12px;
+    height: 12px;
     border-radius: 3px;
     background: var(--border-soft);
 }
-.sh-heat-cell[data-l="0"] { background: var(--border-soft); }
-.sh-heat-cell[data-l="1"] { background: color-mix(in srgb, var(--accent) 22%, var(--bg)); }
-.sh-heat-cell[data-l="2"] { background: color-mix(in srgb, var(--accent) 45%, var(--bg)); }
-.sh-heat-cell[data-l="3"] { background: color-mix(in srgb, var(--accent) 75%, var(--bg)); }
+
+.sh-heat-cell[data-l="0"] {
+    background: var(--border-soft);
+}
+
+.sh-heat-cell[data-l="1"] {
+    background: color-mix(in srgb, var(--accent) 22%, var(--bg));
+}
+
+.sh-heat-cell[data-l="2"] {
+    background: color-mix(in srgb, var(--accent) 45%, var(--bg));
+}
+
+.sh-heat-cell[data-l="3"] {
+    background: color-mix(in srgb, var(--accent) 75%, var(--bg));
+}
+
 .sh-heat-cell[data-l="4"] {
     background: var(--accent);
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
 }
-.sh-heat-cell.today { outline: 1.5px solid var(--text); outline-offset: 1px; }
+
+.sh-heat-cell.today {
+    outline: 1.5px solid var(--text);
+    outline-offset: 1px;
+}
+
 .sh-heat-legend {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 11px; color: var(--text-3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-3);
     flex-wrap: wrap;
 }
-.sh-heat-legend-cells { display: flex; gap: 3px; }
-.sh-heat-total { margin-left: auto; color: var(--text-2); }
+
+.sh-heat-legend-cells {
+    display: flex;
+    gap: 3px;
+}
+
+.sh-heat-total {
+    margin-left: auto;
+    color: var(--text-2);
+}
 
 /* Mobile: drop first 4 heatmap columns to keep card narrow.
    Existing breakpoint behaviour (sh-cockpit-secondary stacks below primary)
    handles the column-collapse for the whole secondary rail. */
 @media (max-width: 760px) {
-    .sh-heat-grid .sh-heat-column:nth-child(-n+4) { display: none; }
-    .sh-heat-months span:first-child { display: none; }
+    .sh-heat-grid .sh-heat-column:nth-child(-n+4) {
+        display: none;
+    }
+
+    .sh-heat-months span:first-child {
+        display: none;
+    }
 }
