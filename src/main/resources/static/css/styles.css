@@ -447,10 +447,14 @@ a {
     position: relative;
     padding: 1.5rem;
     border-radius: 0;
-    background:
-        radial-gradient(1000px circle at 15% -10%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 65%),
-        radial-gradient(800px circle at 90% 10%, rgba(59, 130, 246, 0.05), transparent 60%),
-        var(--bg);
+    background-color: var(--bg);
+    background-image:
+        radial-gradient(rgba(15, 23, 42, 0.08) 1.2px, transparent 1.2px),
+        radial-gradient(1000px circle at 15% -10%, color-mix(in srgb, var(--accent) 15%, transparent), transparent 65%),
+        radial-gradient(800px circle at 90% 10%, rgba(59, 130, 246, 0.08), transparent 60%);
+    background-size: 24px 24px, 100% 100%, 100% 100%;
+    background-repeat: repeat, no-repeat, no-repeat;
+    background-attachment: scroll;
     overflow-y: auto;
     flex: 1;
     display: flex;
@@ -458,29 +462,11 @@ a {
     margin-bottom: 0;
 }
 
-.sh-dashboard-shell::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image:
-        radial-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px);
-    background-size: 24px 24px;
-    opacity: 0.8;
-    pointer-events: none;
-}
-
 [data-theme="dark"] .sh-dashboard-shell {
-    background:
-        radial-gradient(1000px circle at 10% -20%, rgba(99, 102, 241, 0.15), transparent 65%),
-        radial-gradient(800px circle at 90% 10%, rgba(14, 165, 233, 0.08), transparent 60%),
-        var(--bg);
-}
-
-[data-theme="dark"] .sh-dashboard-shell::before {
     background-image:
-        radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    background-size: 24px 24px;
-    opacity: 0.8;
+        radial-gradient(rgba(255, 255, 255, 0.04) 1.2px, transparent 1.2px),
+        radial-gradient(1000px circle at 10% -20%, rgba(99, 102, 241, 0.18), transparent 65%),
+        radial-gradient(800px circle at 90% 10%, rgba(14, 165, 233, 0.10), transparent 60%);
 }
 
 .sh-explorer-shell {
