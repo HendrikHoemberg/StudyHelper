@@ -6500,8 +6500,8 @@ iconify-icon {
 }
 
 .sh-heatmap-grid-wrapper {
+    width: 252px;
     min-width: 252px;
-    width: max-content;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -6513,7 +6513,7 @@ iconify-icon {
     color: var(--text-3);
     letter-spacing: 0.04em;
     padding-left: 4px;
-    width: 100%;
+    width: 252px;
 }
 
 .sh-heat-months span {
@@ -6524,7 +6524,7 @@ iconify-icon {
 .sh-heat-grid {
     display: flex;
     gap: 3px;
-    width: 100%;
+    width: 252px;
 }
 
 .sh-heat-column {
