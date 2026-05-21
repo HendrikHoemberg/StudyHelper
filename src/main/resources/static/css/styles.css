@@ -5923,6 +5923,34 @@ iconify-icon {
     gap: 12px;
 }
 
+/* Color-Coded Action Tiles (Sky Blue, Amethyst Purple, Sunset Rose) */
+.sh-action-tile-study {
+    --tile-color: #0284c7;
+    --tile-bg: rgba(2, 132, 199, 0.12);
+}
+[data-theme="dark"] .sh-action-tile-study {
+    --tile-color: #38bdf8;
+    --tile-bg: rgba(56, 189, 248, 0.15);
+}
+
+.sh-action-tile-generate {
+    --tile-color: #7c3aed;
+    --tile-bg: rgba(124, 58, 237, 0.12);
+}
+[data-theme="dark"] .sh-action-tile-generate {
+    --tile-color: #a78bfa;
+    --tile-bg: rgba(167, 139, 250, 0.15);
+}
+
+.sh-action-tile-exam {
+    --tile-color: #e11d48;
+    --tile-bg: rgba(225, 29, 72, 0.12);
+}
+[data-theme="dark"] .sh-action-tile-exam {
+    --tile-color: #fb7185;
+    --tile-bg: rgba(251, 113, 133, 0.15);
+}
+
 .sh-action-tile {
     display: flex;
     flex-direction: row;
@@ -5941,11 +5969,11 @@ iconify-icon {
 .sh-action-tile-icon {
     width: 40px;
     height: 40px;
-    background: var(--accent);
+    background: var(--tile-bg, var(--accent));
     border-radius: 10px;
     display: grid;
     place-items: center;
-    color: var(--surface);
+    color: var(--tile-color, var(--surface));
     flex-shrink: 0;
     transition: all 150ms ease;
     box-shadow: none;
@@ -5971,16 +5999,17 @@ iconify-icon {
 }
 
 .sh-action-tile:hover {
-    border-color: var(--accent);
+    border-color: var(--tile-color, var(--accent));
     background: var(--surface);
     transform: translateY(-1px);
     box-shadow: none;
 }
 
 .sh-action-tile:hover .sh-action-tile-icon {
-    background: var(--accent);
+    background: var(--tile-color, var(--accent));
     color: #fff;
 }
+
 
 .sh-review-card {
     display: flex;
