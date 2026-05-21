@@ -18,7 +18,8 @@
       "Bash(./mvnw -q compile)",
       "Bash(./mvnw -q -DskipTests compile)",
       "Bash(./mvnw *)",
-      "Bash(jar tf *)"
+      "Bash(jar tf *)",
+      "WebFetch(domain:api.anthropic.com)"
     ]
   }
 }
