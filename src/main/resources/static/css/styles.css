@@ -5997,8 +5997,8 @@ iconify-icon {
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    gap: 18px;
-    padding: 24px 18px;
+    gap: 20px;
+    padding: 30px 20px;
     border-radius: var(--radius-lg);
     background: var(--surface);
     color: var(--text);
@@ -6008,10 +6008,10 @@ iconify-icon {
 }
 
 .sh-action-tile-icon {
-    width: 46px;
-    height: 46px;
+    width: 52px;
+    height: 52px;
     background: var(--tile-bg, var(--accent));
-    border-radius: 12px;
+    border-radius: 14px;
     display: grid;
     place-items: center;
     color: var(--tile-color, var(--surface));
@@ -6022,9 +6022,9 @@ iconify-icon {
 
 .sh-action-tile-icon iconify-icon,
 .sh-action-tile-icon svg {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
     display: flex !important;
     align-items: center;
     justify-content: center;
@@ -6032,7 +6032,7 @@ iconify-icon {
 
 .sh-action-tile-label {
     font-family: var(--font-heading);
-    font-size: 14.5px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text);
     text-align: left;
@@ -6293,12 +6293,12 @@ iconify-icon {
 .sh-action-tile-body {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
     min-width: 0;
 }
 
 .sh-action-tile-hint {
-    font-size: 12.5px;
+    font-size: 13.0px;
     color: var(--text-3);
     font-weight: 400;
     line-height: 1.3;
