@@ -6104,6 +6104,40 @@ iconify-icon {
     .sh-deck-cover {
         height: 90px;
     }
+
+    /* Swap "Today's goal" (Activity panel) above "Recently studied" */
+    .sh-cockpit-primary,
+    .sh-cockpit-secondary {
+        display: contents;
+    }
+
+    .sh-dashboard-greeting {
+        order: 1;
+    }
+
+    .sh-saved-session-card {
+        order: 2;
+    }
+
+    .sh-action-tiles-wrapper {
+        order: 3;
+    }
+
+    .sh-dashboard-alerts-mobile {
+        order: 4;
+    }
+
+    .sh-pinned-decks-section {
+        order: 5;
+    }
+
+    .sh-activity-panel {
+        order: 6;
+    }
+
+    .sh-recently-studied-section {
+        order: 7;
+    }
 }
 
 @media (max-width: 480px) {

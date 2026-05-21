@@ -106,7 +106,7 @@
                 </div>
 
                 <!-- Pinned decks rail -->
-                <section th:if="${!vm.pinnedDecks().isEmpty()}" class="sh-dashboard-section">
+                <section th:if="${!vm.pinnedDecks().isEmpty()}" class="sh-dashboard-section sh-pinned-decks-section">
                     <h2 class="sh-section-title">Pinned</h2>
                     <div class="sh-deck-rail">
                         <th:block th:each="deck : ${vm.pinnedDecks()}">
@@ -116,7 +116,7 @@
                 </section>
 
                 <!-- Recent decks rail -->
-                <section th:if="${!vm.recentDecks().isEmpty()}" class="sh-dashboard-section">
+                <section th:if="${!vm.recentDecks().isEmpty()}" class="sh-dashboard-section sh-recently-studied-section">
                     <div class="sh-section-header">
                         <h2 class="sh-section-title">Recently studied</h2>
                         <span class="sh-section-rule"></span>
