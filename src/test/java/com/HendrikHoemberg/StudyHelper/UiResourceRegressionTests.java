@@ -286,9 +286,9 @@ class UiResourceRegressionTests {
         assertThat(styles)
             .contains("position: static")
             .contains(".sh-wizard-footer>div")
-            .contains("margin-left: 0 !important")
+            .contains("display: contents !important")
             .contains(".sh-wizard-footer #wizard-btn-submit-with-instructions")
-            .contains("flex: 1 1 12rem")
+            .contains("flex: 1 1 100%")
             .contains("max-height: min(44vh, 28rem)");
     }
 

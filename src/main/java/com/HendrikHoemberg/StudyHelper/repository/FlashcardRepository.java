@@ -51,7 +51,8 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     @Query("""
         select count(f)
         from Flashcard f
-        where f.deck.user = :user and f.correctStreak < 2
+        where f.deck.user = :user and (f.correctStreak is null or f.correctStreak < 2)
         """)
     long countNotMasteredByUser(@Param("user") User user);
 }
+

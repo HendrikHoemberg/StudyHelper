@@ -65,6 +65,13 @@
                 <iconify-icon icon="lucide:pencil"></iconify-icon>
                 Rename
             </button>
+            <button class="sh-btn sh-btn-secondary sh-btn-sm"
+                    th:hx-post="@{/decks/{id}/pin(id=${deck.id})}"
+                    hx-target="#explorer-detail"
+                    th:title="${deck.pinned ? 'Unpin this deck from the dashboard' : 'Pin this deck to the dashboard'}">
+                <iconify-icon th:attr="icon=${deck.pinned ? 'lucide:pin-off' : 'lucide:pin'}"></iconify-icon>
+                <span th:text="${deck.pinned ? 'Unpin' : 'Pin'}">Pin</span>
+            </button>
             <form th:action="@{/decks/{id}/delete(id=${deck.id})}" method="post" style="display:inline;"
                   hx-post th:hx-post="@{/decks/{id}/delete(id=${deck.id})}"
                   hx-target="#explorer-detail"

@@ -34,12 +34,16 @@ public class DeckPinController {
     public Object togglePin(@PathVariable Long id,
                             Principal principal,
                             Model model,
-                            @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+                            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                            @RequestHeader(value = "HX-Current-URL", required = false) String currentUrl) {
         User user = userService.getByUsername(principal.getName());
         try {
             deckPinService.togglePin(user, id);
         } catch (NoSuchElementException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        if (hxRequest != null && currentUrl != null) {
+            return "redirect:" + currentUrl;
         }
         if (hxRequest != null) {
             model.addAttribute("vm", dashboardService.buildFor(user));
@@ -49,3 +53,4 @@ public class DeckPinController {
         return ResponseEntity.ok().build();
     }
 }
+
