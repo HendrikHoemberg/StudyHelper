@@ -15,15 +15,23 @@
                 <div class="sh-explorer-shell sh-hide-sidebar">
                     <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
                     <div id="explorer-detail" class="sh-explorer-detail sh-explorer-detail-content">
-                        <div th:switch="${studyStateView}">
-                            <div th:case="'card'" th:replace="~{fragments/study-card :: studyCard}"></div>
-                            <div th:case="'question'" th:replace="~{fragments/quiz-question :: quizQuestion}"></div>
-                            <div th:case="'complete'">
-                                <div th:if="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).QUIZ}" th:replace="~{fragments/quiz-summary :: quizSummary}"></div>
-                                <div th:if="${mode != T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).QUIZ}" th:replace="~{fragments/study-complete :: studyComplete}"></div>
-                            </div>
-                            <div th:case="*" th:replace="~{fragments/study-setup :: studySetup}"></div>
-                        </div>
+                        <th:block th:if="${studyStateView == 'card'}">
+                            <div th:replace="~{fragments/study-card :: studyCard}"></div>
+                        </th:block>
+                        <th:block th:if="${studyStateView == 'question'}">
+                            <div th:replace="~{fragments/quiz-question :: quizQuestion}"></div>
+                        </th:block>
+                        <th:block th:if="${studyStateView == 'complete'}">
+                            <th:block th:if="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).QUIZ}">
+                                <div th:replace="~{fragments/quiz-summary :: quizSummary}"></div>
+                            </th:block>
+                            <th:block th:if="${mode != T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).QUIZ}">
+                                <div th:replace="~{fragments/study-complete :: studyComplete}"></div>
+                            </th:block>
+                        </th:block>
+                        <th:block th:if="${studyStateView != 'card' and studyStateView != 'question' and studyStateView != 'complete'}">
+                            <div th:replace="~{fragments/study-setup :: studySetup}"></div>
+                        </th:block>
                     </div>
                 </div>
             </div>
