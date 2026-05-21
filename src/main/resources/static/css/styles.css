@@ -2279,6 +2279,13 @@ textarea.sh-input {
     perspective: 1000px;
 }
 
+@media (min-width: 769px) {
+    .sh-study-mode-grid.sh-grid-4 {
+        grid-template-columns: repeat(2, minmax(240px, 22rem));
+    }
+}
+
+
 @media (max-width: 768px) {
     .sh-study-mode-grid {
         grid-template-columns: repeat(auto-fit, minmax(240px, 22rem));
