@@ -21,12 +21,15 @@ public class SavedSessionService {
     private final SavedSessionRepository repository;
     private final FlashcardRepository flashcardRepository;
     private final ObjectMapper objectMapper;
+    private final StudyLogService studyLogService;
 
     public SavedSessionService(SavedSessionRepository repository,
                                FlashcardRepository flashcardRepository,
-                               ObjectMapper objectMapper) {
+                               ObjectMapper objectMapper,
+                               StudyLogService studyLogService) {
         this.repository = repository;
         this.flashcardRepository = flashcardRepository;
+        this.studyLogService = studyLogService;
         this.objectMapper = objectMapper.rebuild()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .build();
@@ -68,6 +71,23 @@ public class SavedSessionService {
     }
 
     public void discard(User user) {
+        repository.findByUser(user).ifPresent(row -> {
+            try {
+                if (row.getType() == SavedSessionType.FLASHCARDS) {
+                    StudySessionState state = read(row.getPayload(), StudySessionState.class);
+                    if (state != null && state.totalAnswered() > 0) {
+                        studyLogService.recordFlashcardsPartial(user, state);
+                    }
+                } else if (row.getType() == SavedSessionType.QUIZ) {
+                    QuizSessionState state = read(row.getPayload(), QuizSessionState.class);
+                    if (state != null && state.answers() != null && !state.answers().isEmpty()) {
+                        studyLogService.recordQuizPartial(user, state);
+                    }
+                }
+            } catch (Exception e) {
+                // Keep it safe so discarding never crashes
+            }
+        });
         repository.deleteByUser(user);
     }
 

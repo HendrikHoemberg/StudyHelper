@@ -23,6 +23,7 @@ class SavedSessionServiceTests {
     private SavedSessionRepository repository;
     private FlashcardRepository flashcardRepository;
     private ObjectMapper objectMapper;
+    private StudyLogService studyLogService;
     private SavedSessionService service;
     private User user;
 
@@ -31,7 +32,8 @@ class SavedSessionServiceTests {
         repository = mock(SavedSessionRepository.class);
         flashcardRepository = mock(FlashcardRepository.class);
         objectMapper = new ObjectMapper();
-        service = new SavedSessionService(repository, flashcardRepository, objectMapper);
+        studyLogService = mock(StudyLogService.class);
+        service = new SavedSessionService(repository, flashcardRepository, objectMapper, studyLogService);
 
         user = new User();
         user.setId(7L);
@@ -98,6 +100,31 @@ class SavedSessionServiceTests {
         service.discard(user);
         service.discard(user);
         verify(repository, times(2)).deleteByUser(user);
+    }
+
+    @Test
+    void discard_partialSession_logsProgress() {
+        StudySessionState state = sampleFlashcardState();
+        StudySessionState answeredState = new StudySessionState(
+            state.config(),
+            state.cardsByDeck(),
+            state.queue(),
+            1, 1, 1, 0,
+            List.of()
+        );
+        SavedSession row = new SavedSession();
+        row.setUser(user);
+        row.setType(SavedSessionType.FLASHCARDS);
+        row.setPayload(asJson(answeredState));
+        row.setTitle("t");
+        row.setProgressLabel("p");
+
+        when(repository.findByUser(user)).thenReturn(Optional.of(row));
+
+        service.discard(user);
+
+        verify(studyLogService).recordFlashcardsPartial(eq(user), any(StudySessionState.class));
+        verify(repository).deleteByUser(user);
     }
 
     @Test

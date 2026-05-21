@@ -54,6 +54,28 @@ public class StudyLogService {
     }
 
     @Transactional
+    public void recordFlashcardsPartial(User user, StudySessionState state) {
+        if (state == null || state.totalAnswered() <= 0) return;
+
+        Set<Long> deckIds = new HashSet<>();
+        for (StudyCardView v : state.queue()) {
+            deckIds.add(v.deckId());
+        }
+
+        touchDecks(deckIds);
+
+        StudyLog log = new StudyLog();
+        log.setUser(user);
+        log.setType(SavedSessionType.FLASHCARDS);
+        log.setTitle(flashcardTitle(state) + " (aborted)");
+        log.setCardCount(state.totalAnswered());
+        log.setCorrectCount(state.correctAnswers());
+        log.setDurationSec(null);
+        log.setCompletedAt(LocalDateTime.now());
+        studyLogRepository.save(log);
+    }
+
+    @Transactional
     public void recordQuiz(User user, QuizSessionState state) {
         if (state == null) return;
 
@@ -68,6 +90,34 @@ public class StudyLogService {
         log.setTitle(quizTitle(user, deckIds));
         log.setCardCount(state.questions().size());
         log.setCorrectCount(state.correctCount());
+        log.setDurationSec(null);
+        log.setCompletedAt(LocalDateTime.now());
+        studyLogRepository.save(log);
+    }
+
+    @Transactional
+    public void recordQuizPartial(User user, QuizSessionState state) {
+        if (state == null || state.answers() == null || state.answers().isEmpty()) return;
+
+        Set<Long> deckIds = state.config().selectedDeckIds() == null
+            ? Set.of()
+            : new HashSet<>(state.config().selectedDeckIds());
+        touchDecks(deckIds);
+
+        int answeredCount = state.answers().size();
+        int correctCount = 0;
+        for (Integer idx : state.answers().keySet()) {
+            if (state.isCorrect(idx)) {
+                correctCount++;
+            }
+        }
+
+        StudyLog log = new StudyLog();
+        log.setUser(user);
+        log.setType(SavedSessionType.QUIZ);
+        log.setTitle(quizTitle(user, deckIds) + " (aborted)");
+        log.setCardCount(answeredCount);
+        log.setCorrectCount(correctCount);
         log.setDurationSec(null);
         log.setCompletedAt(LocalDateTime.now());
         studyLogRepository.save(log);
