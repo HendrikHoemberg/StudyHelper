@@ -898,6 +898,7 @@ a {
     text-decoration: none;
     line-height: 1.5;
     white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .sh-btn svg {
