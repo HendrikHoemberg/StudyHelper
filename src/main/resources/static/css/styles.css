@@ -216,6 +216,7 @@ a {
     transition: all var(--transition-fast);
     white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
+    position: relative;
 }
 
 .topnav-link:hover {
@@ -224,8 +225,29 @@ a {
 }
 
 .topnav-link.active {
-    background: var(--accent-light);
-    color: var(--accent);
+    color: var(--text);
+    font-weight: 600;
+}
+
+.topnav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 0.625rem;
+    right: 0.625rem;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 99px;
+    transform: scaleX(0);
+    transition: transform var(--transition) ease;
+}
+
+.topnav-link.active::after {
+    transform: scaleX(1);
+}
+
+.topnav-link:active {
+    transform: scale(0.96);
 }
 
 .topnav-link svg {
@@ -384,11 +406,39 @@ a {
     width: 100%;
     text-align: left;
     -webkit-tap-highlight-color: transparent;
+    position: relative;
 }
 
 .topnav-mobile-link:hover {
     background: var(--surface-hover);
     color: var(--text);
+}
+
+.topnav-mobile-link.active {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.topnav-mobile-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 15%;
+    height: 70%;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 0 4px 4px 0;
+    transform: scaleY(0);
+    transition: transform var(--transition) ease;
+}
+
+.topnav-mobile-link.active::before {
+    transform: scaleY(1);
+}
+
+.topnav-mobile-link:active {
+    transform: scale(0.97);
+    background: var(--surface-hover);
 }
 
 .topnav-mobile-link svg {

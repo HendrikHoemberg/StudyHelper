@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initLucide();
     initTopnav();
+    updateActiveNavLink();
     initSidebarDrawer();
     initSidebarFolderExpand();
     initFolderToggleButtons();
@@ -192,6 +193,7 @@ document.body.addEventListener('htmx:afterSwap', () => {
     if (window.initCustomSteppers) window.initCustomSteppers(document);
     initQuizAnswerForm();
     initLazyExamRuntime(document);
+    updateActiveNavLink();
 
     // Toggle sidebar visibility class to prevent flashing
     const shell = document.querySelector('.sh-explorer-shell');
@@ -354,6 +356,7 @@ document.body.addEventListener('htmx:historyRestore', () => {
     setTimeout(() => {
         initTopnav();
         initSidebarDrawer();
+        updateActiveNavLink();
     }, 0);
 });
 
@@ -425,6 +428,52 @@ function initTopnav() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeMenu();
     });
+}
+
+/* ---------- Active Navigation Indicator ---------- */
+function updateActiveNavLink() {
+    const path = window.location.pathname;
+    
+    // Determine which key is active
+    let activeKey = null;
+    if (path === '/dashboard' || path.startsWith('/folders/') || path.startsWith('/decks/')) {
+        activeKey = 'dashboard';
+    } else if (path.startsWith('/study/') || path.startsWith('/quiz/') || path.startsWith('/session/') || path.startsWith('/sessions/')) {
+        activeKey = 'study';
+    } else if (path.startsWith('/flashcards/')) {
+        activeKey = 'flashcards';
+    } else if (path.startsWith('/exams') || path.startsWith('/exam')) {
+        activeKey = 'exams';
+    } else if (path.startsWith('/admin')) {
+        activeKey = 'admin';
+    }
+    
+    const desktopLinks = document.querySelectorAll('.topnav-link');
+    const mobileLinks = document.querySelectorAll('.topnav-mobile-link');
+    
+    const updateLinks = (links) => {
+        links.forEach(link => {
+            const href = link.getAttribute('href');
+            let isMatch = false;
+            
+            if (activeKey === 'dashboard' && href === '/dashboard') {
+                isMatch = true;
+            } else if (activeKey === 'study' && href === '/study/start') {
+                isMatch = true;
+            } else if (activeKey === 'flashcards' && href === '/flashcards/generate') {
+                isMatch = true;
+            } else if (activeKey === 'exams' && href === '/exams') {
+                isMatch = true;
+            } else if (activeKey === 'admin' && href === '/admin') {
+                isMatch = true;
+            }
+            
+            link.classList.toggle('active', isMatch);
+        });
+    };
+    
+    updateLinks(desktopLinks);
+    updateLinks(mobileLinks);
 }
 
 /* ---------- Sidebar Drawer (mobile) ---------- */
