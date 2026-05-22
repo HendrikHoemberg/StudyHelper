@@ -1169,6 +1169,17 @@ a {
     color: var(--accent);
 }
 
+.sh-deck-due-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    color: var(--accent);
+}
+
 /* ============================================================
    FORM CONTROLS
    ============================================================ */
@@ -6212,8 +6223,14 @@ iconify-icon {
 
 .sh-action-tile-row {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
+}
+
+@media (max-width: 860px) {
+    .sh-action-tile-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 /* Color-Coded Action Tiles (Sky Blue, Amethyst Purple, Sunset Rose) */
@@ -6245,6 +6262,11 @@ iconify-icon {
 [data-theme="dark"] .sh-action-tile-exam {
     --tile-color: #fb7185;
     --tile-bg: rgba(251, 113, 133, 0.15);
+}
+
+.sh-action-tile-review {
+    --tile-color: var(--accent);
+    --tile-bg: var(--accent-light);
 }
 
 .sh-action-tile {
@@ -6460,7 +6482,7 @@ iconify-icon {
 
 
 
-@media (max-width: 640px) {
+@media (max-width: 540px) {
     .sh-action-tile-row {
         grid-template-columns: 1fr;
     }

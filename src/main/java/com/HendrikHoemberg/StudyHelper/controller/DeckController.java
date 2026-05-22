@@ -3,6 +3,7 @@ package com.HendrikHoemberg.StudyHelper.controller;
 import com.HendrikHoemberg.StudyHelper.config.AppDefaults;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
@@ -21,13 +22,16 @@ public class DeckController {
     private final FlashcardService flashcardService;
     private final FolderService folderService;
     private final UserService userService;
+    private final FlashcardRepository flashcardRepository;
 
     public DeckController(DeckService deckService, FlashcardService flashcardService,
-                          FolderService folderService, UserService userService) {
+                          FolderService folderService, UserService userService,
+                          FlashcardRepository flashcardRepository) {
         this.deckService = deckService;
         this.flashcardService = flashcardService;
         this.folderService = folderService;
         this.userService = userService;
+        this.flashcardRepository = flashcardRepository;
     }
 
     @GetMapping("/folders/{folderId}/decks/new")
@@ -77,6 +81,9 @@ public class DeckController {
         model.addAttribute("deck", deck);
         model.addAttribute("flashcards", deck.getFlashcards());
         model.addAttribute("username", principal.getName());
+
+        long dueCount = flashcardRepository.countDueOrNewByDeck(deck, java.time.LocalDate.now());
+        model.addAttribute("dueCount", dueCount);
 
         if (hxRequest != null) {
             model.addAttribute("refreshSidebar", true);

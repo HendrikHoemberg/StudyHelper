@@ -81,7 +81,7 @@ class DashboardServiceTests {
         assertThat(vm.recentDecks().get(0).tagCode()).isEqualTo("INF");
         assertThat(vm.pinnedDecks().get(0).tagCode()).isEqualTo("INF");
         assertThat(vm.recentDecks()).extracting("deckName").doesNotContain("Stale");
-        assertThat(vm.dueTodayCount()).isEqualTo(1);          // 1 card with correctStreak < 2
+        assertThat(vm.dueTodayCount()).isEqualTo(2);          // both cards are new (null dueDate)
         assertThat(vm.todayMinutes()).isEqualTo(10);
         assertThat(vm.cardsReviewedToday()).isEqualTo(2);
         assertThat(vm.todayAccuracyPercent()).isEqualTo(50); // 1 of 2

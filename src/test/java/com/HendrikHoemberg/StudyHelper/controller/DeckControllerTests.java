@@ -4,6 +4,7 @@ import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.AiRequestQuotaService;
+import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
 import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
@@ -54,6 +55,9 @@ class DeckControllerTests {
 
     @MockitoBean
     private SavedSessionService savedSessionService;
+
+    @MockitoBean
+    private FlashcardRepository flashcardRepository;
 
     private User user;
     private Folder folder;

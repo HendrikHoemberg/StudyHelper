@@ -41,8 +41,12 @@
             </div>
             <div>
                 <h1 class="sh-page-title" th:text="${deck.name}">Deck Name</h1>
-                <span class="sh-badge sh-badge-primary mt-1"
-                      th:text="${deck.flashcards.size()} + ' cards'"></span>
+                <span class="flex items-center gap-2 mt-1">
+                    <span class="sh-badge sh-badge-primary"
+                          th:text="${deck.flashcards.size()} + ' cards'"></span>
+                    <span th:if="${dueCount > 0}" class="sh-deck-due-badge"
+                          th:text="${dueCount} + ' due'">0 due</span>
+                </span>
             </div>
         </div>
         <div class="sh-page-actions">

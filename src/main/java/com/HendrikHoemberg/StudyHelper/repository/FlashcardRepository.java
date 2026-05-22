@@ -61,5 +61,21 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
           and f.correctStreak is not null and f.correctStreak >= 3
         """)
     java.util.List<Flashcard> findUnscheduledEstablishedCards();
+
+    @Query("""
+        select count(f) from Flashcard f
+        where f.deck.user = :user
+          and (f.dueDate is null or f.dueDate <= :today)
+        """)
+    long countDueOrNewByUser(@Param("user") User user,
+                             @Param("today") java.time.LocalDate today);
+
+    @Query("""
+        select count(f) from Flashcard f
+        where f.deck = :deck
+          and (f.dueDate is null or f.dueDate <= :today)
+        """)
+    long countDueOrNewByDeck(@Param("deck") Deck deck,
+                             @Param("today") java.time.LocalDate today);
 }
 

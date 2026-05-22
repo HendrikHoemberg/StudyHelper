@@ -78,7 +78,7 @@ public class DashboardService {
 
 
         int streakDays = computeStreak(user);
-        long dueTodayCount = flashcardRepository.countNotMasteredByUser(user);
+        long dueTodayCount = flashcardRepository.countDueOrNewByUser(user, java.time.LocalDate.now());
 
         LocalDate today = LocalDate.now();
         LocalDateTime startOfToday = today.atStartOfDay();

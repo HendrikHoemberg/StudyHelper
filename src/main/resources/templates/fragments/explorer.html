@@ -50,6 +50,16 @@
                 <!-- Action tiles row wrapped in an extra container for better visibility and coherence -->
                 <div class="sh-action-tiles-wrapper">
                     <div class="sh-action-tile-row">
+                        <a class="sh-action-tile sh-action-tile-review" th:href="@{/study/start(mode='FLASHCARDS')}"
+                            th:hx-get="@{/study/start(mode='FLASHCARDS')}" hx-target="#explorer-detail" hx-push-url="true">
+                            <div class="sh-action-tile-icon">
+                                <iconify-icon icon="lucide:alarm-clock"></iconify-icon>
+                            </div>
+                            <div class="sh-action-tile-body">
+                                <span class="sh-action-tile-label">Review</span>
+                                <span class="sh-action-tile-hint" th:text="${vm.dueTodayCount()} + ' due today'">0 due today</span>
+                            </div>
+                        </a>
                         <a class="sh-action-tile sh-action-tile-study" href="/study/start" hx-get="/study/start" hx-target="#explorer-detail"
                             hx-push-url="true">
                             <div class="sh-action-tile-icon">
