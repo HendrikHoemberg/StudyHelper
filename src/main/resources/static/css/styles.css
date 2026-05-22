@@ -682,6 +682,13 @@ a {
         margin-inline: auto;
     }
 
+    /* Fluid expansion on zoomed/scaled desktops */
+    @media (min-width: 769px) and (max-width: 1300px) {
+        .sh-explorer-detail:has(.sh-study-setup-card) {
+            max-width: min(90%, 80rem);
+        }
+    }
+
     .sh-explorer-detail:has(#quiz-session-content),
     .sh-explorer-detail:has(#exam-runtime-wrapper) {
         width: 100%;
@@ -2435,7 +2442,7 @@ textarea.sh-input {
 
 .sh-study-mode-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 22rem));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 22rem));
     justify-content: center;
     gap: 1.5rem;
     margin-top: 2rem;
@@ -2446,14 +2453,14 @@ textarea.sh-input {
 
 @media (min-width: 769px) {
     .sh-study-mode-grid.sh-grid-4 {
-        grid-template-columns: repeat(2, minmax(240px, 22rem));
+        grid-template-columns: repeat(2, minmax(200px, 22rem));
     }
 }
 
 
 @media (max-width: 768px) {
     .sh-study-mode-grid {
-        grid-template-columns: repeat(auto-fit, minmax(240px, 22rem));
+        grid-template-columns: repeat(auto-fit, minmax(200px, 22rem));
         gap: 1.5rem;
         padding-bottom: 2rem;
     }
