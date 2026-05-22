@@ -14,6 +14,7 @@ import com.HendrikHoemberg.StudyHelper.service.DeckService;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
+import com.HendrikHoemberg.StudyHelper.service.SrsScheduler;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.StudyLogService;
 import com.HendrikHoemberg.StudyHelper.service.StudySessionService;
@@ -77,6 +78,9 @@ class StudySessionControllerTests {
     @MockitoBean
     private StudyLogService studyLogService;
 
+    @MockitoBean
+    private SrsScheduler srsScheduler;
+
     private User user;
 
     @BeforeEach
@@ -99,6 +103,7 @@ class StudySessionControllerTests {
         when(studySessionService.isComplete(state)).thenReturn(false);
         when(studySessionService.nextCard(state)).thenReturn(card);
         when(flashcardService.getFlashcardForUser(card.cardId(), user)).thenReturn(new Flashcard());
+        when(flashcardService.getFlashcardOptional(card.cardId())).thenReturn(java.util.Optional.empty());
 
         mockMvc.perform(get("/session/next")
             .principal(() -> "alice")
@@ -138,7 +143,7 @@ class StudySessionControllerTests {
                 .header("HX-Request", "true")
                 .session(session)
                 .param("cardId", String.valueOf(card.cardId()))
-                .param("isCorrect", "true"))
+                .param("grade", "GOOD"))
             .andExpect(status().isOk())
             .andExpect(view().name("fragments/study-complete :: studyComplete"));
     }
@@ -165,7 +170,7 @@ class StudySessionControllerTests {
         mockMvc.perform(post("/session/answer").session(session).with(csrf())
                 .principal(() -> "alice")
                 .header("HX-Request", "true")
-                .param("cardId", "101").param("isCorrect", "true"))
+                .param("cardId", "101").param("grade", "GOOD"))
             .andExpect(status().isOk());
 
         verify(savedSessionService).discard(user);
@@ -188,6 +193,7 @@ class StudySessionControllerTests {
         when(studySessionService.isComplete(after)).thenReturn(false);
         when(studySessionService.nextCard(any())).thenReturn(c1);
         when(flashcardService.getFlashcardForUser(eq(101L), eq(user))).thenReturn(new Flashcard());
+        when(flashcardService.getFlashcardOptional(any())).thenReturn(java.util.Optional.empty());
 
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("studySessionState", before);
@@ -195,7 +201,7 @@ class StudySessionControllerTests {
         mockMvc.perform(post("/session/answer").session(session).with(csrf())
                 .principal(() -> "alice")
                 .header("HX-Request", "true")
-                .param("cardId", "101").param("isCorrect", "true"))
+                .param("cardId", "101").param("grade", "GOOD"))
             .andExpect(status().isOk());
 
         verify(savedSessionService).saveFlashcards(user, after);

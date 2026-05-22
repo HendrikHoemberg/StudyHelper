@@ -1,7 +1,3 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
-<body>
-
 <div th:fragment="studyCard" id="study-session-content" class="sh-fade-in sh-study-card-root sh-study-session-active">
 
     <div th:if="${studyError}" class="sh-alert sh-alert-danger">
@@ -32,7 +28,8 @@
     <!-- Flip card -->
     <div class="sh-study-card-shell">
         <div class="sh-flip-container sh-study-flip-container">
-            <div class="sh-flip-card sh-study-flip-card" th:data-card-id="${currentCard.cardId}">
+            <div class="sh-flip-card sh-study-flip-card" th:data-card-id="${currentCard.cardId}"
+                 onclick="if(!event.target.closest('.sh-study-grade-bar')){this.classList.toggle('flipped');}">
 
                 <!-- Front face -->
                 <div class="sh-flip-face sh-flip-front">
@@ -45,8 +42,8 @@
                     </div>
                     <button type="button" class="sh-btn sh-btn-primary sh-study-reveal-btn"
                             style="min-width:160px;justify-content:center;"
-                            onclick="this.closest('.sh-flip-card').classList.add('flipped')">
-                        Reveal Answer
+                            onclick="event.stopPropagation(); this.closest('.sh-flip-card').classList.add('flipped')">
+                        Tap to reveal
                     </button>
                 </div>
 
@@ -59,46 +56,49 @@
                         <div th:if="${currentCard.backText != null and !#strings.isEmpty(currentCard.backText)}"
                              class="sh-study-face-text" th:text="${currentCard.backText}">Back text</div>
                     </div>
-                    <div class="sh-study-answer-controls">
-                        <form method="post"
-                               hx-post="/session/answer"
-                               hx-target="#study-session-content"
-                               hx-swap="outerHTML swap:500ms">
+                    <div class="sh-study-grade-bar" onclick="event.stopPropagation();">
+                        <form method="post" hx-post="/session/answer"
+                              hx-target="#study-session-content" hx-swap="outerHTML swap:500ms">
                             <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
-                            <input type="hidden" name="isCorrect" value="true">
-                            <button type="submit" class="sh-study-btn-answer sh-study-btn-correct"
-                                    title="Correct">
-                                <iconify-icon icon="lucide:check"></iconify-icon>
+                            <input type="hidden" name="grade" value="AGAIN">
+                            <button type="submit" class="sh-study-grade sh-grade-again">
+                                <span class="sh-grade-label">Again</span>
+                                <span class="sh-grade-hint" th:text="${previewAgain}">today</span>
                             </button>
                         </form>
-
-                        <button type="button" class="sh-study-btn-flip" 
-                                title="Flip back"
-                                onclick="this.closest('.sh-flip-card').classList.remove('flipped')">
-                            <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
-                        </button>
-
-                        <form method="post"
-                               hx-post="/session/answer"
-                               hx-target="#study-session-content"
-                               hx-swap="outerHTML swap:500ms">
+                        <form method="post" hx-post="/session/answer"
+                              hx-target="#study-session-content" hx-swap="outerHTML swap:500ms">
                             <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
-                            <input type="hidden" name="isCorrect" value="false">
-                            <button type="submit" class="sh-study-btn-answer sh-study-btn-incorrect"
-                                    title="Incorrect">
-                                <iconify-icon icon="lucide:x"></iconify-icon>
+                            <input type="hidden" name="grade" value="HARD">
+                            <button type="submit" class="sh-study-grade sh-grade-hard">
+                                <span class="sh-grade-label">Hard</span>
+                                <span class="sh-grade-hint" th:text="${previewHard}">2d</span>
+                            </button>
+                        </form>
+                        <form method="post" hx-post="/session/answer"
+                              hx-target="#study-session-content" hx-swap="outerHTML swap:500ms">
+                            <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
+                            <input type="hidden" name="grade" value="GOOD">
+                            <button type="submit" class="sh-study-grade sh-grade-good">
+                                <span class="sh-grade-label">Good</span>
+                                <span class="sh-grade-hint" th:text="${previewGood}">6d</span>
+                            </button>
+                        </form>
+                        <form method="post" hx-post="/session/answer"
+                              hx-target="#study-session-content" hx-swap="outerHTML swap:500ms">
+                            <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
+                            <input type="hidden" name="grade" value="EASY">
+                            <button type="submit" class="sh-study-grade sh-grade-easy">
+                                <span class="sh-grade-label">Easy</span>
+                                <span class="sh-grade-hint" th:text="${previewEasy}">10d</span>
                             </button>
                         </form>
                     </div>
+                    <div th:if="${isPractice}" class="sh-study-practice-note">Practice — answers won't affect your schedule</div>
                 </div>
 
             </div>
         </div>
     </div>
 
-
-
 </div>
-
-</body>
-</html>

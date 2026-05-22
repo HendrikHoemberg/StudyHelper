@@ -10,6 +10,7 @@ import com.HendrikHoemberg.StudyHelper.dto.StudySessionStats;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.FlashcardService;
 import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
+import com.HendrikHoemberg.StudyHelper.service.SrsScheduler;
 import com.HendrikHoemberg.StudyHelper.service.StudyLogService;
 import com.HendrikHoemberg.StudyHelper.service.StudySessionService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
@@ -43,17 +44,20 @@ public class StudySessionController {
     private final UserService userService;
     private final SavedSessionService savedSessionService;
     private final StudyLogService studyLogService;
+    private final SrsScheduler srsScheduler;
 
     public StudySessionController(StudySessionService studySessionService,
                                   FlashcardService flashcardService,
                                   UserService userService,
                                   SavedSessionService savedSessionService,
-                                  StudyLogService studyLogService) {
+                                  StudyLogService studyLogService,
+                                  SrsScheduler srsScheduler) {
         this.studySessionService = studySessionService;
         this.flashcardService = flashcardService;
         this.userService = userService;
         this.savedSessionService = savedSessionService;
         this.studyLogService = studyLogService;
+        this.srsScheduler = srsScheduler;
     }
 
     @GetMapping("/study/resume")
@@ -227,6 +231,23 @@ public class StudySessionController {
         model.addAttribute("currentCardNumber", state.currentIndex() + 1);
         model.addAttribute("totalCards", state.queue().size());
         model.addAttribute("studyError", error);
+
+        java.time.LocalDate today = java.time.LocalDate.now();
+        flashcardService.getFlashcardOptional(currentCard.cardId()).ifPresentOrElse(fc -> {
+            int interval = fc.getIntervalDays() == null ? 0 : fc.getIntervalDays();
+            double ef = fc.getEaseFactor() == null ? SrsScheduler.INITIAL_EF : fc.getEaseFactor();
+            int reps = fc.getRepetitions() == null ? 0 : fc.getRepetitions();
+            model.addAttribute("previewAgain", "today");
+            model.addAttribute("previewHard", srsScheduler.next(interval, ef, reps, Grade.HARD, today).intervalDays() + "d");
+            model.addAttribute("previewGood", srsScheduler.next(interval, ef, reps, Grade.GOOD, today).intervalDays() + "d");
+            model.addAttribute("previewEasy", srsScheduler.next(interval, ef, reps, Grade.EASY, today).intervalDays() + "d");
+        }, () -> {
+            model.addAttribute("previewAgain", "today");
+            model.addAttribute("previewHard", "");
+            model.addAttribute("previewGood", "");
+            model.addAttribute("previewEasy", "");
+        });
+        model.addAttribute("isPractice", state.config().practice());
     }
 
     private void prepareCompletionModel(Model model, StudySessionState state) {

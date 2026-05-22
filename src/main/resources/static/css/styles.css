@@ -6929,3 +6929,46 @@ iconify-icon {
         margin-top: 4px;
     }
 }
+
+.sh-study-grade-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+.sh-study-grade-bar form { margin: 0; display: flex; }
+.sh-study-grade {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    padding: 0.7rem 0.3rem;
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 56px;
+    transition: filter 120ms ease, transform 80ms ease;
+}
+.sh-study-grade:active { transform: scale(0.97); }
+.sh-study-grade:hover { filter: brightness(1.08); }
+.sh-grade-label { font-size: 0.95rem; }
+.sh-grade-hint { font-size: 0.72rem; opacity: 0.85; }
+.sh-grade-again { background: #e5484d; }
+.sh-grade-hard  { background: #f5a623; }
+.sh-grade-good  { background: #30a46c; }
+.sh-grade-easy  { background: #4593e6; }
+.sh-study-practice-note {
+    margin-top: 0.6rem;
+    text-align: center;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+@media (max-width: 380px) {
+    .sh-grade-hint { display: none; }
+    .sh-study-grade { min-height: 48px; }
+}

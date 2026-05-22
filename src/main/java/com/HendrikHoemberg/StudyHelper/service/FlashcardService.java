@@ -142,6 +142,11 @@ public class FlashcardService {
     }
 
     @Transactional(readOnly = true)
+    public java.util.Optional<Flashcard> getFlashcardOptional(Long id) {
+        return flashcardRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
     public Flashcard getFlashcardForUser(Long cardId, User user) {
         return flashcardRepository.findByIdAndDeckUserUsername(cardId, user.getUsername())
             .orElseThrow(() -> new ResourceNotFoundException("Flashcard not found"));
