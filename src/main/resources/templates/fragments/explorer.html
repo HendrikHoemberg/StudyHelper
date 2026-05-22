@@ -47,19 +47,46 @@
                     <th:block th:replace="~{fragments/saved-session :: card}"></th:block>
                 </th:block>
 
+                <div class="sh-review-banner" th:if="${vm.dueTodayCount() > 0 or vm.reviewMistakesCount() > 0}">
+                    <a th:if="${vm.dueTodayCount() > 0}" class="sh-review-card" href="#"
+                        hx-post="/study/start-due" hx-target="#explorer-detail" hx-push-url="true">
+                        <span class="sh-review-card-icon">
+                            <iconify-icon icon="lucide:alarm-clock"></iconify-icon>
+                        </span>
+                        <span class="sh-review-card-body">
+                            <div class="sh-review-card-title-row">
+                                <span class="sh-review-card-title">Due today</span>
+                                <span class="sh-review-card-badge">
+                                    <span th:text="${vm.dueTodayCount()}">0</span> due
+                                </span>
+                            </div>
+                            <span class="sh-review-card-meta">Cards scheduled for review</span>
+                        </span>
+                        <span class="sh-review-card-cta">Study now</span>
+                    </a>
+
+                    <a th:if="${vm.reviewMistakesCount() > 0}" class="sh-review-card" href="#"
+                        hx-post="/study/review-mistakes" hx-target="#explorer-detail" hx-push-url="true">
+                        <span class="sh-review-card-icon">
+                            <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
+                        </span>
+                        <span class="sh-review-card-body">
+                            <div class="sh-review-card-title-row">
+                                <span class="sh-review-card-title">Review mistakes</span>
+                                <span class="sh-review-card-badge">
+                                    <span th:text="${vm.reviewMistakesCount()}">0</span> due
+                                </span>
+                            </div>
+                            <span class="sh-review-card-meta">Practice cards you got wrong</span>
+                        </span>
+                        <span class="sh-review-card-cta">Study now</span>
+                    </a>
+                </div>
+
                 <!-- Action tiles row wrapped in an extra container for better visibility and coherence -->
                 <div class="sh-action-tiles-wrapper">
                     <div class="sh-action-tile-row">
-                        <a class="sh-action-tile sh-action-tile-review" th:href="@{/study/start(mode='FLASHCARDS')}"
-                            th:hx-get="@{/study/start(mode='FLASHCARDS')}" hx-target="#explorer-detail" hx-push-url="true">
-                            <div class="sh-action-tile-icon">
-                                <iconify-icon icon="lucide:alarm-clock"></iconify-icon>
-                            </div>
-                            <div class="sh-action-tile-body">
-                                <span class="sh-action-tile-label">Review</span>
-                                <span class="sh-action-tile-hint" th:text="${vm.dueTodayCount()} + ' due today'">0 due today</span>
-                            </div>
-                        </a>
+
                         <a class="sh-action-tile sh-action-tile-study" href="/study/start" hx-get="/study/start" hx-target="#explorer-detail"
                             hx-push-url="true">
                             <div class="sh-action-tile-icon">
@@ -93,28 +120,7 @@
                     </div>
                 </div>
 
-                <!-- Mobile/Splitscreen Alerts & High Priority CTAs -->
-                <div class="sh-dashboard-alerts-mobile">
-                    <!-- Review mistakes card (Mobile/Splitscreen version) -->
-                    <a th:if="${vm.reviewMistakesCount() > 0}" class="sh-review-card sh-review-card-mobile" href="#"
-                        hx-post="/study/review-mistakes" hx-target="#explorer-detail" hx-push-url="true">
-                        <span class="sh-review-card-icon">
-                            <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
-                        </span>
-                        <span class="sh-review-card-body">
-                            <div class="sh-review-card-title-row">
-                                <span class="sh-review-card-title">Review mistakes</span>
-                                <span class="sh-review-card-badge">
-                                    <span th:text="${vm.reviewMistakesCount()}">0</span> due
-                                </span>
-                            </div>
-                            <span class="sh-review-card-meta">
-                                Practice cards you got wrong in previous sessions
-                            </span>
-                        </span>
-                        <span class="sh-review-card-cta">Study now</span>
-                    </a>
-                </div>
+
 
                 <!-- Pinned decks rail -->
                 <section th:if="${!vm.pinnedDecks().isEmpty()}" class="sh-dashboard-section sh-pinned-decks-section">
@@ -207,25 +213,7 @@
                     </div>
                 </section>
 
-                <!-- Review mistakes card (Desktop Sidebar version) -->
-                <a th:if="${vm.reviewMistakesCount() > 0}" class="sh-review-card sh-review-card-desktop" href="#"
-                    hx-post="/study/review-mistakes" hx-target="#explorer-detail" hx-push-url="true">
-                    <span class="sh-review-card-icon">
-                        <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
-                    </span>
-                    <span class="sh-review-card-body">
-                        <div class="sh-review-card-title-row">
-                            <span class="sh-review-card-title">Review mistakes</span>
-                            <span class="sh-review-card-badge">
-                                <span th:text="${vm.reviewMistakesCount()}">0</span> due
-                            </span>
-                        </div>
-                        <span class="sh-review-card-meta">
-                            Practice incorrect cards
-                        </span>
-                    </span>
-                    <span class="sh-review-card-cta">Study now</span>
-                </a>
+
 
 
 

@@ -853,6 +853,34 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void dashboardUsesMergedDueAndMistakesBannerInsteadOfLegacyReviewSurfaces() throws IOException {
+        String template = resource("templates/fragments/explorer.html");
+        String styles = resource("static/css/styles.css");
+
+        assertThat(template)
+            .contains("class=\"sh-review-banner\"")
+            .contains("th:if=\"${vm.dueTodayCount() > 0 or vm.reviewMistakesCount() > 0}\"")
+            .contains("hx-post=\"/study/start-due\"")
+            .contains("Due today")
+            .contains("Cards scheduled for review")
+            .contains("hx-post=\"/study/review-mistakes\"")
+            .contains("Review mistakes")
+            .contains("Practice cards you got wrong")
+            .doesNotContain("sh-action-tile-review")
+            .doesNotContain("sh-review-card-mobile")
+            .doesNotContain("sh-review-card-desktop");
+
+        assertThat(template.indexOf("class=\"sh-review-banner\""))
+            .isLessThan(template.indexOf("class=\"sh-action-tiles-wrapper\""));
+
+        assertThat(styles)
+            .contains(".sh-review-banner")
+            .doesNotContain(".sh-action-tile-review")
+            .doesNotContain(".sh-review-card-mobile")
+            .doesNotContain(".sh-review-card-desktop");
+    }
+
+    @Test
     void quizQuestionShowsDistinctMultipleSelectVisualCueWithoutChangingSingleChoiceMarkers() throws IOException {
         String template = resource("templates/fragments/quiz-question.html");
         String styles = resource("static/css/quiz.css");
