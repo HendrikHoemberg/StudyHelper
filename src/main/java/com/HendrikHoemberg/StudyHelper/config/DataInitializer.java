@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.config;
 
+import com.HendrikHoemberg.StudyHelper.service.SrsSeedingService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 public class DataInitializer implements CommandLineRunner {
 
     private final UserService userService;
+    private final SrsSeedingService srsSeedingService;
 
     @Value("${app.user1.username}")
     private String user1Name;
@@ -22,8 +24,9 @@ public class DataInitializer implements CommandLineRunner {
     @Value("${app.user2.password}")
     private String user2Password;
 
-    public DataInitializer(UserService userService) {
+    public DataInitializer(UserService userService, SrsSeedingService srsSeedingService) {
         this.userService = userService;
+        this.srsSeedingService = srsSeedingService;
     }
 
     @Override
@@ -31,5 +34,6 @@ public class DataInitializer implements CommandLineRunner {
         userService.createIfNotExists(user1Name, user1Password);
         userService.createIfNotExists(user2Name, user2Password);
         userService.promoteToAdminIfPresent(user1Name);
+        srsSeedingService.seedUnscheduledCards();
     }
 }
