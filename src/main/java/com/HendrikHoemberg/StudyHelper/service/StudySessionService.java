@@ -212,7 +212,8 @@ public class StudySessionService {
             ? DeckOrderMode.SELECTED_ORDER
             : rawConfig.deckOrderMode();
 
-        return new StudySessionConfig(normalizedDeckIds, mode, deckOrder);
+        int newCardsPerDay = rawConfig.newCardsPerDay() <= 0 ? 20 : rawConfig.newCardsPerDay();
+        return new StudySessionConfig(normalizedDeckIds, mode, deckOrder, rawConfig.practice(), newCardsPerDay);
     }
 
     private List<Long> normalizeDeckIds(List<Long> deckIds) {

@@ -88,7 +88,7 @@ class StudyLogServiceTests {
         StudyCardView v2 = new StudyCardView(card2.getId(), "F2", "B2", deck.getId(), "Anatomy", "Root / Anatomy", "#000", "layers", null, null);
 
         StudySessionState state = new StudySessionState(
-            new StudySessionConfig(List.of(deck.getId()), com.HendrikHoemberg.StudyHelper.dto.SessionMode.DECK_BY_DECK, com.HendrikHoemberg.StudyHelper.dto.DeckOrderMode.SELECTED_ORDER),
+            new StudySessionConfig(List.of(deck.getId()), com.HendrikHoemberg.StudyHelper.dto.SessionMode.DECK_BY_DECK, com.HendrikHoemberg.StudyHelper.dto.DeckOrderMode.SELECTED_ORDER, false, 20),
             Map.of(deck.getId(), List.of(v1, v2)),
             List.of(v1, v2),
             2, 2, 1, 1, List.of(card2.getId())
@@ -129,7 +129,7 @@ class StudyLogServiceTests {
         StudyCardView v1 = new StudyCardView(card1.getId(), "F1", "B1", deck.getId(), "Anatomy", "Root / Anatomy", "#000", "layers", null, null);
         StudyCardView v2 = new StudyCardView(card2.getId(), "F2", "B2", deck.getId(), "Anatomy", "Root / Anatomy", "#000", "layers", null, null);
         StudySessionState state = new StudySessionState(
-            new StudySessionConfig(List.of(deck.getId()), com.HendrikHoemberg.StudyHelper.dto.SessionMode.DECK_BY_DECK, com.HendrikHoemberg.StudyHelper.dto.DeckOrderMode.SELECTED_ORDER),
+            new StudySessionConfig(List.of(deck.getId()), com.HendrikHoemberg.StudyHelper.dto.SessionMode.DECK_BY_DECK, com.HendrikHoemberg.StudyHelper.dto.DeckOrderMode.SELECTED_ORDER, false, 20),
             Map.of(deck.getId(), List.of(v1, v2)),
             List.of(v1, v2),
             2, 2, 1, 1, List.of(card2.getId())

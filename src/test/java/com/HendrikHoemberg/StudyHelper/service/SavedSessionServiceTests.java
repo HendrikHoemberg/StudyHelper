@@ -149,7 +149,7 @@ class SavedSessionServiceTests {
         StudyCardView c1 = new StudyCardView(101L, "f1", "b1", 10L, "Deck A", "Root / A", "#fff", null, null, null);
         StudyCardView c2 = new StudyCardView(102L, "f2", "b2", 10L, "Deck A", "Root / A", "#fff", null, null, null);
         StudyCardView c3 = new StudyCardView(103L, "f3", "b3", 10L, "Deck A", "Root / A", "#fff", null, null, null);
-        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER);
+        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER, false, 20);
         StudySessionState state = new StudySessionState(
             config,
             Map.of(10L, List.of(c1, c2, c3)),
@@ -171,7 +171,7 @@ class SavedSessionServiceTests {
     void reconcileFlashcards_dropsEmptyDecks() {
         StudyCardView c1 = new StudyCardView(101L, "f1", "b1", 10L, "Deck A", "Root / A", "#fff", null, null, null);
         StudyCardView c2 = new StudyCardView(102L, "f2", "b2", 20L, "Deck B", "Root / B", "#fff", null, null, null);
-        StudySessionConfig config = new StudySessionConfig(List.of(10L, 20L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER);
+        StudySessionConfig config = new StudySessionConfig(List.of(10L, 20L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER, false, 20);
         Map<Long, List<StudyCardView>> by = new LinkedHashMap<>();
         by.put(10L, List.of(c1));
         by.put(20L, List.of(c2));
@@ -198,7 +198,7 @@ class SavedSessionServiceTests {
     private StudySessionState sampleFlashcardState() {
         StudyCardView c1 = new StudyCardView(101L, "f1", "b1", 10L, "Deck A", "Root / A", "#fff", null, null, null);
         StudyCardView c2 = new StudyCardView(102L, "f2", "b2", 10L, "Deck A", "Root / A", "#fff", null, null, null);
-        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER);
+        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER, false, 20);
         return new StudySessionState(
             config,
             Map.of(10L, List.of(c1, c2)),

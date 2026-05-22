@@ -58,7 +58,9 @@ class StudySessionServiceTests {
         StudySessionConfig config = new StudySessionConfig(
             List.of(20L, 10L),
             SessionMode.DECK_BY_DECK,
-            DeckOrderMode.SELECTED_ORDER
+            DeckOrderMode.SELECTED_ORDER,
+            false,
+            20
         );
 
         when(deckService.getValidatedDecksInRequestedOrder(config.selectedDeckIds(), user))
@@ -87,7 +89,9 @@ class StudySessionServiceTests {
         StudySessionConfig config = new StudySessionConfig(
             List.of(1L, 2L, 3L),
             SessionMode.DECK_BY_DECK,
-            DeckOrderMode.RANDOMIZED_ORDER
+            DeckOrderMode.RANDOMIZED_ORDER,
+            false,
+            20
         );
 
         when(deckService.getValidatedDecksInRequestedOrder(config.selectedDeckIds(), user))
@@ -114,7 +118,9 @@ class StudySessionServiceTests {
         StudySessionConfig config = new StudySessionConfig(
             List.of(1L, 2L),
             SessionMode.SHUFFLED,
-            DeckOrderMode.SELECTED_ORDER
+            DeckOrderMode.SELECTED_ORDER,
+            false,
+            20
         );
 
         when(deckService.getValidatedDecksInRequestedOrder(config.selectedDeckIds(), user))
@@ -132,7 +138,7 @@ class StudySessionServiceTests {
     @Test
     void buildStats_ComputesTotalsAndPercentage() {
         StudySessionState state = new StudySessionState(
-            new StudySessionConfig(List.of(1L), SessionMode.SHUFFLED, DeckOrderMode.SELECTED_ORDER),
+            new StudySessionConfig(List.of(1L), SessionMode.SHUFFLED, DeckOrderMode.SELECTED_ORDER, false, 20),
             Map.of(),
             List.of(),
             2,
@@ -162,7 +168,9 @@ class StudySessionServiceTests {
         StudySessionConfig config = new StudySessionConfig(
             List.of(1L, 2L),
             SessionMode.SHUFFLED,
-            DeckOrderMode.SELECTED_ORDER
+            DeckOrderMode.SELECTED_ORDER,
+            false,
+            20
         );
 
         when(deckService.getValidatedDecksInRequestedOrder(config.selectedDeckIds(), user))
@@ -194,7 +202,7 @@ class StudySessionServiceTests {
         );
 
         StudySessionState state = new StudySessionState(
-            new StudySessionConfig(List.of(1L), SessionMode.SHUFFLED, DeckOrderMode.SELECTED_ORDER),
+            new StudySessionConfig(List.of(1L), SessionMode.SHUFFLED, DeckOrderMode.SELECTED_ORDER, false, 20),
             Map.of(1L, List.of(view)),
             List.of(view),
             0, 0, 0, 0, List.of()
@@ -219,7 +227,7 @@ class StudySessionServiceTests {
         );
 
         StudySessionState state = new StudySessionState(
-            new StudySessionConfig(List.of(1L), SessionMode.SHUFFLED, DeckOrderMode.SELECTED_ORDER),
+            new StudySessionConfig(List.of(1L), SessionMode.SHUFFLED, DeckOrderMode.SELECTED_ORDER, false, 20),
             Map.of(1L, List.of(view)),
             List.of(view),
             0, 0, 0, 0, List.of()
@@ -245,7 +253,7 @@ class StudySessionServiceTests {
         );
 
         StudySessionState state = new StudySessionState(
-            new StudySessionConfig(List.of(1L), SessionMode.SHUFFLED, DeckOrderMode.SELECTED_ORDER),
+            new StudySessionConfig(List.of(1L), SessionMode.SHUFFLED, DeckOrderMode.SELECTED_ORDER, false, 20),
             Map.of(1L, List.of(view)),
             List.of(view),
             0, 0, 0, 0, List.of()

@@ -149,7 +149,7 @@ class StudySessionControllerTests {
         when(userService.getByUsername("alice")).thenReturn(user);
 
         StudyCardView card = new StudyCardView(101L, "f", "b", 10L, "Deck", "Root", "#fff", null, null, null);
-        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER);
+        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER, false, 20);
         StudySessionState before = new StudySessionState(config, Map.of(10L, List.of(card)), List.of(card), 0, 0, 0, 0, List.of());
         StudySessionState after = new StudySessionState(config, Map.of(10L, List.of(card)), List.of(card), 1, 1, 1, 0, List.of());
 
@@ -179,7 +179,7 @@ class StudySessionControllerTests {
 
         StudyCardView c1 = new StudyCardView(101L, "f1", "b1", 10L, "Deck", "Root", "#fff", null, null, null);
         StudyCardView c2 = new StudyCardView(102L, "f2", "b2", 10L, "Deck", "Root", "#fff", null, null, null);
-        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER);
+        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER, false, 20);
         StudySessionState before = new StudySessionState(config, Map.of(10L, List.of(c1, c2)), List.of(c1, c2), 0, 0, 0, 0, List.of());
         StudySessionState after = new StudySessionState(config, Map.of(10L, List.of(c1, c2)), List.of(c1, c2), 1, 1, 1, 0, List.of());
 
@@ -219,7 +219,7 @@ class StudySessionControllerTests {
         when(userService.getByUsername("alice")).thenReturn(user);
 
         StudyCardView c1 = new StudyCardView(101L, "f", "b", 10L, "Deck", "Root", "#fff", null, null, null);
-        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER);
+        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER, false, 20);
         StudySessionState saved = new StudySessionState(config, Map.of(10L, List.of(c1)), List.of(c1), 0, 0, 0, 0, List.of());
         StudySessionState empty = new StudySessionState(config, Map.of(), List.of(), 0, 0, 0, 0, List.of());
 
@@ -242,7 +242,7 @@ class StudySessionControllerTests {
 
         StudyCardView c1 = new StudyCardView(101L, "f", "b", 10L, "Deck", "Root", "#fff", null, null, null);
         StudyCardView c2 = new StudyCardView(102L, "f", "b", 10L, "Deck", "Root", "#fff", null, null, null);
-        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER);
+        StudySessionConfig config = new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER, false, 20);
         StudySessionState saved = new StudySessionState(config, Map.of(10L, List.of(c1, c2)), List.of(c1, c2), 0, 0, 0, 0, List.of());
         StudySessionState reconciled = new StudySessionState(config, Map.of(10L, List.of(c2)), List.of(c2), 0, 0, 0, 0, List.of());
 
@@ -262,7 +262,7 @@ class StudySessionControllerTests {
     private StudySessionState activeState() {
         StudyCardView card = new StudyCardView(10L, "Q", "A", 1L, "Deck", "Root", null, null, null, null);
         return new StudySessionState(
-            new StudySessionConfig(List.of(1L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER),
+            new StudySessionConfig(List.of(1L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER, false, 20),
             Map.of(1L, List.of(card)),
             List.of(card),
             0,

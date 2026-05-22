@@ -143,6 +143,7 @@ class StudyControllerTests {
             new MockHttpServletRequest(),
             SessionMode.DECK_BY_DECK,
             DeckOrderMode.SELECTED_ORDER,
+            false,
             null,
             QuizQuestionMode.MCQ_ONLY,
             Difficulty.MEDIUM,
@@ -191,6 +192,7 @@ class StudyControllerTests {
             new MockHttpServletRequest(),
             SessionMode.DECK_BY_DECK,
             DeckOrderMode.SELECTED_ORDER,
+            false,
             null,
             QuizQuestionMode.MCQ_ONLY,
             Difficulty.MEDIUM,
@@ -346,7 +348,7 @@ class StudyControllerTests {
         String view = controller.createSession(
             StudyMode.FLASHCARDS, List.of(10L), List.of(), null,
             new MockHttpServletRequest(), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER,
-            null, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, 5,
+            false, null, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, 5,
             ExamQuestionSize.MEDIUM, 5, null, ExamLayout.PER_PAGE,
             false, model, () -> "alice", new MockHttpSession(), response, "true"
         );
@@ -361,7 +363,7 @@ class StudyControllerTests {
         when(userService.getByUsername("alice")).thenReturn(user);
         when(studySessionService.buildSession(any(), eq(user))).thenReturn(
             new StudySessionState(
-                new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER),
+                new StudySessionConfig(List.of(10L), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER, false, 20),
                 Map.of(), List.of(), 0, 0, 0, 0, List.of())
         );
 
@@ -371,7 +373,7 @@ class StudyControllerTests {
         String view = controller.createSession(
             StudyMode.FLASHCARDS, List.of(10L), List.of(), null,
             new MockHttpServletRequest(), SessionMode.DECK_BY_DECK, DeckOrderMode.SELECTED_ORDER,
-            null, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, 5,
+            false, null, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, 5,
             ExamQuestionSize.MEDIUM, 5, null, ExamLayout.PER_PAGE,
             true, model, () -> "alice", new MockHttpSession(), response, "true"
         );

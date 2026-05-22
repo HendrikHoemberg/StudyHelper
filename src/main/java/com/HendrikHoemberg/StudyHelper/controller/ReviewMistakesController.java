@@ -62,7 +62,9 @@ public class ReviewMistakesController {
         StudySessionConfig config = new StudySessionConfig(
             List.copyOf(byDeck.keySet()),
             SessionMode.SHUFFLED,
-            DeckOrderMode.SELECTED_ORDER
+            DeckOrderMode.SELECTED_ORDER,
+            true,
+            0
         );
         StudySessionState state = new StudySessionState(
             config,

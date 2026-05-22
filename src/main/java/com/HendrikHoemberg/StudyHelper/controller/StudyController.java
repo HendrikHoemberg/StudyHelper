@@ -175,6 +175,7 @@ public class StudyController {
                                 // Flashcard params
                                 @RequestParam(defaultValue = "DECK_BY_DECK") SessionMode sessionMode,
                                 @RequestParam(defaultValue = "SELECTED_ORDER") DeckOrderMode deckOrderMode,
+                                @RequestParam(defaultValue = "false") boolean practice,
                                 @RequestParam(required = false) String orderedDeckIds,
                                 // Quiz params
                                 @RequestParam(defaultValue = "MCQ_ONLY") QuizQuestionMode quizQuestionMode,
@@ -213,7 +214,7 @@ public class StudyController {
         if (mode == StudyMode.FLASHCARDS) {
             try {
                 List<Long> orderedSelection = resolveOrderedSelection(selectedDeckIds, orderedDeckIds, sessionMode);
-                StudySessionConfig config = new StudySessionConfig(orderedSelection, sessionMode, deckOrderMode);
+                StudySessionConfig config = new StudySessionConfig(orderedSelection, sessionMode, deckOrderMode, practice, 20);
                 StudySessionState state = studySessionService.buildSession(config, user);
                 savedSessionService.discard(user);
                 session.setAttribute("studySessionState", state);
@@ -320,7 +321,7 @@ public class StudyController {
                     request.getParameter("orderedDeckIds"),
                     sessionMode
                 );
-                StudySessionConfig config = new StudySessionConfig(orderedSelection, sessionMode, deckOrderMode);
+                StudySessionConfig config = new StudySessionConfig(orderedSelection, sessionMode, deckOrderMode, false, 20);
                 studySessionService.buildSession(config, user);
             }
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
