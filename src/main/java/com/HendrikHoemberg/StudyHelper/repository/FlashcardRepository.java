@@ -56,6 +56,21 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
 
     @Query("""
         select count(f) from Flashcard f
+        where f.deck.user = :user
+          and f.dueDate is not null and f.dueDate <= :today
+        """)
+    long countDueReviewsByUser(@Param("user") User user,
+                               @Param("today") java.time.LocalDate today);
+
+    @Query("""
+        select count(f) from Flashcard f
+        where f.deck.user = :user
+          and f.dueDate is null
+        """)
+    long countNewByUser(@Param("user") User user);
+
+    @Query("""
+        select count(f) from Flashcard f
         where f.deck = :deck
           and (f.dueDate is null or f.dueDate <= :today)
         """)

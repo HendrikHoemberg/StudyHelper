@@ -42,6 +42,7 @@ class DashboardServiceTests {
         assertThat(vm.recentDecks()).isEmpty();
         assertThat(vm.streakDays()).isZero();
         assertThat(vm.dueTodayCount()).isZero();
+        assertThat(vm.dueTodaySessionCount()).isZero();
         assertThat(vm.todayMinutes()).isZero();
         assertThat(vm.dailyMinuteGoal()).isEqualTo(60);
         assertThat(vm.todayAccuracyPercent()).isNull();
@@ -80,6 +81,7 @@ class DashboardServiceTests {
         assertThat(vm.pinnedDecks().get(0).tagCode()).isEqualTo("INF");
         assertThat(vm.recentDecks()).extracting("deckName").doesNotContain("Stale");
         assertThat(vm.dueTodayCount()).isEqualTo(2);          // both cards are new (null dueDate)
+        assertThat(vm.dueTodaySessionCount()).isEqualTo(2);   // both are studyable in daily session
         assertThat(vm.todayMinutes()).isEqualTo(10);
         assertThat(vm.cardsReviewedToday()).isEqualTo(2);
         assertThat(vm.todayAccuracyPercent()).isEqualTo(50); // 1 of 2

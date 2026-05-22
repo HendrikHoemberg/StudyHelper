@@ -47,7 +47,7 @@
                     <th:block th:replace="~{fragments/saved-session :: card}"></th:block>
                 </th:block>
 
-                <div class="sh-review-banner" th:if="${vm.dueTodayCount() > 0}">
+                <div class="sh-review-banner" th:if="${vm.dueTodaySessionCount() > 0}">
                     <a class="sh-review-card" href="#" hx-post="/study/start-due" hx-target="#explorer-detail" hx-push-url="true">
                         <span class="sh-review-card-main">
                             <span class="sh-review-card-icon">
@@ -57,7 +57,7 @@
                                 <div class="sh-review-card-title-row">
                                     <span class="sh-review-card-title">Due today</span>
                                     <span class="sh-review-card-badge">
-                                        <span th:text="${vm.dueTodayCount()}">0</span> due
+                                        <span th:text="${vm.dueTodaySessionCount()}">0</span> due
                                     </span>
                                 </div>
                                 <span class="sh-review-card-meta">Cards scheduled for review</span>

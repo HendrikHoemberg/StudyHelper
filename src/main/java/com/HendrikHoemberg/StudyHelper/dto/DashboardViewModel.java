@@ -11,6 +11,7 @@ public record DashboardViewModel(
     List<DashboardDeckSummary> recentDecks,
     int streakDays,
     long dueTodayCount,
+    long dueTodaySessionCount,
     int todayMinutes,
     int dailyMinuteGoal,
     Integer todayAccuracyPercent,

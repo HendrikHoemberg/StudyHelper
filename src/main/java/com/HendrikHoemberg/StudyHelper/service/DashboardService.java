@@ -10,6 +10,7 @@ import com.HendrikHoemberg.StudyHelper.entity.StudyLog;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.repository.DeckRepository;
 import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
+import com.HendrikHoemberg.StudyHelper.repository.ReviewLogRepository;
 import com.HendrikHoemberg.StudyHelper.repository.StudyLogRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -40,17 +41,20 @@ public class DashboardService {
     private final FlashcardRepository flashcardRepository;
     private final SavedSessionService savedSessionService;
     private final FolderService folderService;
+    private final ReviewLogRepository reviewLogRepository;
 
     public DashboardService(DeckRepository deckRepository,
                             StudyLogRepository studyLogRepository,
                             FlashcardRepository flashcardRepository,
                             SavedSessionService savedSessionService,
-                            FolderService folderService) {
+                            FolderService folderService,
+                            ReviewLogRepository reviewLogRepository) {
         this.deckRepository = deckRepository;
         this.studyLogRepository = studyLogRepository;
         this.flashcardRepository = flashcardRepository;
         this.savedSessionService = savedSessionService;
         this.folderService = folderService;
+        this.reviewLogRepository = reviewLogRepository;
     }
 
     @Transactional(readOnly = true)
@@ -77,6 +81,13 @@ public class DashboardService {
         long dueTodayCount = flashcardRepository.countDueOrNewByUser(user, java.time.LocalDate.now());
 
         LocalDate today = LocalDate.now();
+        long dueReviewsCount = flashcardRepository.countDueReviewsByUser(user, today);
+        long newCardsCount = flashcardRepository.countNewByUser(user);
+        long introducedToday = reviewLogRepository.countNewIntroducedBetween(
+            user, today.atStartOfDay(), today.plusDays(1).atStartOfDay());
+        long remainingNew = Math.max(0, 20 - introducedToday);
+        long dueTodaySessionCount = dueReviewsCount + Math.min(remainingNew, newCardsCount);
+
         LocalDateTime startOfToday = today.atStartOfDay();
         LocalDateTime endOfToday = today.atTime(LocalTime.MAX);
         LocalDateTime startOfWeek = today.minusDays(6).atStartOfDay();
@@ -107,6 +118,7 @@ public class DashboardService {
             recent,
             streakDays,
             dueTodayCount,
+            dueTodaySessionCount,
             todayMinutes,
             DAILY_MINUTE_GOAL,
             todayAccuracyPercent,
