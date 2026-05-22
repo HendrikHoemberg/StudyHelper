@@ -18,6 +18,31 @@ public class SrsScheduler {
     public record SrsState(int intervalDays, double easeFactor, int repetitions, LocalDate dueDate) {}
 
     public SrsState next(int intervalDays, double easeFactor, int repetitions, Grade grade, LocalDate today) {
-        throw new UnsupportedOperationException("not implemented");
+        int q = grade.quality();
+        double newEf = Math.max(MIN_EF,
+            easeFactor + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
+
+        if (grade == Grade.AGAIN) {
+            return new SrsState(0, newEf, 0, today);
+        }
+
+        int newReps = repetitions + 1;
+        int newInterval;
+        if (newReps == 1) {
+            newInterval = FIRST_INTERVAL;
+        } else if (newReps == 2) {
+            newInterval = SECOND_INTERVAL;
+        } else {
+            newInterval = (int) Math.round(intervalDays * newEf);
+        }
+
+        if (grade == Grade.HARD && newReps > 2) {
+            newInterval = Math.max(intervalDays + 1, (int) Math.round(intervalDays * HARD_MULTIPLIER));
+        }
+        if (grade == Grade.EASY) {
+            newInterval = (int) Math.round(newInterval * EASY_BONUS);
+        }
+
+        return new SrsState(newInterval, newEf, newReps, today.plusDays(newInterval));
     }
 }
