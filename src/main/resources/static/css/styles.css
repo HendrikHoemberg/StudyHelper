@@ -6330,6 +6330,14 @@ iconify-icon {
     color: #fff;
 }
 
+.sh-review-card-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    min-width: 0;
+}
+
 .sh-review-card-body {
     display: flex;
     flex-direction: column;
@@ -6518,6 +6526,11 @@ iconify-icon {
     .sh-review-card {
         flex-direction: column;
         align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .sh-review-card-main {
+        align-items: flex-start;
         gap: 0.75rem;
     }
 

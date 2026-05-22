@@ -859,6 +859,7 @@ class UiResourceRegressionTests {
 
         assertThat(template)
             .contains("class=\"sh-review-banner\"")
+            .contains("class=\"sh-review-card-main\"")
             .contains("th:if=\"${vm.dueTodayCount() > 0}\"")
             .contains("hx-post=\"/study/start-due\"")
             .contains("Due today")
@@ -876,6 +877,7 @@ class UiResourceRegressionTests {
 
         assertThat(styles)
             .contains(".sh-review-banner")
+            .contains(".sh-review-card-main")
             .doesNotContain(".sh-action-tile-review")
             .doesNotContain(".sh-review-card-mobile")
             .doesNotContain(".sh-review-card-desktop");
