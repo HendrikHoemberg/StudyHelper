@@ -11,6 +11,7 @@ import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
+import com.HendrikHoemberg.StudyHelper.repository.ReviewLogRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +32,8 @@ class StudySessionServiceTests {
     private DeckService deckService;
     private FlashcardService flashcardService;
     private FlashcardRepository flashcardRepository;
+    private ReviewLogRepository reviewLogRepository;
+    private SrsScheduler srsScheduler;
     private StudySessionService studySessionService;
     private User user;
 
@@ -39,7 +42,9 @@ class StudySessionServiceTests {
         deckService = mock(DeckService.class);
         flashcardService = mock(FlashcardService.class);
         flashcardRepository = mock(FlashcardRepository.class);
-        studySessionService = new StudySessionService(deckService, flashcardService, flashcardRepository, new Random(42));
+        reviewLogRepository = mock(ReviewLogRepository.class);
+        srsScheduler = mock(SrsScheduler.class);
+        studySessionService = new StudySessionService(deckService, flashcardService, flashcardRepository, reviewLogRepository, srsScheduler, new Random(42));
 
         user = new User();
         user.setId(1L);

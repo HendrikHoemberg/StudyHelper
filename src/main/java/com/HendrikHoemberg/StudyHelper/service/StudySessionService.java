@@ -11,6 +11,7 @@ import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
+import com.HendrikHoemberg.StudyHelper.repository.ReviewLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,22 +32,30 @@ public class StudySessionService {
     private final DeckService deckService;
     private final FlashcardService flashcardService;
     private final FlashcardRepository flashcardRepository;
+    private final ReviewLogRepository reviewLogRepository;
+    private final SrsScheduler srsScheduler;
     private final Random random;
 
     @Autowired
     public StudySessionService(DeckService deckService,
                                FlashcardService flashcardService,
-                               FlashcardRepository flashcardRepository) {
-        this(deckService, flashcardService, flashcardRepository, new Random());
+                               FlashcardRepository flashcardRepository,
+                               ReviewLogRepository reviewLogRepository,
+                               SrsScheduler srsScheduler) {
+        this(deckService, flashcardService, flashcardRepository, reviewLogRepository, srsScheduler, new Random());
     }
 
     StudySessionService(DeckService deckService,
                         FlashcardService flashcardService,
                         FlashcardRepository flashcardRepository,
+                        ReviewLogRepository reviewLogRepository,
+                        SrsScheduler srsScheduler,
                         Random random) {
         this.deckService = deckService;
         this.flashcardService = flashcardService;
         this.flashcardRepository = flashcardRepository;
+        this.reviewLogRepository = reviewLogRepository;
+        this.srsScheduler = srsScheduler;
         this.random = random;
     }
 
@@ -55,6 +64,21 @@ public class StudySessionService {
         StudySessionConfig config = normalizeConfig(rawConfig);
         List<Deck> orderedDecks = deckService.getValidatedDecksInRequestedOrder(config.selectedDeckIds(), user);
         Map<Long, List<Flashcard>> groupedCards = flashcardService.getFlashcardsGroupedByDeck(orderedDecks);
+        if (!config.practice()) {
+            java.time.LocalDate today = java.time.LocalDate.now();
+            long introducedToday = reviewLogRepository.countNewIntroducedBetween(
+                user, today.atStartOfDay(), today.plusDays(1).atStartOfDay());
+            long remainingNew = Math.max(0, config.newCardsPerDay() - introducedToday);
+            Map<Long, List<Flashcard>> filtered = new LinkedHashMap<>();
+            for (Deck deck : orderedDecks) {
+                List<Flashcard> deckCards = groupedCards.getOrDefault(deck.getId(), List.of());
+                List<Flashcard> picked = selectScheduledCards(deckCards, today, (int) remainingNew, 0);
+                long newlyTaken = picked.stream().filter(c -> c.getDueDate() == null).count();
+                remainingNew = Math.max(0, remainingNew - newlyTaken);
+                filtered.put(deck.getId(), picked);
+            }
+            groupedCards = filtered;
+        }
         Map<Long, List<StudyCardView>> cardsByDeck = toCardsByDeck(orderedDecks, groupedCards);
 
         ensureCardPoolNotEmpty(cardsByDeck);
@@ -305,5 +329,24 @@ public class StudySessionService {
             current = current.getParentFolder();
         }
         return String.join(" / ", segments);
+    }
+
+    public static List<Flashcard> selectScheduledCards(List<Flashcard> cards,
+                                                java.time.LocalDate today,
+                                                int newCardsPerDay,
+                                                long newAlreadyIntroducedToday) {
+        List<Flashcard> dueReviews = new ArrayList<>();
+        List<Flashcard> newCards = new ArrayList<>();
+        for (Flashcard c : cards) {
+            if (c.getDueDate() == null) {
+                newCards.add(c);
+            } else if (!c.getDueDate().isAfter(today)) {
+                dueReviews.add(c);
+            }
+        }
+        long remainingNew = Math.max(0, newCardsPerDay - newAlreadyIntroducedToday);
+        List<Flashcard> selected = new ArrayList<>(dueReviews);
+        selected.addAll(newCards.stream().limit(remainingNew).toList());
+        return selected;
     }
 }
