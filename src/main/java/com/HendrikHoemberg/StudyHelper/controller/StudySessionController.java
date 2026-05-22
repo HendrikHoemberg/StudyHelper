@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.Grade;
+import com.HendrikHoemberg.StudyHelper.dto.Grade;
 import com.HendrikHoemberg.StudyHelper.dto.SessionMode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyCardView;
 import com.HendrikHoemberg.StudyHelper.dto.StudyMode;
@@ -107,7 +108,7 @@ public class StudySessionController {
 
     @PostMapping("/session/answer")
     public String answer(@RequestParam Long cardId,
-                         @RequestParam boolean isCorrect,
+                         @RequestParam Grade grade,
                          Model model,
                          Principal principal,
                          HttpSession httpSession,
@@ -123,7 +124,6 @@ public class StudySessionController {
 
         try {
             flashcardService.getFlashcardForUser(cardId, user);
-            Grade grade = isCorrect ? Grade.GOOD : Grade.AGAIN;
             StudySessionState nextState = studySessionService.recordAnswer(state, cardId, grade);
             stashAndPersist(httpSession, user, nextState);
             return renderCurrentState(model, user, nextState, hxRequest);
