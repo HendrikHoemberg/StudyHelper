@@ -154,6 +154,32 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void studyModeCardsExposeTutorialTriggersAndContent() throws IOException {
+        String setup = resource("templates/fragments/study-setup.html");
+        // Each mode card carries an info trigger that opens its tutorial without selecting the mode.
+        assertThat(setup)
+            .contains("shOpenTutorial('FLASHCARDS')")
+            .contains("shOpenTutorial('QUIZ')")
+            .contains("shOpenTutorial('EXAM')")
+            .contains("class=\"sh-mode-info\"")
+            .contains("fragments/study-tutorials :: tutorials");
+
+        String tutorials = resource("templates/fragments/study-tutorials.html");
+        assertThat(tutorials)
+            .contains("th:fragment=\"tutorials\"")
+            .contains("id=\"sh-tutorial\"")
+            .contains("id=\"sh-tutorial-body\"")
+            .contains("data-sh-tutorial-cancel")
+            .contains("data-tutorial-content=\"FLASHCARDS\"")
+            .contains("data-tutorial-content=\"QUIZ\"")
+            .contains("data-tutorial-content=\"EXAM\"")
+            // Spot-check that the full-workflow copy actually landed.
+            .contains("Again")                 // flashcards grade button
+            .contains("Practice")              // flashcards practice toggle
+            .contains("grades your answers");  // exam grading workflow
+    }
+
+    @Test
     void savedSessionConflictCancelUsesExplicitReturnUrlInsteadOfBrowserBack() throws IOException {
         String template = resource("templates/fragments/saved-session.html");
 
