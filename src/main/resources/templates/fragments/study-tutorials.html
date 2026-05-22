@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="tutorials">
+
+    <!-- Shared tutorial modal shell -->
+    <div id="sh-tutorial" class="sh-tutorial" role="dialog" aria-modal="true"
+         aria-hidden="true" aria-labelledby="sh-tutorial-title">
+        <div class="sh-tutorial-backdrop" data-sh-tutorial-cancel></div>
+        <div class="sh-tutorial-card" role="document">
+            <div class="sh-tutorial-header">
+                <span class="sh-tutorial-icon" id="sh-tutorial-icon">
+                    <iconify-icon icon="lucide:info"></iconify-icon>
+                </span>
+                <h3 class="sh-tutorial-title" id="sh-tutorial-title">How it works</h3>
+                <button type="button" class="sh-tutorial-close" id="sh-tutorial-close"
+                        aria-label="Close" data-sh-tutorial-cancel>
+                    <iconify-icon icon="lucide:x"></iconify-icon>
+                </button>
+            </div>
+            <div class="sh-tutorial-body" id="sh-tutorial-body"></div>
+        </div>
+    </div>
+
+    <!-- Hidden per-mode content (cloned into the modal body by JS) -->
+    <div class="sh-tutorial-source" data-tutorial-content="FLASHCARDS" hidden>
+        <h4>How it works</h4>
+        <ul>
+            <li>Each session surfaces the cards that are <strong>due</strong> today, plus up to a daily limit of new cards (20). Cards you already know are spaced further out and skipped until they come due.</li>
+            <li>Tap the card to flip between the question and the answer.</li>
+            <li>After revealing the answer, grade yourself with <strong>Again&nbsp;/&nbsp;Hard&nbsp;/&nbsp;Good&nbsp;/&nbsp;Easy</strong>. Each button previews when you'll next see the card (e.g. "Good&nbsp;&middot;&nbsp;6d").</li>
+            <li><strong>Again</strong> re-queues the card later in the same session so you keep seeing it until it sticks; Hard, Good, and Easy schedule it for a future day and remove it from the session.</li>
+        </ul>
+        <h4>Tips</h4>
+        <ul>
+            <li>Grade honestly &mdash; the schedule only helps if it reflects what you actually recall.</li>
+            <li>Turn on the <strong>Practice</strong> toggle to run through cards without changing their schedule (good for last-minute cramming).</li>
+        </ul>
+    </div>
+
+    <div class="sh-tutorial-source" data-tutorial-content="QUIZ" hidden>
+        <h4>How it works</h4>
+        <ul>
+            <li>Pick the decks or files you want to be quizzed on as the source.</li>
+            <li>The AI generates multiple-choice and true/false questions from that material.</li>
+            <li>Answer each question and get immediate scoring as you go.</li>
+            <li>A summary at the end shows how you did.</li>
+        </ul>
+        <h4>Tips</h4>
+        <ul>
+            <li>More source material gives the AI more to draw varied questions from.</li>
+            <li>Use it to check understanding quickly &mdash; it does not change your flashcard schedules.</li>
+        </ul>
+    </div>
+
+    <div class="sh-tutorial-source" data-tutorial-content="EXAM" hidden>
+        <h4>How it works</h4>
+        <ul>
+            <li>Choose your material, then answer <strong>long-form written</strong> questions in your own words.</li>
+            <li>The AI grades your answers and returns a feedback report highlighting what was strong and what to improve.</li>
+        </ul>
+        <h4>Tips</h4>
+        <ul>
+            <li>Best for testing deeper understanding and explanation, not quick recall.</li>
+            <li>Like quizzes, exam performance does not affect your flashcard scheduling.</li>
+        </ul>
+    </div>
+
+</div>
+
+</body>
+</html>
