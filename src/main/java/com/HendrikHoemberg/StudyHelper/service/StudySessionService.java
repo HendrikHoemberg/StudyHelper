@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.DeckOrderMode;
+import com.HendrikHoemberg.StudyHelper.dto.Grade;
 import com.HendrikHoemberg.StudyHelper.dto.SessionMode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyCardView;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionConfig;
@@ -9,6 +10,7 @@ import com.HendrikHoemberg.StudyHelper.dto.StudySessionStats;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
+import com.HendrikHoemberg.StudyHelper.entity.ReviewLog;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
 import com.HendrikHoemberg.StudyHelper.repository.ReviewLogRepository;
@@ -108,7 +110,7 @@ public class StudySessionService {
     }
 
     @Transactional
-    public StudySessionState recordAnswer(StudySessionState state, Long cardId, boolean isCorrect) {
+    public StudySessionState recordAnswer(StudySessionState state, Long cardId, Grade grade) {
         if (state == null) {
             throw new IllegalArgumentException("No active study session.");
         }
@@ -121,33 +123,72 @@ public class StudySessionService {
             throw new IllegalArgumentException("Answer does not match the current card.");
         }
 
-        flashcardRepository.findById(cardId).ifPresent(fc -> {
-            if (isCorrect) {
-                Integer cur = fc.getCorrectStreak();
-                fc.setCorrectStreak((cur == null ? 0 : cur) + 1);
-            } else {
-                fc.setCorrectStreak(0);
-            }
-            flashcardRepository.save(fc);
-        });
+        boolean isCorrect = grade != Grade.AGAIN;
+        boolean practice = state.config().practice();
+
+        if (!practice) {
+            applySchedule(cardId, grade);
+        }
 
         int nextCorrect = state.correctAnswers() + (isCorrect ? 1 : 0);
         int nextIncorrect = state.incorrectAnswers() + (isCorrect ? 0 : 1);
 
+        List<StudyCardView> queue = state.queue();
         List<Long> newIncorrectIds = isCorrect
             ? state.incorrectCardIds()
             : appendId(state.incorrectCardIds(), cardId);
 
+        if (grade == Grade.AGAIN) {
+            List<StudyCardView> requeued = new ArrayList<>(queue);
+            requeued.add(current);
+            queue = List.copyOf(requeued);
+        }
+
         return new StudySessionState(
             state.config(),
             state.cardsByDeck(),
-            state.queue(),
+            queue,
             state.currentIndex() + 1,
             state.totalAnswered() + 1,
             nextCorrect,
             nextIncorrect,
             newIncorrectIds
         );
+    }
+
+    private void applySchedule(Long cardId, Grade grade) {
+        flashcardRepository.findById(cardId).ifPresent(fc -> {
+            boolean wasNew = fc.getDueDate() == null;
+            int interval = fc.getIntervalDays() == null ? 0 : fc.getIntervalDays();
+            double ef = fc.getEaseFactor() == null ? SrsScheduler.INITIAL_EF : fc.getEaseFactor();
+            int reps = fc.getRepetitions() == null ? 0 : fc.getRepetitions();
+
+            SrsScheduler.SrsState result = srsScheduler.next(
+                interval, ef, reps, grade, java.time.LocalDate.now());
+
+            fc.setIntervalDays(result.intervalDays());
+            fc.setEaseFactor(result.easeFactor());
+            fc.setRepetitions(result.repetitions());
+            fc.setDueDate(result.dueDate());
+            fc.setLastReviewedAt(java.time.LocalDateTime.now());
+            if (grade == Grade.AGAIN) {
+                fc.setCorrectStreak(0);
+            } else {
+                Integer cur = fc.getCorrectStreak();
+                fc.setCorrectStreak((cur == null ? 0 : cur) + 1);
+            }
+            flashcardRepository.save(fc);
+
+            ReviewLog log = new ReviewLog();
+            log.setFlashcard(fc);
+            log.setUser(fc.getDeck().getUser());
+            log.setReviewedAt(java.time.LocalDateTime.now());
+            log.setGrade(grade);
+            log.setIntervalDaysAfter(result.intervalDays());
+            log.setEaseFactorAfter(result.easeFactor());
+            log.setWasNew(wasNew);
+            reviewLogRepository.save(log);
+        });
     }
 
     public boolean isComplete(StudySessionState state) {

@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.DeckOrderMode;
+import com.HendrikHoemberg.StudyHelper.dto.Grade;
 import com.HendrikHoemberg.StudyHelper.dto.SessionMode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyCardView;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionConfig;
@@ -23,6 +24,9 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,6 +41,8 @@ class StudySessionServiceTests {
     private StudySessionService studySessionService;
     private User user;
 
+    private static final SrsScheduler.SrsState DUMMY_SRS_STATE = new SrsScheduler.SrsState(1, 2.5, 1, java.time.LocalDate.now().plusDays(1));
+
     @BeforeEach
     void setUp() {
         deckService = mock(DeckService.class);
@@ -44,6 +50,7 @@ class StudySessionServiceTests {
         flashcardRepository = mock(FlashcardRepository.class);
         reviewLogRepository = mock(ReviewLogRepository.class);
         srsScheduler = mock(SrsScheduler.class);
+        when(srsScheduler.next(anyInt(), anyDouble(), anyInt(), any(), any())).thenReturn(DUMMY_SRS_STATE);
         studySessionService = new StudySessionService(deckService, flashcardService, flashcardRepository, reviewLogRepository, srsScheduler, new Random(42));
 
         user = new User();
@@ -215,7 +222,7 @@ class StudySessionServiceTests {
 
         when(flashcardRepository.findById(100L)).thenReturn(Optional.of(card));
 
-        studySessionService.recordAnswer(state, 100L, false);
+        studySessionService.recordAnswer(state, 100L, Grade.AGAIN);
 
         assertThat(card.getCorrectStreak()).isZero();
         verify(flashcardRepository).save(card);
@@ -240,7 +247,7 @@ class StudySessionServiceTests {
 
         when(flashcardRepository.findById(100L)).thenReturn(Optional.of(card));
 
-        studySessionService.recordAnswer(state, 100L, true);
+        studySessionService.recordAnswer(state, 100L, Grade.GOOD);
 
         assertThat(card.getCorrectStreak()).isEqualTo(1);
         verify(flashcardRepository).save(card);
@@ -266,7 +273,7 @@ class StudySessionServiceTests {
 
         when(flashcardRepository.findById(100L)).thenReturn(Optional.of(card));
 
-        studySessionService.recordAnswer(state, 100L, true);
+        studySessionService.recordAnswer(state, 100L, Grade.GOOD);
 
         assertThat(card.getCorrectStreak()).isEqualTo(4);
         verify(flashcardRepository).save(card);

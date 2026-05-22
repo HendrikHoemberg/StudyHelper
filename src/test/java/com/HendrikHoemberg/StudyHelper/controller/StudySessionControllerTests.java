@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.DeckOrderMode;
+import com.HendrikHoemberg.StudyHelper.dto.Grade;
 import com.HendrikHoemberg.StudyHelper.dto.SessionMode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyCardView;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionConfig;
@@ -127,7 +128,7 @@ class StudySessionControllerTests {
         session.setAttribute("studySessionState", state);
 
         when(flashcardService.getFlashcardForUser(card.cardId(), user)).thenReturn(new Flashcard());
-        when(studySessionService.recordAnswer(state, card.cardId(), true)).thenReturn(completed);
+        when(studySessionService.recordAnswer(state, card.cardId(), Grade.GOOD)).thenReturn(completed);
         when(studySessionService.isComplete(completed)).thenReturn(true);
         when(studySessionService.buildStats(completed)).thenReturn(new StudySessionStats(1, 1, 1, 0, 100));
 
@@ -153,7 +154,7 @@ class StudySessionControllerTests {
         StudySessionState before = new StudySessionState(config, Map.of(10L, List.of(card)), List.of(card), 0, 0, 0, 0, List.of());
         StudySessionState after = new StudySessionState(config, Map.of(10L, List.of(card)), List.of(card), 1, 1, 1, 0, List.of());
 
-        when(studySessionService.recordAnswer(any(), eq(101L), eq(true))).thenReturn(after);
+        when(studySessionService.recordAnswer(any(), eq(101L), eq(Grade.GOOD))).thenReturn(after);
         when(studySessionService.isComplete(after)).thenReturn(true);
         when(studySessionService.buildStats(after)).thenReturn(new StudySessionStats(1, 1, 1, 0, 100));
         when(flashcardService.getFlashcardForUser(eq(101L), eq(user))).thenReturn(new Flashcard());
@@ -183,7 +184,7 @@ class StudySessionControllerTests {
         StudySessionState before = new StudySessionState(config, Map.of(10L, List.of(c1, c2)), List.of(c1, c2), 0, 0, 0, 0, List.of());
         StudySessionState after = new StudySessionState(config, Map.of(10L, List.of(c1, c2)), List.of(c1, c2), 1, 1, 1, 0, List.of());
 
-        when(studySessionService.recordAnswer(any(), eq(101L), eq(true))).thenReturn(after);
+        when(studySessionService.recordAnswer(any(), eq(101L), eq(Grade.GOOD))).thenReturn(after);
         when(studySessionService.isComplete(after)).thenReturn(false);
         when(studySessionService.nextCard(any())).thenReturn(c1);
         when(flashcardService.getFlashcardForUser(eq(101L), eq(user))).thenReturn(new Flashcard());

@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
+import com.HendrikHoemberg.StudyHelper.dto.Grade;
 import com.HendrikHoemberg.StudyHelper.dto.SessionMode;
 import com.HendrikHoemberg.StudyHelper.dto.StudyCardView;
 import com.HendrikHoemberg.StudyHelper.dto.StudyMode;
@@ -122,7 +123,8 @@ public class StudySessionController {
 
         try {
             flashcardService.getFlashcardForUser(cardId, user);
-            StudySessionState nextState = studySessionService.recordAnswer(state, cardId, isCorrect);
+            Grade grade = isCorrect ? Grade.GOOD : Grade.AGAIN;
+            StudySessionState nextState = studySessionService.recordAnswer(state, cardId, grade);
             stashAndPersist(httpSession, user, nextState);
             return renderCurrentState(model, user, nextState, hxRequest);
         } catch (IllegalArgumentException | IllegalStateException | NoSuchElementException ex) {
