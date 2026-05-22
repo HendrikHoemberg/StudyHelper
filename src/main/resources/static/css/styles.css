@@ -7014,15 +7014,15 @@ iconify-icon {
     border: none;
     border-radius: 999px;
     background: transparent;
-    color: var(--text-muted);
+    color: var(--choice-color, var(--accent));
     font-size: 1.05rem;
     cursor: pointer;
     transition: background 120ms ease, color 120ms ease;
 }
 
 .sh-mode-info:hover {
-    background: color-mix(in srgb, var(--accent) 15%, transparent);
-    color: var(--accent);
+    background: color-mix(in srgb, var(--choice-color, var(--accent)) 15%, transparent);
+    color: var(--choice-color, var(--accent));
 }
 
 .sh-tutorial {
