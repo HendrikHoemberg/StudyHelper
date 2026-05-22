@@ -819,4 +819,51 @@ document.addEventListener('click', (event) => {
     });
 });
 
+    // ── Study mode tutorials ─────────────────────────────────────────────
+    const TUTORIAL_META = {
+        FLASHCARDS: { icon: 'lucide:book-open',   title: 'Flashcards' },
+        QUIZ:       { icon: 'lucide:list-checks',  title: 'AI Quiz' },
+        EXAM:       { icon: 'lucide:pencil-line',  title: 'Exam' },
+    };
+
+    function openTutorial(mode) {
+        const modal = document.getElementById('sh-tutorial');
+        const source = document.querySelector(`[data-tutorial-content="${mode}"]`);
+        if (!modal || !source) return;
+
+        const meta = TUTORIAL_META[mode] || { icon: 'lucide:info', title: 'How it works' };
+        document.getElementById('sh-tutorial-icon').innerHTML =
+            `<iconify-icon icon="${meta.icon}"></iconify-icon>`;
+        document.getElementById('sh-tutorial-title').textContent = meta.title;
+        document.getElementById('sh-tutorial-body').innerHTML = source.innerHTML;
+
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        document.getElementById('sh-tutorial-close')?.focus();
+    }
+
+    function closeTutorial() {
+        const modal = document.getElementById('sh-tutorial');
+        if (!modal || modal.getAttribute('aria-hidden') === 'true') return;
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+
+    // Exposed for the inline onclick on each mode card's info button.
+    window.shOpenTutorial = openTutorial;
+
+    // Close via ✕, backdrop, or any element marked data-sh-tutorial-cancel.
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('[data-sh-tutorial-cancel]')) {
+            closeTutorial();
+        }
+    });
+
+    // Close on Escape.
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeTutorial();
+    });
+
 })();
