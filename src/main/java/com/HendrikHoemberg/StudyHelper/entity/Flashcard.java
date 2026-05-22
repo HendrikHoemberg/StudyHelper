@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "flashcards")
 @Getter
@@ -36,6 +39,21 @@ public class Flashcard {
 
     @Column(name = "correct_streak")
     private Integer correctStreak;
+
+    @Column(name = "due_date")
+    private LocalDate dueDate;
+
+    @Column(name = "interval_days")
+    private Integer intervalDays;
+
+    @Column(name = "ease_factor")
+    private Double easeFactor;
+
+    @Column(name = "repetitions")
+    private Integer repetitions;
+
+    @Column(name = "last_reviewed_at")
+    private LocalDateTime lastReviewedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deck_id", nullable = false)
