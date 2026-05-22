@@ -4062,28 +4062,39 @@ textarea.sh-input {
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 1rem;
-    padding: 1rem 1.25rem;
-    background: linear-gradient(135deg,
-            color-mix(in srgb, var(--accent) 10%, var(--surface)) 0%,
-            var(--surface) 70%);
-    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border-light));
+    padding: 1.15rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border-soft));
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-sm);
     margin-bottom: 0.5rem;
+    transition: all var(--transition);
+}
+
+.sh-saved-session-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 60%, var(--border-soft));
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
 }
 
 .sh-saved-session-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    transition: all var(--transition);
+}
+
+.sh-saved-session-card:hover .sh-saved-session-icon {
     background: var(--accent);
     color: #fff;
-    font-size: 1.25rem;
-    box-shadow: 0 4px 12px var(--accent-glow);
-    flex-shrink: 0;
 }
 
 .sh-saved-session-body {
@@ -4112,14 +4123,19 @@ textarea.sh-input {
 
 .sh-saved-session-paused {
     text-transform: uppercase;
+    font-weight: 700;
+    font-size: 0.6875rem;
     color: var(--text-muted);
-    font-weight: 600;
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
 }
 
 .sh-saved-session-title {
     font-family: var(--font-heading);
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: var(--text);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -4136,6 +4152,50 @@ textarea.sh-input {
     align-items: center;
     gap: 0.5rem;
     flex-shrink: 0;
+}
+
+.sh-saved-session-actions .sh-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+    border-color: transparent;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: all var(--transition);
+    white-space: nowrap;
+}
+
+.sh-saved-session-actions .sh-btn-primary:hover {
+    background: var(--accent) !important;
+    color: #fff !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.sh-saved-session-actions .sh-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--text-muted) 10%, transparent);
+    color: var(--text-secondary);
+    border-color: transparent;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: all var(--transition);
+    white-space: nowrap;
+}
+
+.sh-saved-session-actions .sh-btn-secondary:hover {
+    background: var(--danger) !important;
+    color: #fff !important;
+    border-color: var(--danger) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 
 @media (max-width: 720px) {
