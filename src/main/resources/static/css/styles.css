@@ -6936,20 +6936,35 @@ iconify-icon {
     padding: 0.7rem 0.3rem;
     border: none;
     border-radius: 12px;
-    color: #fff;
+    background: color-mix(in srgb, var(--grade-color) 12%, var(--surface));
+    color: var(--grade-color);
     font-weight: 600;
     cursor: pointer;
     min-height: 56px;
-    transition: filter 120ms ease, transform 80ms ease;
+    transition: background-color 150ms ease, color 150ms ease, transform 80ms ease;
 }
 .sh-study-grade:active { transform: scale(0.97); }
-.sh-study-grade:hover { filter: brightness(1.08); }
+.sh-study-grade:hover {
+    background: var(--grade-color);
+    color: #fff;
+}
 .sh-grade-label { font-size: 0.95rem; }
-.sh-grade-hint { font-size: 0.72rem; opacity: 0.85; }
-.sh-grade-again { background: #e5484d; }
-.sh-grade-hard  { background: #f5a623; }
-.sh-grade-good  { background: #30a46c; }
-.sh-grade-easy  { background: #4593e6; }
+.sh-grade-hint { font-size: 0.72rem; opacity: 0.75; }
+.sh-grade-again {
+    --grade-color: var(--danger);
+}
+.sh-grade-hard  {
+    --grade-color: var(--warning);
+}
+.sh-grade-good  {
+    --grade-color: var(--success);
+}
+.sh-grade-easy  {
+    --grade-color: #0284c7;
+}
+[data-theme="dark"] .sh-grade-easy {
+    --grade-color: #38bdf8;
+}
 .sh-study-practice-note {
     margin-top: 0.6rem;
     text-align: center;

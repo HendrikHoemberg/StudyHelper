@@ -34,6 +34,8 @@ public class StudyController {
     private final FileEntryService fileEntryService;
     private final ExamSessionService examSessionService;
     private final SavedSessionService savedSessionService;
+    private final FlashcardService flashcardService;
+    private final SrsScheduler srsScheduler;
     private static final String DEFAULT_STUDY_CANCEL_URL = "/dashboard";
 
     @Autowired
@@ -45,7 +47,9 @@ public class StudyController {
                            DocumentExtractionService documentExtractionService,
                            FileEntryService fileEntryService,
                            ExamSessionService examSessionService,
-                           SavedSessionService savedSessionService) {
+                           SavedSessionService savedSessionService,
+                           FlashcardService flashcardService,
+                           SrsScheduler srsScheduler) {
         this.studySessionService = studySessionService;
         this.quizSessionService = quizSessionService;
         this.deckService = deckService;
@@ -55,6 +59,8 @@ public class StudyController {
         this.fileEntryService = fileEntryService;
         this.examSessionService = examSessionService;
         this.savedSessionService = savedSessionService;
+        this.flashcardService = flashcardService;
+        this.srsScheduler = srsScheduler;
     }
 
     @GetMapping("/study/start")
@@ -419,6 +425,24 @@ public class StudyController {
         model.addAttribute("currentCard", currentCard);
         model.addAttribute("currentCardNumber", state.currentIndex() + 1);
         model.addAttribute("totalCards", state.queue().size());
+
+        java.time.LocalDate today = java.time.LocalDate.now();
+        flashcardService.getFlashcardOptional(currentCard.cardId()).ifPresentOrElse(fc -> {
+            int interval = fc.getIntervalDays() == null ? 0 : fc.getIntervalDays();
+            double ef = fc.getEaseFactor() == null ? SrsScheduler.INITIAL_EF : fc.getEaseFactor();
+            int reps = fc.getRepetitions() == null ? 0 : fc.getRepetitions();
+            model.addAttribute("previewAgain", "today");
+            model.addAttribute("previewHard", srsScheduler.next(interval, ef, reps, Grade.HARD, today).intervalDays() + "d");
+            model.addAttribute("previewGood", srsScheduler.next(interval, ef, reps, Grade.GOOD, today).intervalDays() + "d");
+            model.addAttribute("previewEasy", srsScheduler.next(interval, ef, reps, Grade.EASY, today).intervalDays() + "d");
+        }, () -> {
+            model.addAttribute("previewAgain", "today");
+            model.addAttribute("previewHard", "");
+            model.addAttribute("previewGood", "");
+            model.addAttribute("previewEasy", "");
+        });
+        model.addAttribute("isPractice", state.config().practice());
+
         if (hxRequest != null) return "fragments/study-card :: studyCard";
         model.addAttribute("studyStateView", "card");
         return "study-page";

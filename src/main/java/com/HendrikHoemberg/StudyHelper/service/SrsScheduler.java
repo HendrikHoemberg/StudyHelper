@@ -29,18 +29,26 @@ public class SrsScheduler {
         int newReps = repetitions + 1;
         int newInterval;
         if (newReps == 1) {
-            newInterval = FIRST_INTERVAL;
+            if (grade == Grade.HARD) {
+                newInterval = 1;
+            } else if (grade == Grade.GOOD) {
+                newInterval = 2;
+            } else { // Grade.EASY
+                newInterval = 3;
+            }
         } else if (newReps == 2) {
             newInterval = SECOND_INTERVAL;
+            if (grade == Grade.EASY) {
+                newInterval = (int) Math.round(newInterval * EASY_BONUS);
+            }
         } else {
             newInterval = (int) Math.round(intervalDays * newEf);
-        }
-
-        if (grade == Grade.HARD && newReps > 2) {
-            newInterval = Math.max(intervalDays + 1, (int) Math.round(intervalDays * HARD_MULTIPLIER));
-        }
-        if (grade == Grade.EASY) {
-            newInterval = (int) Math.round(newInterval * EASY_BONUS);
+            if (grade == Grade.HARD) {
+                newInterval = Math.max(intervalDays + 1, (int) Math.round(intervalDays * HARD_MULTIPLIER));
+            }
+            if (grade == Grade.EASY) {
+                newInterval = (int) Math.round(newInterval * EASY_BONUS);
+            }
         }
 
         return new SrsState(newInterval, newEf, newReps, today.plusDays(newInterval));

@@ -48,6 +48,8 @@ class StudyControllerTests {
         examSessionService = mock(ExamSessionService.class);
 
         savedSessionService = mock(SavedSessionService.class);
+        FlashcardService flashcardService = mock(FlashcardService.class);
+        SrsScheduler srsScheduler = mock(SrsScheduler.class);
         controller = new StudyController(
             studySessionService,
             quizSessionService,
@@ -57,7 +59,9 @@ class StudyControllerTests {
             documentExtractionService,
             fileEntryService,
             examSessionService,
-            savedSessionService
+            savedSessionService,
+            flashcardService,
+            srsScheduler
         );
 
         user = new User();

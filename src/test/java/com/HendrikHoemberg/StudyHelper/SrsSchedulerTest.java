@@ -16,12 +16,28 @@ class SrsSchedulerTest {
     private final LocalDate today = LocalDate.of(2026, 5, 22);
 
     @Test
-    void newCardGoodAdvancesToOneDay() {
+    void newCardGoodAdvancesToTwoDays() {
         SrsState s = scheduler.next(0, 2.5, 0, Grade.GOOD, today);
         assertThat(s.repetitions()).isEqualTo(1);
-        assertThat(s.intervalDays()).isEqualTo(1);
+        assertThat(s.intervalDays()).isEqualTo(2);
         assertThat(s.easeFactor()).isCloseTo(2.5, within(0.0001));
+        assertThat(s.dueDate()).isEqualTo(today.plusDays(2));
+    }
+
+    @Test
+    void newCardHardAdvancesToOneDay() {
+        SrsState s = scheduler.next(0, 2.5, 0, Grade.HARD, today);
+        assertThat(s.repetitions()).isEqualTo(1);
+        assertThat(s.intervalDays()).isEqualTo(1);
         assertThat(s.dueDate()).isEqualTo(today.plusDays(1));
+    }
+
+    @Test
+    void newCardEasyAdvancesToThreeDays() {
+        SrsState s = scheduler.next(0, 2.5, 0, Grade.EASY, today);
+        assertThat(s.repetitions()).isEqualTo(1);
+        assertThat(s.intervalDays()).isEqualTo(3);
+        assertThat(s.dueDate()).isEqualTo(today.plusDays(3));
     }
 
     @Test

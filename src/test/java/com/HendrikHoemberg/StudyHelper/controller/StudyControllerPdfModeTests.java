@@ -57,9 +57,11 @@ class StudyControllerPdfModeTests {
                 aiExamService, deckService, flashcardService, fileEntryService,
                 documentExtractionService, aiRequestQuotaService);
         SavedSessionService savedSessionService = mock(SavedSessionService.class);
+        SrsScheduler srsScheduler = mock(SrsScheduler.class);
         controller = new StudyController(
                 studySessionService, quizSessionService, deckService, folderService,
-                userService, documentExtractionService, fileEntryService, examSessionService, savedSessionService);
+                userService, documentExtractionService, fileEntryService, examSessionService, savedSessionService,
+                flashcardService, srsScheduler);
 
         user = new User();
         user.setId(1L);

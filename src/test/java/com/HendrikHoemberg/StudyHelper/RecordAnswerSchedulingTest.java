@@ -61,8 +61,8 @@ class RecordAnswerSchedulingTest {
 
         Flashcard reloaded = flashcardRepository.findById(card.getId()).orElseThrow();
         assertThat(reloaded.getRepetitions()).isEqualTo(1);
-        assertThat(reloaded.getIntervalDays()).isEqualTo(1);
-        assertThat(reloaded.getDueDate()).isEqualTo(java.time.LocalDate.now().plusDays(1));
+        assertThat(reloaded.getIntervalDays()).isEqualTo(2);
+        assertThat(reloaded.getDueDate()).isEqualTo(java.time.LocalDate.now().plusDays(2));
         assertThat(reviewLogRepository.count()).isEqualTo(beforeLogs + 1);
     }
 }
