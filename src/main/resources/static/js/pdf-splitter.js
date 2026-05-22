@@ -22,10 +22,49 @@ let _breaks = new Set();  // page numbers AFTER which a split occurs
 let _selectedPartIndexes = new Set();
 let _pageZoom = PAGE_ZOOM_DEFAULT;
 let _wired = false;
+let _darkPages = false;
+let _themeObserver = null;
 const _historyKey = { ps: true };
 
 function _baseName(name) {
     return (name || 'document.pdf').replace(/\.[^.]+$/, '');
+}
+
+function _applyDarkPages() {
+    const pagesContainer = $id('sh-ps-pages');
+    const themeBtn = $id('sh-ps-theme-btn');
+    if (!pagesContainer) return;
+    pagesContainer.classList.toggle('sh-ps-dark-pages', _darkPages);
+    if (themeBtn) {
+        themeBtn.classList.toggle('is-active', _darkPages);
+        themeBtn.title = _darkPages ? "Show original PDF colors" : "Invert PDF colors for dark mode";
+    }
+}
+
+function _toggleDarkPages() {
+    _darkPages = !_darkPages;
+    _applyDarkPages();
+}
+
+function _initThemeObserver() {
+    if (_themeObserver) return;
+    _themeObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                const isSystemDark = document.documentElement.dataset.theme === 'dark';
+                _darkPages = isSystemDark;
+                _applyDarkPages();
+            }
+        });
+    });
+    _themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+}
+
+function _destroyThemeObserver() {
+    if (_themeObserver) {
+        _themeObserver.disconnect();
+        _themeObserver = null;
+    }
 }
 
 function _show(on) {
@@ -75,10 +114,13 @@ async function open(opts) {
     _breaks = new Set();
     _selectedPartIndexes = new Set();
     _pageZoom = PAGE_ZOOM_DEFAULT;
+    _darkPages = document.documentElement.dataset.theme === 'dark';
     const modal = $id('sh-ps-modal');
     if (!modal) { console.error('PdfSplitter: #sh-ps-modal not found'); return; }
     _wire();
     _applyPageZoom();
+    _applyDarkPages();
+    _initThemeObserver();
     $id('sh-ps-title').textContent = 'Split \u2014 ' + (_opts.name || 'PDF');
     $id('sh-ps-pages').innerHTML = '';
     $id('sh-ps-parts').innerHTML = '';
@@ -320,6 +362,8 @@ function _wire() {
     $id('sh-ps-zoom-out').addEventListener('click', () => _setPageZoom(_pageZoom - PAGE_ZOOM_STEP));
     $id('sh-ps-zoom-reset').addEventListener('click', () => _setPageZoom(PAGE_ZOOM_DEFAULT));
     $id('sh-ps-zoom-in').addEventListener('click', () => _setPageZoom(_pageZoom + PAGE_ZOOM_STEP));
+    const themeBtn = $id('sh-ps-theme-btn');
+    if (themeBtn) themeBtn.addEventListener('click', _toggleDarkPages);
     document.addEventListener('keydown', _onKeydown);
     window.addEventListener('popstate', () => { if (_isOpen()) close(); });
 }
@@ -327,6 +371,7 @@ function _wire() {
 function close() {
     if (history.state === _historyKey) history.back();
     _show(false);
+    _destroyThemeObserver();
     if (_pdf) { _pdf.destroy(); _pdf = null; }
     const pages = $id('sh-ps-pages');
     const parts = $id('sh-ps-parts');
