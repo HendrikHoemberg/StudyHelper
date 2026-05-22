@@ -1,5 +1,6 @@
 <div th:fragment="exam-result" id="exam-runtime" class="animate-fade-in"
-     th:with="score=${exam.overallScorePct}">
+     th:with="score=${exam.overallScorePct}"
+     data-celebrate="true" th:attr="data-score=${score}">
 
     <div class="sh-exam-result-header">
         <div class="sh-exam-result-score" 

@@ -2,7 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <body>
 
-<div th:fragment="studyComplete" id="study-session-content" class="sh-fade-in sh-study-session-active">
+<div th:fragment="studyComplete" id="study-session-content" class="sh-fade-in sh-study-session-active"
+     data-celebrate="true" th:attr="data-score=${stats.percentage}">
 
     <div th:if="${studyError}" class="sh-alert sh-alert-danger">
         <div class="sh-alert-body" th:text="${studyError}"></div>

@@ -202,6 +202,17 @@ document.body.addEventListener('htmx:afterSwap', () => {
                          document.getElementById('quiz-session-content') !== null;
         shell.classList.toggle('sh-hide-sidebar', hasStudy);
     }
+
+    // Trigger celebration confetti for completion screens
+    const celebrateEl = document.querySelector('[data-celebrate="true"]');
+    if (celebrateEl && !celebrateEl.hasAttribute('data-celebrated')) {
+        celebrateEl.setAttribute('data-celebrated', 'true');
+        const score = parseInt(celebrateEl.getAttribute('data-score')) || 0;
+        // Minor delay for visual settlement
+        setTimeout(() => {
+            triggerCelebration(score);
+        }, 250);
+    }
 });
 
 // Optional fade-in animation after settle
@@ -1151,4 +1162,184 @@ function syncAiFolderSelectionWithSelectedPdf() {
         if (deckNameInput && !deckNameInput.value.trim()) deckNameInput.value = 'Generated Flashcards';
     }
     updateAiPdfSizeWarning();
+}
+
+/* ---------- Premium Canvas Confetti Engine (Self-contained, Offline-ready) ---------- */
+function triggerCelebration(score) {
+    // Option A Cutoff: Do not spawn any confetti for a flat 0% score
+    if (score <= 0) return;
+
+    // Create a full-screen pointer-events-free canvas
+    const canvas = document.createElement('canvas');
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '99999';
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    const handleResize = () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
+    const colors = [
+        '#06b6d4', '#0891b2', '#0e766e', // Teals
+        '#f59e0b', '#d97706', // Yellow/Ambers
+        '#ec4899', '#db2777', // Pinks
+        '#8b5cf6', '#7c3aed', // Violets
+        '#10b981', '#059669'  // Greens
+    ];
+
+    const shapes = ['square', 'circle', 'triangle', 'wavy'];
+    const particles = [];
+
+    class ConfettiParticle {
+        constructor(x, y, vx, vy, color, shape) {
+            this.x = x;
+            this.y = y;
+            this.vx = vx;
+            this.vy = vy;
+            this.color = color;
+            this.shape = shape;
+            this.size = Math.random() * 8 + 6;
+            this.rotation = Math.random() * 360;
+            this.rotationSpeed = Math.random() * 4 - 2;
+            this.opacity = 1;
+            this.gravity = 0.2;
+            this.drag = 0.985;
+            this.wobble = Math.random() * 10;
+            this.wobbleSpeed = Math.random() * 0.1 + 0.05;
+        }
+
+        update() {
+            this.vy += this.gravity;
+            this.vx *= this.drag;
+            this.vy *= this.drag;
+            this.x += this.vx + Math.sin(this.wobble) * 0.5;
+            this.y += this.vy;
+            this.rotation += this.rotationSpeed;
+            this.wobble += this.wobbleSpeed;
+            
+            if (this.y > height - 100) {
+                this.opacity -= 0.015;
+            }
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation * Math.PI / 180);
+            ctx.globalAlpha = this.opacity;
+            ctx.fillStyle = this.color;
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 2;
+
+            if (this.shape === 'square') {
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+            } else if (this.shape === 'circle') {
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (this.shape === 'triangle') {
+                ctx.beginPath();
+                ctx.moveTo(0, -this.size / 2);
+                ctx.lineTo(this.size / 2, this.size / 2);
+                ctx.lineTo(-this.size / 2, this.size / 2);
+                ctx.closePath();
+                ctx.fill();
+            } else if (this.shape === 'wavy') {
+                ctx.beginPath();
+                ctx.moveTo(-this.size / 2, 0);
+                ctx.bezierCurveTo(-this.size / 4, -this.size / 2, this.size / 4, this.size / 2, this.size / 2, 0);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+    }
+
+    function spawnCannons() {
+        for (let i = 0; i < 45; i++) {
+            particles.push(new ConfettiParticle(
+                0, height,
+                Math.random() * 12 + 8, -(Math.random() * 16 + 10),
+                colors[Math.floor(Math.random() * colors.length)],
+                shapes[Math.floor(Math.random() * shapes.length)]
+            ));
+        }
+        for (let i = 0; i < 45; i++) {
+            particles.push(new ConfettiParticle(
+                width, height,
+                -(Math.random() * 12 + 8), -(Math.random() * 16 + 10),
+                colors[Math.floor(Math.random() * colors.length)],
+                shapes[Math.floor(Math.random() * shapes.length)]
+            ));
+        }
+    }
+
+    function spawnCascade() {
+        for (let i = 0; i < 80; i++) {
+            particles.push(new ConfettiParticle(
+                Math.random() * width, -20,
+                Math.random() * 4 - 2, Math.random() * 5 + 2,
+                colors[Math.floor(Math.random() * colors.length)],
+                shapes[Math.floor(Math.random() * shapes.length)]
+            ));
+        }
+    }
+
+    function spawnFloatingRise() {
+        for (let i = 0; i < 35; i++) {
+            const p = new ConfettiParticle(
+                Math.random() * width, height + 20,
+                Math.random() * 2 - 1, -(Math.random() * 3 + 2),
+                colors[Math.floor(Math.random() * colors.length)],
+                shapes[Math.floor(Math.random() * shapes.length)]
+            );
+            p.gravity = -0.04;
+            particles.push(p);
+        }
+    }
+
+    if (score >= 80) {
+        spawnCannons();
+        setTimeout(spawnCannons, 350);
+        setTimeout(spawnCannons, 700);
+    } else if (score >= 60) {
+        spawnCascade();
+        setTimeout(spawnCascade, 400);
+    } else {
+        spawnFloatingRise();
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.update();
+            p.draw();
+
+            if (p.opacity <= 0 || p.x < -50 || p.x > width + 50 || p.y > height + 50) {
+                particles.splice(i, 1);
+            }
+        }
+
+        if (particles.length > 0) {
+            requestAnimationFrame(animate);
+        } else {
+            window.removeEventListener('resize', handleResize);
+            canvas.remove();
+        }
+    }
+
+    animate();
 }
