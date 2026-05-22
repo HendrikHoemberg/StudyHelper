@@ -72,7 +72,9 @@
                 const panelMode = panel.dataset.mode;
                 if (panelMode && panelMode !== currentMode) return;
                 panel.querySelectorAll('input[type="radio"]').forEach(radio => {
-                    radio.checked = false;
+                    if (['sessionMode', 'quizQuestionMode', 'questionSize', 'mode_picker'].includes(radio.name)) {
+                        radio.checked = false;
+                    }
                 });
             });
         }
