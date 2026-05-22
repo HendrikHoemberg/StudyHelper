@@ -6994,3 +6994,146 @@ iconify-icon {
     .sh-grade-hint { display: none; }
     .sh-study-grade { min-height: 48px; }
 }
+
+/* ── Study mode tutorial: info trigger + modal ───────────────────────── */
+.sh-study-choice {
+    position: relative;
+}
+
+.sh-mode-info {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+}
+
+.sh-mode-info:hover {
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--accent);
+}
+
+.sh-tutorial {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2050;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.sh-tutorial.is-open {
+    display: flex;
+    animation: sh-fade-in-fast 0.15s ease;
+}
+
+.sh-tutorial-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    cursor: pointer;
+}
+
+.sh-tutorial-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 480px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    animation: modalIn 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sh-tutorial-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.sh-tutorial-icon {
+    display: inline-flex;
+    color: var(--accent);
+    font-size: 1.35rem;
+}
+
+.sh-tutorial-title {
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.sh-tutorial-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+}
+
+.sh-tutorial-close:hover {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+}
+
+.sh-tutorial-body {
+    padding: 1.1rem 1.25rem 1.5rem;
+    overflow-y: auto;
+    color: var(--text-main);
+}
+
+.sh-tutorial-body h4 {
+    margin: 1.1rem 0 0.45rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.sh-tutorial-body h4:first-child {
+    margin-top: 0;
+}
+
+.sh-tutorial-body ul {
+    margin: 0;
+    padding-left: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.sh-tutorial-body li {
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+}
