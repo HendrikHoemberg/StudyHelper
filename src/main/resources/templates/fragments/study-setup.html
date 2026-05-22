@@ -44,6 +44,10 @@
                 <div class="sh-section-title">What's the plan?</div>
                 <div class="sh-study-mode-grid">
                     <label class="sh-study-choice sh-study-choice-study" onclick="selectStudyMode(this, 'FLASHCARDS')">
+                        <button type="button" class="sh-mode-info" aria-label="How Flashcards works"
+                                onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('FLASHCARDS');">
+                            <iconify-icon icon="lucide:info"></iconify-icon>
+                        </button>
                         <input type="radio" name="mode_picker" value="FLASHCARDS" th:checked="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).FLASHCARDS}">
                         <div class="sh-study-choice-icon">
                             <iconify-icon icon="lucide:book-open"></iconify-icon>
@@ -54,6 +58,10 @@
                         </div>
                     </label>
                     <label class="sh-study-choice sh-study-choice-generate" onclick="selectStudyMode(this, 'QUIZ')">
+                        <button type="button" class="sh-mode-info" aria-label="How AI Quiz works"
+                                onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('QUIZ');">
+                            <iconify-icon icon="lucide:info"></iconify-icon>
+                        </button>
                         <input type="radio" name="mode_picker" value="QUIZ" th:checked="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).QUIZ}">
                         <div class="sh-study-choice-icon">
                             <iconify-icon icon="lucide:list-checks"></iconify-icon>
@@ -64,6 +72,10 @@
                         </div>
                     </label>
                     <label class="sh-study-choice sh-study-choice-exam" onclick="selectStudyMode(this, 'EXAM')">
+                        <button type="button" class="sh-mode-info" aria-label="How Exam works"
+                                onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('EXAM');">
+                            <iconify-icon icon="lucide:info"></iconify-icon>
+                        </button>
                         <input type="radio" name="mode_picker" value="EXAM" th:checked="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).EXAM}">
                         <div class="sh-study-choice-icon">
                             <iconify-icon icon="lucide:pencil-line"></iconify-icon>
@@ -75,6 +87,9 @@
                     </label>
                 </div>
             </div>
+
+            <!-- Study mode tutorial modal + content -->
+            <div th:replace="~{fragments/study-tutorials :: tutorials}"></div>
 
             <!-- Panel 2s (Branched) -->
             <div th:replace="~{fragments/wizard-flashcards :: panels}"></div>
