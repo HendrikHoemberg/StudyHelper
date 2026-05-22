@@ -39,27 +39,23 @@ public class DashboardService {
     private final StudyLogRepository studyLogRepository;
     private final FlashcardRepository flashcardRepository;
     private final SavedSessionService savedSessionService;
-    private final FlashcardReviewService flashcardReviewService;
     private final FolderService folderService;
 
     public DashboardService(DeckRepository deckRepository,
                             StudyLogRepository studyLogRepository,
                             FlashcardRepository flashcardRepository,
                             SavedSessionService savedSessionService,
-                            FlashcardReviewService flashcardReviewService,
                             FolderService folderService) {
         this.deckRepository = deckRepository;
         this.studyLogRepository = studyLogRepository;
         this.flashcardRepository = flashcardRepository;
         this.savedSessionService = savedSessionService;
-        this.flashcardReviewService = flashcardReviewService;
         this.folderService = folderService;
     }
 
     @Transactional(readOnly = true)
     public DashboardViewModel buildFor(User user) {
         Optional<SavedSessionSummary> resume = savedSessionService.findForUser(user);
-        long mistakesCount = flashcardReviewService.countMistakes(user);
 
         List<DashboardDeckSummary> pinned = deckRepository
             .findByUserAndPinnedTrueOrderByNameAsc(user)
@@ -107,7 +103,6 @@ public class DashboardService {
         return new DashboardViewModel(
             user.getUsername(),
             resume,
-            mistakesCount,
             pinned,
             recent,
             streakDays,

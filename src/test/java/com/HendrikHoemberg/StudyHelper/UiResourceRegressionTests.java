@@ -853,19 +853,20 @@ class UiResourceRegressionTests {
     }
 
     @Test
-    void dashboardUsesMergedDueAndMistakesBannerInsteadOfLegacyReviewSurfaces() throws IOException {
+    void dashboardUsesOnlyDueStudyBannerAndNoMistakesMode() throws IOException {
         String template = resource("templates/fragments/explorer.html");
         String styles = resource("static/css/styles.css");
 
         assertThat(template)
             .contains("class=\"sh-review-banner\"")
-            .contains("th:if=\"${vm.dueTodayCount() > 0 or vm.reviewMistakesCount() > 0}\"")
+            .contains("th:if=\"${vm.dueTodayCount() > 0}\"")
             .contains("hx-post=\"/study/start-due\"")
             .contains("Due today")
             .contains("Cards scheduled for review")
-            .contains("hx-post=\"/study/review-mistakes\"")
-            .contains("Review mistakes")
-            .contains("Practice cards you got wrong")
+            .doesNotContain("reviewMistakesCount")
+            .doesNotContain("hx-post=\"/study/review-mistakes\"")
+            .doesNotContain("Review mistakes")
+            .doesNotContain("Practice cards you got wrong")
             .doesNotContain("sh-action-tile-review")
             .doesNotContain("sh-review-card-mobile")
             .doesNotContain("sh-review-card-desktop");

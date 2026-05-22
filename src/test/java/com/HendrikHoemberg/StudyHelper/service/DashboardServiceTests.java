@@ -38,7 +38,6 @@ class DashboardServiceTests {
 
         assertThat(vm.greetingName()).contains("new");
         assertThat(vm.resume()).isEmpty();
-        assertThat(vm.reviewMistakesCount()).isZero();
         assertThat(vm.pinnedDecks()).isEmpty();
         assertThat(vm.recentDecks()).isEmpty();
         assertThat(vm.streakDays()).isZero();
@@ -73,7 +72,6 @@ class DashboardServiceTests {
 
         DashboardViewModel vm = dashboardService.buildFor(user);
 
-        assertThat(vm.reviewMistakesCount()).isEqualTo(1);
         assertThat(vm.pinnedDecks()).extracting("deckName").containsExactly("Pinned deck");
         assertThat(vm.recentDecks()).extracting("deckName").containsExactly("Recent deck");
         assertThat(vm.recentDecks().get(0).masteredCards()).isEqualTo(1);

@@ -47,9 +47,8 @@
                     <th:block th:replace="~{fragments/saved-session :: card}"></th:block>
                 </th:block>
 
-                <div class="sh-review-banner" th:if="${vm.dueTodayCount() > 0 or vm.reviewMistakesCount() > 0}">
-                    <a th:if="${vm.dueTodayCount() > 0}" class="sh-review-card" href="#"
-                        hx-post="/study/start-due" hx-target="#explorer-detail" hx-push-url="true">
+                <div class="sh-review-banner" th:if="${vm.dueTodayCount() > 0}">
+                    <a class="sh-review-card" href="#" hx-post="/study/start-due" hx-target="#explorer-detail" hx-push-url="true">
                         <span class="sh-review-card-icon">
                             <iconify-icon icon="lucide:alarm-clock"></iconify-icon>
                         </span>
@@ -61,23 +60,6 @@
                                 </span>
                             </div>
                             <span class="sh-review-card-meta">Cards scheduled for review</span>
-                        </span>
-                        <span class="sh-review-card-cta">Study now</span>
-                    </a>
-
-                    <a th:if="${vm.reviewMistakesCount() > 0}" class="sh-review-card" href="#"
-                        hx-post="/study/review-mistakes" hx-target="#explorer-detail" hx-push-url="true">
-                        <span class="sh-review-card-icon">
-                            <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
-                        </span>
-                        <span class="sh-review-card-body">
-                            <div class="sh-review-card-title-row">
-                                <span class="sh-review-card-title">Review mistakes</span>
-                                <span class="sh-review-card-badge">
-                                    <span th:text="${vm.reviewMistakesCount()}">0</span> due
-                                </span>
-                            </div>
-                            <span class="sh-review-card-meta">Practice cards you got wrong</span>
                         </span>
                         <span class="sh-review-card-cta">Study now</span>
                     </a>
