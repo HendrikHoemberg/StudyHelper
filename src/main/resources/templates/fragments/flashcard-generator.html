@@ -25,7 +25,20 @@
         </button>
     </div>
 
+    <div class="sh-wizard-steps" id="sh-wizard-steps">
+        <div class="sh-wizard-step is-active" data-step-pill="1">
+            <div class="sh-wizard-step-dot">1</div>
+            <div class="sh-wizard-step-label" th:text="#{flashcard-gen.step.sources}">Sources</div>
+        </div>
+        <div class="sh-wizard-step-connector"></div>
+        <div class="sh-wizard-step" data-step-pill="2">
+            <div class="sh-wizard-step-dot">2</div>
+            <div class="sh-wizard-step-label" th:text="#{flashcard-gen.step.destination}">Destination</div>
+        </div>
+    </div>
+
     <form class="sh-card sh-ai-flashcard-form"
+          id="ai-flashcard-form"
           method="post"
           hx-post="/flashcards/generate"
           hx-target="#explorer-detail"
@@ -34,10 +47,9 @@
           hx-sync="this:drop"
           hx-disabled-elt="#ai-flashcard-submit">
         <input type="hidden" name="additionalInstructions" id="ai-flashcard-additional-instructions" value="">
-        <div class="sh-card-body">
-            <div class="sh-ai-flashcard-grid">
-                <section>
-                    <div class="sh-section-title" th:text="#{flashcard-gen.choose-pdfs}">Choose PDFs</div>
+        <div class="sh-card-body sh-wizard-body">
+            <div class="sh-wizard-panel is-active" data-step="1" id="ai-flashcard-panel-1">
+                <div class="sh-section-title" th:text="#{flashcard-gen.choose-pdfs}">Choose PDFs</div>
                     <div class="sh-study-search-wrap mb-3">
                         <iconify-icon icon="lucide:search" class="sh-study-search-icon"></iconify-icon>
                         <input type="text" class="sh-study-search-input" id="ai-pdf-search" th:placeholder="#{flashcard-gen.search-pdfs}" placeholder="Search PDFs..." autocomplete="off">
@@ -109,9 +121,9 @@
                             </div>
                         </div>
                     </div>
-                </section>
+                </div>
 
-                <section>
+            <div class="sh-wizard-panel" data-step="2" id="ai-flashcard-panel-2">
                     <div class="sh-section-title" th:text="#{flashcard-gen.save-to}">Save generated cards to</div>
                     <div class="sh-ai-destination-list">
                         <div class="sh-ai-destination-card" th:classappend="${selectedDestination == null || #strings.toString(selectedDestination) == 'NEW_DECK'} ? ' is-selected' : ''">
@@ -227,18 +239,27 @@
                             </button>
                         </div>
                     </div>
-                </section>
-            </div>
+                </div>
         </div>
-        <div class="sh-wizard-footer" style="display:flex;">
-            <button type="button" id="ai-flashcard-submit-with-instructions" class="sh-btn sh-btn-secondary" style="margin-left:auto;">
-                <iconify-icon icon="lucide:message-square-text"></iconify-icon>
-                <span th:text="#{flashcard-gen.generate-with-instructions}">Generate with instructions</span>
+        <div class="sh-wizard-footer">
+            <button type="button" id="ai-flashcard-back" class="sh-btn sh-btn-secondary" style="display:none;">
+                <iconify-icon icon="lucide:arrow-left"></iconify-icon>
+                <span th:text="#{flashcard-gen.back}">Back</span>
             </button>
-            <button type="submit" id="ai-flashcard-submit" class="sh-btn sh-btn-primary">
-                <iconify-icon icon="lucide:sparkles"></iconify-icon>
-                <span th:text="#{flashcard-gen.generate}">Generate flashcards</span>
-            </button>
+            <div style="display:flex;gap:0.75rem;margin-left:auto;">
+                <button type="button" id="ai-flashcard-next" class="sh-btn sh-btn-primary" disabled>
+                    <span th:text="#{flashcard-gen.next}">Next</span>
+                    <iconify-icon icon="lucide:arrow-right"></iconify-icon>
+                </button>
+                <button type="button" id="ai-flashcard-submit-with-instructions" class="sh-btn sh-btn-secondary" style="display:none;">
+                    <iconify-icon icon="lucide:message-square-text"></iconify-icon>
+                    <span th:text="#{flashcard-gen.generate-with-instructions}">Generate with instructions</span>
+                </button>
+                <button type="submit" id="ai-flashcard-submit" class="sh-btn sh-btn-primary" style="display:none;">
+                    <iconify-icon icon="lucide:sparkles"></iconify-icon>
+                    <span th:text="#{flashcard-gen.generate}">Generate flashcards</span>
+                </button>
+            </div>
         </div>
     </form>
 
