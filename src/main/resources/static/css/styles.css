@@ -4802,6 +4802,10 @@ iconify-icon {
 }
 
 @media (max-width: 768px) {
+    .app-topnav {
+        display: none !important;
+    }
+
     .sh-explorer-shell {
         grid-template-columns: 1fr;
         gap: 0;
@@ -4876,7 +4880,7 @@ iconify-icon {
 
     .app-main-content {
         padding: 0;
-        padding-top: 53px;
+        padding-top: 0 !important;
     }
 
     .sh-dashboard-shell {
