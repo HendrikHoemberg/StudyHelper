@@ -100,10 +100,10 @@
                     </div>
                 </div>
             </div>
-            <span class="topnav-user">
-                <iconify-icon icon="lucide:user"></iconify-icon>
-                <span th:text="${username}">User</span>
-            </span>
+            <a href="/settings" class="topnav-user" th:title="#{nav.settings}">
+                <iconify-icon icon="lucide:settings"></iconify-icon>
+                <span th:text="#{nav.settings}">Settings</span>
+            </a>
             <button class="sh-btn sh-btn-ghost sh-btn-icon topnav-theme-btn" type="button" onclick="toggleTheme()" title="Toggle theme">
                 <iconify-icon icon="lucide:sun" class="theme-icon-light"></iconify-icon>
                 <iconify-icon icon="lucide:moon" class="theme-icon-dark"></iconify-icon>
@@ -179,10 +179,10 @@
         </div>
     </div>
     <div class="topnav-mobile-divider" th:if="${userQuota != null}"></div>
-    <span class="topnav-mobile-user">
-        <iconify-icon icon="lucide:user"></iconify-icon>
-        <span th:text="${username}">User</span>
-    </span>
+    <a href="/settings" class="topnav-mobile-link">
+        <iconify-icon icon="lucide:settings"></iconify-icon>
+        <span th:text="#{nav.settings}">Settings</span>
+    </a>
     <form th:action="@{/logout}" method="post">
         <button type="submit" class="topnav-mobile-link topnav-logout-btn">
             <iconify-icon icon="lucide:log-out"></iconify-icon>
@@ -280,10 +280,11 @@
 
             <!-- Controls Section -->
             <div class="sh-sheet-section">
-                <div class="sh-sheet-user-pill">
-                    <iconify-icon icon="lucide:user"></iconify-icon>
-                    <span class="sh-sheet-username" th:text="${username}">User</span>
-                </div>
+                <a href="/settings" class="sh-sheet-row-link">
+                    <iconify-icon icon="lucide:settings"></iconify-icon>
+                    <span th:text="#{nav.settings}">Settings</span>
+                    <iconify-icon icon="lucide:chevron-right" class="sh-sheet-arrow"></iconify-icon>
+                </a>
 
                 <a th:if="${isAdmin}" href="/admin" class="sh-sheet-row-link">
                     <iconify-icon icon="lucide:shield"></iconify-icon>
