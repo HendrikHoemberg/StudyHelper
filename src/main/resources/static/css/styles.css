@@ -5700,6 +5700,10 @@ iconify-icon {
     white-space: nowrap;
 }
 
+.sh-ai-flashcard-form {
+    overflow: hidden;
+}
+
 .sh-ai-pdf-meta {
     color: var(--text-tertiary);
     font-size: 0.8125rem;
