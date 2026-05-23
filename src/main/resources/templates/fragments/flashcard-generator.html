@@ -119,112 +119,101 @@
 
             <div class="sh-wizard-panel" data-step="2" id="ai-flashcard-panel-2">
                     <div class="sh-section-title" th:text="#{flashcard-gen.save-to}">Save generated cards to</div>
-                    <div class="sh-ai-destination-list">
-                        <div class="sh-ai-destination-card" th:classappend="${selectedDestination == null || #strings.toString(selectedDestination) == 'NEW_DECK'} ? ' is-selected' : ''">
-                            <label class="sh-ai-destination-head">
-                                <input class="sh-checkbox" type="radio" name="destination" value="NEW_DECK" th:checked="${selectedDestination == null || #strings.toString(selectedDestination) == 'NEW_DECK'}">
-                                <span class="sh-ai-destination-icon"><iconify-icon icon="lucide:plus"></iconify-icon></span>
-                                <span class="sh-ai-destination-main">
-                                    <span class="sh-ai-destination-title" th:text="#{flashcard-gen.dest.new-deck}">New deck</span>
-                                    <span class="sh-ai-destination-subtitle" th:text="#{flashcard-gen.dest.new-deck-desc}">Create a deck in a selected folder.</span>
-                                </span>
-                            </label>
-                            <div class="sh-ai-destination-body" data-destination-panel="NEW_DECK">
-                                <input class="sh-input" name="newDeckName" th:value="${newDeckName}" th:placeholder="#{flashcard-gen.dest.new-deck-placeholder}" placeholder="New deck name">
-                                <div style="margin:0.75rem 0 0.5rem; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-tertiary);" th:text="#{flashcard-gen.dest.pick-folder}">Pick a folder</div>
-                                <div th:if="${#lists.isEmpty(folderTree)}" class="sh-empty" style="padding:1rem;">
-                                    <p class="sh-empty-text mb-1" th:text="#{flashcard-gen.dest.no-folders}">No folders available</p>
-                                    <p class="sh-empty-hint" th:text="#{flashcard-gen.dest.no-folders-hint}">Create a folder first.</p>
-                                </div>
-                                <div th:if="${!#lists.isEmpty(folderTree)}" class="vb-list sh-ai-tree">
-                                    <div th:each="node : ${folderTree}" class="vb-group" th:classappend="${!#lists.isEmpty(node.children)} ? ' is-collapsed' : ''" th:style="'--folder-color: ' + ${node.colorHex}">
-                                        <label class="vb-group-head sh-ai-tree-folder">
-                                            <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder" th:if="${!#lists.isEmpty(node.children)}">
-                                                <iconify-icon icon="lucide:chevron-right"></iconify-icon>
-                                            </button>
-                                            <input class="sh-checkbox" type="checkbox" name="newDeckFolderId" th:value="${node.id}" th:checked="${selectedNewDeckFolderId == node.id}">
-                                            <span class="vb-group-cap">
-                                                <iconify-icon th:attr="icon=${node.iconName.contains(':') ? node.iconName : 'lucide:' + node.iconName}"></iconify-icon>
-                                            </span>
-                                            <div class="vb-group-title" th:text="${node.name}">Folder</div>
-                                        </label>
-                                        <div th:if="${!#lists.isEmpty(node.children)}" class="vb-group-body vb-folder-content">
-                                            <label th:each="child : ${node.children}" class="vb-subgroup-head sh-ai-tree-folder" th:style="'--folder-color: ' + ${child.colorHex}">
-                                                <input class="sh-checkbox" type="checkbox" name="newDeckFolderId" th:value="${child.id}" th:checked="${selectedNewDeckFolderId == child.id}">
-                                                <span class="vb-subgroup-cap">
-                                                    <iconify-icon th:attr="icon=${child.iconName.contains(':') ? child.iconName : 'lucide:' + child.iconName}"></iconify-icon>
-                                                </span>
-                                                <span class="vb-subgroup-name" th:text="${child.name}">Subfolder</span>
-                                            </label>
-                                        </div>
-                                    </div>
+                    <div class="sh-ai-destination-toggle">
+                        <input type="hidden" name="destination" id="ai-flashcard-destination-input" th:value="${selectedDestination ?: 'NEW_DECK'}">
+                        <button type="button" class="sh-ai-destination-toggle-btn" th:classappend="${selectedDestination == null || #strings.toString(selectedDestination) == 'NEW_DECK'} ? ' is-active' : ''" data-value="NEW_DECK">
+                            <iconify-icon icon="lucide:plus"></iconify-icon>
+                            <span th:text="#{flashcard-gen.dest.new-deck}">New deck</span>
+                        </button>
+                        <button type="button" class="sh-ai-destination-toggle-btn" th:classappend="${#strings.toString(selectedDestination) == 'EXISTING_DECK'} ? ' is-active' : ''" data-value="EXISTING_DECK">
+                            <iconify-icon icon="lucide:layers"></iconify-icon>
+                            <span th:text="#{flashcard-gen.dest.existing-deck}">Existing deck</span>
+                        </button>
+                    </div>
+
+                    <div class="sh-ai-destination-body" data-destination-panel="NEW_DECK" th:style="${selectedDestination == null || #strings.toString(selectedDestination) == 'NEW_DECK'} ? 'display: flex;' : 'display: none;'">
+                        <input class="sh-input" name="newDeckName" th:value="${newDeckName}" th:placeholder="#{flashcard-gen.dest.new-deck-placeholder}" placeholder="New deck name">
+                        <div style="margin:0.25rem 0 0.125rem; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-tertiary);" th:text="#{flashcard-gen.dest.pick-folder}">Pick a folder</div>
+                        <div th:if="${#lists.isEmpty(folderTree)}" class="sh-empty" style="padding:1rem;">
+                            <p class="sh-empty-text mb-1" th:text="#{flashcard-gen.dest.no-folders}">No folders available</p>
+                            <p class="sh-empty-hint" th:text="#{flashcard-gen.dest.no-folders-hint}">Create a folder first.</p>
+                        </div>
+                        <div th:if="${!#lists.isEmpty(folderTree)}" class="vb-list sh-ai-tree">
+                            <div th:each="node : ${folderTree}" class="vb-group" th:classappend="${!#lists.isEmpty(node.children)} ? ' is-collapsed' : ''" th:style="'--folder-color: ' + ${node.colorHex}">
+                                <label class="vb-group-head sh-ai-tree-folder">
+                                    <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder" th:if="${!#lists.isEmpty(node.children)}">
+                                        <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                                    </button>
+                                    <input class="sh-checkbox" type="checkbox" name="newDeckFolderId" th:value="${node.id}" th:checked="${selectedNewDeckFolderId == node.id}">
+                                    <span class="vb-group-cap">
+                                        <iconify-icon th:attr="icon=${node.iconName.contains(':') ? node.iconName : 'lucide:' + node.iconName}"></iconify-icon>
+                                    </span>
+                                    <div class="vb-group-title" th:text="${node.name}">Folder</div>
+                                </label>
+                                <div th:if="${!#lists.isEmpty(node.children)}" class="vb-group-body vb-folder-content">
+                                    <label th:each="child : ${node.children}" class="vb-subgroup-head sh-ai-tree-folder" th:style="'--folder-color: ' + ${child.colorHex}">
+                                        <input class="sh-checkbox" type="checkbox" name="newDeckFolderId" th:value="${child.id}" th:checked="${selectedNewDeckFolderId == child.id}">
+                                        <span class="vb-subgroup-cap">
+                                            <iconify-icon th:attr="icon=${child.iconName.contains(':') ? child.iconName : 'lucide:' + child.iconName}"></iconify-icon>
+                                        </span>
+                                        <span class="vb-subgroup-name" th:text="${child.name}">Subfolder</span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="sh-ai-destination-card" th:classappend="${#strings.toString(selectedDestination) == 'EXISTING_DECK'} ? ' is-selected' : ''">
-                            <label class="sh-ai-destination-head">
-                                <input class="sh-checkbox" type="radio" name="destination" value="EXISTING_DECK" th:checked="${#strings.toString(selectedDestination) == 'EXISTING_DECK'}">
-                                <span class="sh-ai-destination-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
-                                <span class="sh-ai-destination-main">
-                                    <span class="sh-ai-destination-title" th:text="#{flashcard-gen.dest.existing-deck}">Existing deck</span>
-                                    <span class="sh-ai-destination-subtitle" th:text="#{flashcard-gen.dest.existing-deck-desc}">Append cards to one of your decks.</span>
-                                </span>
-                            </label>
-                            <div class="sh-ai-destination-body" data-destination-panel="EXISTING_DECK">
-                                <div th:if="${#lists.isEmpty(deckTree)}" class="sh-empty" style="padding:1rem;">
-                                    <p class="sh-empty-text mb-1" th:text="#{flashcard-gen.dest.no-decks}">No decks available</p>
-                                    <p class="sh-empty-hint" th:text="#{flashcard-gen.dest.no-decks-hint}">Create a deck first.</p>
+                    <div class="sh-ai-destination-body" data-destination-panel="EXISTING_DECK" th:style="${#strings.toString(selectedDestination) == 'EXISTING_DECK'} ? 'display: flex;' : 'display: none;'">
+                        <div th:if="${#lists.isEmpty(deckTree)}" class="sh-empty" style="padding:1rem;">
+                            <p class="sh-empty-text mb-1" th:text="#{flashcard-gen.dest.no-decks}">No decks available</p>
+                            <p class="sh-empty-hint" th:text="#{flashcard-gen.dest.no-decks-hint}">Create a deck first.</p>
+                        </div>
+                        <div th:if="${!#lists.isEmpty(deckTree)}" class="vb-list sh-ai-tree">
+                            <div th:each="group : ${deckTree}" class="vb-group is-collapsed" th:style="'--folder-color: ' + ${group.folderColor}">
+                                <div class="vb-group-head" style="cursor:pointer;">
+                                    <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder">
+                                        <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                                    </button>
+                                    <span class="vb-group-cap">
+                                        <iconify-icon th:attr="icon=${group.folderIcon.contains(':') ? group.folderIcon : 'lucide:' + group.folderIcon}"></iconify-icon>
+                                    </span>
+                                    <div class="vb-group-title" th:text="${group.folderName}">Folder</div>
                                 </div>
-                                <div th:if="${!#lists.isEmpty(deckTree)}" class="vb-list sh-ai-tree">
-                                    <div th:each="group : ${deckTree}" class="vb-group is-collapsed" th:style="'--folder-color: ' + ${group.folderColor}">
-                                        <div class="vb-group-head" style="cursor:pointer;">
+                                <div class="vb-group-body vb-folder-content">
+                                    <label th:each="deck : ${group.decks}" class="vb-deck"
+                                           th:classappend="${selectedExistingDeckId == deck.deckId ? ' is-selected' : ''}">
+                                        <input class="sh-checkbox sh-ai-tree-radio" type="radio" name="existingDeckId" th:value="${deck.deckId}" th:checked="${selectedExistingDeckId == deck.deckId}">
+                                        <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
+                                             <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
+                                        </span>
+                                        <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
+                                        <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
+                                    </label>
+                                    <div th:each="sub : ${group.subGroups}" class="vb-subgroup is-collapsed" th:style="'--folder-color: ' + ${sub.folderColor}">
+                                        <div class="vb-subgroup-head" style="cursor:pointer;">
                                             <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder">
                                                 <iconify-icon icon="lucide:chevron-right"></iconify-icon>
                                             </button>
-                                            <span class="vb-group-cap">
-                                                <iconify-icon th:attr="icon=${group.folderIcon.contains(':') ? group.folderIcon : 'lucide:' + group.folderIcon}"></iconify-icon>
+                                            <span class="vb-subgroup-cap">
+                                                <iconify-icon th:attr="icon=${sub.folderIcon.contains(':') ? sub.folderIcon : 'lucide:' + sub.folderIcon}"></iconify-icon>
                                             </span>
-                                            <div class="vb-group-title" th:text="${group.folderName}">Folder</div>
+                                            <span class="vb-subgroup-name" th:text="${sub.folderName}">Subfolder</span>
                                         </div>
-                                        <div class="vb-group-body vb-folder-content">
-                                            <label th:each="deck : ${group.decks}" class="vb-deck"
+                                        <div class="vb-subgroup-body vb-folder-content">
+                                            <label th:each="deck : ${sub.decks}" class="vb-deck"
                                                    th:classappend="${selectedExistingDeckId == deck.deckId ? ' is-selected' : ''}">
                                                 <input class="sh-checkbox sh-ai-tree-radio" type="radio" name="existingDeckId" th:value="${deck.deckId}" th:checked="${selectedExistingDeckId == deck.deckId}">
                                                 <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
-                                     <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
-                                 </span>
+                                                     <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
+                                                </span>
                                                 <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                                 <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
                                             </label>
-                                            <div th:each="sub : ${group.subGroups}" class="vb-subgroup is-collapsed" th:style="'--folder-color: ' + ${sub.folderColor}">
-                                                <div class="vb-subgroup-head" style="cursor:pointer;">
-                                                    <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder">
-                                                        <iconify-icon icon="lucide:chevron-right"></iconify-icon>
-                                                    </button>
-                                                    <span class="vb-subgroup-cap">
-                                                        <iconify-icon th:attr="icon=${sub.folderIcon.contains(':') ? sub.folderIcon : 'lucide:' + sub.folderIcon}"></iconify-icon>
-                                                    </span>
-                                                    <span class="vb-subgroup-name" th:text="${sub.folderName}">Subfolder</span>
-                                                </div>
-                                                <div class="vb-subgroup-body vb-folder-content">
-                                                    <label th:each="deck : ${sub.decks}" class="vb-deck"
-                                                           th:classappend="${selectedExistingDeckId == deck.deckId ? ' is-selected' : ''}">
-                                                        <input class="sh-checkbox sh-ai-tree-radio" type="radio" name="existingDeckId" th:value="${deck.deckId}" th:checked="${selectedExistingDeckId == deck.deckId}">
-                                                        <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
-                                     <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
-                                 </span>
-                                                        <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
-                                                        <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
-                                                    </label>
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                     <div class="sh-setting-row" style="margin-top:1.25rem;">
                         <div>

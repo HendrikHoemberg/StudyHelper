@@ -1062,10 +1062,18 @@ document.addEventListener('change', (event) => {
         });
     }
     if (event.target.matches('input[name="existingDeckId"]') || event.target.matches('input[name="newDeckFolderId"]')) {
-        const card = event.target.closest('.sh-ai-destination-card');
-        const head = card?.querySelector('.sh-ai-destination-head input[name="destination"]');
-        if (head && !head.checked) {
-            head.checked = true;
+        const targetValue = event.target.matches('input[name="existingDeckId"]') ? 'EXISTING_DECK' : 'NEW_DECK';
+        const input = document.getElementById('ai-flashcard-destination-input');
+        if (input && input.value !== targetValue) {
+            input.value = targetValue;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            // Sync toggle buttons
+            const toggle = document.querySelector('.sh-ai-destination-toggle');
+            toggle?.querySelectorAll('.sh-ai-destination-toggle-btn').forEach(btn => {
+                btn.classList.toggle('is-active', btn.dataset.value === targetValue);
+            });
+            
             updateAiFlashcardDestinationPanels();
         }
     }
@@ -1087,6 +1095,21 @@ document.addEventListener('click', (event) => {
 });
 
 document.body.addEventListener('click', (e) => {
+    const destBtn = e.target.closest('.sh-ai-destination-toggle-btn');
+    if (destBtn) {
+        e.preventDefault();
+        const val = destBtn.dataset.value;
+        const input = document.getElementById('ai-flashcard-destination-input');
+        if (input) {
+            input.value = val;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        const group = destBtn.closest('.sh-ai-destination-toggle');
+        group?.querySelectorAll('.sh-ai-destination-toggle-btn').forEach(b => {
+            b.classList.toggle('is-active', b === destBtn);
+        });
+        updateAiFlashcardDestinationPanels();
+    }
     if (e.target.closest('#ai-gen-abort-btn')) {
         const form = document.querySelector('form.sh-ai-flashcard-form');
         if (form) htmx.trigger(form, 'htmx:abort');
@@ -1208,10 +1231,13 @@ function extractAiGenerationDetails(responseText) {
 }
 
 function updateAiFlashcardDestinationPanels() {
-    const selected = document.querySelector('input[name="destination"]:checked')?.value || 'NEW_DECK';
-    document.querySelectorAll('.sh-ai-destination-card').forEach(card => {
-        const radio = card.querySelector('.sh-ai-destination-head input[name="destination"]');
-        card.classList.toggle('is-selected', radio?.value === selected);
+    const input = document.getElementById('ai-flashcard-destination-input');
+    const selected = input?.value || document.querySelector('input[name="destination"]:checked')?.value || 'NEW_DECK';
+    
+    document.querySelectorAll('.sh-ai-destination-body').forEach(panel => {
+        const isActive = panel.dataset.destinationPanel === selected;
+        panel.style.display = isActive ? 'flex' : 'none';
+        panel.classList.toggle('is-active', isActive);
     });
 }
 

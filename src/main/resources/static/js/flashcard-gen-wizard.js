@@ -72,7 +72,7 @@
 
         if (step === 2) {
             setTimeout(() => {
-                const checkedCheckbox = document.querySelector('.sh-ai-destination-body[data-destination-panel="NEW_DECK"] input[name="newDeckFolderId"]:checked');
+                const checkedCheckbox = document.querySelector('#ai-flashcard-panel-2 input[name="newDeckFolderId"]:checked');
                 if (checkedCheckbox) {
                     let parent = checkedCheckbox.closest('.vb-group, .vb-subgroup');
                     while (parent) {
