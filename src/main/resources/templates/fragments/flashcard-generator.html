@@ -3,20 +3,6 @@
 <body>
 
 <div th:fragment="generator" class="sh-flashcard-generator sh-fade-in">
-    <div class="sh-page-header">
-        <div>
-            <h1 class="sh-page-title" th:text="#{flashcard-gen.title}">AI Flashcards</h1>
-            <p class="sh-page-subtitle" th:text="#{flashcard-gen.subtitle}">Generate flashcards from one or more uploaded PDFs.</p>
-        </div>
-        <div class="sh-page-actions">
-            <a href="/dashboard" class="sh-btn sh-btn-secondary"
-               hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
-                <iconify-icon icon="lucide:arrow-left"></iconify-icon>
-                <span th:text="#{flashcard-gen.back-to-library}">Back to Library</span>
-            </a>
-        </div>
-    </div>
-
     <div th:if="${generationError}" class="sh-alert sh-alert-danger" data-ai-generation-error="true">
         <div class="sh-alert-body" th:text="${generationError}"></div>
         <pre th:if="${generationDetails}" class="sh-alert-details" data-ai-generation-details="true" th:text="${generationDetails}" hidden></pre>
