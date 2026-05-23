@@ -58,14 +58,17 @@
                     </div>
 
                     <div th:if="${!#lists.isEmpty(pdfFolderTree)}" class="vb-list sh-ai-tree" style="max-height: 560px;">
-                        <div th:each="node : ${pdfFolderTree}" class="vb-group" th:style="'--folder-color: ' + ${node.colorHex}">
-                            <div class="vb-group-head" style="cursor:default;">
+                        <div th:each="node : ${pdfFolderTree}" class="vb-group is-collapsed" th:style="'--folder-color: ' + ${node.colorHex}">
+                            <div class="vb-group-head" style="cursor:pointer;">
+                                <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder">
+                                    <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                                </button>
                                 <span class="vb-group-cap">
                                     <iconify-icon th:attr="icon=${node.iconName.contains(':') ? node.iconName : 'lucide:' + node.iconName}"></iconify-icon>
                                 </span>
                                 <div class="vb-group-title" th:text="${node.name}">Folder</div>
                             </div>
-                            <div class="vb-group-body">
+                            <div class="vb-group-body vb-folder-content">
                                 <!-- PDFs directly in root folder -->
                                 <label th:each="pdf : ${node.pdfs}"
                                        class="sh-ai-pdf-row vb-deck"
@@ -81,14 +84,17 @@
                                 </label>
 
                                 <!-- Subfolders containing PDFs -->
-                                <div th:each="child : ${node.children}" class="vb-subgroup" th:style="'--folder-color: ' + ${child.colorHex}">
-                                    <div class="vb-subgroup-head" style="cursor:default;">
+                                <div th:each="child : ${node.children}" class="vb-subgroup is-collapsed" th:style="'--folder-color: ' + ${child.colorHex}">
+                                    <div class="vb-subgroup-head" style="cursor:pointer;">
+                                        <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder">
+                                            <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                                        </button>
                                         <span class="vb-subgroup-cap">
                                             <iconify-icon th:attr="icon=${child.iconName.contains(':') ? child.iconName : 'lucide:' + child.iconName}"></iconify-icon>
                                         </span>
                                         <span class="vb-subgroup-name" th:text="${child.name}">Subfolder</span>
                                     </div>
-                                    <div class="vb-subgroup-body">
+                                    <div class="vb-subgroup-body vb-folder-content">
                                         <!-- PDFs inside this subfolder -->
                                         <label th:each="pdf : ${child.pdfs}"
                                                class="sh-ai-pdf-row vb-deck"
@@ -129,15 +135,18 @@
                                     <p class="sh-empty-hint" th:text="#{flashcard-gen.dest.no-folders-hint}">Create a folder first.</p>
                                 </div>
                                 <div th:if="${!#lists.isEmpty(folderTree)}" class="vb-list sh-ai-tree">
-                                    <div th:each="node : ${folderTree}" class="vb-group" th:style="'--folder-color: ' + ${node.colorHex}">
+                                    <div th:each="node : ${folderTree}" class="vb-group" th:classappend="${!#lists.isEmpty(node.children)} ? ' is-collapsed' : ''" th:style="'--folder-color: ' + ${node.colorHex}">
                                         <label class="vb-group-head sh-ai-tree-folder">
+                                            <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder" th:if="${!#lists.isEmpty(node.children)}">
+                                                <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                                            </button>
                                             <input class="sh-checkbox" type="checkbox" name="newDeckFolderId" th:value="${node.id}" th:checked="${selectedNewDeckFolderId == node.id}">
                                             <span class="vb-group-cap">
                                                 <iconify-icon th:attr="icon=${node.iconName.contains(':') ? node.iconName : 'lucide:' + node.iconName}"></iconify-icon>
                                             </span>
                                             <div class="vb-group-title" th:text="${node.name}">Folder</div>
                                         </label>
-                                        <div th:if="${!#lists.isEmpty(node.children)}" class="vb-group-body">
+                                        <div th:if="${!#lists.isEmpty(node.children)}" class="vb-group-body vb-folder-content">
                                             <label th:each="child : ${node.children}" class="vb-subgroup-head sh-ai-tree-folder" th:style="'--folder-color: ' + ${child.colorHex}">
                                                 <input class="sh-checkbox" type="checkbox" name="newDeckFolderId" th:value="${child.id}" th:checked="${selectedNewDeckFolderId == child.id}">
                                                 <span class="vb-subgroup-cap">
@@ -166,37 +175,43 @@
                                     <p class="sh-empty-hint" th:text="#{flashcard-gen.dest.no-decks-hint}">Create a deck first.</p>
                                 </div>
                                 <div th:if="${!#lists.isEmpty(deckTree)}" class="vb-list sh-ai-tree">
-                                    <div th:each="group : ${deckTree}" class="vb-group" th:style="'--folder-color: ' + ${group.folderColor}">
-                                        <div class="vb-group-head" style="cursor:default;">
+                                    <div th:each="group : ${deckTree}" class="vb-group is-collapsed" th:style="'--folder-color: ' + ${group.folderColor}">
+                                        <div class="vb-group-head" style="cursor:pointer;">
+                                            <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder">
+                                                <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                                            </button>
                                             <span class="vb-group-cap">
                                                 <iconify-icon th:attr="icon=${group.folderIcon.contains(':') ? group.folderIcon : 'lucide:' + group.folderIcon}"></iconify-icon>
                                             </span>
                                             <div class="vb-group-title" th:text="${group.folderName}">Folder</div>
                                         </div>
-                                        <div class="vb-group-body">
+                                        <div class="vb-group-body vb-folder-content">
                                             <label th:each="deck : ${group.decks}" class="vb-deck"
                                                    th:classappend="${selectedExistingDeckId == deck.deckId ? ' is-selected' : ''}">
                                                 <input class="sh-checkbox sh-ai-tree-radio" type="radio" name="existingDeckId" th:value="${deck.deckId}" th:checked="${selectedExistingDeckId == deck.deckId}">
                                                 <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
-                                    <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
-                                </span>
+                                     <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
+                                 </span>
                                                 <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                                 <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
                                             </label>
-                                            <div th:each="sub : ${group.subGroups}" class="vb-subgroup" th:style="'--folder-color: ' + ${sub.folderColor}">
-                                                <div class="vb-subgroup-head" style="cursor:default;">
+                                            <div th:each="sub : ${group.subGroups}" class="vb-subgroup is-collapsed" th:style="'--folder-color: ' + ${sub.folderColor}">
+                                                <div class="vb-subgroup-head" style="cursor:pointer;">
+                                                    <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder">
+                                                        <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                                                    </button>
                                                     <span class="vb-subgroup-cap">
                                                         <iconify-icon th:attr="icon=${sub.folderIcon.contains(':') ? sub.folderIcon : 'lucide:' + sub.folderIcon}"></iconify-icon>
                                                     </span>
                                                     <span class="vb-subgroup-name" th:text="${sub.folderName}">Subfolder</span>
                                                 </div>
-                                                <div class="vb-subgroup-body">
+                                                <div class="vb-subgroup-body vb-folder-content">
                                                     <label th:each="deck : ${sub.decks}" class="vb-deck"
                                                            th:classappend="${selectedExistingDeckId == deck.deckId ? ' is-selected' : ''}">
                                                         <input class="sh-checkbox sh-ai-tree-radio" type="radio" name="existingDeckId" th:value="${deck.deckId}" th:checked="${selectedExistingDeckId == deck.deckId}">
                                                         <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
-                                    <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
-                                </span>
+                                     <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
+                                 </span>
                                                         <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
                                                         <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
                                                     </label>

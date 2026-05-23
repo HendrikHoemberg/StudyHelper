@@ -1018,9 +1018,30 @@ const AI_PDF_SLOW_WARNING_BYTES = 5 * 1024 * 1024;
 document.addEventListener('input', (event) => {
     if (!event.target.matches('#ai-pdf-search')) return;
     const q = event.target.value.toLowerCase();
+    
+    // Show/hide PDF rows
     document.querySelectorAll('.sh-ai-pdf-row').forEach(row => {
         const text = (row.dataset.name || row.innerText).toLowerCase();
-        row.style.display = text.includes(q) ? '' : 'none';
+        row.style.display = !q || text.includes(q) ? '' : 'none';
+    });
+
+    // Dynamically update foldertrees expand/collapse and visibility in Panel 1
+    document.querySelectorAll('#ai-flashcard-panel-1 .vb-group, #ai-flashcard-panel-1 .vb-subgroup').forEach(folder => {
+        if (!q) {
+            folder.style.display = '';
+            folder.classList.remove('is-search-expanded');
+            return;
+        }
+
+        // Check if there are any visible PDF rows inside this folder
+        const hasVisiblePdfs = !!folder.querySelector('.sh-ai-pdf-row:not([style*="display: none"])');
+        if (hasVisiblePdfs) {
+            folder.style.display = '';
+            folder.classList.add('is-search-expanded');
+        } else {
+            folder.style.display = 'none';
+            folder.classList.remove('is-search-expanded');
+        }
     });
 });
 

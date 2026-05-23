@@ -99,10 +99,52 @@
         });
     }
 
+    function setFolderExpanded(folder, expanded) {
+        folder.classList.toggle('is-collapsed', !expanded);
+        const toggle = folder.querySelector(':scope > .vb-group-head .vb-folder-toggle, :scope > .vb-subgroup-head .vb-folder-toggle');
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            toggle.setAttribute('title', expanded ? 'Collapse folder' : 'Expand folder');
+        }
+    }
+
+    function initFolderTrees(form) {
+        form.querySelectorAll('.vb-group, .vb-subgroup').forEach(folder => {
+            const toggle = folder.querySelector(':scope > .vb-group-head .vb-folder-toggle, :scope > .vb-subgroup-head .vb-folder-toggle');
+            if (toggle && toggle.dataset.initialized !== 'true') {
+                toggle.dataset.initialized = 'true';
+                toggle.addEventListener('click', event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setFolderExpanded(folder, folder.classList.contains('is-collapsed'));
+                });
+            }
+
+            const head = folder.querySelector(':scope > .vb-group-head, :scope > .vb-subgroup-head');
+            if (head && head.tagName !== 'LABEL' && head.dataset.initialized !== 'true') {
+                head.dataset.initialized = 'true';
+                head.addEventListener('click', event => {
+                    if (event.target.closest('button, a, input')) return;
+                    event.preventDefault();
+                    setFolderExpanded(folder, folder.classList.contains('is-collapsed'));
+                });
+            }
+        });
+
+        // Expand any folders containing selected inputs on initial render/load
+        form.querySelectorAll('.vb-group, .vb-subgroup').forEach(folder => {
+            const hasCheckedInput = !!folder.querySelector(':scope > .vb-folder-content input:checked');
+            if (hasCheckedInput) {
+                setFolderExpanded(folder, true);
+            }
+        });
+    }
+
     function init() {
         const form = $(FORM_ID);
         if (!form) return;
         wire(form);
+        initFolderTrees(form);
         updateNextEnabled();
         const hasError = document.querySelector(ERROR_BANNER_SELECTOR);
         showStep(hasError ? 2 : 1);
