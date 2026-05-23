@@ -529,12 +529,14 @@ function updateActiveNavLink() {
     const mobileLinks = document.querySelectorAll('.topnav-mobile-link');
     const bottomLinks = document.querySelectorAll('.bottom-tab');
     
-    const updateLinks = (links) => {
+    const updateLinks = (links, isBottomBar = false) => {
         links.forEach(link => {
             const href = link.getAttribute('href');
             let isMatch = false;
             
-            if (activeKey === 'dashboard' && href === '/dashboard') {
+            const adjustDashboard = isBottomBar && path.startsWith('/folders/');
+            
+            if (activeKey === 'dashboard' && href === '/dashboard' && !adjustDashboard) {
                 isMatch = true;
             } else if (activeKey === 'study' && href === '/study/start') {
                 isMatch = true;
@@ -552,7 +554,13 @@ function updateActiveNavLink() {
     
     updateLinks(desktopLinks);
     updateLinks(mobileLinks);
-    updateLinks(bottomLinks);
+    updateLinks(bottomLinks, true);
+    
+    // Specifically handle active state of bottom folders button when in a folders view
+    const bottomFoldersBtn = document.getElementById('bottom-folders-btn');
+    if (bottomFoldersBtn) {
+        bottomFoldersBtn.classList.toggle('active', path.startsWith('/folders/'));
+    }
 }
 
 /* ---------- Sidebar Drawer (mobile) ---------- */
