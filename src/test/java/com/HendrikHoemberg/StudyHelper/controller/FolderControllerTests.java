@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.entity.FileEntry;
+import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Folder;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.ActiveTab;
@@ -182,6 +183,32 @@ class FolderControllerTests {
             .andExpect(content().string(not(containsString(">Edit</button>"))))
             .andExpect(content().string(not(containsString(">Download</a>"))))
             .andExpect(content().string(not(containsString(">Delete</button>"))));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void viewFolder_DecksTab_RendersDeckPinAction() throws Exception {
+        Deck deck = new Deck();
+        deck.setId(9L);
+        deck.setName("Pinned Deck");
+        deck.setPinned(true);
+        deck.setFolder(folder);
+        deck.setUser(user);
+
+        FolderView decksView = new FolderView(
+            folder, Collections.emptyList(), List.of(deck),
+            Collections.emptyList(), Collections.singletonList(folder), 0, ActiveTab.DECKS, false
+        );
+        when(folderService.getFolderView(eq(42L), eq(user), any(), any(), eq(ActiveTab.DECKS)))
+            .thenReturn(decksView);
+
+        mockMvc.perform(get("/folders/42")
+                .with(csrf())
+                .param("tab", "decks")
+                .principal(() -> "alice"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Pinned Deck")))
+            .andExpect(content().string(containsString("title=\"Unpin\"")));
     }
 
 }

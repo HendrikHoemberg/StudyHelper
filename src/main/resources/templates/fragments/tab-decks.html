@@ -40,7 +40,7 @@
                 <div class="sh-deck-meta" th:text="#{tab.decks.cards(${deck.flashcards.size()})}">0 cards</div>
             </div>
             <div class="sh-file-tile-actions">
-                <button class="sh-deck-edit-btn" th:title="${deck.pinned ? #{tab.decks.unpin} : #{tab.decks.pin}}"
+                <button class="sh-deck-edit-btn" th:title="${deck.pinned} ? #{tab.decks.unpin} : #{tab.decks.pin}"
                         th:hx-post="@{/decks/{id}/pin(id=${deck.id})}"
                         hx-target="#explorer-detail">
                     <iconify-icon th:attr="icon=${deck.pinned ? 'lucide:pin-off' : 'lucide:pin'}"></iconify-icon>
