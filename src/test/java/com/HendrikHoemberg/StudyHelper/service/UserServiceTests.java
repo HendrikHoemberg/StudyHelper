@@ -132,4 +132,10 @@ class UserServiceTests {
         assertThat(existing.getRole()).isEqualTo(UserRole.ADMIN);
         assertThat(existing.isEnabled()).isTrue();
     }
+
+    @Test
+    void newUser_HasNullLanguageByDefault() {
+        User user = new User();
+        assertThat(user.getLanguage()).isNull();
+    }
 }

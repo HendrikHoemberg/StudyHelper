@@ -42,6 +42,9 @@ public class User {
     @Column(nullable = false)
     private int dailyAiRequestLimit = DEFAULT_DAILY_AI_REQUEST_LIMIT;
 
+    @Column(length = 8)
+    private String language;
+
     @Column(updatable = false)
     private Instant createdAt;
 
