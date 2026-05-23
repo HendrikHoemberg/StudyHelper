@@ -200,6 +200,7 @@
 <div th:fragment="scripts">
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <div th:replace="~{fragments/i18n-bridge :: bridge}"></div>
     <script src="/js/app.js"></script>
     <script src="/js/study-wizard.js"></script>
     <div th:replace="~{fragments/color-picker :: popover}"></div>

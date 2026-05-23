@@ -12,13 +12,17 @@ import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
+import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,6 +36,7 @@ public class GlobalControllerAdvice {
     private final StorageQuotaService storageQuotaService;
     private final SavedSessionService savedSessionService;
     private final HttpServletRequest request;
+    private final MessageSource messageSource;
 
     public GlobalControllerAdvice(FolderService folderService,
                                    DeckService deckService,
@@ -39,7 +44,8 @@ public class GlobalControllerAdvice {
                                    AiRequestQuotaService aiRequestQuotaService,
                                    StorageQuotaService storageQuotaService,
                                    SavedSessionService savedSessionService,
-                                   HttpServletRequest request) {
+                                   HttpServletRequest request,
+                                   MessageSource messageSource) {
         this.folderService = folderService;
         this.deckService = deckService;
         this.userService = userService;
@@ -47,6 +53,7 @@ public class GlobalControllerAdvice {
         this.storageQuotaService = storageQuotaService;
         this.savedSessionService = savedSessionService;
         this.request = request;
+        this.messageSource = messageSource;
     }
 
     @ModelAttribute("sidebarTree")
@@ -115,5 +122,43 @@ public class GlobalControllerAdvice {
         if (principal == null) return null;
         User user = userService.getByUsername(principal.getName());
         return savedSessionService.findForUser(user).orElse(null);
+    }
+
+    @ModelAttribute("i18nJs")
+    public Map<String, String> addI18nJs() {
+        Locale locale = LocaleContextHolder.getLocale();
+        Map<String, String> result = new HashMap<>();
+        addJsKeysForLocale("messages", Locale.ENGLISH, result);
+        if (!Locale.ENGLISH.getLanguage().equals(locale.getLanguage())) {
+            addJsKeysForLocale("messages", locale, result);
+        }
+        return result;
+    }
+
+    private void addJsKeysForLocale(String basename, Locale locale, Map<String, String> target) {
+        if (!(messageSource instanceof org.springframework.context.support.ReloadableResourceBundleMessageSource)) {
+            return;
+        }
+        org.springframework.context.support.ReloadableResourceBundleMessageSource rms =
+            (org.springframework.context.support.ReloadableResourceBundleMessageSource) messageSource;
+        try {
+            java.lang.reflect.Method m = org.springframework.context.support.ReloadableResourceBundleMessageSource.class
+                .getDeclaredMethod("getMergedProperties", Locale.class);
+            m.setAccessible(true);
+            Object holder = m.invoke(rms, locale);
+            java.lang.reflect.Method propsMethod = holder.getClass().getMethod("getProperties");
+            propsMethod.setAccessible(true);
+            java.util.Properties loaded = (java.util.Properties) propsMethod.invoke(holder);
+            if (loaded != null) {
+                loaded.stringPropertyNames().forEach(key -> {
+                    if (key.startsWith("js.")) {
+                        target.put(key.substring("js.".length()), loaded.getProperty(key));
+                    }
+                });
+            }
+        } catch (org.springframework.context.NoSuchMessageException ignored) {
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to load messages for " + locale, ex);
+        }
     }
 }
