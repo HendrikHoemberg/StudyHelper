@@ -63,6 +63,7 @@
                                 <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder">
                                     <iconify-icon icon="lucide:chevron-right"></iconify-icon>
                                 </button>
+                                <input type="checkbox" class="sh-checkbox sh-folder-batch-checkbox" th:disabled="${#lists.isEmpty(node.pdfs) and #lists.isEmpty(node.children)}">
                                 <span class="vb-group-cap">
                                     <iconify-icon th:attr="icon=${node.iconName.contains(':') ? node.iconName : 'lucide:' + node.iconName}"></iconify-icon>
                                 </span>
@@ -89,6 +90,7 @@
                                         <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder">
                                             <iconify-icon icon="lucide:chevron-right"></iconify-icon>
                                         </button>
+                                        <input type="checkbox" class="sh-checkbox sh-folder-batch-checkbox" th:disabled="${#lists.isEmpty(child.pdfs)}">
                                         <span class="vb-subgroup-cap">
                                             <iconify-icon th:attr="icon=${child.iconName.contains(':') ? child.iconName : 'lucide:' + child.iconName}"></iconify-icon>
                                         </span>

@@ -108,6 +108,52 @@
         }
     }
 
+    function syncFolderBatchCheckboxes(form) {
+        form.querySelectorAll('.vb-group, .vb-subgroup').forEach(folder => {
+            const batchCheckbox = folder.querySelector(':scope > .vb-group-head > .sh-folder-batch-checkbox, :scope > .vb-subgroup-head > .sh-folder-batch-checkbox');
+            if (!batchCheckbox) return;
+
+            const pdfs = folder.querySelectorAll('.vb-folder-content input[name="fileId"]');
+            if (pdfs.length === 0) {
+                batchCheckbox.disabled = true;
+                batchCheckbox.checked = false;
+                batchCheckbox.indeterminate = false;
+                return;
+            }
+
+            const checkedPdfs = folder.querySelectorAll('.vb-folder-content input[name="fileId"]:checked');
+            if (checkedPdfs.length === 0) {
+                batchCheckbox.checked = false;
+                batchCheckbox.indeterminate = false;
+            } else if (checkedPdfs.length === pdfs.length) {
+                batchCheckbox.checked = true;
+                batchCheckbox.indeterminate = false;
+            } else {
+                batchCheckbox.checked = false;
+                batchCheckbox.indeterminate = true;
+            }
+        });
+    }
+
+    function handleBatchCheckboxChange(batchCheckbox, folder, form) {
+        const isChecked = batchCheckbox.checked;
+
+        folder.querySelectorAll('.vb-folder-content input[name="fileId"]').forEach(cb => {
+            if (cb.checked !== isChecked) {
+                cb.checked = isChecked;
+                cb.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+
+        folder.querySelectorAll('.vb-folder-content .sh-folder-batch-checkbox').forEach(cb => {
+            cb.checked = isChecked;
+            cb.indeterminate = false;
+        });
+
+        syncFolderBatchCheckboxes(form);
+        updateNextEnabled();
+    }
+
     function initFolderTrees(form) {
         form.querySelectorAll('.vb-group, .vb-subgroup').forEach(folder => {
             const toggle = folder.querySelector(':scope > .vb-group-head .vb-folder-toggle, :scope > .vb-subgroup-head .vb-folder-toggle');
@@ -131,6 +177,29 @@
             }
         });
 
+        // Setup batch checkbox change listeners
+        form.querySelectorAll('.sh-folder-batch-checkbox').forEach(cb => {
+            if (cb.dataset.batchWired === 'true') return;
+            cb.dataset.batchWired = 'true';
+            cb.addEventListener('change', () => {
+                const folder = cb.closest('.vb-group, .vb-subgroup');
+                if (!folder) return;
+                handleBatchCheckboxChange(cb, folder, form);
+            });
+            cb.addEventListener('click', event => {
+                event.stopPropagation();
+            });
+        });
+
+        // Setup PDF leaf node select change listeners to sync batch checkboxes
+        form.querySelectorAll('input[name="fileId"]').forEach(cb => {
+            if (cb.dataset.batchSyncWired === 'true') return;
+            cb.dataset.batchSyncWired = 'true';
+            cb.addEventListener('change', () => {
+                syncFolderBatchCheckboxes(form);
+            });
+        });
+
         // Expand any folders containing selected inputs on initial render/load
         form.querySelectorAll('.vb-group, .vb-subgroup').forEach(folder => {
             const hasCheckedInput = !!folder.querySelector(':scope > .vb-folder-content input:checked');
@@ -138,6 +207,9 @@
                 setFolderExpanded(folder, true);
             }
         });
+
+        // Run sync on load to set initial indeterminate/checked states based on preselected files
+        syncFolderBatchCheckboxes(form);
     }
 
     function init() {
