@@ -11,17 +11,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.security.Principal;
+import org.springframework.context.i18n.LocaleContextHolder;
+
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 
 @Controller
 public class DashboardController {
 
     private static final int WEEKS = 17;
-    private static final DateTimeFormatter MONTH = DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH);
 
     private final UserService userService;
     private final DashboardService dashboardService;
@@ -81,12 +81,16 @@ public class DashboardController {
         // Up to 4 distinct months in display order (oldest → newest).
         LinkedHashSet<String> labels = new LinkedHashSet<>();
         for (HeatmapEntry e : heatmap) {
-            labels.add(e.date().format(MONTH));
+            labels.add(e.date().format(monthFormatter()));
         }
         List<String> out = new ArrayList<>(labels);
         while (out.size() > 4) {
             out.remove(0);
         }
         return out;
+    }
+
+    private static DateTimeFormatter monthFormatter() {
+        return DateTimeFormatter.ofPattern("MMM", LocaleContextHolder.getLocale());
     }
 }
