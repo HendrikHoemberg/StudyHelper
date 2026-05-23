@@ -12,6 +12,7 @@ import com.HendrikHoemberg.StudyHelper.service.FolderService;
 import com.HendrikHoemberg.StudyHelper.service.SavedSessionService;
 import com.HendrikHoemberg.StudyHelper.service.StorageQuotaService;
 import com.HendrikHoemberg.StudyHelper.service.UserService;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -88,6 +89,11 @@ public class GlobalControllerAdvice {
     @ModelAttribute("defaultColorHex")
     public String addDefaultColorHex() {
         return AppDefaults.DEFAULT_COLOR_HEX;
+    }
+
+    @ModelAttribute("currentLocale")
+    public String addCurrentLocale() {
+        return LocaleContextHolder.getLocale().getLanguage();
     }
 
     @ModelAttribute("userQuota")
