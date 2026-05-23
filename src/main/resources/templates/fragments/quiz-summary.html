@@ -7,7 +7,7 @@
 
     <div class="sh-card sh-study-complete-card">
         <div class="sh-card-body">
-            <h1 class="sh-page-title text-center mb-2">Test Complete</h1>
+            <h1 class="sh-page-title text-center mb-2" th:text="#{quiz.summary.title}">Test Complete</h1>
 
             <!-- Score hero -->
             <div class="sh-quiz-score-hero"
@@ -16,11 +16,11 @@
                                      : ' sh-quiz-score-hero--bad')}">
                 <div class="sh-quiz-score-value"
                      th:text="${correctCount} + '/' + ${totalQuestions}">0/0</div>
-                <div class="sh-quiz-score-label" th:text="${scorePercent} + '% correct'">0%</div>
+                <div class="sh-quiz-score-label" th:text="#{quiz.summary.percent-correct(${scorePercent})}">0% correct</div>
             </div>
 
             <!-- Question review -->
-            <div class="sh-section-title mt-4">Review</div>
+            <div class="sh-section-title mt-4" th:text="#{quiz.summary.review}">Review</div>
             <div class="sh-quiz-review-list">
                 <div th:each="question, iter : ${questions}"
                      th:with="isCorrect=${correctFlags[iter.index]}"
@@ -28,7 +28,7 @@
                      th:classappend="${isCorrect ? ' sh-quiz-review-item--correct' : ' sh-quiz-review-item--wrong'}">
 
                     <div class="sh-quiz-review-header">
-                        <span class="sh-quiz-review-num" th:text="'Q' + (iter.index + 1)">Q1</span>
+                        <span class="sh-quiz-review-num" th:text="#{quiz.summary.q-prefix(${iter.index + 1})}">Q1</span>
                         <span class="sh-quiz-review-question" th:text="${question.questionText}">Question</span>
                         <span class="sh-quiz-review-badge"
                                th:classappend="${isCorrect ? ' sh-quiz-review-badge--correct' : ' sh-quiz-review-badge--wrong'}">
@@ -38,7 +38,7 @@
                     </div>
 
                     <div th:unless="${isCorrect}" class="sh-quiz-review-correct-ans">
-                        <span th:text="${question.correctOptionIndices.size() > 1} ? 'Correct answers: ' : 'Correct answer: '">Correct answer: </span>
+                        <span th:text="${question.correctOptionIndices.size() > 1} ? #{quiz.summary.correct-answers-plural} : #{quiz.summary.correct-answers-singular}">Correct answer: </span>
                         <strong th:text="${correctAnswerTexts[iter.index]}">Answer</strong>
                     </div>
                 </div>
@@ -49,12 +49,12 @@
                 <a href="/study/start?mode=QUIZ" class="sh-btn sh-btn-primary"
                    hx-get="/study/start?mode=QUIZ" hx-target="#explorer-detail" hx-push-url="true">
                     <iconify-icon icon="lucide:rotate-ccw"></iconify-icon>
-                    New Quiz
+                    <span th:text="#{quiz.summary.new-quiz}">New Quiz</span>
                 </a>
                 <a href="/dashboard" class="sh-btn sh-btn-secondary"
                    hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
                     <iconify-icon icon="lucide:layout-dashboard"></iconify-icon>
-                    Back to Dashboard
+                    <span th:text="#{study.complete.back-to-dashboard}">Back to Dashboard</span>
                 </a>
             </div>
         </div>

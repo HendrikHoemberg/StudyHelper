@@ -7,7 +7,7 @@
     <!-- Progress bar -->
     <div class="sh-study-progress-wrap mb-4">
         <div class="sh-study-progress-label">
-            Question <span th:text="${questionNumber}">1</span> of <span th:text="${totalQuestions}">5</span>
+            <span th:text="#{quiz.progress(${questionNumber}, ${totalQuestions})}">Question 1 of 5</span>
         </div>
         <div class="sh-study-progress-bar-bg">
             <div class="sh-study-progress-bar"
@@ -18,7 +18,7 @@
     <!-- Question card -->
     <div class="sh-card mb-3">
         <div class="sh-card-body">
-            <div class="sh-flashcard-label mb-2">Question</div>
+            <div class="sh-flashcard-label mb-2" th:text="#{quiz.question-label}">Question</div>
             <p class="sh-quiz-question-text" th:text="${currentQuestion.questionText}">Question text</p>
         </div>
     </div>
@@ -36,15 +36,15 @@
         <div class="sh-quiz-answer-hint">
             <div th:if="${currentQuestion.type.name() == 'MULTIPLE_SELECT'}" class="sh-quiz-type-badge sh-quiz-type-badge--multiple">
                 <iconify-icon icon="lucide:list-checks"></iconify-icon>
-                <span>Multiple answers</span>
+                <span th:text="#{quiz.multiple-answers}">Multiple answers</span>
             </div>
             <div th:if="${currentQuestion.type.name() == 'TRUE_FALSE'}" class="sh-quiz-type-badge">
                 <iconify-icon icon="lucide:toggle-left"></iconify-icon>
-                <span>True or false</span>
+                <span th:text="#{quiz.true-false}">True or false</span>
             </div>
             <div th:if="${currentQuestion.type.name() != 'MULTIPLE_SELECT' and currentQuestion.type.name() != 'TRUE_FALSE'}" class="sh-quiz-type-badge">
                 <iconify-icon icon="lucide:check"></iconify-icon>
-                <span>Single answer</span>
+                <span th:text="#{quiz.single-answer}">Single answer</span>
             </div>
         </div>
 
@@ -66,7 +66,7 @@
 
         <div class="sh-quiz-feedback-actions">
             <button type="submit" class="sh-btn sh-btn-primary sh-quiz-submit-btn" disabled>
-                Submit Answer <iconify-icon icon="lucide:check"></iconify-icon>
+                <span th:text="#{quiz.submit-answer}">Submit Answer</span> <iconify-icon icon="lucide:check"></iconify-icon>
             </button>
         </div>
     </form>
@@ -91,11 +91,11 @@
     <div th:if="${answered}" class="sh-quiz-feedback">
         <div th:if="${answerCorrect}" class="sh-alert sh-alert-success">
             <iconify-icon icon="lucide:check-circle"></iconify-icon>
-            Correct!
+            <span th:text="#{quiz.correct}">Correct!</span>
         </div>
         <div th:unless="${answerCorrect}" class="sh-alert sh-alert-danger">
             <iconify-icon icon="lucide:x-circle"></iconify-icon>
-            Incorrect.
+            <span th:text="#{quiz.incorrect}">Incorrect.</span>
         </div>
         <div class="sh-quiz-feedback-actions">
             <a th:if="${questionNumber < totalQuestions}"
@@ -105,7 +105,7 @@
                hx-disabled-elt="this"
                class="sh-btn sh-btn-primary"
                style="cursor:pointer;">
-                Next Question <iconify-icon icon="lucide:arrow-right"></iconify-icon>
+                <span th:text="#{quiz.next-question}">Next Question</span> <iconify-icon icon="lucide:arrow-right"></iconify-icon>
             </a>
             <a th:if="${questionNumber >= totalQuestions}"
                hx-get="/quiz/next"
@@ -114,7 +114,7 @@
                hx-disabled-elt="this"
                class="sh-btn sh-btn-primary"
                style="cursor:pointer;">
-                <iconify-icon icon="lucide:flag"></iconify-icon> View Results
+                <iconify-icon icon="lucide:flag"></iconify-icon> <span th:text="#{quiz.view-results}">View Results</span>
             </a>
         </div>
     </div>

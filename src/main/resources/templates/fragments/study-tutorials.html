@@ -13,9 +13,9 @@
                 <span class="sh-tutorial-icon" id="sh-tutorial-icon">
                     <iconify-icon icon="lucide:info"></iconify-icon>
                 </span>
-                <h3 class="sh-tutorial-title" id="sh-tutorial-title">How it works</h3>
+                <h3 class="sh-tutorial-title" id="sh-tutorial-title" th:text="#{study.tutorial.how-it-works}">How it works</h3>
                 <button type="button" class="sh-tutorial-close" id="sh-tutorial-close"
-                        aria-label="Close" data-sh-tutorial-cancel>
+                        th:aria-label="#{study.tutorial.close}" aria-label="Close" data-sh-tutorial-cancel>
                     <iconify-icon icon="lucide:x"></iconify-icon>
                 </button>
             </div>
@@ -25,87 +25,87 @@
 
     <!-- Hidden per-mode content (cloned into the modal body by JS) -->
     <div class="sh-tutorial-source" data-tutorial-content="FLASHCARDS" hidden>
-        <h4>How it works</h4>
+        <h4 th:text="#{study.tutorial.how-it-works}">How it works</h4>
         <ul>
-            <li>Each session surfaces the cards that are <strong>due</strong> today, plus up to a daily limit of new cards (20). Cards you already know are spaced further out and skipped until they come due.</li>
-            <li>Tap the card to flip between the question and the answer.</li>
-            <li>After revealing the answer, grade yourself with <strong>Again&nbsp;/&nbsp;Hard&nbsp;/&nbsp;Good&nbsp;/&nbsp;Easy</strong>. Each button previews when you'll next see the card (e.g. "Good&nbsp;&middot;&nbsp;6d").</li>
-            <li><strong>Again</strong> re-queues the card later in the same session so you keep seeing it until it sticks; Hard, Good, and Easy schedule it for a future day and remove it from the session.</li>
+            <li th:utext="#{study.tutorial.flashcards.p1}">Each session surfaces the cards that are <strong>due</strong> today, plus up to a daily limit of new cards (20). Cards you already know are spaced further out and skipped until they come due.</li>
+            <li th:text="#{study.tutorial.flashcards.p2}">Tap the card to flip between the question and the answer.</li>
+            <li th:utext="#{study.tutorial.flashcards.p3}">After revealing the answer, grade yourself with <strong>Again&nbsp;/&nbsp;Hard&nbsp;/&nbsp;Good&nbsp;/&nbsp;Easy</strong>. Each button previews when you'll next see the card (e.g. "Good&nbsp;&middot;&nbsp;6d").</li>
+            <li th:utext="#{study.tutorial.flashcards.p4}"><strong>Again</strong> re-queues the card later in the same session so you keep seeing it until it sticks; Hard, Good, and Easy schedule it for a future day and remove it from the session.</li>
         </ul>
-        <h4>Tips</h4>
+        <h4 th:text="#{study.tutorial.tips}">Tips</h4>
         <ul>
-            <li>Grade honestly &mdash; the schedule only helps if it reflects what you actually recall.</li>
-            <li>Turn on the <strong>Practice</strong> toggle to run through cards without changing their schedule (good for last-minute cramming).</li>
+            <li th:text="#{study.tutorial.flashcards.tip1}">Grade honestly &mdash; the schedule only helps if it reflects what you actually recall.</li>
+            <li th:utext="#{study.tutorial.flashcards.tip2}">Turn on the <strong>Practice</strong> toggle to run through cards without changing their schedule (good for last-minute cramming).</li>
         </ul>
     </div>
 
     <div class="sh-tutorial-source" data-tutorial-content="QUIZ" hidden>
-        <h4>How it works</h4>
+        <h4 th:text="#{study.tutorial.how-it-works}">How it works</h4>
         <ul>
-            <li>Pick the decks or files you want to be quizzed on as the source.</li>
-            <li>The AI generates multiple-choice and true/false questions from that material.</li>
-            <li>Answer each question and get immediate scoring as you go.</li>
-            <li>A summary at the end shows how you did.</li>
+            <li th:text="#{study.tutorial.quiz.p1}">Pick the decks or files you want to be quizzed on as the source.</li>
+            <li th:text="#{study.tutorial.quiz.p2}">The AI generates multiple-choice and true/false questions from that material.</li>
+            <li th:text="#{study.tutorial.quiz.p3}">Answer each question and get immediate scoring as you go.</li>
+            <li th:text="#{study.tutorial.quiz.p4}">A summary at the end shows how you did.</li>
         </ul>
-        <h4>Tips</h4>
+        <h4 th:text="#{study.tutorial.tips}">Tips</h4>
         <ul>
-            <li>More source material gives the AI more to draw varied questions from.</li>
-            <li>Use it to check understanding quickly &mdash; it does not change your flashcard schedules.</li>
+            <li th:text="#{study.tutorial.quiz.tip1}">More source material gives the AI more to draw varied questions from.</li>
+            <li th:text="#{study.tutorial.quiz.tip2}">Use it to check understanding quickly &mdash; it does not change your flashcard schedules.</li>
         </ul>
     </div>
 
     <div class="sh-tutorial-source" data-tutorial-content="EXAM" hidden>
-        <h4>How it works</h4>
+        <h4 th:text="#{study.tutorial.how-it-works}">How it works</h4>
         <ul>
-            <li>Choose your material, then answer <strong>long-form written</strong> questions in your own words.</li>
-            <li>The AI grades your answers and returns a feedback report highlighting what was strong and what to improve.</li>
+            <li th:utext="#{study.tutorial.exam.p1}">Choose your material, then answer <strong>long-form written</strong> questions in your own words.</li>
+            <li th:text="#{study.tutorial.exam.p2}">The AI grades your answers and returns a feedback report highlighting what was strong and what to improve.</li>
         </ul>
-        <h4>Tips</h4>
+        <h4 th:text="#{study.tutorial.tips}">Tips</h4>
         <ul>
-            <li>Best for testing deeper understanding and explanation, not quick recall.</li>
-            <li>Like quizzes, exam performance does not affect your flashcard scheduling.</li>
+            <li th:text="#{study.tutorial.exam.tip1}">Best for testing deeper understanding and explanation, not quick recall.</li>
+            <li th:text="#{study.tutorial.exam.tip2}">Like quizzes, exam performance does not affect your flashcard scheduling.</li>
         </ul>
     </div>
 
     <div class="sh-tutorial-source" data-tutorial-content="STUDY_DASHBOARD" hidden>
-        <h4>How it works</h4>
+        <h4 th:text="#{study.tutorial.how-it-works}">How it works</h4>
         <ul>
-            <li>Jump straight into configuring a study session with your choice of study modes: <strong>Flashcards</strong>, <strong>AI Quiz</strong>, or <strong>Exam</strong>.</li>
-            <li>Customize options like question counts, AI guidelines, and study order before beginning your session.</li>
-            <li>Track your correct and incorrect answers to automatically feed your progress back into the spaced repetition scheduler.</li>
+            <li th:utext="#{study.tutorial.study-dashboard.p1}">Jump straight into configuring a study session with your choice of study modes: <strong>Flashcards</strong>, <strong>AI Quiz</strong>, or <strong>Exam</strong>.</li>
+            <li th:text="#{study.tutorial.study-dashboard.p2}">Customize options like question counts, AI guidelines, and study order before beginning your session.</li>
+            <li th:text="#{study.tutorial.study-dashboard.p3}">Track your correct and incorrect answers to automatically feed your progress back into the spaced repetition scheduler.</li>
         </ul>
-        <h4>Tips</h4>
+        <h4 th:text="#{study.tutorial.tips}">Tips</h4>
         <ul>
-            <li>Select multiple decks or folders to study mixed content.</li>
-            <li>Use custom AI instructions if you want to quiz yourself on specific sub-topics or focus on a particular language.</li>
+            <li th:text="#{study.tutorial.study-dashboard.tip1}">Select multiple decks or folders to study mixed content.</li>
+            <li th:text="#{study.tutorial.study-dashboard.tip2}">Use custom AI instructions if you want to quiz yourself on specific sub-topics or focus on a particular language.</li>
         </ul>
     </div>
 
     <div class="sh-tutorial-source" data-tutorial-content="GENERATOR_DASHBOARD" hidden>
-        <h4>How it works</h4>
+        <h4 th:text="#{study.tutorial.how-it-works}">How it works</h4>
         <ul>
-            <li>Instantly build structured flashcard decks using advanced AI.</li>
-            <li>Upload documents (like PDF files), paste plain text notes, or capture/upload images.</li>
-            <li>The AI analyzes your material and generates relevant question-and-answer pairs, organizing them into a new deck.</li>
+            <li th:text="#{study.tutorial.generator-dashboard.p1}">Instantly build structured flashcard decks using advanced AI.</li>
+            <li th:text="#{study.tutorial.generator-dashboard.p2}">Upload documents (like PDF files), paste plain text notes, or capture/upload images.</li>
+            <li th:text="#{study.tutorial.generator-dashboard.p3}">The AI analyzes your material and generates relevant question-and-answer pairs, organizing them into a new deck.</li>
         </ul>
-        <h4>Tips</h4>
+        <h4 th:text="#{study.tutorial.tips}">Tips</h4>
         <ul>
-            <li>For PDFs, you can select specific pages to focus the generator on exactly what you need.</li>
-            <li>Provide custom prompt instructions to guide the AI, such as "create only high-level conceptual questions" or "generate definitions in French".</li>
+            <li th:text="#{study.tutorial.generator-dashboard.tip1}">For PDFs, you can select specific pages to focus the generator on exactly what you need.</li>
+            <li th:text="#{study.tutorial.generator-dashboard.tip2}">Provide custom prompt instructions to guide the AI, such as "create only high-level conceptual questions" or "generate definitions in French".</li>
         </ul>
     </div>
 
     <div class="sh-tutorial-source" data-tutorial-content="DUE_DASHBOARD" hidden>
-        <h4>How it works</h4>
+        <h4 th:text="#{study.tutorial.how-it-works}">How it works</h4>
         <ul>
-            <li>Your daily spaced repetition queue. These are cards that the system has scheduled for review today based on your previous grades.</li>
-            <li>Reviewing these cards daily is the most efficient way to achieve <strong>long-term mastery</strong> with minimal study time.</li>
-            <li>Tap any card to flip it, then grade your recall honestly: <strong>Again / Hard / Good / Easy</strong>.</li>
+            <li th:text="#{study.tutorial.due-dashboard.p1}">Your daily spaced repetition queue. These are cards that the system has scheduled for review today based on your previous grades.</li>
+            <li th:utext="#{study.tutorial.due-dashboard.p2}">Reviewing these cards daily is the most efficient way to achieve <strong>long-term mastery</strong> with minimal study time.</li>
+            <li th:utext="#{study.tutorial.due-dashboard.p3}">Tap any card to flip it, then grade your recall honestly: <strong>Again / Hard / Good / Easy</strong>.</li>
         </ul>
-        <h4>Tips</h4>
+        <h4 th:text="#{study.tutorial.tips}">Tips</h4>
         <ul>
-            <li>Keep your streak alive! Consistent daily practice helps solidify memories much better than cramming.</li>
-            <li>If you are all caught up, feel free to start a custom study session to review other material or preview new cards.</li>
+            <li th:text="#{study.tutorial.due-dashboard.tip1}">Keep your streak alive! Consistent daily practice helps solidify memories much better than cramming.</li>
+            <li th:text="#{study.tutorial.due-dashboard.tip2}">If you are all caught up, feel free to start a custom study session to review other material or preview new cards.</li>
         </ul>
     </div>
 

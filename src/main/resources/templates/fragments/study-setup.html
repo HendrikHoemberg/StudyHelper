@@ -41,10 +41,10 @@
 
             <!-- Panel 1: Mode Picker -->
             <div class="sh-wizard-panel" data-step="1" id="wizard-panel-1">
-                <div class="sh-section-title">What's the plan?</div>
+                <div class="sh-section-title" th:text="#{study.setup.whats-the-plan}">What's the plan?</div>
                 <div class="sh-study-mode-grid">
                     <label class="sh-study-choice sh-study-choice-study" onclick="selectStudyMode(this, 'FLASHCARDS')">
-                        <span class="sh-mode-info" role="button" tabindex="0" aria-label="How Flashcards works"
+                            <span class="sh-mode-info" role="button" tabindex="0" th:aria-label="#{study.setup.how-flashcards}" aria-label="How Flashcards works"
                               onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('FLASHCARDS');">
                             <iconify-icon icon="lucide:info"></iconify-icon>
                         </span>
@@ -52,13 +52,13 @@
                         <div class="sh-study-choice-icon">
                             <iconify-icon icon="lucide:book-open"></iconify-icon>
                         </div>
-                        <div class="sh-study-choice-title">Flashcards</div>
-                        <div class="sh-study-choice-subtitle">
+                        <div class="sh-study-choice-title" th:text="#{study.setup.mode.flashcards}">Flashcards</div>
+                        <div class="sh-study-choice-subtitle" th:text="#{study.setup.mode.flashcards-desc}">
                             Flip through cards. Track right/wrong.
                         </div>
                     </label>
                     <label class="sh-study-choice sh-study-choice-generate" onclick="selectStudyMode(this, 'QUIZ')">
-                        <span class="sh-mode-info" role="button" tabindex="0" aria-label="How AI Quiz works"
+                            <span class="sh-mode-info" role="button" tabindex="0" th:aria-label="#{study.setup.how-quiz}" aria-label="How AI Quiz works"
                               onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('QUIZ');">
                             <iconify-icon icon="lucide:info"></iconify-icon>
                         </span>
@@ -66,13 +66,13 @@
                         <div class="sh-study-choice-icon">
                             <iconify-icon icon="lucide:list-checks"></iconify-icon>
                         </div>
-                        <div class="sh-study-choice-title">AI Quiz</div>
-                        <div class="sh-study-choice-subtitle">
+                        <div class="sh-study-choice-title" th:text="#{study.setup.mode.quiz}">AI Quiz</div>
+                        <div class="sh-study-choice-subtitle" th:text="#{study.setup.mode.quiz-desc}">
                             Auto-generated multiple choice & true/false questions.
                         </div>
                     </label>
                     <label class="sh-study-choice sh-study-choice-exam" onclick="selectStudyMode(this, 'EXAM')">
-                        <span class="sh-mode-info" role="button" tabindex="0" aria-label="How Exam works"
+                            <span class="sh-mode-info" role="button" tabindex="0" th:aria-label="#{study.setup.how-exam}" aria-label="How Exam works"
                               onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('EXAM');">
                             <iconify-icon icon="lucide:info"></iconify-icon>
                         </span>
@@ -80,8 +80,8 @@
                         <div class="sh-study-choice-icon">
                             <iconify-icon icon="lucide:pencil-line"></iconify-icon>
                         </div>
-                        <div class="sh-study-choice-title">Exam</div>
-                        <div class="sh-study-choice-subtitle">
+                        <div class="sh-study-choice-title" th:text="#{study.setup.mode.exam}">Exam</div>
+                        <div class="sh-study-choice-subtitle" th:text="#{study.setup.mode.exam-desc}">
                             Long-form written answers, AI-graded.
                         </div>
                     </label>
@@ -102,18 +102,18 @@
             <!-- Sticky footer -->
             <div class="sh-wizard-footer">
                 <button type="button" class="sh-btn sh-btn-secondary" id="wizard-btn-back">
-                    <iconify-icon icon="lucide:arrow-left"></iconify-icon> Back
+                    <iconify-icon icon="lucide:arrow-left"></iconify-icon> <span th:text="#{study.setup.back}">Back</span>
                 </button>
                 <div style="display:flex;gap:0.75rem;margin-left:auto;">
                     <button type="button" class="sh-btn sh-btn-primary" id="wizard-btn-next">
-                        Next <iconify-icon icon="lucide:arrow-right"></iconify-icon>
+                        <span th:text="#{study.setup.next}">Next</span> <iconify-icon icon="lucide:arrow-right"></iconify-icon>
                     </button>
                     <button type="button" class="sh-btn sh-btn-secondary" id="wizard-btn-submit-with-instructions" style="display:none;">
-                        <iconify-icon icon="lucide:message-square-text"></iconify-icon> Generate with instructions
+                        <iconify-icon icon="lucide:message-square-text"></iconify-icon> <span th:text="#{study.setup.generate-with-instructions}">Generate with instructions</span>
                     </button>
                     <button type="submit" class="sh-btn sh-btn-primary" id="wizard-btn-submit" style="display:none;">
                         <iconify-icon icon="lucide:play"></iconify-icon>
-                        <span class="sh-btn-text">Start</span>
+                        <span th:text="#{study.setup.start}" class="sh-btn-text">Start</span>
                     </button>
                 </div>
             </div>
@@ -133,10 +133,10 @@
         <div class="sh-ai-gen-dialog">
             <div class="sh-ai-gen-spinner"></div>
             <div>
-                <div id="ai-gen-title" class="sh-ai-gen-title">Generating your quiz with AI…</div>
-                <div class="sh-ai-gen-subtitle">This may take a few seconds.</div>
+                <div id="ai-gen-title" class="sh-ai-gen-title" th:text="#{study.setup.ai-gen-title}">Generating your quiz with AI…</div>
+                <div class="sh-ai-gen-subtitle" th:text="#{study.setup.ai-gen-subtitle}">This may take a few seconds.</div>
             </div>
-            <button type="button" class="sh-btn sh-btn-secondary sh-btn-sm" id="ai-gen-abort-btn">Cancel</button>
+            <button type="button" class="sh-btn sh-btn-secondary sh-btn-sm" id="ai-gen-abort-btn" th:text="#{study.setup.cancel}">Cancel</button>
         </div>
     </div>
 </div>

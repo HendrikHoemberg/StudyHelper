@@ -12,26 +12,27 @@
        th:attr="hx-get=@{${savedSession.resumeUrl()}}"
        hx-target="#explorer-detail"
        hx-push-url="true"
-       aria-label="Resume saved session">
+        th:aria-label="#{session.card.resume-aria}" aria-label="Resume saved session">
         <div class="sh-saved-session-icon">
             <iconify-icon icon="lucide:play"></iconify-icon>
         </div>
         <div class="sh-saved-session-body">
             <div class="sh-saved-session-eyebrow">
                 <span class="sh-saved-session-tag" th:text="${savedSession.type()}">FLASHCARDS</span>
-                <span class="sh-saved-session-paused">Paused</span>
+                <span class="sh-saved-session-paused" th:text="#{session.paused}">Paused</span>
             </div>
             <div class="sh-saved-session-title" th:text="${savedSession.title()}">Title</div>
             <div class="sh-saved-session-progress" th:text="${savedSession.progressLabel()}">0 / 0 answered</div>
         </div>
-        <span class="sh-saved-session-cta" aria-hidden="true">Resume</span>
+        <span class="sh-saved-session-cta" aria-hidden="true" th:text="#{session.resume}">Resume</span>
     </a>
     <button type="button" class="sh-saved-session-dismiss"
-            aria-label="Discard saved session"
+            th:aria-label="#{session.discard-aria}" aria-label="Discard saved session"
             hx-post="/sessions/saved/discard"
             hx-target="#saved-session-card"
             hx-swap="outerHTML"
-            hx-confirm="Discard this saved session? Your progress will be lost.">
+            hx-confirm="Discard this saved session? Your progress will be lost."
+            th:hx-confirm="#{session.discard.confirm}">
         <iconify-icon icon="lucide:x"></iconify-icon>
     </button>
 </section>
@@ -50,7 +51,7 @@
    th:title="${savedSession.title() + ' — ' + savedSession.progressLabel()}">
     <span class="topnav-saved-badge-dot" aria-hidden="true"></span>
     <iconify-icon icon="lucide:bookmark"></iconify-icon>
-    <span>Resume</span>
+    <span th:text="#{session.resume}">Resume</span>
 </a>
 
 <!-- Conflict modal — included inline in the study wizard when a saved session exists.
@@ -60,15 +61,15 @@
     <div class="sh-modal-dialog">
         <div class="sh-modal-content">
             <div class="sh-modal-header">
-                <h5 class="sh-modal-title">Saved session in progress</h5>
+                <h5 class="sh-modal-title" th:text="#{session.conflict.title}">Saved session in progress</h5>
 
             </div>
             <div class="sh-modal-body">
                 <p style="margin:0;color:var(--text-muted);font-size:0.875rem;">
-                    You already have a saved
+                    <span th:text="#{session.conflict.body-pre}">You already have a saved</span>
                     <strong style="color:var(--text);text-transform:lowercase;"
                             th:text="${savedSession.type()}">flashcards</strong>
-                    session. Resume it, or discard it and start a new one.
+                    <span th:text="#{session.conflict.body-post}">session. Resume it, or discard it and start a new one.</span>
                 </p>
                 <div class="sh-saved-session-recap">
                     <div class="sh-saved-session-recap-title" th:text="${savedSession.title()}">Title</div>
@@ -83,14 +84,14 @@
                    hx-target="#explorer-detail"
                    hx-replace-url="true"
                    hx-on::after-request="var modal=document.getElementById('saved-session-conflict-modal'); if (modal) modal.remove();">
-                    Cancel
+                    <span th:text="#{session.cancel}">Cancel</span>
                 </a>
                 <button type="button" class="sh-btn sh-btn-danger"
                         hx-post="/sessions/saved/discard"
                         hx-target="#saved-session-conflict-modal"
                         hx-swap="outerHTML">
                     <iconify-icon icon="lucide:trash-2"></iconify-icon>
-                    Discard
+                    <span th:text="#{session.discard}">Discard</span>
                 </button>
                 <a class="sh-btn sh-btn-primary"
                    th:href="@{${savedSession.resumeUrl()}}"
@@ -98,7 +99,7 @@
                    hx-target="#explorer-detail"
                    hx-push-url="true">
                     <iconify-icon icon="lucide:play"></iconify-icon>
-                    Resume
+                    <span th:text="#{session.resume}">Resume</span>
                 </a>
             </div>
         </div>

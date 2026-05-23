@@ -10,7 +10,7 @@
     <!-- Progress bar -->
     <div class="sh-study-progress-wrap mb-4">
         <div class="sh-study-progress-label">
-            Card <span th:text="${currentCardNumber}">1</span> of <span th:text="${totalCards}">10</span>
+            <span th:text="#{study.card-progress(${currentCardNumber}, ${totalCards})}">Card 1 of 10</span>
             <span style="margin-left:0.5rem;display:inline-flex;align-items:center;gap:0.35rem;">
                 —
                 <iconify-icon th:attr="icon=${(currentCard.deckIconName ?: 'layers').contains(':') ? (currentCard.deckIconName ?: 'layers') : 'lucide:' + (currentCard.deckIconName ?: 'layers')}"
@@ -34,25 +34,25 @@
                 <!-- Front face -->
                 <div class="sh-flip-face sh-flip-front">
                     <div class="sh-study-face-content">
-                        <div class="sh-flashcard-label" style="margin-bottom:0.75rem;">Question</div>
+                        <div class="sh-flashcard-label" style="margin-bottom:0.75rem;" th:text="#{study.question-label}">Question</div>
                         <img th:if="${currentCard.frontImageUrl}" th:src="${currentCard.frontImageUrl}"
-                             class="sh-study-card-image sh-lightbox-trigger" alt="Card image">
+                             class="sh-study-card-image sh-lightbox-trigger" th:alt="#{study.card-image-alt}" alt="Card image">
                         <div th:if="${currentCard.frontText != null and !#strings.isEmpty(currentCard.frontText)}"
                              class="sh-study-face-text" th:text="${currentCard.frontText}">Front text</div>
                     </div>
                     <button type="button" class="sh-btn sh-btn-primary sh-study-reveal-btn"
                             style="min-width:160px;justify-content:center;"
                             onclick="event.stopPropagation(); this.closest('.sh-flip-card').classList.add('flipped')">
-                        Tap to reveal
+                        <span th:text="#{study.tap-to-reveal}">Tap to reveal</span>
                     </button>
                 </div>
 
                 <!-- Back face -->
                 <div class="sh-flip-face sh-flip-back">
                     <div class="sh-study-face-content">
-                        <div class="sh-flashcard-label" style="margin-bottom:0.75rem;">Answer</div>
+                        <div class="sh-flashcard-label" style="margin-bottom:0.75rem;" th:text="#{study.answer-label}">Answer</div>
                         <img th:if="${currentCard.backImageUrl}" th:src="${currentCard.backImageUrl}"
-                             class="sh-study-card-image sh-lightbox-trigger" alt="Card image">
+                             class="sh-study-card-image sh-lightbox-trigger" th:alt="#{study.card-image-alt}" alt="Card image">
                         <div th:if="${currentCard.backText != null and !#strings.isEmpty(currentCard.backText)}"
                              class="sh-study-face-text" th:text="${currentCard.backText}">Back text</div>
                     </div>
@@ -62,7 +62,7 @@
                             <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
                             <input type="hidden" name="grade" value="AGAIN">
                             <button type="submit" class="sh-study-grade sh-grade-again">
-                                <span class="sh-grade-label">Again</span>
+                                <span class="sh-grade-label" th:text="#{study.grade.again}">Again</span>
                                 <span class="sh-grade-hint" th:text="${previewAgain}">today</span>
                             </button>
                         </form>
@@ -71,7 +71,7 @@
                             <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
                             <input type="hidden" name="grade" value="HARD">
                             <button type="submit" class="sh-study-grade sh-grade-hard">
-                                <span class="sh-grade-label">Hard</span>
+                                <span class="sh-grade-label" th:text="#{study.grade.hard}">Hard</span>
                                 <span class="sh-grade-hint" th:text="${previewHard}">2d</span>
                             </button>
                         </form>
@@ -80,7 +80,7 @@
                             <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
                             <input type="hidden" name="grade" value="GOOD">
                             <button type="submit" class="sh-study-grade sh-grade-good">
-                                <span class="sh-grade-label">Good</span>
+                                <span class="sh-grade-label" th:text="#{study.grade.good}">Good</span>
                                 <span class="sh-grade-hint" th:text="${previewGood}">6d</span>
                             </button>
                         </form>
@@ -89,12 +89,12 @@
                             <input type="hidden" name="cardId" th:value="${currentCard.cardId}">
                             <input type="hidden" name="grade" value="EASY">
                             <button type="submit" class="sh-study-grade sh-grade-easy">
-                                <span class="sh-grade-label">Easy</span>
+                                <span class="sh-grade-label" th:text="#{study.grade.easy}">Easy</span>
                                 <span class="sh-grade-hint" th:text="${previewEasy}">10d</span>
                             </button>
                         </form>
                     </div>
-                    <div th:if="${isPractice}" class="sh-study-practice-note">Practice — answers won't affect your schedule</div>
+                    <div th:if="${isPractice}" class="sh-study-practice-note" th:text="#{study.practice-note}">Practice — answers won't affect your schedule</div>
                 </div>
 
             </div>
