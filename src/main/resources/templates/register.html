@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Register — StudyHelper</title>
-    <meta name="description" content="Create your StudyHelper account with an invite code.">
+    <title th:text="#{register.title} + ' — StudyHelper'">Register — StudyHelper</title>
+    <meta name="description" th:content="#{register.description}" content="Create your StudyHelper account with an invite code.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
@@ -21,8 +21,8 @@
         <div class="sh-login-icon">
             <img src="/icons/icon-192.png" alt="" class="sh-login-logo">
         </div>
-        <h1 class="sh-login-brand">StudyHelper</h1>
-        <p class="sh-login-subtitle">Create your account</p>
+        <h1 class="sh-login-brand" th:text="#{app.brand}">StudyHelper</h1>
+        <p class="sh-login-subtitle" th:text="#{register.subtitle}">Create your account</p>
 
         <div th:if="${errorMessage}" class="sh-alert sh-alert-danger">
             <div class="sh-alert-body" th:text="${errorMessage}"></div>
@@ -30,28 +30,28 @@
 
         <form th:action="@{/register}" method="post">
             <div class="sh-login-field">
-                <label for="code" class="sh-label">Invite code</label>
+                <label for="code" class="sh-label" th:text="#{register.label.invite-code}">Invite code</label>
                 <input type="text" id="code" name="code" class="sh-input" required
-                       autocomplete="off" placeholder="Enter your invite code" th:value="${code}">
+                       autocomplete="off" th:placeholder="#{register.placeholder.invite-code}" placeholder="Enter your invite code" th:value="${code}">
             </div>
             <div class="sh-login-field">
-                <label for="username" class="sh-label">Username</label>
+                <label for="username" class="sh-label" th:text="#{register.label.username}">Username</label>
                 <input type="text" id="username" name="username" class="sh-input" required
-                       autocomplete="username" placeholder="Choose a username" th:value="${username}">
+                       autocomplete="username" th:placeholder="#{register.placeholder.username}" placeholder="Choose a username" th:value="${username}">
             </div>
             <div class="sh-login-field">
-                <label for="password" class="sh-label">Password</label>
+                <label for="password" class="sh-label" th:text="#{register.label.password}">Password</label>
                 <input type="password" id="password" name="password" class="sh-input" required
-                       autocomplete="new-password" placeholder="Choose a password">
+                       autocomplete="new-password" th:placeholder="#{register.placeholder.password}" placeholder="Choose a password">
             </div>
             <div class="sh-login-submit">
-                <button type="submit" class="sh-btn sh-btn-primary w-full justify-center">
+                <button type="submit" class="sh-btn sh-btn-primary w-full justify-center" th:text="#{register.button.create-account}">
                     Create account
                 </button>
             </div>
         </form>
         <p class="sh-login-subtitle" style="margin-top:1rem;">
-            <a th:href="@{/login}">Back to sign in</a>
+            <a th:href="@{/login}" th:text="#{register.link.back-to-sign-in}">Back to sign in</a>
         </p>
     </div>
 </body>

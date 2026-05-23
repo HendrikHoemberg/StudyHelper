@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sign In — StudyHelper</title>
-    <meta name="description" content="Sign in to StudyHelper to access your flashcard decks and study materials.">
+    <title th:text="#{login.title} + ' — StudyHelper'">Sign In — StudyHelper</title>
+    <meta name="description" th:content="#{login.description}" content="Sign in to StudyHelper to access your flashcard decks and study materials.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
@@ -21,17 +21,17 @@
         <div class="sh-login-icon">
             <img src="/icons/icon-192.png" alt="" class="sh-login-logo">
         </div>
-        <h1 class="sh-login-brand">StudyHelper</h1>
-        <p class="sh-login-subtitle">Sign in to your account</p>
+        <h1 class="sh-login-brand" th:text="#{app.brand}">StudyHelper</h1>
+        <p class="sh-login-subtitle" th:text="#{login.subtitle}">Sign in to your account</p>
 
         <div th:if="${param.error}" class="sh-alert sh-alert-danger">
-            <div class="sh-alert-body">Invalid username or password.</div>
+            <div class="sh-alert-body" th:text="#{login.error.invalid}">Invalid username or password.</div>
         </div>
         <div th:if="${param.logout}" class="sh-alert sh-alert-info">
-            <div class="sh-alert-body">You have been signed out.</div>
+            <div class="sh-alert-body" th:text="#{login.error.signed-out}">You have been signed out.</div>
         </div>
         <div th:if="${param.disabled}" class="sh-alert sh-alert-danger">
-            <div class="sh-alert-body">Your account has been disabled. Contact an administrator.</div>
+            <div class="sh-alert-body" th:text="#{login.error.disabled}">Your account has been disabled. Contact an administrator.</div>
         </div>
         <div th:if="${successMessage}" class="sh-alert sh-alert-success">
             <div class="sh-alert-body" th:text="${successMessage}"></div>
@@ -39,23 +39,23 @@
 
         <form th:action="@{/login}" method="post">
             <div class="sh-login-field">
-                <label for="username" class="sh-label">Username</label>
+                <label for="username" class="sh-label" th:text="#{login.label.username}">Username</label>
                 <input type="text" id="username" name="username" class="sh-input"
-                       autocomplete="username" required autofocus placeholder="Enter your username">
+                       autocomplete="username" required autofocus th:placeholder="#{login.placeholder.username}" placeholder="Enter your username">
             </div>
             <div class="sh-login-field">
-                <label for="password" class="sh-label">Password</label>
+                <label for="password" class="sh-label" th:text="#{login.label.password}">Password</label>
                 <input type="password" id="password" name="password" class="sh-input"
-                       autocomplete="current-password" required placeholder="Enter your password">
+                       autocomplete="current-password" required th:placeholder="#{login.placeholder.password}" placeholder="Enter your password">
             </div>
             <div class="sh-login-submit">
-                <button type="submit" class="sh-btn sh-btn-primary w-full justify-center">
+                <button type="submit" class="sh-btn sh-btn-primary w-full justify-center" th:text="#{login.button.sign-in}">
                     Sign in
                 </button>
             </div>
         </form>
         <div class="sh-login-submit">
-            <a href="/register" class="sh-btn sh-btn-secondary w-full justify-center">Register with invite code</a>
+            <a href="/register" class="sh-btn sh-btn-secondary w-full justify-center" th:text="#{login.link.register}">Register with invite code</a>
         </div>
     </div>
 </body>
