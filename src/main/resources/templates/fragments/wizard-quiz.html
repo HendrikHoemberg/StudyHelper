@@ -5,31 +5,31 @@
 <div th:fragment="panels">
     <!-- Panel 2: Quiz Format -->
     <div class="sh-wizard-panel" data-step="2" data-mode="QUIZ">
-        <div class="sh-section-title">Quiz Format</div>
+        <div class="sh-section-title" th:text="#{wizard.quiz.format}">Quiz Format</div>
         <div class="sh-study-mode-grid">
             <label class="sh-study-choice sh-study-choice-generate">
                 <input type="radio" name="quizQuestionMode" value="MCQ_ONLY">
                 <div class="sh-study-choice-icon">
                     <iconify-icon icon="lucide:list"></iconify-icon>
                 </div>
-                <div class="sh-study-choice-title">Multiple Choice</div>
-                <div class="sh-study-choice-subtitle">4 options, one or more correct.</div>
+                <div class="sh-study-choice-title" th:text="#{wizard.quiz.format.mcq}">Multiple Choice</div>
+                <div class="sh-study-choice-subtitle" th:text="#{wizard.quiz.format.mcq-desc}">4 options, one or more correct.</div>
             </label>
             <label class="sh-study-choice sh-study-choice-generate">
                 <input type="radio" name="quizQuestionMode" value="TF_ONLY">
                 <div class="sh-study-choice-icon">
                     <iconify-icon icon="lucide:check-circle"></iconify-icon>
                 </div>
-                <div class="sh-study-choice-title">True / False</div>
-                <div class="sh-study-choice-subtitle">Quick verification.</div>
+                <div class="sh-study-choice-title" th:text="#{wizard.quiz.format.tf}">True / False</div>
+                <div class="sh-study-choice-subtitle" th:text="#{wizard.quiz.format.tf-desc}">Quick verification.</div>
             </label>
             <label class="sh-study-choice sh-study-choice-generate">
                 <input type="radio" name="quizQuestionMode" value="MIXED">
                 <div class="sh-study-choice-icon">
                     <iconify-icon icon="lucide:shuffle"></iconify-icon>
                 </div>
-                <div class="sh-study-choice-title">Mixed (50/50)</div>
-                <div class="sh-study-choice-subtitle">MCQ and True/False.</div>
+                <div class="sh-study-choice-title" th:text="#{wizard.quiz.format.mixed}">Mixed (50/50)</div>
+                <div class="sh-study-choice-subtitle" th:text="#{wizard.quiz.format.mixed-desc}">MCQ and True/False.</div>
             </label>
         </div>
 
@@ -37,13 +37,13 @@
 
     <!-- Panel 3: Quiz Settings -->
     <div class="sh-wizard-panel" data-step="3" data-mode="QUIZ">
-        <div class="sh-section-title">Quiz Settings</div>
+        <div class="sh-section-title" th:text="#{wizard.quiz.settings}">Quiz Settings</div>
 
         <div class="sh-settings-grid">
             <div class="sh-setting-row">
                 <div>
-                    <div class="sh-setting-label">Difficulty</div>
-                    <div class="sh-setting-hint">Controls how directly the questions test the source material.</div>
+                    <div class="sh-setting-label" th:text="#{wizard.quiz.difficulty}">Difficulty</div>
+                    <div class="sh-setting-hint" th:text="#{wizard.quiz.difficulty-hint}">Controls how directly the questions test the source material.</div>
                 </div>
                 <div class="sh-segmented-control">
                     <label th:each="diff : ${difficulties}" class="sh-segmented-option">
@@ -55,15 +55,15 @@
 
             <div class="sh-setting-row">
                 <div>
-                    <div class="sh-setting-label">Question Count</div>
-                    <div class="sh-setting-hint">Choose between 1 and 100 generated questions.</div>
+                    <div class="sh-setting-label" th:text="#{wizard.quiz.question-count}">Question Count</div>
+                    <div class="sh-setting-hint" th:text="#{wizard.quiz.question-count-hint}">Choose between 1 and 100 generated questions.</div>
                 </div>
                 <div class="sh-number-stepper" data-stepper>
-                    <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" aria-label="Decrease question count">
+                    <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" th:aria-label="#{wizard.quiz.count.decrease}" aria-label="Decrease question count">
                         <iconify-icon icon="lucide:minus"></iconify-icon>
                     </button>
                     <input type="number" name="questionCount" class="sh-stepper-input" value="5" min="1" max="100">
-                    <button type="button" class="sh-stepper-btn" data-stepper-action="increment" aria-label="Increase question count">
+                    <button type="button" class="sh-stepper-btn" data-stepper-action="increment" th:aria-label="#{wizard.quiz.count.increase}" aria-label="Increase question count">
                         <iconify-icon icon="lucide:plus"></iconify-icon>
                     </button>
                 </div>

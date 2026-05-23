@@ -10,8 +10,8 @@
 
     <div class="sh-pv-dialog">
         <div class="sh-pv-header">
-            <span class="sh-pv-title" id="sh-pv-title">PDF</span>
-            <button type="button" class="sh-pv-hdr-btn" id="sh-pv-close-btn" aria-label="Close viewer">
+            <span class="sh-pv-title" id="sh-pv-title" th:text="#{pdf.viewer.title}">PDF</span>
+            <button type="button" class="sh-pv-hdr-btn" id="sh-pv-close-btn" th:aria-label="#{pdf.viewer.close-aria}" aria-label="Close viewer">
                 <iconify-icon icon="lucide:x"></iconify-icon>
             </button>
         </div>
@@ -22,18 +22,18 @@
                 <iconify-icon icon="lucide:loader-2" class="sh-pv-spin"></iconify-icon>
             </div>
             <div class="sh-pv-overlay" id="sh-pv-error" style="display:none;">
-                <p class="sh-pv-error-msg">This PDF could not be displayed.</p>
-                <button type="button" class="sh-btn sh-btn-secondary" id="sh-pv-error-close">Close</button>
+                <p class="sh-pv-error-msg" th:text="#{pdf.viewer.error}">This PDF could not be displayed.</p>
+                <button type="button" class="sh-btn sh-btn-secondary" id="sh-pv-error-close" th:text="#{pdf.viewer.error-close}">Close</button>
             </div>
         </div>
 
         <div class="sh-pv-footer">
             <div class="sh-pv-toolgroup">
-                <button type="button" class="sh-pv-tool-btn" id="sh-pv-zoom-out" aria-label="Zoom out">
+                <button type="button" class="sh-pv-tool-btn" id="sh-pv-zoom-out" th:aria-label="#{pdf.viewer.zoom-out-aria}" aria-label="Zoom out">
                     <iconify-icon icon="lucide:minus"></iconify-icon>
                 </button>
                 <span class="sh-pv-zoom-val" id="sh-pv-zoom-val">100%</span>
-                <button type="button" class="sh-pv-tool-btn" id="sh-pv-zoom-in" aria-label="Zoom in">
+                <button type="button" class="sh-pv-tool-btn" id="sh-pv-zoom-in" th:aria-label="#{pdf.viewer.zoom-in-aria}" aria-label="Zoom in">
                     <iconify-icon icon="lucide:plus"></iconify-icon>
                 </button>
             </div>
@@ -41,11 +41,11 @@
             <div class="sh-pv-actions">
                 <button type="button" class="sh-btn sh-btn-secondary" id="sh-pv-download">
                     <iconify-icon icon="lucide:download"></iconify-icon>
-                    Download
+                    <span th:text="#{pdf.viewer.download}">Download</span>
                 </button>
                 <button type="button" class="sh-btn sh-btn-primary" id="sh-pv-split-btn">
                     <iconify-icon icon="lucide:scissors"></iconify-icon>
-                    Split this PDF
+                    <span th:text="#{pdf.viewer.split}">Split this PDF</span>
                 </button>
             </div>
         </div>

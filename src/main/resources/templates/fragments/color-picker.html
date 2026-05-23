@@ -9,7 +9,7 @@
      style="display:none;"
      role="dialog"
      aria-modal="true"
-     aria-label="Color picker">
+     th:aria-label="#{color-picker.aria}" aria-label="Color picker">
 
     <!-- SV plane + hue slider -->
     <div class="sh-cp-gradient-area">
@@ -25,9 +25,9 @@
 
     <!-- Mode tabs -->
     <div class="sh-cp-tabs" role="tablist">
-        <button type="button" class="sh-cp-tab is-active" data-mode="hex" role="tab">HEX</button>
-        <button type="button" class="sh-cp-tab" data-mode="rgb" role="tab">RGB</button>
-        <button type="button" class="sh-cp-tab" data-mode="hsb" role="tab">HSB</button>
+        <button type="button" class="sh-cp-tab is-active" data-mode="hex" role="tab" th:text="#{color-picker.tab.hex}">HEX</button>
+        <button type="button" class="sh-cp-tab" data-mode="rgb" role="tab" th:text="#{color-picker.tab.rgb}">RGB</button>
+        <button type="button" class="sh-cp-tab" data-mode="hsb" role="tab" th:text="#{color-picker.tab.hsb}">HSB</button>
     </div>
 
     <!-- Inputs (one row per mode, toggled by JS) -->
@@ -35,33 +35,33 @@
         <!-- HEX -->
         <div class="sh-cp-input-row sh-cp-hex-row">
             <input type="text" class="sh-input" maxlength="7" spellcheck="false"
-                   placeholder="#0f766e" aria-label="Hex color value">
-            <button type="button" class="sh-cp-eyedropper" title="Pick color from screen" aria-label="Eyedropper">
+                   th:placeholder="#{color-picker.hex-placeholder}" placeholder="#0f766e" th:aria-label="#{color-picker.hex-aria}" aria-label="Hex color value">
+            <button type="button" class="sh-cp-eyedropper" th:title="#{color-picker.eyedropper.title}" title="Pick color from screen" th:aria-label="#{color-picker.eyedropper.aria}" aria-label="Eyedropper">
                 <iconify-icon icon="lucide:pipette"></iconify-icon>
             </button>
         </div>
         <!-- RGB -->
         <div class="sh-cp-input-row sh-cp-rgb-row" style="display:none">
-            <label class="sh-cp-channel">R
-                <input type="number" class="sh-input" min="0" max="255" data-channel="r" aria-label="Red">
+            <label class="sh-cp-channel"><span th:text="#{color-picker.channel.r}">R</span>
+                <input type="number" class="sh-input" min="0" max="255" data-channel="r" th:aria-label="#{color-picker.channel.r-aria}" aria-label="Red">
             </label>
-            <label class="sh-cp-channel">G
-                <input type="number" class="sh-input" min="0" max="255" data-channel="g" aria-label="Green">
+            <label class="sh-cp-channel"><span th:text="#{color-picker.channel.g}">G</span>
+                <input type="number" class="sh-input" min="0" max="255" data-channel="g" th:aria-label="#{color-picker.channel.g-aria}" aria-label="Green">
             </label>
-            <label class="sh-cp-channel">B
-                <input type="number" class="sh-input" min="0" max="255" data-channel="b" aria-label="Blue">
+            <label class="sh-cp-channel"><span th:text="#{color-picker.channel.b}">B</span>
+                <input type="number" class="sh-input" min="0" max="255" data-channel="b" th:aria-label="#{color-picker.channel.b-aria}" aria-label="Blue">
             </label>
         </div>
         <!-- HSB -->
         <div class="sh-cp-input-row sh-cp-hsb-row" style="display:none">
-            <label class="sh-cp-channel">H
-                <input type="number" class="sh-input" min="0" max="360" data-channel="h" aria-label="Hue">
+            <label class="sh-cp-channel"><span th:text="#{color-picker.channel.h}">H</span>
+                <input type="number" class="sh-input" min="0" max="360" data-channel="h" th:aria-label="#{color-picker.channel.h-aria}" aria-label="Hue">
             </label>
-            <label class="sh-cp-channel">S
-                <input type="number" class="sh-input" min="0" max="100" data-channel="s" aria-label="Saturation">
+            <label class="sh-cp-channel"><span th:text="#{color-picker.channel.s}">S</span>
+                <input type="number" class="sh-input" min="0" max="100" data-channel="s" th:aria-label="#{color-picker.channel.s-aria}" aria-label="Saturation">
             </label>
-            <label class="sh-cp-channel">B
-                <input type="number" class="sh-input" min="0" max="100" data-channel="v" aria-label="Brightness">
+            <label class="sh-cp-channel"><span th:text="#{color-picker.channel.v}">B</span>
+                <input type="number" class="sh-input" min="0" max="100" data-channel="v" th:aria-label="#{color-picker.channel.v-aria}" aria-label="Brightness">
             </label>
         </div>
     </div>
@@ -69,11 +69,11 @@
     <!-- Swatches: recent + app palette -->
     <div class="sh-cp-swatches">
         <div class="sh-cp-swatch-row">
-            <span class="sh-cp-swatch-label">Recent</span>
+            <span class="sh-cp-swatch-label" th:text="#{color-picker.swatch.recent}">Recent</span>
             <div class="sh-cp-recent-swatches"></div>
         </div>
         <div class="sh-cp-swatch-row">
-            <span class="sh-cp-swatch-label">Palette</span>
+            <span class="sh-cp-swatch-label" th:text="#{color-picker.swatch.palette}">Palette</span>
             <div class="sh-cp-palette-swatches"></div>
         </div>
     </div>

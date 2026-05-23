@@ -5,33 +5,33 @@
 <div th:fragment="panels">
     <!-- Panel 2: Exam Depth -->
     <div class="sh-wizard-panel" data-step="2" data-mode="EXAM">
-        <div class="sh-section-title">Question Depth</div>
+        <div class="sh-section-title" th:text="#{wizard.exam.depth}">Question Depth</div>
         
         <div class="sh-field-group">
             <div class="sh-study-mode-grid sh-grid-4">
                 <label class="sh-study-choice sh-study-choice-exam">
                     <input type="radio" name="questionSize" value="SHORT">
                     <div class="sh-study-choice-icon"><iconify-icon icon="lucide:minus"></iconify-icon></div>
-                    <div class="sh-study-choice-title">Short</div>
-                    <div class="sh-study-choice-subtitle">~50 words. Brief recall.</div>
+                    <div class="sh-study-choice-title" th:text="#{wizard.exam.size.short}">Short</div>
+                    <div class="sh-study-choice-subtitle" th:text="#{wizard.exam.size.short-desc}">~50 words. Brief recall.</div>
                 </label>
                 <label class="sh-study-choice sh-study-choice-exam">
                     <input type="radio" name="questionSize" value="MEDIUM">
                     <div class="sh-study-choice-icon"><iconify-icon icon="lucide:menu"></iconify-icon></div>
-                    <div class="sh-study-choice-title">Medium</div>
-                    <div class="sh-study-choice-subtitle">~150 words. Explanation.</div>
+                    <div class="sh-study-choice-title" th:text="#{wizard.exam.size.medium}">Medium</div>
+                    <div class="sh-study-choice-subtitle" th:text="#{wizard.exam.size.medium-desc}">~150 words. Explanation.</div>
                 </label>
                 <label class="sh-study-choice sh-study-choice-exam">
                     <input type="radio" name="questionSize" value="LONG">
                     <div class="sh-study-choice-icon"><iconify-icon icon="lucide:align-left"></iconify-icon></div>
-                    <div class="sh-study-choice-title">Long</div>
-                    <div class="sh-study-choice-subtitle">~400 words. Synthesis.</div>
+                    <div class="sh-study-choice-title" th:text="#{wizard.exam.size.long}">Long</div>
+                    <div class="sh-study-choice-subtitle" th:text="#{wizard.exam.size.long-desc}">~400 words. Synthesis.</div>
                 </label>
                 <label class="sh-study-choice sh-study-choice-exam">
                     <input type="radio" name="questionSize" value="MIXED">
                     <div class="sh-study-choice-icon"><iconify-icon icon="lucide:layers"></iconify-icon></div>
-                    <div class="sh-study-choice-title">Mixed</div>
-                    <div class="sh-study-choice-subtitle">Varying depths.</div>
+                    <div class="sh-study-choice-title" th:text="#{wizard.exam.size.mixed}">Mixed</div>
+                    <div class="sh-study-choice-subtitle" th:text="#{wizard.exam.size.mixed-desc}">Varying depths.</div>
                 </label>
             </div>
         </div>
@@ -39,20 +39,20 @@
 
     <!-- Panel 3: Exam Settings -->
     <div class="sh-wizard-panel" data-step="3" data-mode="EXAM">
-        <div class="sh-section-title">Exam Settings</div>
+        <div class="sh-section-title" th:text="#{wizard.exam.settings}">Exam Settings</div>
 
         <div class="sh-settings-grid">
             <div class="sh-setting-row">
                 <div>
-                    <div class="sh-setting-label">Questions</div>
-                    <div class="sh-setting-hint">Choose between 1 and 20 written-answer prompts.</div>
+                    <div class="sh-setting-label" th:text="#{wizard.exam.questions}">Questions</div>
+                    <div class="sh-setting-hint" th:text="#{wizard.exam.questions-hint}">Choose between 1 and 20 written-answer prompts.</div>
                 </div>
                 <div class="sh-number-stepper" data-stepper>
-                    <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" aria-label="Decrease question count">
+                    <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" th:aria-label="#{wizard.exam.questions.decrease}" aria-label="Decrease question count">
                         <iconify-icon icon="lucide:minus"></iconify-icon>
                     </button>
                     <input type="number" name="count" id="exam-count-input" class="sh-stepper-input" value="5" min="1" max="20">
-                    <button type="button" class="sh-stepper-btn" data-stepper-action="increment" aria-label="Increase question count">
+                    <button type="button" class="sh-stepper-btn" data-stepper-action="increment" th:aria-label="#{wizard.exam.questions.increase}" aria-label="Increase question count">
                         <iconify-icon icon="lucide:plus"></iconify-icon>
                     </button>
                 </div>
@@ -62,48 +62,48 @@
                 <label class="sh-checkbox-container" style="margin:0">
                     <input type="checkbox" name="timerEnabled" id="exam-timer-toggle" checked>
                     <span class="sh-checkbox-checkmark"></span>
-                    <span class="sh-checkbox-label">Enable Timer</span>
+                    <span class="sh-checkbox-label" th:text="#{wizard.exam.timer.enable}">Enable Timer</span>
                 </label>
                 <div id="exam-timer-input-wrap" class="sh-timer-setting">
                     <div class="sh-number-stepper" data-stepper>
-                        <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" aria-label="Decrease timer minutes">
+                        <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" th:aria-label="#{wizard.exam.timer.decrease}" aria-label="Decrease timer minutes">
                             <iconify-icon icon="lucide:minus"></iconify-icon>
                         </button>
                         <input type="number" name="timerMinutes" id="exam-timer-input" class="sh-stepper-input" value="25" min="1" max="240">
-                        <button type="button" class="sh-stepper-btn" data-stepper-action="increment" aria-label="Increase timer minutes">
+                        <button type="button" class="sh-stepper-btn" data-stepper-action="increment" th:aria-label="#{wizard.exam.timer.increase}" aria-label="Increase timer minutes">
                             <iconify-icon icon="lucide:plus"></iconify-icon>
                         </button>
                     </div>
-                    <span class="sh-setting-unit">minutes</span>
+                    <span class="sh-setting-unit" th:text="#{wizard.exam.timer.unit}">minutes</span>
                 </div>
             </div>
 
             <div id="exam-estimate-label" class="sh-estimate-label">
                 <iconify-icon icon="lucide:clock" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></iconify-icon>
-                Estimated time: ~25 minutes
+                <span th:text="#{wizard.exam.estimated}">Estimated time: ~25 minutes</span>
             </div>
         </div>
     </div>
 
     <!-- Panel 5: Exam Layout -->
     <div class="sh-wizard-panel" data-step="5" data-mode="EXAM">
-        <div class="sh-section-title">Exam Layout</div>
+        <div class="sh-section-title" th:text="#{wizard.exam.layout}">Exam Layout</div>
         <div class="sh-study-mode-grid">
             <label class="sh-study-choice sh-study-choice-exam">
                 <input type="radio" name="layout" value="PER_PAGE" checked>
                 <div class="sh-study-choice-icon">
                     <iconify-icon icon="lucide:copy"></iconify-icon>
                 </div>
-                <div class="sh-study-choice-title">One per page</div>
-                <div class="sh-study-choice-subtitle">Focus on one question at a time.</div>
+                <div class="sh-study-choice-title" th:text="#{wizard.exam.layout.per-page}">One per page</div>
+                <div class="sh-study-choice-subtitle" th:text="#{wizard.exam.layout.per-page-desc}">Focus on one question at a time.</div>
             </label>
             <label class="sh-study-choice sh-study-choice-exam">
                 <input type="radio" name="layout" value="SINGLE_PAGE">
                 <div class="sh-study-choice-icon">
                     <iconify-icon icon="lucide:file-text"></iconify-icon>
                 </div>
-                <div class="sh-study-choice-title">All on one page</div>
-                <div class="sh-study-choice-subtitle">See everything at once. Scroll to answer.</div>
+                <div class="sh-study-choice-title" th:text="#{wizard.exam.layout.single-page}">All on one page</div>
+                <div class="sh-study-choice-subtitle" th:text="#{wizard.exam.layout.single-page-desc}">See everything at once. Scroll to answer.</div>
             </label>
         </div>
     </div>

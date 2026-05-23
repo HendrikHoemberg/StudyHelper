@@ -7,22 +7,22 @@
      role="dialog" aria-modal="true" aria-labelledby="sh-ps-title">
 
     <div class="sh-ps-header">
-        <span class="sh-ps-title" id="sh-ps-title">Split PDF</span>
+        <span class="sh-ps-title" id="sh-ps-title" th:text="#{pdf.splitter.title}">Split PDF</span>
         <div class="sh-ps-zoom-controls" aria-label="Page size controls">
-            <button type="button" class="sh-ps-hdr-btn" id="sh-ps-zoom-out" aria-label="Decrease page size">
+            <button type="button" class="sh-ps-hdr-btn" id="sh-ps-zoom-out" th:aria-label="#{pdf.splitter.zoom-out-aria}" aria-label="Decrease page size">
                 <iconify-icon icon="lucide:minus"></iconify-icon>
             </button>
-            <button type="button" class="sh-ps-zoom-reset" id="sh-ps-zoom-reset" aria-label="Reset page size">
+            <button type="button" class="sh-ps-zoom-reset" id="sh-ps-zoom-reset" th:aria-label="#{pdf.splitter.zoom-reset-aria}" aria-label="Reset page size">
                 100%
             </button>
-            <button type="button" class="sh-ps-hdr-btn" id="sh-ps-zoom-in" aria-label="Increase page size">
+            <button type="button" class="sh-ps-hdr-btn" id="sh-ps-zoom-in" th:aria-label="#{pdf.splitter.zoom-in-aria}" aria-label="Increase page size">
                 <iconify-icon icon="lucide:plus"></iconify-icon>
             </button>
         </div>
-        <button type="button" class="sh-ps-hdr-btn" id="sh-ps-theme-btn" title="Toggle dark PDF colors" aria-label="Toggle dark PDF colors">
+        <button type="button" class="sh-ps-hdr-btn" id="sh-ps-theme-btn" th:title="#{pdf.splitter.theme-aria}" title="Toggle dark PDF colors" th:aria-label="#{pdf.splitter.theme-aria}" aria-label="Toggle dark PDF colors">
             <iconify-icon icon="lucide:contrast"></iconify-icon>
         </button>
-        <button type="button" class="sh-ps-hdr-btn" id="sh-ps-close-btn" aria-label="Close splitter">
+        <button type="button" class="sh-ps-hdr-btn" id="sh-ps-close-btn" th:aria-label="#{pdf.splitter.close-aria}" aria-label="Close splitter">
             <iconify-icon icon="lucide:x"></iconify-icon>
         </button>
     </div>
@@ -32,17 +32,17 @@
             <iconify-icon icon="lucide:loader-2" class="sh-ps-spin"></iconify-icon>
         </div>
         <div class="sh-ps-overlay" id="sh-ps-error" style="display:none;">
-            <p>This PDF could not be opened.</p>
+            <p th:text="#{pdf.splitter.error}">This PDF could not be opened.</p>
         </div>
         <div class="sh-ps-overlay" id="sh-ps-single" style="display:none;">
-            <p>This PDF has only one page — there is nothing to split.</p>
+            <p th:text="#{pdf.splitter.single-page}">This PDF has only one page — there is nothing to split.</p>
         </div>
 
         <div class="sh-ps-workspace" id="sh-ps-workspace" style="display:none;">
             <div class="sh-ps-pages" id="sh-ps-pages"></div>
             <aside class="sh-ps-sidebar">
-                <h6 class="sh-ps-sidebar-title">Parts</h6>
-                <p class="sh-ps-hint">Click the scissors on a page to split after it.
+                <h6 class="sh-ps-sidebar-title" th:text="#{pdf.splitter.parts-title}">Parts</h6>
+                <p class="sh-ps-hint" th:text="#{pdf.splitter.hint}">Click the scissors on a page to split after it.
                     Each part is saved as a new file.</p>
                 <div class="sh-ps-parts" id="sh-ps-parts"></div>
             </aside>
@@ -53,10 +53,10 @@
         <div class="sh-ps-footer-alert sh-alert sh-alert-danger" id="sh-ps-footer-alert"
              style="display:none;" role="alert"></div>
         <div class="sh-ps-actions">
-            <button type="button" class="sh-btn sh-btn-secondary" id="sh-ps-cancel-btn">Cancel</button>
+            <button type="button" class="sh-btn sh-btn-secondary" id="sh-ps-cancel-btn" th:text="#{pdf.splitter.cancel}">Cancel</button>
             <button type="button" class="sh-btn sh-btn-primary" id="sh-ps-save-btn" disabled>
                 <iconify-icon icon="lucide:save"></iconify-icon>
-                Save <span id="sh-ps-save-count">1</span> <span id="sh-ps-save-label">parts</span>
+                <span th:text="#{pdf.splitter.save}">Save</span> <span id="sh-ps-save-count">1</span> <span id="sh-ps-save-label" th:text="#{pdf.splitter.save-label}">parts</span>
             </button>
         </div>
     </div>

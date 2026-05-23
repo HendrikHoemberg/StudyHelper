@@ -13,8 +13,8 @@
 
     <!-- Header -->
     <div class="sh-ie-header">
-        <span class="sh-ie-title" id="sh-ie-title">Image Editor</span>
-        <button type="button" class="sh-ie-hdr-btn" id="sh-ie-close-btn" aria-label="Close editor">
+        <span class="sh-ie-title" id="sh-ie-title" th:text="#{image-editor.title}">Image Editor</span>
+        <button type="button" class="sh-ie-hdr-btn" id="sh-ie-close-btn" th:aria-label="#{image-editor.close-aria}" aria-label="Close editor">
             <iconify-icon icon="lucide:x"></iconify-icon>
         </button>
     </div>
@@ -23,46 +23,46 @@
     <div class="sh-ie-body">
 
         <!-- Left toolbar -->
-        <nav class="sh-ie-toolbar" aria-label="Drawing tools">
+        <nav class="sh-ie-toolbar" th:aria-label="#{image-editor.toolbar-aria}" aria-label="Drawing tools">
             <button type="button" class="sh-ie-tool-btn"
-                    data-tool="select" title="Select / Move (V)" aria-label="Select">
+                    data-tool="select" th:title="#{image-editor.tool.select.title}" title="Select / Move (V)" th:aria-label="#{image-editor.tool.select.aria}" aria-label="Select">
                 <iconify-icon icon="lucide:mouse-pointer-2"></iconify-icon>
             </button>
 
             <div class="sh-ie-sep" role="separator"></div>
 
             <button type="button" class="sh-ie-tool-btn is-active"
-                    data-tool="brush" title="Brush (B)" aria-label="Brush">
+                    data-tool="brush" th:title="#{image-editor.tool.brush.title}" title="Brush (B)" th:aria-label="#{image-editor.tool.brush.aria}" aria-label="Brush">
                 <iconify-icon icon="lucide:pencil"></iconify-icon>
             </button>
             <button type="button" class="sh-ie-tool-btn"
-                    data-tool="eraser" title="Eraser (E)" aria-label="Eraser">
+                    data-tool="eraser" th:title="#{image-editor.tool.eraser.title}" title="Eraser (E)" th:aria-label="#{image-editor.tool.eraser.aria}" aria-label="Eraser">
                 <iconify-icon icon="lucide:eraser"></iconify-icon>
             </button>
 
             <div class="sh-ie-sep" role="separator"></div>
 
             <button type="button" class="sh-ie-tool-btn"
-                    data-tool="rect" title="Rectangle (R)" aria-label="Rectangle">
+                    data-tool="rect" th:title="#{image-editor.tool.rect.title}" title="Rectangle (R)" th:aria-label="#{image-editor.tool.rect.aria}" aria-label="Rectangle">
                 <iconify-icon icon="lucide:square"></iconify-icon>
             </button>
             <button type="button" class="sh-ie-tool-btn"
-                    data-tool="ellipse" title="Ellipse (O)" aria-label="Ellipse">
+                    data-tool="ellipse" th:title="#{image-editor.tool.ellipse.title}" title="Ellipse (O)" th:aria-label="#{image-editor.tool.ellipse.aria}" aria-label="Ellipse">
                 <iconify-icon icon="lucide:circle"></iconify-icon>
             </button>
             <button type="button" class="sh-ie-tool-btn"
-                    data-tool="line" title="Line (L)" aria-label="Line">
+                    data-tool="line" th:title="#{image-editor.tool.line.title}" title="Line (L)" th:aria-label="#{image-editor.tool.line.aria}" aria-label="Line">
                 <iconify-icon icon="lucide:minus"></iconify-icon>
             </button>
             <button type="button" class="sh-ie-tool-btn"
-                    data-tool="text" title="Text (T)" aria-label="Text">
+                    data-tool="text" th:title="#{image-editor.tool.text.title}" title="Text (T)" th:aria-label="#{image-editor.tool.text.aria}" aria-label="Text">
                 <iconify-icon icon="lucide:type"></iconify-icon>
             </button>
 
             <div class="sh-ie-sep" role="separator"></div>
 
             <button type="button" class="sh-ie-color-btn" id="sh-ie-color-btn"
-                    title="Pick color" aria-label="Stroke color">
+                    th:title="#{image-editor.color.stroke.title}" title="Pick color" th:aria-label="#{image-editor.color.stroke.aria}" aria-label="Stroke color">
                 <span class="sh-ie-color-swatch" id="sh-ie-color-swatch"
                       style="background:#000000"></span>
             </button>
@@ -70,18 +70,18 @@
             <div class="sh-ie-sep" role="separator"></div>
 
             <button type="button" class="sh-ie-tool-btn" id="sh-ie-undo-btn"
-                    title="Undo (Ctrl+Z)" aria-label="Undo" disabled>
+                    th:title="#{image-editor.undo.title}" title="Undo (Ctrl+Z)" th:aria-label="#{image-editor.undo.aria}" aria-label="Undo" disabled>
                 <iconify-icon icon="lucide:undo-2"></iconify-icon>
             </button>
             <button type="button" class="sh-ie-tool-btn" id="sh-ie-redo-btn"
-                    title="Redo (Ctrl+Shift+Z)" aria-label="Redo" disabled>
+                    th:title="#{image-editor.redo.title}" title="Redo (Ctrl+Shift+Z)" th:aria-label="#{image-editor.redo.aria}" aria-label="Redo" disabled>
                 <iconify-icon icon="lucide:redo-2"></iconify-icon>
             </button>
 
             <div class="sh-ie-sep" role="separator"></div>
 
             <button type="button" class="sh-ie-tool-btn sh-ie-tool-danger"
-                    id="sh-ie-clear-btn" title="Clear all drawings" aria-label="Clear">
+                    id="sh-ie-clear-btn" th:title="#{image-editor.clear.title}" title="Clear all drawings" th:aria-label="#{image-editor.clear.aria}" aria-label="Clear">
                 <iconify-icon icon="lucide:trash-2"></iconify-icon>
             </button>
         </nav>
@@ -90,34 +90,34 @@
         <div class="sh-ie-canvas-area">
             <div class="sh-ie-options" id="sh-ie-options">
                 <div class="sh-ie-opt-group" data-opts="brush eraser rect ellipse line">
-                    <label class="sh-ie-ctrl-label" for="sh-ie-size-slider" id="sh-ie-size-label">Size</label>
+                    <label class="sh-ie-ctrl-label" for="sh-ie-size-slider" id="sh-ie-size-label" th:text="#{image-editor.opt.size}">Size</label>
                     <input type="range" class="sh-ie-slider" id="sh-ie-size-slider"
                            min="1" max="60" value="1" aria-label="Brush/shape size">
                     <span class="sh-ie-ctrl-val" id="sh-ie-size-val">1</span>
-                    <label class="sh-ie-ctrl-label" for="sh-ie-opacity-slider">Opacity</label>
+                    <label class="sh-ie-ctrl-label" for="sh-ie-opacity-slider" th:text="#{image-editor.opt.opacity}">Opacity</label>
                     <input type="range" class="sh-ie-slider" id="sh-ie-opacity-slider"
                            min="1" max="100" value="100" aria-label="Opacity">
                     <span class="sh-ie-ctrl-val" id="sh-ie-opacity-val">100%</span>
                 </div>
                 <div class="sh-ie-opt-group" data-opts="rect ellipse line">
-                    <label class="sh-ie-ctrl-label">Border</label>
+                    <label class="sh-ie-ctrl-label" th:text="#{image-editor.opt.border}">Border</label>
                     <button type="button" class="sh-ie-color-btn" id="sh-ie-border-btn"
-                            title="Border color" aria-label="Border color">
+                            th:title="#{image-editor.color.border.title}" title="Border color" th:aria-label="#{image-editor.color.border.aria}" aria-label="Border color">
                         <span class="sh-ie-color-swatch" id="sh-ie-border-swatch"
                               style="background:#000000"></span>
                     </button>
                 </div>
                 <div class="sh-ie-opt-group" data-opts="rect ellipse">
-                    <label class="sh-ie-ctrl-label">Fill</label>
+                    <label class="sh-ie-ctrl-label" th:text="#{image-editor.opt.fill}">Fill</label>
                     <button type="button" class="sh-ie-color-btn" id="sh-ie-fill-btn"
-                            title="Fill color" aria-label="Fill color">
+                            th:title="#{image-editor.color.fill.title}" title="Fill color" th:aria-label="#{image-editor.color.fill.aria}" aria-label="Fill color">
                         <span class="sh-ie-color-swatch sh-ie-fill-none" id="sh-ie-fill-swatch"></span>
                     </button>
                     <button type="button" class="sh-ie-zoom-reset" id="sh-ie-fill-none-btn"
-                            title="No fill">None</button>
+                            th:title="#{image-editor.opt.no-fill}" title="No fill" th:text="#{image-editor.opt.no-fill}">None</button>
                 </div>
                 <div class="sh-ie-opt-group" data-opts="text">
-                    <label class="sh-ie-ctrl-label" for="sh-ie-font-slider">Font</label>
+                    <label class="sh-ie-ctrl-label" for="sh-ie-font-slider" th:text="#{image-editor.opt.font}">Font</label>
                     <input type="range" class="sh-ie-slider" id="sh-ie-font-slider"
                            min="8" max="120" value="24" aria-label="Font size">
                     <span class="sh-ie-ctrl-val" id="sh-ie-font-val">24</span>
@@ -130,10 +130,10 @@
                 <iconify-icon icon="lucide:loader-2" class="sh-ie-spin"></iconify-icon>
             </div>
             <div class="sh-ie-overlay sh-ie-error-panel" id="sh-ie-error" style="display:none;">
-                <p class="sh-ie-error-msg" id="sh-ie-error-msg">Failed to load image.</p>
+                <p class="sh-ie-error-msg" id="sh-ie-error-msg" th:text="#{image-editor.load-error}">Failed to load image.</p>
                 <div class="sh-ie-error-actions">
-                    <button type="button" class="sh-btn sh-btn-primary" id="sh-ie-retry-btn">Retry</button>
-                    <button type="button" class="sh-btn sh-btn-secondary" id="sh-ie-err-cancel-btn">Cancel</button>
+                    <button type="button" class="sh-btn sh-btn-primary" id="sh-ie-retry-btn" th:text="#{image-editor.retry}">Retry</button>
+                    <button type="button" class="sh-btn sh-btn-secondary" id="sh-ie-err-cancel-btn" th:text="#{image-editor.footer.cancel}">Cancel</button>
                 </div>
             </div>
         </div>
@@ -143,10 +143,10 @@
     <div class="sh-ie-footer">
         <div class="sh-ie-controls">
             <div class="sh-ie-ctrl-group" id="sh-ie-zoom-controls">
-                <span class="sh-ie-ctrl-label">Zoom</span>
+                <span class="sh-ie-ctrl-label" th:text="#{image-editor.zoom}">Zoom</span>
                 <span class="sh-ie-ctrl-val" id="sh-ie-zoom-val">100%</span>
                 <button type="button" class="sh-ie-zoom-reset" id="sh-ie-zoom-reset"
-                        title="Fit to screen (0)" aria-label="Fit to screen">Fit</button>
+                        th:title="#{image-editor.fit.title}" title="Fit to screen (0)" th:aria-label="#{image-editor.fit.aria}" aria-label="Fit to screen" th:text="#{image-editor.fit.aria}">Fit</button>
             </div>
         </div>
 
@@ -154,13 +154,13 @@
              id="sh-ie-footer-alert" style="display:none;" role="alert"></div>
 
         <div class="sh-ie-actions">
-            <button type="button" class="sh-btn sh-btn-secondary" id="sh-ie-cancel-btn">
+            <button type="button" class="sh-btn sh-btn-secondary" id="sh-ie-cancel-btn" th:text="#{image-editor.footer.cancel}">
                 Cancel
             </button>
 
             <button type="button" class="sh-btn sh-btn-primary" id="sh-ie-save-btn">
                 <iconify-icon icon="lucide:save"></iconify-icon>
-                <span id="sh-ie-save-label">Save</span>
+                <span id="sh-ie-save-label" th:text="#{image-editor.save}">Save</span>
             </button>
         </div>
     </div>
@@ -168,12 +168,12 @@
     <!-- Filename Prompt Modal Overlay -->
     <div class="sh-ie-overlay" id="sh-ie-prompt" style="display:none; z-index: 2000;" role="dialog" aria-modal="true" aria-labelledby="sh-ie-prompt-title">
         <div class="sh-ie-prompt-panel">
-            <h3 class="sh-ie-prompt-title" id="sh-ie-prompt-title">Save as new</h3>
-            <p class="sh-ie-prompt-desc">Enter a name for the new file:</p>
+            <h3 class="sh-ie-prompt-title" id="sh-ie-prompt-title" th:text="#{image-editor.prompt.title}">Save as new</h3>
+            <p class="sh-ie-prompt-desc" th:text="#{image-editor.prompt.desc}">Enter a name for the new file:</p>
             <input type="text" id="sh-ie-prompt-input" class="sh-ie-prompt-input" autocomplete="off" />
             <div class="sh-ie-prompt-actions">
-                <button type="button" class="sh-btn sh-btn-secondary" id="sh-ie-prompt-cancel">Cancel</button>
-                <button type="button" class="sh-btn sh-btn-primary" id="sh-ie-prompt-ok">Save</button>
+                <button type="button" class="sh-btn sh-btn-secondary" id="sh-ie-prompt-cancel" th:text="#{image-editor.prompt.cancel}">Cancel</button>
+                <button type="button" class="sh-btn sh-btn-primary" id="sh-ie-prompt-ok" th:text="#{image-editor.prompt.save}">Save</button>
             </div>
         </div>
     </div>
@@ -182,25 +182,25 @@
     <div class="sh-ie-overlay" id="sh-ie-save-choice" style="display:none; z-index: 2000;"
          role="dialog" aria-modal="true" aria-labelledby="sh-ie-save-choice-title">
         <div class="sh-ie-prompt-panel sh-ie-choice-panel">
-            <h3 class="sh-ie-prompt-title" id="sh-ie-save-choice-title">Save changes</h3>
-            <p class="sh-ie-prompt-desc">How would you like to save?</p>
+            <h3 class="sh-ie-prompt-title" id="sh-ie-save-choice-title" th:text="#{image-editor.save-choice.title}">Save changes</h3>
+            <p class="sh-ie-prompt-desc" th:text="#{image-editor.save-choice.desc}">How would you like to save?</p>
             <button type="button" class="sh-ie-choice-card" id="sh-ie-choice-overwrite">
                 <iconify-icon icon="lucide:refresh-cw" class="sh-ie-choice-icon"></iconify-icon>
                 <span class="sh-ie-choice-text">
-                    <span class="sh-ie-choice-label">Overwrite original</span>
-                    <span class="sh-ie-choice-sub">Replace the existing file</span>
+                    <span class="sh-ie-choice-label" th:text="#{image-editor.save-choice.overwrite}">Overwrite original</span>
+                    <span class="sh-ie-choice-sub" th:text="#{image-editor.save-choice.overwrite-desc}">Replace the existing file</span>
                 </span>
             </button>
             <button type="button" class="sh-ie-choice-card" id="sh-ie-choice-new">
                 <iconify-icon icon="lucide:copy-plus" class="sh-ie-choice-icon"></iconify-icon>
                 <span class="sh-ie-choice-text">
-                    <span class="sh-ie-choice-label">Save as new file</span>
-                    <span class="sh-ie-choice-sub">Keep the original, add a copy</span>
+                    <span class="sh-ie-choice-label" th:text="#{image-editor.save-choice.save-new}">Save as new file</span>
+                    <span class="sh-ie-choice-sub" th:text="#{image-editor.save-choice.save-new-desc}">Keep the original, add a copy</span>
                 </span>
             </button>
             <div class="sh-ie-prompt-actions">
                 <button type="button" class="sh-btn sh-btn-secondary"
-                        id="sh-ie-save-choice-cancel">Cancel</button>
+                        id="sh-ie-save-choice-cancel" th:text="#{image-editor.save-choice.cancel}">Cancel</button>
             </div>
         </div>
     </div>

@@ -4,8 +4,8 @@
 
 <div th:fragment="aiGenerationError" class="sh-alert sh-alert-danger" data-ai-generation-error="true">
     <div>
-        <strong th:text="${aiErrorTitle ?: 'AI generation failed'}">AI generation failed</strong>
-        <div class="sh-alert-body" th:text="${aiErrorMessage ?: 'Please try again.'}">Please try again.</div>
+        <strong th:text="${aiErrorTitle ?: #{ai-generation.error.title}}">AI generation failed</strong>
+        <div class="sh-alert-body" th:text="${aiErrorMessage ?: #{ai-generation.error.message}}">Please try again.</div>
         <pre th:if="${aiErrorDetails}" class="sh-alert-details" data-ai-generation-details="true" th:text="${aiErrorDetails}" hidden></pre>
     </div>
     <button type="button" class="sh-alert-close" hx-on:click="this.closest('.sh-alert').remove()">

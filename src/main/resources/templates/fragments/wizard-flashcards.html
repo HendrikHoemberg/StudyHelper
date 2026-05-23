@@ -5,15 +5,15 @@
 <div th:fragment="panels">
     <!-- Panel 2: Sub-mode -->
     <div class="sh-wizard-panel" data-step="2" data-mode="FLASHCARDS">
-        <div class="sh-section-title">How do you want to study?</div>
+        <div class="sh-section-title" th:text="#{wizard.flashcards.submode}">How do you want to study?</div>
         <div class="sh-study-mode-grid">
             <label class="sh-study-choice sh-study-choice-study">
                 <input type="radio" name="sessionMode" value="DECK_BY_DECK">
                 <div class="sh-study-choice-icon">
                     <iconify-icon icon="lucide:layers"></iconify-icon>
                 </div>
-                <div class="sh-study-choice-title">Deck-by-Deck</div>
-                <div class="sh-study-choice-subtitle">
+                <div class="sh-study-choice-title" th:text="#{wizard.flashcards.mode.deck-by-deck}">Deck-by-Deck</div>
+                <div class="sh-study-choice-subtitle" th:text="#{wizard.flashcards.mode.deck-by-deck-desc}">
                     Study one deck at a time. Define the order.
                 </div>
             </label>
@@ -22,8 +22,8 @@
                 <div class="sh-study-choice-icon">
                     <iconify-icon icon="lucide:shuffle"></iconify-icon>
                 </div>
-                <div class="sh-study-choice-title">Shuffled</div>
-                <div class="sh-study-choice-subtitle">
+                <div class="sh-study-choice-title" th:text="#{wizard.flashcards.mode.shuffled}">Shuffled</div>
+                <div class="sh-study-choice-subtitle" th:text="#{wizard.flashcards.mode.shuffled-desc}">
                     Mix cards from all selected decks.
                 </div>
             </label>
@@ -33,35 +33,35 @@
         <div class="flex gap-4 justify-center mt-6">
             <label class="sh-study-inline-choice">
                 <input type="radio" name="practice" value="false" checked>
-                Scheduled review
+                <span th:text="#{wizard.flashcards.practice.scheduled}">Scheduled review</span>
             </label>
             <label class="sh-study-inline-choice">
                 <input type="radio" name="practice" value="true">
-                Practice (no scheduling)
+                <span th:text="#{wizard.flashcards.practice.unscheduled}">Practice (no scheduling)</span>
             </label>
         </div>
     </div>
 
     <!-- Panel 4: Deck Order -->
     <div class="sh-wizard-panel" data-step="4" data-mode="FLASHCARDS">
-        <div class="sh-section-title">Deck Order</div>
-        <p class="sh-folder-meta mb-3">Drag items to rearrange.</p>
+        <div class="sh-section-title" th:text="#{wizard.flashcards.deck-order}">Deck Order</div>
+        <p class="sh-folder-meta mb-3" th:text="#{wizard.flashcards.deck-order-hint}">Drag items to rearrange.</p>
 
         <div class="flex gap-3 flex-wrap mb-4">
             <label class="sh-study-inline-choice">
                 <input type="radio" name="deckOrderMode" value="SELECTED_ORDER" checked
                        onchange="document.getElementById('sh-study-order-list').style.display = ''">
-                My order
+                <span th:text="#{wizard.flashcards.order.my-order}">My order</span>
             </label>
             <label class="sh-study-inline-choice">
                 <input type="radio" name="deckOrderMode" value="RANDOMIZED_ORDER"
                        onchange="document.getElementById('sh-study-order-list').style.display = 'none'">
-                Randomize
+                <span th:text="#{wizard.flashcards.order.randomize}">Randomize</span>
             </label>
         </div>
 
         <ul class="sh-study-order-list" id="sh-study-order-list">
-            <li class="sh-study-order-empty" id="sh-order-empty-msg">Select decks in step 3 to arrange them here.</li>
+            <li class="sh-study-order-empty" id="sh-order-empty-msg" th:text="#{wizard.flashcards.order.empty}">Select decks in step 3 to arrange them here.</li>
         </ul>
         <input type="hidden" name="orderedDeckIds" id="study-ordered-deck-ids" value="">
     </div>

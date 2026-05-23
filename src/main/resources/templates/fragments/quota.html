@@ -3,9 +3,9 @@
 <body>
 
 <div id="quota-desktop" hx-swap-oob="true" class="topnav-quotas" th:if="${userQuota != null}">
-    <div class="topnav-quota" th:title="'Storage: ' + ${userQuota.storageLabel()}">
+    <div class="topnav-quota" th:title="|#{quota.storage}: ${userQuota.storageLabel()}|">
         <div class="topnav-quota-label">
-            <span>Storage</span>
+            <span th:text="#{quota.storage}">Storage</span>
             <strong th:text="${userQuota.storageLabel()}">512 MB / 1.0 GB</strong>
         </div>
         <div class="topnav-quota-progress">
@@ -14,9 +14,9 @@
                  th:style="'width:' + ${userQuota.storagePercent()} + '%'"></div>
         </div>
     </div>
-    <div class="topnav-quota" th:title="'AI today: ' + ${userQuota.aiLabel()}">
+    <div class="topnav-quota" th:title="|#{quota.ai}: ${userQuota.aiLabel()}|">
         <div class="topnav-quota-label">
-            <span>AI</span>
+            <span th:text="#{quota.ai}">AI</span>
             <strong th:text="${userQuota.aiLabel()}">7 / 10</strong>
         </div>
         <div class="topnav-quota-progress">
@@ -30,7 +30,7 @@
 <div id="quota-mobile" hx-swap-oob="true" class="topnav-mobile-quotas" th:if="${userQuota != null}">
     <div class="topnav-mobile-quota">
         <div class="topnav-quota-label">
-            <span>Storage</span>
+            <span th:text="#{quota.storage}">Storage</span>
             <strong th:text="${userQuota.storageLabel()}">512 MB / 1.0 GB</strong>
         </div>
         <div class="topnav-quota-progress">
@@ -41,7 +41,7 @@
     </div>
     <div class="topnav-mobile-quota">
         <div class="topnav-quota-label">
-            <span>AI today</span>
+            <span th:text="#{quota.ai-today}">AI today</span>
             <strong th:text="${userQuota.aiLabel()}">7 / 10</strong>
         </div>
         <div class="topnav-quota-progress">

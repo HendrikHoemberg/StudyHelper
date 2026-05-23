@@ -5,14 +5,14 @@
 <div th:fragment="generator" class="sh-flashcard-generator sh-fade-in">
     <div class="sh-page-header">
         <div>
-            <h1 class="sh-page-title">AI Flashcards</h1>
-            <p class="sh-page-subtitle">Generate flashcards from one or more uploaded PDFs.</p>
+            <h1 class="sh-page-title" th:text="#{flashcard-gen.title}">AI Flashcards</h1>
+            <p class="sh-page-subtitle" th:text="#{flashcard-gen.subtitle}">Generate flashcards from one or more uploaded PDFs.</p>
         </div>
         <div class="sh-page-actions">
             <a href="/dashboard" class="sh-btn sh-btn-secondary"
                hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
                 <iconify-icon icon="lucide:arrow-left"></iconify-icon>
-                Back to Library
+                <span th:text="#{flashcard-gen.back-to-library}">Back to Library</span>
             </a>
         </div>
     </div>
@@ -37,26 +37,26 @@
         <div class="sh-card-body">
             <div class="sh-ai-flashcard-grid">
                 <section>
-                    <div class="sh-section-title">Choose PDFs</div>
+                    <div class="sh-section-title" th:text="#{flashcard-gen.choose-pdfs}">Choose PDFs</div>
                     <div class="sh-study-search-wrap mb-3">
                         <iconify-icon icon="lucide:search" class="sh-study-search-icon"></iconify-icon>
-                        <input type="text" class="sh-study-search-input" id="ai-pdf-search" placeholder="Search PDFs..." autocomplete="off">
+                        <input type="text" class="sh-study-search-input" id="ai-pdf-search" th:placeholder="#{flashcard-gen.search-pdfs}" placeholder="Search PDFs..." autocomplete="off">
                     </div>
 
                     <div th:if="${#lists.isEmpty(pdfFolderTree)}" class="sh-empty" style="padding:1.25rem 1rem;">
-                        <p class="sh-empty-text mb-1">No supported PDFs available</p>
-                        <p class="sh-empty-hint">Upload a PDF under 10 MB first.</p>
+                        <p class="sh-empty-text mb-1" th:text="#{flashcard-gen.no-pdfs}">No supported PDFs available</p>
+                        <p class="sh-empty-hint" th:text="#{flashcard-gen.no-pdfs-hint}">Upload a PDF under 10 MB first.</p>
                     </div>
 
                     <div class="vb-pdf-mode sh-ai-global-pdf-mode" th:if="${!#lists.isEmpty(pdfFolderTree)}">
                         <input type="hidden" name="documentMode" th:value="${selectedDocumentMode ?: T(com.HendrikHoemberg.StudyHelper.dto.DocumentMode).TEXT}">
-                        <button type="button" class="vb-pdf-mode-btn" th:classappend="${selectedDocumentMode == null || #strings.toString(selectedDocumentMode) == 'TEXT'} ? ' is-active' : ''" data-mode="TEXT" th:attr="aria-pressed=${selectedDocumentMode == null || #strings.toString(selectedDocumentMode) == 'TEXT'}">Text</button>
-                        <button type="button" class="vb-pdf-mode-btn" th:classappend="${#strings.toString(selectedDocumentMode) == 'FULL_PDF'} ? ' is-active' : ''" data-mode="FULL_PDF" th:attr="aria-pressed=${#strings.toString(selectedDocumentMode) == 'FULL_PDF'}" title="Send the full PDFs with figures, diagrams, and layout.">Full PDF</button>
+                        <button type="button" class="vb-pdf-mode-btn" th:classappend="${selectedDocumentMode == null || #strings.toString(selectedDocumentMode) == 'TEXT'} ? ' is-active' : ''" data-mode="TEXT" th:attr="aria-pressed=${selectedDocumentMode == null || #strings.toString(selectedDocumentMode) == 'TEXT'}" th:text="#{flashcard-gen.mode.text}">Text</button>
+                        <button type="button" class="vb-pdf-mode-btn" th:classappend="${#strings.toString(selectedDocumentMode) == 'FULL_PDF'} ? ' is-active' : ''" data-mode="FULL_PDF" th:attr="aria-pressed=${#strings.toString(selectedDocumentMode) == 'FULL_PDF'}" th:title="#{flashcard-gen.mode.full-pdf.title}" title="Send the full PDFs with figures, diagrams, and layout." th:text="#{flashcard-gen.mode.full-pdf}">Full PDF</button>
                     </div>
 
                     <div class="sh-quiz-warn-banner sh-ai-pdf-size-warning" hidden th:if="${!#lists.isEmpty(pdfFolderTree)}">
                         <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
-                        <span>Large PDF — generation may be slow.</span>
+                        <span th:text="#{flashcard-gen.large-pdf-warning}">Large PDF — generation may be slow.</span>
                     </div>
 
                     <div th:if="${!#lists.isEmpty(pdfFolderTree)}" class="vb-list sh-ai-tree" style="max-height: 560px;">
@@ -112,23 +112,23 @@
                 </section>
 
                 <section>
-                    <div class="sh-section-title">Save generated cards to</div>
+                    <div class="sh-section-title" th:text="#{flashcard-gen.save-to}">Save generated cards to</div>
                     <div class="sh-ai-destination-list">
                         <div class="sh-ai-destination-card" th:classappend="${selectedDestination == null || #strings.toString(selectedDestination) == 'NEW_DECK'} ? ' is-selected' : ''">
                             <label class="sh-ai-destination-head">
                                 <input type="radio" name="destination" value="NEW_DECK" th:checked="${selectedDestination == null || #strings.toString(selectedDestination) == 'NEW_DECK'}">
                                 <span class="sh-ai-destination-icon"><iconify-icon icon="lucide:plus"></iconify-icon></span>
                                 <span class="sh-ai-destination-main">
-                                    <span class="sh-ai-destination-title">New deck</span>
-                                    <span class="sh-ai-destination-subtitle">Create a deck in a selected folder.</span>
+                                    <span class="sh-ai-destination-title" th:text="#{flashcard-gen.dest.new-deck}">New deck</span>
+                                    <span class="sh-ai-destination-subtitle" th:text="#{flashcard-gen.dest.new-deck-desc}">Create a deck in a selected folder.</span>
                                 </span>
                             </label>
                             <div class="sh-ai-destination-body" data-destination-panel="NEW_DECK">
-                                <input class="sh-input" name="newDeckName" th:value="${newDeckName}" placeholder="New deck name">
-                                <div style="margin:0.75rem 0 0.5rem; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-tertiary);">Pick a folder</div>
+                                <input class="sh-input" name="newDeckName" th:value="${newDeckName}" th:placeholder="#{flashcard-gen.dest.new-deck-placeholder}" placeholder="New deck name">
+                                <div style="margin:0.75rem 0 0.5rem; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-tertiary);" th:text="#{flashcard-gen.dest.pick-folder}">Pick a folder</div>
                                 <div th:if="${#lists.isEmpty(folderTree)}" class="sh-empty" style="padding:1rem;">
-                                    <p class="sh-empty-text mb-1">No folders available</p>
-                                    <p class="sh-empty-hint">Create a folder first.</p>
+                                    <p class="sh-empty-text mb-1" th:text="#{flashcard-gen.dest.no-folders}">No folders available</p>
+                                    <p class="sh-empty-hint" th:text="#{flashcard-gen.dest.no-folders-hint}">Create a folder first.</p>
                                 </div>
                                 <div th:if="${!#lists.isEmpty(folderTree)}" class="vb-list sh-ai-tree">
                                     <div th:each="node : ${folderTree}" class="vb-group" th:style="'--folder-color: ' + ${node.colorHex}">
@@ -158,14 +158,14 @@
                                 <input type="radio" name="destination" value="EXISTING_DECK" th:checked="${#strings.toString(selectedDestination) == 'EXISTING_DECK'}">
                                 <span class="sh-ai-destination-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
                                 <span class="sh-ai-destination-main">
-                                    <span class="sh-ai-destination-title">Existing deck</span>
-                                    <span class="sh-ai-destination-subtitle">Append cards to one of your decks.</span>
+                                    <span class="sh-ai-destination-title" th:text="#{flashcard-gen.dest.existing-deck}">Existing deck</span>
+                                    <span class="sh-ai-destination-subtitle" th:text="#{flashcard-gen.dest.existing-deck-desc}">Append cards to one of your decks.</span>
                                 </span>
                             </label>
                             <div class="sh-ai-destination-body" data-destination-panel="EXISTING_DECK">
                                 <div th:if="${#lists.isEmpty(deckTree)}" class="sh-empty" style="padding:1rem;">
-                                    <p class="sh-empty-text mb-1">No decks available</p>
-                                    <p class="sh-empty-hint">Create a deck first.</p>
+                                    <p class="sh-empty-text mb-1" th:text="#{flashcard-gen.dest.no-decks}">No decks available</p>
+                                    <p class="sh-empty-hint" th:text="#{flashcard-gen.dest.no-decks-hint}">Create a deck first.</p>
                                 </div>
                                 <div th:if="${!#lists.isEmpty(deckTree)}" class="vb-list sh-ai-tree">
                                     <div th:each="group : ${deckTree}" class="vb-group" th:style="'--folder-color: ' + ${group.folderColor}">
@@ -213,16 +213,16 @@
                     </div>
                     <div class="sh-setting-row" style="margin-top:1.25rem;">
                         <div>
-                            <div class="sh-setting-label">Card Count</div>
-                            <div class="sh-setting-hint">Choose between 1 and 100 generated cards.</div>
+                            <div class="sh-setting-label" th:text="#{flashcard-gen.card-count}">Card Count</div>
+                            <div class="sh-setting-hint" th:text="#{flashcard-gen.card-count-hint}">Choose between 1 and 100 generated cards.</div>
                         </div>
                         <div class="sh-number-stepper" data-stepper>
-                            <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" aria-label="Decrease card count">
+                            <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" th:aria-label="#{flashcard-gen.card-count.decrease}" aria-label="Decrease card count">
                                 <iconify-icon icon="lucide:minus"></iconify-icon>
                             </button>
                             <input type="number" name="cardCount" class="sh-stepper-input"
                                    th:value="${cardCount != null ? cardCount : 20}" min="1" max="100">
-                            <button type="button" class="sh-stepper-btn" data-stepper-action="increment" aria-label="Increase card count">
+                            <button type="button" class="sh-stepper-btn" data-stepper-action="increment" th:aria-label="#{flashcard-gen.card-count.increase}" aria-label="Increase card count">
                                 <iconify-icon icon="lucide:plus"></iconify-icon>
                             </button>
                         </div>
@@ -233,11 +233,11 @@
         <div class="sh-wizard-footer" style="display:flex;">
             <button type="button" id="ai-flashcard-submit-with-instructions" class="sh-btn sh-btn-secondary" style="margin-left:auto;">
                 <iconify-icon icon="lucide:message-square-text"></iconify-icon>
-                Generate with instructions
+                <span th:text="#{flashcard-gen.generate-with-instructions}">Generate with instructions</span>
             </button>
             <button type="submit" id="ai-flashcard-submit" class="sh-btn sh-btn-primary">
                 <iconify-icon icon="lucide:sparkles"></iconify-icon>
-                Generate flashcards
+                <span th:text="#{flashcard-gen.generate}">Generate flashcards</span>
             </button>
         </div>
     </form>
@@ -247,10 +247,10 @@
         <div class="sh-ai-gen-dialog">
             <div class="sh-ai-gen-spinner"></div>
             <div>
-                <div id="ai-gen-title" class="sh-ai-gen-title">Generating your flashcards with AI…</div>
-                <div class="sh-ai-gen-subtitle">This may take a few seconds.</div>
+                <div id="ai-gen-title" class="sh-ai-gen-title" th:text="#{flashcard-gen.generating-title}">Generating your flashcards with AI…</div>
+                <div class="sh-ai-gen-subtitle" th:text="#{flashcard-gen.generating-subtitle}">This may take a few seconds.</div>
             </div>
-            <button type="button" class="sh-btn sh-btn-secondary sh-btn-sm" id="ai-gen-abort-btn">Cancel</button>
+            <button type="button" class="sh-btn sh-btn-secondary sh-btn-sm" id="ai-gen-abort-btn" th:text="#{flashcard-gen.generating-cancel}">Cancel</button>
         </div>
     </div>
 </div>

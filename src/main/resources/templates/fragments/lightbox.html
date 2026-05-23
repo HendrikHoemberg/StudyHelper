@@ -7,15 +7,15 @@
         <iconify-icon icon="lucide:x"></iconify-icon>
     </button>
     <div class="sh-lightbox-content" onclick="event.stopPropagation()">
-        <img id="sh-lightbox-img" class="sh-lightbox-img" src="" alt="Full size image">
+        <img id="sh-lightbox-img" class="sh-lightbox-img" src="" th:alt="#{lightbox.image-alt}" alt="Full size image">
         <div class="sh-lightbox-footer">
             <button type="button" class="sh-btn sh-btn-secondary" id="sh-lightbox-download">
                 <iconify-icon icon="lucide:download"></iconify-icon>
-                Download
+                <span th:text="#{lightbox.download}">Download</span>
             </button>
             <button type="button" class="sh-btn sh-btn-primary" id="sh-lightbox-edit-btn">
                 <iconify-icon icon="lucide:pencil"></iconify-icon>
-                Open Image Editor
+                <span th:text="#{lightbox.open-editor}">Open Image Editor</span>
             </button>
         </div>
     </div>
