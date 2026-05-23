@@ -7,7 +7,7 @@
     <div class="sh-modal-dialog">
         <div class="sh-modal-content">
             <div class="sh-modal-header">
-                <h5 class="sh-modal-title">Upload File</h5>
+                <h5 class="sh-modal-title" th:text="#{file.upload.title}">Upload File</h5>
                 <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').remove()">
                     <iconify-icon icon="lucide:x"></iconify-icon>
                 </button>
@@ -20,21 +20,21 @@
                                accept=".pdf,.txt,.md,.png,.jpg,.jpeg,.gif,.webp" multiple required>
                         <button type="button" class="sh-upload-chooser" id="upload-file-chooser">
                             <iconify-icon icon="lucide:upload-cloud"></iconify-icon>
-                            <span>Choose files</span>
+                            <span th:text="#{file.upload.choose}">Choose files</span>
                         </button>
                         <div class="sh-upload-selected" id="upload-selected-file">
                             <iconify-icon icon="lucide:check-circle" id="upload-status-icon"></iconify-icon>
-                            <div class="sh-upload-file-name" id="upload-file-name">No file selected</div>
+                            <div class="sh-upload-file-name" id="upload-file-name" th:text="#{file.upload.no-file-selected}">No file selected</div>
                         </div>
                         <div id="upload-error-message" style="display: none; color: #ff4d4f; margin-top: 8px; font-size: 0.875rem; align-items: center; gap: 4px;">
                             <iconify-icon icon="lucide:alert-circle"></iconify-icon>
-                            <span>Unsupported file type selected. Allowed: .pdf, .txt, .md, .png, .jpg, .jpeg, .gif, .webp</span>
+                            <span th:text="#{file.upload.unsupported-type}">Unsupported file type selected. Allowed: .pdf, .txt, .md, .png, .jpg, .jpeg, .gif, .webp</span>
                         </div>
                     </div>
-                    <p class="sh-upload-limit">Maximum file size: 100 MB</p>
+                    <p class="sh-upload-limit" th:text="#{file.upload.max-size}">Maximum file size: 100 MB</p>
                 </div>
                 <div class="sh-modal-footer">
-                    <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()">Cancel</button>
+                    <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()" th:text="#{file.form.cancel}">Cancel</button>
                     <button type="submit" class="sh-btn sh-btn-primary" id="upload-submit" disabled>Upload</button>
                 </div>
             </form>

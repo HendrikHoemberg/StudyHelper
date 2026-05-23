@@ -22,7 +22,7 @@
     <ul class="sh-breadcrumb">
         <li>
             <a href="/dashboard" hx-get="/dashboard" hx-target="#explorer-detail"
-               hx-push-url="true">Dashboard</a>
+               hx-push-url="true" th:text="#{folder.dashboard}">Dashboard</a>
         </li>
         <th:block th:each="crumb, stat : ${view.breadcrumb}">
             <li class="sh-breadcrumb-sep">/</li>
@@ -45,7 +45,7 @@
             <div>
                 <h1 class="sh-page-title" th:text="${view.folder.name}">Folder Name</h1>
                 <span class="sh-badge sh-badge-muted mt-1"
-                      th:text="${view.totalCardCount} + ' cards total'"></span>
+                      th:text="#{folder.cards-total(${view.totalCardCount})}">0 cards total</span>
             </div>
         </div>
         <div class="sh-page-actions">
@@ -55,20 +55,20 @@
                hx-get="/study/start" th:hx-vals="${'{&quot;folderId&quot;: ' + view.folder.id + '}'}"
                hx-target="#explorer-detail" hx-push-url="true">
                 <iconify-icon icon="lucide:play"></iconify-icon>
-                Study
+                <span th:text="#{folder.study}">Study</span>
             </a>
             <button class="sh-btn sh-btn-secondary sh-btn-sm"
                     th:hx-get="@{/folders/{id}/edit(id=${view.folder.id})}" hx-target="#modal-placeholder">
                 <iconify-icon icon="lucide:pencil"></iconify-icon>
-                Edit
+                <span th:text="#{folder.edit}">Edit</span>
             </button>
             <button class="sh-btn sh-btn-danger sh-btn-sm"
                     th:hx-post="@{/folders/{id}/delete(id=${view.folder.id})}"
-                    hx-confirm="Delete this folder and all its contents? This action cannot be undone."
+                    th:hx-confirm="#{folder.delete-confirm}" hx-confirm="Delete this folder and all its contents? This action cannot be undone."
                     hx-target="#explorer-detail"
                     hx-push-url="true">
                 <iconify-icon icon="lucide:trash-2"></iconify-icon>
-                Delete
+                <span th:text="#{folder.delete}">Delete</span>
             </button>
         </div>
     </div>

@@ -45,7 +45,8 @@
 
     <!-- Empty hint if no children -->
     <div th:if="${#lists.isEmpty(view.subFolders) and #lists.isEmpty(view.decks)}"
-         style="padding: 0.5rem 0.875rem; font-size: 0.8125rem; color: var(--text-muted);">
+         style="padding: 0.5rem 0.875rem; font-size: 0.8125rem; color: var(--text-muted);"
+         th:text="#{folder.children.empty}">
         No subfolders or decks
     </div>
 </div>
