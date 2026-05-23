@@ -47,7 +47,7 @@ The server-side flow (`/flashcards/generate`, `/flashcards/generate/preflight`, 
   - Add a `<script src="/js/flashcard-gen-wizard.js" defer></script>` tag alongside the other JS includes.
 
 - **Modify** `src/main/resources/messages.properties` and `messages_de.properties`
-  - Add keys: `flashcard-gen.step.sources` ("Sources" / "Quellen"), `flashcard-gen.step.destination` ("Destination" / "Speicherort"), `flashcard-gen.where-to-save` ("Where to save" / "Speicherort"), and reuse `study.setup.back` / `study.setup.next` *or* add `flashcard-gen.back` / `flashcard-gen.next` if the existing keys feel out of place semantically.
+  - Add keys: `flashcard-gen.step.sources` ("Sources" / "Quellen"), `flashcard-gen.step.destination` ("Destination" / "Speicherort"), `flashcard-gen.where-to-save` ("Where to save" / "Speicherort"), `flashcard-gen.back` ("Back" / "Zurück"), `flashcard-gen.next` ("Next" / "Weiter"). New keys (not reused from `study.setup.*`) to keep the two wizards independently translatable.
 
 - **Modify** `src/test/java/com/HendrikHoemberg/StudyHelper/UiResourceRegressionTests.java`
   - Existing generator-page assertions should be extended to require:
