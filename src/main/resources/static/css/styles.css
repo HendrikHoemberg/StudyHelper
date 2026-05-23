@@ -2759,7 +2759,7 @@ textarea.sh-input {
     color: var(--text);
 }
 
-.sh-study-inline-choice input[type="radio"] {
+.sh-study-inline-choice input[type="radio"]:not(.sh-checkbox) {
     appearance: none;
     -webkit-appearance: none;
     width: 1.125rem;
@@ -2775,7 +2775,7 @@ textarea.sh-input {
     margin: 0;
 }
 
-.sh-study-inline-choice input[type="radio"]::before {
+.sh-study-inline-choice input[type="radio"]:not(.sh-checkbox)::before {
     content: "";
     width: 0.5rem;
     height: 0.5rem;
@@ -2785,20 +2785,20 @@ textarea.sh-input {
     background-color: var(--accent);
 }
 
-.sh-study-inline-choice input[type="radio"]:checked {
+.sh-study-inline-choice input[type="radio"]:not(.sh-checkbox):checked {
     border-color: var(--accent);
     background-color: var(--bg-surface, var(--surface, #fff));
 }
 
-.sh-study-inline-choice input[type="radio"]:checked::before {
+.sh-study-inline-choice input[type="radio"]:not(.sh-checkbox):checked::before {
     transform: scale(1);
 }
 
-.sh-study-inline-choice input[type="radio"]:hover {
+.sh-study-inline-choice input[type="radio"]:not(.sh-checkbox):hover {
     border-color: var(--accent);
 }
 
-.sh-study-inline-choice input[type="radio"]:focus-visible {
+.sh-study-inline-choice input[type="radio"]:not(.sh-checkbox):focus-visible {
     box-shadow: 0 0 0 3px var(--accent-glow);
 }
 

@@ -114,7 +114,7 @@
                     <div class="sh-ai-destination-list">
                         <div class="sh-ai-destination-card" th:classappend="${selectedDestination == null || #strings.toString(selectedDestination) == 'NEW_DECK'} ? ' is-selected' : ''">
                             <label class="sh-ai-destination-head">
-                                <input type="radio" name="destination" value="NEW_DECK" th:checked="${selectedDestination == null || #strings.toString(selectedDestination) == 'NEW_DECK'}">
+                                <input class="sh-checkbox" type="radio" name="destination" value="NEW_DECK" th:checked="${selectedDestination == null || #strings.toString(selectedDestination) == 'NEW_DECK'}">
                                 <span class="sh-ai-destination-icon"><iconify-icon icon="lucide:plus"></iconify-icon></span>
                                 <span class="sh-ai-destination-main">
                                     <span class="sh-ai-destination-title" th:text="#{flashcard-gen.dest.new-deck}">New deck</span>
@@ -153,7 +153,7 @@
 
                         <div class="sh-ai-destination-card" th:classappend="${#strings.toString(selectedDestination) == 'EXISTING_DECK'} ? ' is-selected' : ''">
                             <label class="sh-ai-destination-head">
-                                <input type="radio" name="destination" value="EXISTING_DECK" th:checked="${#strings.toString(selectedDestination) == 'EXISTING_DECK'}">
+                                <input class="sh-checkbox" type="radio" name="destination" value="EXISTING_DECK" th:checked="${#strings.toString(selectedDestination) == 'EXISTING_DECK'}">
                                 <span class="sh-ai-destination-icon"><iconify-icon icon="lucide:layers"></iconify-icon></span>
                                 <span class="sh-ai-destination-main">
                                     <span class="sh-ai-destination-title" th:text="#{flashcard-gen.dest.existing-deck}">Existing deck</span>
@@ -176,7 +176,7 @@
                                         <div class="vb-group-body">
                                             <label th:each="deck : ${group.decks}" class="vb-deck"
                                                    th:classappend="${selectedExistingDeckId == deck.deckId ? ' is-selected' : ''}">
-                                                <input class="sh-ai-tree-radio" type="radio" name="existingDeckId" th:value="${deck.deckId}" th:checked="${selectedExistingDeckId == deck.deckId}">
+                                                <input class="sh-checkbox sh-ai-tree-radio" type="radio" name="existingDeckId" th:value="${deck.deckId}" th:checked="${selectedExistingDeckId == deck.deckId}">
                                                 <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
                                     <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
                                 </span>
@@ -193,7 +193,7 @@
                                                 <div class="vb-subgroup-body">
                                                     <label th:each="deck : ${sub.decks}" class="vb-deck"
                                                            th:classappend="${selectedExistingDeckId == deck.deckId ? ' is-selected' : ''}">
-                                                        <input class="sh-ai-tree-radio" type="radio" name="existingDeckId" th:value="${deck.deckId}" th:checked="${selectedExistingDeckId == deck.deckId}">
+                                                        <input class="sh-checkbox sh-ai-tree-radio" type="radio" name="existingDeckId" th:value="${deck.deckId}" th:checked="${selectedExistingDeckId == deck.deckId}">
                                                         <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
                                     <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
                                 </span>
