@@ -106,6 +106,59 @@ class AiRequestQuotaServiceTests {
     }
 
     @Test
+    void checkAndRecord_WithAmountTwo_IncrementsByTwo() {
+        AiRequestUsage usage = new AiRequestUsage();
+        usage.setUser(user);
+        usage.setUsageDate(today);
+        usage.setRequestCount(0);
+        when(aiRequestUsageRepository.findByUserAndUsageDateForUpdate(user, today)).thenReturn(Optional.of(usage));
+        when(aiRequestUsageRepository.save(usage)).thenReturn(usage);
+
+        aiRequestQuotaService.checkAndRecord(user, 2);
+
+        assertThat(usage.getRequestCount()).isEqualTo(2);
+        verify(aiRequestUsageRepository, times(1)).save(usage);
+    }
+
+    @Test
+    void checkAndRecord_WithAmountTwo_WhenWouldExceedLimit_ThrowsAndDoesNotSave() {
+        AiRequestUsage usage = new AiRequestUsage();
+        usage.setUser(user);
+        usage.setUsageDate(today);
+        usage.setRequestCount(1);
+        when(aiRequestUsageRepository.findByUserAndUsageDateForUpdate(user, today)).thenReturn(Optional.of(usage));
+
+        assertThatThrownBy(() -> aiRequestQuotaService.checkAndRecord(user, 2))
+            .isInstanceOf(AiQuotaExceededException.class)
+            .hasMessage("Daily AI request limit reached.");
+
+        assertThat(usage.getRequestCount()).isEqualTo(1);
+        verify(aiRequestUsageRepository, never()).save(any(AiRequestUsage.class));
+    }
+
+    @Test
+    void checkAndRecord_WithAmountTwo_AtExactlyLimit_Succeeds() {
+        AiRequestUsage usage = new AiRequestUsage();
+        usage.setUser(user);
+        usage.setUsageDate(today);
+        usage.setRequestCount(0);
+        when(aiRequestUsageRepository.findByUserAndUsageDateForUpdate(user, today)).thenReturn(Optional.of(usage));
+        when(aiRequestUsageRepository.save(usage)).thenReturn(usage);
+
+        assertThatCode(() -> aiRequestQuotaService.checkAndRecord(user, 2)).doesNotThrowAnyException();
+
+        assertThat(usage.getRequestCount()).isEqualTo(2);
+    }
+
+    @Test
+    void checkAndRecord_WithNonPositiveAmount_ThrowsIllegalArgument() {
+        assertThatThrownBy(() -> aiRequestQuotaService.checkAndRecord(user, 0))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> aiRequestQuotaService.checkAndRecord(user, -1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void checkAndRecord_UsesLockedLookupPath() {
         AiRequestUsage usage = new AiRequestUsage();
         usage.setUser(user);

@@ -36,6 +36,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -306,12 +307,38 @@ class FlashcardGenerationControllerTests {
     }
 
     @Test
+    void generate_BillsQuotaTwiceForTwoStagePipeline() throws Exception {
+        when(fileEntryService.getByIdAndUser(99L, user)).thenReturn(pdf);
+        when(documentExtractionService.isSupported(pdf)).thenReturn(true);
+        when(documentExtractionService.extractText(pdf)).thenReturn("Lecture text");
+        when(aiFlashcardService.generate(any(List.class), any())).thenReturn(List.of(new GeneratedFlashcard("Q", "A")));
+        when(persistenceService.saveGeneratedCards(eq(FlashcardGenerationDestination.EXISTING_DECK), eq(20L), eq(null), eq(null), eq(user), any())).thenReturn(deck);
+        when(deckService.getDeck(20L, user)).thenReturn(deck);
+
+        controller.generate(
+            List.of(99L),
+            DocumentMode.TEXT,
+            null,
+            FlashcardGenerationDestination.EXISTING_DECK,
+            20L,
+            null,
+            null,
+            new ExtendedModelMap(),
+            () -> "alice",
+            new MockHttpServletResponse(),
+            "true"
+        );
+
+        verify(aiRequestQuotaService).checkAndRecord(user, 2);
+    }
+
+    @Test
     void generate_QuotaExceeded_ReturnsGeneratorErrorWithoutCallingAi() throws Exception {
         when(fileEntryService.getByIdAndUser(99L, user)).thenReturn(pdf);
         when(documentExtractionService.isSupported(pdf)).thenReturn(true);
         when(documentExtractionService.extractText(pdf)).thenReturn("Lecture text");
         doThrow(new AiQuotaExceededException("Daily AI request limit reached."))
-            .when(aiRequestQuotaService).checkAndRecord(user);
+            .when(aiRequestQuotaService).checkAndRecord(user, 2);
 
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -359,7 +386,7 @@ class FlashcardGenerationControllerTests {
 
         assertThat(response.getStatus()).isEqualTo(204);
         assertThat(view).isNull();
-        verify(aiRequestQuotaService, never()).checkAndRecord(any());
+        verify(aiRequestQuotaService, never()).checkAndRecord(any(), anyInt());
         verify(aiFlashcardService, never()).generate(any(List.class), any());
     }
 
@@ -384,7 +411,7 @@ class FlashcardGenerationControllerTests {
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("generationError")).isEqualTo("Please select at least one PDF.");
-        verify(aiRequestQuotaService, never()).checkAndRecord(any());
+        verify(aiRequestQuotaService, never()).checkAndRecord(any(), anyInt());
         verify(aiFlashcardService, never()).generate(any(List.class), any());
     }
 
