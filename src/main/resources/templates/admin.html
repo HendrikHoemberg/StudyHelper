@@ -103,9 +103,11 @@
 
                                                 <!-- Username -->
                                                 <td class="sh-admin-cell-user" th:data-label="#{admin.users.table.user}">
-                                                    <div class="sh-admin-user-avatar"
-                                                         th:text="${#strings.toUpperCase(#strings.substring(u.username(), 0, 1))}"></div>
-                                                    <span th:text="${u.username()}"></span>
+                                                    <div class="sh-admin-cell-user-inner">
+                                                        <div class="sh-admin-user-avatar"
+                                                             th:text="${#strings.toUpperCase(#strings.substring(u.username(), 0, 1))}"></div>
+                                                        <span th:text="${u.username()}"></span>
+                                                    </div>
                                                 </td>
 
                                                 <!-- Role badge -->

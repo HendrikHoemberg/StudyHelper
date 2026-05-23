@@ -6116,7 +6116,7 @@ iconify-icon {
 }
 
 /* ---- User avatar initials ---- */
-.sh-admin-cell-user {
+.sh-admin-cell-user-inner {
     display: flex;
     align-items: center;
     gap: 0.5rem;
