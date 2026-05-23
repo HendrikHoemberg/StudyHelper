@@ -63,14 +63,14 @@
                                     <div class="sh-card-header-title" th:text="#{settings.language.title}">Language</div>
                                 </div>
                                 <div class="sh-card-body">
-                                    <form th:action="@{/settings/language}" method="post" class="sh-form-group-stack">
+                                                                   <form th:action="@{/settings/language}" method="post" class="sh-form-group-stack">
                                         <label class="sh-login-field" style="display:flex;align-items:center;gap:0.5rem;">
-                                            <input type="radio" name="language" value="de"
+                                            <input type="radio" class="sh-radio" name="language" value="de"
                                                    th:checked="${currentLanguage == 'de'}">
                                             <span th:text="#{settings.language.de}">Deutsch</span>
                                         </label>
                                         <label class="sh-login-field" style="display:flex;align-items:center;gap:0.5rem;">
-                                            <input type="radio" name="language" value="en"
+                                            <input type="radio" class="sh-radio" name="language" value="en"
                                                    th:checked="${currentLanguage == 'en'}">
                                             <span th:text="#{settings.language.en}">English</span>
                                         </label>

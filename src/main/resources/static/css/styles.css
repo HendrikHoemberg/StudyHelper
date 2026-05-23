@@ -1279,6 +1279,56 @@ textarea.sh-input {
     opacity: 0.45;
 }
 
+/* Radio */
+.sh-radio {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: 2px solid var(--border-strong, var(--border));
+    border-radius: 50%;
+    outline: none;
+    background-color: var(--bg-surface, var(--surface, #fff));
+    display: inline-grid;
+    place-content: center;
+    cursor: pointer;
+    transition: border-color var(--transition-fast, 0.15s) ease, background-color var(--transition-fast, 0.15s) ease, box-shadow var(--transition-fast, 0.15s) ease;
+    margin: 0;
+}
+
+.sh-radio::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform var(--transition-fast, 0.15s) cubic-bezier(0.34, 1.56, 0.64, 1);
+    background-color: var(--accent);
+}
+
+.sh-radio:checked {
+    border-color: var(--accent);
+    background-color: var(--bg-surface, var(--surface, #fff));
+}
+
+.sh-radio:checked::before {
+    transform: scale(1);
+}
+
+.sh-radio:hover {
+    border-color: var(--accent);
+}
+
+.sh-radio:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.sh-radio:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
 /* ============================================================
    SEARCH BAR
    ============================================================ */
@@ -4956,8 +5006,8 @@ iconify-icon {
     }
 
     .vb-source-scroll {
-        max-height: none;
-        overflow: visible;
+        max-height: min(44vh, 28rem);
+        overflow-y: auto;
         padding-bottom: 0;
     }
 
@@ -5824,6 +5874,10 @@ iconify-icon {
     display: flex;
     flex-direction: column;
     min-width: 0;
+}
+
+.sh-admin-page > .sh-card + .sh-card {
+    margin-top: 1.25rem;
 }
 
 .sh-admin-section {
