@@ -11,15 +11,15 @@
                     style="font-size:22px;"></iconify-icon>
             </div>
             <div style="flex:1;">
-                <label class="sh-label">Name</label>
+                <label class="sh-label" th:text="#{deck.form.name}">Name</label>
                 <input type="text" name="name" th:id="${prefix + 'DeckName'}" class="sh-input" required
-                    th:value="${name}" placeholder="e.g. Vocabulary">
+                    th:value="${name}" th:placeholder="#{deck.form.name-placeholder}" placeholder="e.g. Vocabulary">
             </div>
         </div>
 
         <!-- Color -->
         <div>
-            <label class="sh-label">Color</label>
+            <label class="sh-label" th:text="#{deck.form.color}">Color</label>
             <button type="button" class="sh-color-trigger" data-color-picker
                 th:attr="data-target=${prefix + 'DeckColor'}" data-palette-key="deck">
                 <span class="sh-color-swatch" th:style="'background:' + ${colorHex ?: defaultColorHex}"></span>
@@ -32,13 +32,13 @@
         <!-- Icon Selection -->
         <div>
             <div class="sh-icon-picker-header">
-                <label class="sh-label mb-0">Icon</label>
-                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">Iconify Extended Set</span>
+                <label class="sh-label mb-0" th:text="#{deck.form.icon}">Icon</label>
+                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;" th:text="#{deck.form.iconify-set}">Iconify Extended Set</span>
             </div>
 
             <div class="sh-search-bar sh-search-bar-sm mb-3">
                 <span class="sh-search-icon"><iconify-icon icon="lucide:search"></iconify-icon></span>
-                <input type="text" class="sh-input sh-icon-search" placeholder="Search for icons…"
+                <input type="text" class="sh-input sh-icon-search" th:placeholder="#{deck.form.icon-search-placeholder}" placeholder="Search for icons\u2026"
                     oninput="handleIconSearch(this)">
             </div>
 
@@ -74,15 +74,16 @@
                         <button th:if="${deck?.id != null}" type="button" class="sh-btn sh-btn-danger" hx-post
                             th:hx-post="@{/decks/{id}/delete(id=${deck.id})}" hx-target="#explorer-detail"
                             hx-confirm="Delete this deck and all its flashcards? This action cannot be undone."
+                            th:hx-confirm="#{deck.delete.confirm}"
                             hx-on::after-request="if(event.detail.successful) this.closest('.sh-modal').remove()">
                             <iconify-icon icon="lucide:trash-2"></iconify-icon>
-                            Delete
+                            <span th:text="#{deck.delete}">Delete</span>
                         </button>
                         <div style="display:flex; gap:0.5rem;">
                             <button type="button" class="sh-btn sh-btn-secondary"
-                                onclick="this.closest('.sh-modal').remove()">Cancel</button>
+                                onclick="this.closest('.sh-modal').remove()" th:text="#{deck.form.cancel}">Cancel</button>
                             <button type="submit" class="sh-btn sh-btn-primary"
-                                th:text="${deck?.id == null ? 'Create' : 'Save'}">Save</button>
+                                th:text="${deck?.id == null ? #{deck.form.create} : #{deck.form.save}}">Save</button>
                         </div>
                     </div>
                 </form>

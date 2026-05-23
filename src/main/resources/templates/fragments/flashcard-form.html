@@ -26,15 +26,15 @@
                 <div class="sh-modal-body">
                     <!-- Front side -->
                     <div>
-                        <label class="sh-label">Front (Question)</label>
+                        <label class="sh-label" th:text="#{flashcard.form.front-label}">Front (Question)</label>
                         <textarea name="frontText" class="sh-input" rows="3"
-                                  placeholder="Enter the question or prompt..."
+                                  th:placeholder="#{flashcard.form.front-placeholder}" placeholder="Enter the question or prompt..."
                                   th:text="${flashcard?.frontText}"></textarea>
                         <div class="sh-img-zone" id="front-img-zone">
                             <div th:if="${frontImageUrl}" class="sh-img-preview-wrap" id="front-preview-wrap"
                                  th:attr="data-existing-url=${frontImageUrl}">
-                                <img th:src="${frontImageUrl}" class="sh-img-preview sh-lightbox-trigger" alt="Front image">
-                                <button type="button" class="sh-img-edit-btn" data-side="front" aria-label="Edit image">
+                                <img th:src="${frontImageUrl}" class="sh-img-preview sh-lightbox-trigger" th:alt="#{flashcard.form.front-image-alt}" alt="Front image">
+                                <button type="button" class="sh-img-edit-btn" data-side="front" th:aria-label="#{flashcard.form.edit-image}" aria-label="Edit image">
                                     <iconify-icon icon="lucide:pencil"></iconify-icon>
                                 </button>
                                 <button type="button" class="sh-img-remove-btn" id="front-remove-btn">
@@ -46,7 +46,7 @@
                                     id="front-drop-label"
                                     data-image-source-trigger="front">
                                 <iconify-icon icon="lucide:image-plus"></iconify-icon>
-                                <span>Add image</span>
+                                <span th:text="#{flashcard.form.add-image}">Add image</span>
                             </button>
                             <input type="file" id="frontImageInput" name="frontImage"
                                    accept="image/jpeg,image/png,image/webp,image/gif"
@@ -57,15 +57,15 @@
 
                     <!-- Back side -->
                     <div>
-                        <label class="sh-label">Back (Answer)</label>
+                        <label class="sh-label" th:text="#{flashcard.form.back-label}">Back (Answer)</label>
                         <textarea name="backText" class="sh-input" rows="3"
-                                  placeholder="Enter the answer..."
+                                  th:placeholder="#{flashcard.form.back-placeholder}" placeholder="Enter the answer..."
                                   th:text="${flashcard?.backText}"></textarea>
                         <div class="sh-img-zone" id="back-img-zone">
                             <div th:if="${backImageUrl}" class="sh-img-preview-wrap" id="back-preview-wrap"
                                  th:attr="data-existing-url=${backImageUrl}">
-                                <img th:src="${backImageUrl}" class="sh-img-preview sh-lightbox-trigger" alt="Back image">
-                                <button type="button" class="sh-img-edit-btn" data-side="back" aria-label="Edit image">
+                                <img th:src="${backImageUrl}" class="sh-img-preview sh-lightbox-trigger" th:alt="#{flashcard.form.back-image-alt}" alt="Back image">
+                                <button type="button" class="sh-img-edit-btn" data-side="back" th:aria-label="#{flashcard.form.edit-image}" aria-label="Edit image">
                                     <iconify-icon icon="lucide:pencil"></iconify-icon>
                                 </button>
                                 <button type="button" class="sh-img-remove-btn" id="back-remove-btn">
@@ -77,7 +77,7 @@
                                     id="back-drop-label"
                                     data-image-source-trigger="back">
                                 <iconify-icon icon="lucide:image-plus"></iconify-icon>
-                                <span>Add image</span>
+                                <span th:text="#{flashcard.form.add-image}">Add image</span>
                             </button>
                             <input type="file" id="backImageInput" name="backImage"
                                    accept="image/jpeg,image/png,image/webp,image/gif"
@@ -87,8 +87,8 @@
                     </div>
                 </div>
                 <div class="sh-modal-footer">
-                    <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()">Cancel</button>
-                    <button type="submit" class="sh-btn sh-btn-primary" th:text="${flashcard?.id == null ? 'New Card' : 'Save'}">Save</button>
+                    <button type="button" class="sh-btn sh-btn-secondary" onclick="this.closest('.sh-modal').remove()" th:text="#{flashcard.form.cancel}">Cancel</button>
+                    <button type="submit" class="sh-btn sh-btn-primary" th:text="${flashcard?.id == null ? #{flashcard.form.create} : #{flashcard.form.save}}">Save</button>
                 </div>
             </form>
         </div>
@@ -99,19 +99,19 @@
         <div class="sh-modal-dialog sh-modal-dialog-sm">
             <div class="sh-modal-content">
                 <div class="sh-modal-header">
-                    <h5 class="sh-modal-title" id="flashcard-image-source-title">Add image</h5>
-                    <button type="button" class="sh-modal-close" data-image-source-close aria-label="Close">
+                    <h5 class="sh-modal-title" id="flashcard-image-source-title" th:text="#{flashcard.form.add-image}">Add image</h5>
+                    <button type="button" class="sh-modal-close" data-image-source-close th:aria-label="#{flashcard.form.close}" aria-label="Close">
                         <iconify-icon icon="lucide:x"></iconify-icon>
                     </button>
                 </div>
                 <div class="sh-modal-body">
                     <button type="button" class="sh-btn sh-btn-secondary" data-image-source-browse>
                         <iconify-icon icon="lucide:folder-open"></iconify-icon>
-                        <span>Browse files</span>
+                        <span th:text="#{flashcard.form.browse-files}">Browse files</span>
                     </button>
                     <button type="button" class="sh-btn sh-btn-primary" data-image-source-paste>
                         <iconify-icon icon="lucide:clipboard"></iconify-icon>
-                        <span>Paste image</span>
+                        <span th:text="#{flashcard.form.paste-image}">Paste image</span>
                     </button>
                 </div>
             </div>
@@ -190,14 +190,14 @@
                     var img = document.createElement('img');
                     img.src = URL.createObjectURL(file);
                     img.className = 'sh-img-preview';
-                    img.alt = 'Preview';
+                    img.alt = window.i18n && window.i18n['js.flashcard.preview'] || 'Preview';
                     bindLightbox(img);
 
                     var editBtn = document.createElement('button');
                     editBtn.type = 'button';
                     editBtn.className = 'sh-img-edit-btn';
                     editBtn.setAttribute('data-side', side);
-                    editBtn.setAttribute('aria-label', 'Edit image');
+                    editBtn.setAttribute('aria-label', window.i18n && window.i18n['js.flashcard.edit-image'] || 'Edit image');
                     editBtn.innerHTML = '<iconify-icon icon="lucide:pencil"></iconify-icon>';
                     editBtn.addEventListener('click', function() { openEditor(side); });
 
@@ -220,9 +220,9 @@
 
                 function clearPreview() {
                     shConfirm({
-                        title: 'Remove image?',
-                        message: 'Remove this image from the flashcard?',
-                        confirmText: 'Remove',
+                        title: window.i18n && window.i18n['js.flashcard.remove-image-title'] || 'Remove image?',
+                        message: window.i18n && window.i18n['js.flashcard.remove-image-message'] || 'Remove this image from the flashcard?',
+                        confirmText: window.i18n && window.i18n['js.flashcard.remove-image-confirm'] || 'Remove',
                         danger: true
                     }).then(function(ok) {
                         if (!ok) return;
@@ -318,8 +318,8 @@
                 if (!navigator.clipboard || !navigator.clipboard.read) {
                     closeImageSourceModal();
                     shAlert({
-                        title: 'Paste image',
-                        message: 'Press Ctrl+V or Cmd+V while this flashcard is open to paste an image.',
+                        title: window.i18n && window.i18n['js.flashcard.paste-title'] || 'Paste image',
+                        message: window.i18n && window.i18n['js.flashcard.paste-message'] || 'Press Ctrl+V or Cmd+V while this flashcard is open to paste an image.',
                         icon: 'lucide:clipboard'
                     });
                     return;
@@ -341,8 +341,8 @@
                         closeImageSourceModal();
                         if (!blob) {
                             shAlert({
-                                title: 'No image found',
-                                message: 'Copy an image first, then choose Paste image again.',
+                                title: window.i18n && window.i18n['js.flashcard.no-image-title'] || 'No image found',
+                                message: window.i18n && window.i18n['js.flashcard.no-image-message'] || 'Copy an image first, then choose Paste image again.',
                                 icon: 'lucide:clipboard'
                             });
                             return;
@@ -352,8 +352,8 @@
                     .catch(function() {
                         closeImageSourceModal();
                         shAlert({
-                            title: 'Paste image',
-                            message: 'Your browser blocked direct clipboard access. Press Ctrl+V or Cmd+V while this flashcard is open instead.',
+                            title: window.i18n && window.i18n['js.flashcard.blocked-title'] || 'Paste image',
+                            message: window.i18n && window.i18n['js.flashcard.blocked-message'] || 'Your browser blocked direct clipboard access. Press Ctrl+V or Cmd+V while this flashcard is open instead.',
                             icon: 'lucide:clipboard'
                         });
                     });
