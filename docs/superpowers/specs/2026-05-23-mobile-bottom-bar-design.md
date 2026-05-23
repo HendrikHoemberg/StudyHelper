@@ -17,7 +17,7 @@ While functional, this top-heavy layout has poor ergonomics on modern tall mobil
 
 Below is the design mockup representing the modern mobile bottom bar navigation and the smooth glassmorphism sliding sheet.
 
-![Mobile Navigation Mockup](file:///home/hendrik/.gemini/antigravity-cli/brain/1815bf42-8bf0-4972-bce3-3fed858cee55/mobile_bottom_bar_mockup_1779522347359.png)
+![Mobile Navigation Mockup](/home/hendrik/.gemini/antigravity-cli/brain/1815bf42-8bf0-4972-bce3-3fed858cee55/mobile_bottom_bar_mockup_1779522347359.png)
 
 ---
 
