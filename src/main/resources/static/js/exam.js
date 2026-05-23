@@ -2,6 +2,8 @@
  * Exam Runtime Logic
  */
 (function() {
+    function t(key) { return (window.i18n && window.i18n[key]) || key; }
+
     let timerInterval = null;
     let loaderInterval = null;
 
@@ -33,7 +35,7 @@
             const remaining = endsAt - now;
 
             if (remaining <= 0) {
-                timerEl.querySelector('span').textContent = "00:00";
+                timerEl.querySelector('span').textContent = t('exam.timer.timeout');
                 clearInterval(timerInterval);
                 timerInterval = null;
                 autoSubmit();
@@ -120,10 +122,10 @@
         if (loaderInterval) return;
 
         const messages = [
-            "Reading your answers...",
-            "Comparing with source material...",
-            "Drafting feedback...",
-            "Compiling report..."
+            t('exam.loader.reading'),
+            t('exam.loader.comparing'),
+            t('exam.loader.drafting'),
+            t('exam.loader.compiling')
         ];
         let index = 0;
 
@@ -187,9 +189,9 @@
 
             evt.preventDefault();
             shConfirm({
-                title: 'Submit exam?',
-                message: `You have ${emptyCount} unanswered question${emptyCount > 1 ? 's' : ''}. Submit anyway?`,
-                confirmText: 'Submit',
+                title: t('exam.confirm.title'),
+                message: t('exam.confirm.message').replace('{0}', emptyCount).replace('{1}', emptyCount > 1 ? 's' : ''),
+                confirmText: t('exam.confirm.submit'),
                 danger: true
             }).then((ok) => { if (ok) evt.detail.issueRequest(true); });
         });

@@ -6,6 +6,8 @@ import * as pdfjsLib from '/js/lib/pdfjs/pdf.min.mjs';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/lib/pdfjs/pdf.worker.min.mjs';
 
+function t(key) { return (window.i18n && window.i18n[key]) || key; }
+
 const $id = (id) => document.getElementById(id);
 const THUMB_WIDTH = 300;
 const TINT_COUNT = 6;
@@ -37,7 +39,7 @@ function _applyDarkPages() {
     pagesContainer.classList.toggle('sh-ps-dark-pages', _darkPages);
     if (themeBtn) {
         themeBtn.classList.toggle('is-active', _darkPages);
-        themeBtn.title = _darkPages ? "Show original PDF colors" : "Invert PDF colors for dark mode";
+        themeBtn.title = _darkPages ? t('pdf-splitter.theme.light') : t('pdf-splitter.theme.dark');
     }
 }
 
@@ -121,7 +123,7 @@ async function open(opts) {
     _applyPageZoom();
     _applyDarkPages();
     _initThemeObserver();
-    $id('sh-ps-title').textContent = 'Split \u2014 ' + (_opts.name || 'PDF');
+    $id('sh-ps-title').textContent = t('pdf-splitter.title').replace('{0}', _opts.name || t('pdf-viewer.title'));
     $id('sh-ps-pages').innerHTML = '';
     $id('sh-ps-parts').innerHTML = '';
     _showFooterError('');
@@ -167,7 +169,7 @@ async function _renderThumbnails() {
 
         const label = document.createElement('div');
         label.className = 'sh-ps-page-label';
-        label.textContent = 'Page ' + n;
+        label.textContent = t('pdf-splitter.page-label').replace('{0}', n);
         card.appendChild(label);
 
         if (n < _numPages) {
@@ -175,7 +177,7 @@ async function _renderThumbnails() {
             brk.type = 'button';
             brk.className = 'sh-ps-break';
             brk.dataset.after = String(n);
-            brk.setAttribute('aria-label', 'Toggle split after page ' + n);
+            brk.setAttribute('aria-label', t('pdf-splitter.split-aria').replace('{0}', n));
             brk.innerHTML = '<iconify-icon icon="lucide:scissors"></iconify-icon>';
             brk.addEventListener('click', () => _toggleBreak(n));
             card.appendChild(brk);
@@ -251,15 +253,15 @@ function _refreshParts() {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = selected;
-        checkbox.setAttribute('aria-label', 'Save part ' + (i + 1));
+        checkbox.setAttribute('aria-label', t('pdf-splitter.save-aria').replace('{0}', i + 1));
         checkbox.addEventListener('change', () => _togglePart(i, checkbox.checked));
         label.appendChild(checkbox);
 
         const head = document.createElement('span');
         head.className = 'sh-ps-part-head';
         head.textContent = r.endPage > r.startPage
-            ? 'Part ' + (i + 1) + ' \u00b7 pages ' + r.startPage + '\u2013' + r.endPage
-            : 'Part ' + (i + 1) + ' \u00b7 page ' + r.startPage;
+            ? t('pdf-splitter.part-header.pages').replace('{0}', i + 1).replace('{1}', r.startPage).replace('{2}', r.endPage)
+            : t('pdf-splitter.part-header.page').replace('{0}', i + 1).replace('{1}', r.startPage);
         label.appendChild(head);
         row.appendChild(label);
 
@@ -275,7 +277,7 @@ function _refreshParts() {
 
     const selectedCount = _selectedPartIndexes.size;
     $id('sh-ps-save-count').textContent = String(selectedCount);
-    $id('sh-ps-save-label').textContent = selectedCount === 1 ? 'part' : 'parts';
+    $id('sh-ps-save-label').textContent = selectedCount === 1 ? t('pdf-splitter.part-label') : t('pdf-splitter.parts-label');
     $id('sh-ps-save-btn').disabled = ranges.length < 2 || selectedCount < 1;
 }
 
@@ -333,7 +335,7 @@ function _save() {
         .then((resp) => {
             if (!resp.ok) {
                 return resp.json().catch(() => ({})).then((data) => {
-                    throw new Error(data.error || 'Could not split this PDF.');
+                    throw new Error(data.error || t('pdf-splitter.error'));
                 });
             }
             return resp.json();
@@ -341,7 +343,7 @@ function _save() {
         .then((data) => _reloadFilesView(data.folderId))
         .then(() => close())
         .catch((err) => {
-            _showFooterError(err.message || 'Could not split this PDF.');
+            _showFooterError(err.message || t('pdf-splitter.error'));
             $id('sh-ps-save-btn').disabled = false;
         });
 }

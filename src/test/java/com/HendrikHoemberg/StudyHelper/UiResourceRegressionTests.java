@@ -257,7 +257,7 @@ class UiResourceRegressionTests {
             .contains("appearance: textfield");
 
         assertThat(wizardJs)
-            .contains("Please enter a question count between 1 and 100.");
+            .contains("alert.invalid-count-range");
     }
 
     @Test

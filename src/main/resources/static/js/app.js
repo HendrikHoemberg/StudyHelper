@@ -2,6 +2,8 @@
    StudyHelper — App JavaScript (HTMX Simplified)
    ============================================================ */
 
+function t(key) { return (window.i18n && window.i18n[key]) || key; }
+
 const featureScriptPromises = new Map();
 let colorPickerPromise = null;
 let imageEditorPromise = null;
@@ -657,11 +659,11 @@ function debouncedIconifySearch(input) {
     const grid = modal.querySelector('.sh-icon-grid');
 
     if (query.length < 2) {
-        grid.innerHTML = '<div class="sh-sidebar-empty">Type at least 2 chars to search...</div>';
+        grid.innerHTML = '<div class="sh-sidebar-empty">' + t('app.icon-search.type-at-least') + '</div>';
         return;
     }
 
-    grid.innerHTML = '<div class="sh-sidebar-empty">Searching icons...</div>';
+    grid.innerHTML = '<div class="sh-sidebar-empty">' + t('app.icon-search.searching') + '</div>';
     
     const squarePrefixes = 'lucide,heroicons,ph,mdi,tabler,octicon,bi,ri,fluent,carbon,ic';
 
@@ -672,7 +674,7 @@ function debouncedIconifySearch(input) {
                 renderIconifyResults(modal, data.icons || []);
             })
             .catch(err => {
-                grid.innerHTML = '<div class="sh-sidebar-empty">Error loading icons.</div>';
+                grid.innerHTML = '<div class="sh-sidebar-empty">' + t('app.icon-search.error') + '</div>';
             });
     }, 500);
 }
@@ -682,7 +684,7 @@ function renderIconifyResults(modal, icons) {
     const selectedIcon = modal.querySelector('input[name="iconName"]')?.value;
     
     if (icons.length === 0) {
-        grid.innerHTML = '<div class="sh-sidebar-empty">No icons found.</div>';
+        grid.innerHTML = '<div class="sh-sidebar-empty">' + t('app.icon-search.no-icons') + '</div>';
         return;
     }
 
@@ -702,7 +704,7 @@ function renderIconGrid(modal, selectedIcon) {
     if (!grid) return;
 
     if (!grid.innerHTML) {
-        grid.innerHTML = '<div class="sh-sidebar-empty">Start typing to find icons...</div>';
+        grid.innerHTML = '<div class="sh-sidebar-empty">' + t('app.icon-search.start-typing') + '</div>';
     }
 
     grid.querySelectorAll('.sh-icon-btn').forEach(b => {
@@ -784,7 +786,7 @@ function initShDialog() {
             const details = document.getElementById('sh-dialog-details');
             const expanded = details && details.style.display !== 'none';
             if (details) details.style.display = expanded ? 'none' : '';
-            e.target.textContent = expanded ? 'Show technical details' : 'Hide technical details';
+            e.target.textContent = expanded ? t('app.dialog.toggle-details') : t('app.dialog.toggle-details-hide');
         } else if (e.target.id === 'sh-dialog-ok') {
             const input = document.getElementById('sh-dialog-input');
             const textarea = document.getElementById('sh-dialog-textarea');
@@ -853,7 +855,7 @@ function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText
         const detailsToggle = document.getElementById('sh-dialog-details-toggle');
         const detailsEl = document.getElementById('sh-dialog-details');
 
-        titleEl.textContent = title || (prompt ? 'Enter a value' : (hideCancel ? 'Notice' : 'Confirm'));
+        titleEl.textContent = title || (prompt ? t('app.dialog.enter-value') : (hideCancel ? t('app.dialog.notice') : t('app.dialog.confirm')));
         msgEl.textContent = message || '';
         msgEl.style.display = message ? '' : 'none';
 
@@ -863,8 +865,8 @@ function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText
             : 'lucide:help-circle');
         iconEl.innerHTML = `<iconify-icon icon="${iconName}"></iconify-icon>`;
 
-        okBtn.textContent = confirmText || (prompt ? 'Save' : 'OK');
-        cancelBtn.textContent = cancelText || 'Cancel';
+        okBtn.textContent = confirmText || (prompt ? t('app.dialog.save') : t('app.dialog.ok'));
+        cancelBtn.textContent = cancelText || t('app.dialog.cancel');
         cancelBtn.style.display = hideCancel ? 'none' : '';
 
         if (prompt) {
@@ -890,7 +892,7 @@ function _shOpenDialog({ title, message, icon, iconKind, confirmText, cancelText
         if (detailsToggle && detailsEl) {
             const hasDetails = !!technicalDetails;
             detailsToggle.style.display = hasDetails ? '' : 'none';
-            detailsToggle.textContent = 'Show technical details';
+            detailsToggle.textContent = t('app.dialog.toggle-details');
             detailsEl.style.display = 'none';
             detailsEl.textContent = hasDetails ? technicalDetails : '';
         }

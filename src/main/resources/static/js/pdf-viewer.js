@@ -6,6 +6,8 @@ import * as pdfjsLib from '/js/lib/pdfjs/pdf.min.mjs';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/lib/pdfjs/pdf.worker.min.mjs';
 
+function t(key) { return (window.i18n && window.i18n[key]) || key; }
+
 const $id = (id) => document.getElementById(id);
 
 let _pdf = null;
@@ -42,7 +44,7 @@ async function open(opts) {
     const modal = $id('sh-pv-modal');
     if (!modal) { console.error('PdfViewer: #sh-pv-modal not found'); return; }
     _wire();
-    $id('sh-pv-title').textContent = _opts.name || 'PDF';
+    $id('sh-pv-title').textContent = _opts.name || t('pdf-viewer.title');
     $id('sh-pv-pages').innerHTML = '';
     $id('sh-pv-page-val').textContent = '\u2013';
     _setState('loading');

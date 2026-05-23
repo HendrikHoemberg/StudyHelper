@@ -1,4 +1,5 @@
 (function () {
+    function t(key) { return (window.i18n && window.i18n[key]) || key; }
     let currentStep = 1;
     let currentMode = 'FLASHCARDS';
     let sourceTreeScrollTop = 0;
@@ -171,21 +172,21 @@
             
             if (currentMode === 'QUIZ') {
                 if (icon) icon.setAttribute('icon', 'lucide:sparkles');
-                if (text) text.textContent = 'Generate Quiz';
+                if (text) text.textContent = t('study.wizard.generate-quiz');
             } else if (currentMode === 'EXAM') {
                 if (icon) icon.setAttribute('icon', 'lucide:pencil-line');
-                if (text) text.textContent = 'Start Exam';
+                if (text) text.textContent = t('study.wizard.start-exam');
             } else {
                 if (icon) icon.setAttribute('icon', 'lucide:play');
-                if (text) text.textContent = 'Start Session';
+                if (text) text.textContent = t('study.wizard.start-session');
             }
         }
 
         if (submitWithInstructionsBtn) {
             if (currentMode === 'QUIZ') {
-                submitWithInstructionsBtn.innerHTML = '<iconify-icon icon="lucide:message-square-text"></iconify-icon> Generate with instructions';
+                submitWithInstructionsBtn.innerHTML = '<iconify-icon icon="lucide:message-square-text"></iconify-icon> ' + t('study.wizard.generate-with-instructions');
             } else if (currentMode === 'EXAM') {
-                submitWithInstructionsBtn.innerHTML = '<iconify-icon icon="lucide:message-square-text"></iconify-icon> Start with instructions';
+                submitWithInstructionsBtn.innerHTML = '<iconify-icon icon="lucide:message-square-text"></iconify-icon> ' + t('study.wizard.start-with-instructions');
             }
         }
         
@@ -197,21 +198,21 @@
             if (currentMode === 'FLASHCARDS') {
                 const selected = document.querySelector('input[name="sessionMode"]:checked');
                 if (!selected) {
-                    shAlert({ title: 'Missing selection', message: 'Please select a study mode.' });
+                    shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.select-mode') });
                     return false;
                 }
             }
             if (currentMode === 'QUIZ') {
                 const selected = document.querySelector('input[name="quizQuestionMode"]:checked');
                 if (!selected) {
-                    shAlert({ title: 'Missing selection', message: 'Please select a quiz format.' });
+                    shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.select-format') });
                     return false;
                 }
             }
             if (currentMode === 'EXAM') {
                 const selected = document.querySelector('input[name="questionSize"]:checked');
                 if (!selected) {
-                    shAlert({ title: 'Missing selection', message: 'Please select an exam question depth.' });
+                    shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.select-depth') });
                     return false;
                 }
             }
@@ -220,7 +221,7 @@
             if (currentMode === 'QUIZ') {
                 const countInput = document.querySelector('input[name="questionCount"]');
                 if (countInput && (parseInt(countInput.value) < 1 || parseInt(countInput.value) > 100)) {
-                    shAlert({ title: 'Invalid value', message: 'Please enter a question count between 1 and 100.' });
+                    shAlert({ title: t('study.wizard.alert.invalid-value'), message: t('study.wizard.alert.invalid-count-range') });
                     return false;
                 }
             }
@@ -230,13 +231,13 @@
                 const timerInput = document.getElementById('exam-timer-input');
 
                 if (countInput && (parseInt(countInput.value) < 1 || parseInt(countInput.value) > 20)) {
-                    shAlert({ title: 'Invalid value', message: 'Please enter a question count between 1 and 20.' });
+                    shAlert({ title: t('study.wizard.alert.invalid-value'), message: t('study.wizard.alert.invalid-exam-range') });
                     return false;
                 }
 
                 if (timerToggle && timerToggle.checked && timerInput) {
                     if (parseInt(timerInput.value) < 1 || parseInt(timerInput.value) > 240) {
-                        shAlert({ title: 'Invalid value', message: 'Please enter a timer duration between 1 and 240 minutes.' });
+                        shAlert({ title: t('study.wizard.alert.invalid-value'), message: t('study.wizard.alert.invalid-timer') });
                         return false;
                     }
                 }
@@ -245,7 +246,7 @@
         if (step === sourceStep()) {
             const checked = document.querySelectorAll('.sh-source-checkbox:checked');
             if (checked.length === 0) {
-                shAlert({ title: 'Missing source', message: 'Please select at least one source.' });
+                shAlert({ title: t('study.wizard.alert.missing-source'), message: t('study.wizard.alert.select-source') });
                 return false;
             }
         }
@@ -253,7 +254,7 @@
             if (currentMode === 'EXAM') {
                 const selected = document.querySelector('input[name="layout"]:checked');
                 if (!selected) {
-                    shAlert({ title: 'Missing selection', message: 'Please select an exam layout.' });
+                    shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.select-layout') });
                     return false;
                 }
             }
@@ -408,9 +409,9 @@
         const allSelected = checkboxes.length > 0 && checked.length === checkboxes.length;
 
         if (allSelected) {
-            text.textContent = 'Deselect all';
+            text.textContent = t('study.wizard.deselect-all');
         } else {
-            text.textContent = 'Select all';
+            text.textContent = t('study.wizard.select-all');
         }
         btn.classList.toggle('is-on', allSelected);
         btn.setAttribute('aria-pressed', allSelected ? 'true' : 'false');
@@ -429,7 +430,7 @@
         const toggle = folder.querySelector(':scope > .vb-group-head .vb-folder-toggle, :scope > .vb-subgroup-head .vb-folder-toggle');
         if (toggle) {
             toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-            toggle.setAttribute('title', expanded ? 'Collapse folder' : 'Expand folder');
+            toggle.setAttribute('title', expanded ? t('study.wizard.collapse-folder') : t('study.wizard.expand-folder'));
         }
     }
 
@@ -438,7 +439,7 @@
         if (!toggle) return;
         const expanded = !folder.classList.contains('is-collapsed') || folder.classList.contains('is-search-expanded');
         toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        toggle.setAttribute('title', expanded ? 'Collapse folder' : 'Expand folder');
+        toggle.setAttribute('title', expanded ? t('study.wizard.collapse-folder') : t('study.wizard.expand-folder'));
     }
 
     window.openFoldersWithSelection = function() {
@@ -621,7 +622,7 @@
 
             const label = document.getElementById('exam-estimate-label');
             if (label) {
-                label.innerHTML = `<i data-lucide="clock" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> Estimated time: ~${estimate} minutes`;
+                label.innerHTML = `<i data-lucide="clock" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> ` + t('study.wizard.estimated-time').replace('{0}', estimate);
                 if (typeof initLucide === 'function') initLucide();
             }
 
@@ -720,8 +721,8 @@
 
     // Progress message cycler for AI generation (Quiz & Exam)
     const PROGRESS_MESSAGES = {
-        QUIZ: ['Generating your quiz with AI…', 'Reading content...', 'Analyzing topics...', 'Asking Gemini...', 'Generating questions...'],
-        EXAM: ['Generating your exam with AI…', 'Reading content...', 'Analyzing topics...', 'Generating questions...', 'Setting up exam...'],
+        QUIZ: [t('study.wizard.progress.quiz.title'), t('study.wizard.progress.quiz.reading'), t('study.wizard.progress.quiz.analyzing'), t('study.wizard.progress.quiz.asking'), t('study.wizard.progress.quiz.generating')],
+        EXAM: [t('study.wizard.progress.exam.title'), t('study.wizard.progress.exam.reading'), t('study.wizard.progress.exam.analyzing'), t('study.wizard.progress.exam.generating'), t('study.wizard.progress.exam.setup')],
     };
     let timer = null;
     document.body.addEventListener('htmx:beforeRequest', (e) => {
@@ -823,12 +824,12 @@ document.addEventListener('click', (event) => {
 
     // ── Study mode tutorials ─────────────────────────────────────────────
     const TUTORIAL_META = {
-        FLASHCARDS: { icon: 'lucide:book-open',   title: 'Flashcards', cardClass: 'sh-study-choice-study' },
-        QUIZ:       { icon: 'lucide:list-checks',  title: 'AI Quiz',     cardClass: 'sh-study-choice-generate' },
-        EXAM:       { icon: 'lucide:pencil-line',  title: 'Exam',        cardClass: 'sh-study-choice-exam' },
-        STUDY_DASHBOARD: { icon: 'lucide:book-open', title: 'Start Studying', cardClass: 'sh-action-tile-study', colorVar: '--tile-color' },
-        GENERATOR_DASHBOARD: { icon: 'lucide:sparkles', title: 'Generate Flashcards', cardClass: 'sh-action-tile-generate', colorVar: '--tile-color' },
-        DUE_DASHBOARD: { icon: 'lucide:alarm-clock', title: 'Due Today', cardClass: 'sh-action-tile-due', colorVar: '--tile-color' }
+        FLASHCARDS: { icon: 'lucide:book-open',   title: t('study.wizard.tutorial.flashcards'), cardClass: 'sh-study-choice-study' },
+        QUIZ:       { icon: 'lucide:list-checks',  title: t('study.wizard.tutorial.quiz'),     cardClass: 'sh-study-choice-generate' },
+        EXAM:       { icon: 'lucide:pencil-line',  title: t('study.wizard.tutorial.exam'),        cardClass: 'sh-study-choice-exam' },
+        STUDY_DASHBOARD: { icon: 'lucide:book-open', title: t('study.wizard.tutorial.study'), cardClass: 'sh-action-tile-study', colorVar: '--tile-color' },
+        GENERATOR_DASHBOARD: { icon: 'lucide:sparkles', title: t('study.wizard.tutorial.generate'), cardClass: 'sh-action-tile-generate', colorVar: '--tile-color' },
+        DUE_DASHBOARD: { icon: 'lucide:alarm-clock', title: t('study.wizard.tutorial.due'), cardClass: 'sh-action-tile-due', colorVar: '--tile-color' }
     };
 
     function openTutorial(mode) {
@@ -836,7 +837,7 @@ document.addEventListener('click', (event) => {
         const source = document.querySelector(`[data-tutorial-content="${mode}"]`);
         if (!modal || !source) return;
 
-        const meta = TUTORIAL_META[mode] || { icon: 'lucide:info', title: 'How it works' };
+        const meta = TUTORIAL_META[mode] || { icon: 'lucide:info', title: t('study.wizard.tutorial.fallback') };
         const iconEl = document.getElementById('sh-tutorial-icon');
         iconEl.innerHTML = `<iconify-icon icon="${meta.icon}"></iconify-icon>`;
         // Match the modal header icon to the mode's card color (theme-aware).

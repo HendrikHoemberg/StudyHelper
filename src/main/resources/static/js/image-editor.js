@@ -5,6 +5,7 @@
    ============================================================ */
 (function () {
     'use strict';
+    function t(key) { return (window.i18n && window.i18n[key]) || key; }
 
     // ── Module state ─────────────────────────────────────────────────
     var _fc       = null;    // fabric.Canvas instance
@@ -224,7 +225,7 @@
 
         var sizeLabel = $id('sh-ie-size-label');
         if (sizeLabel) {
-            sizeLabel.textContent = (key === 'rect' || key === 'ellipse' || key === 'line') ? 'Bordersize' : 'Size';
+            sizeLabel.textContent = (key === 'rect' || key === 'ellipse' || key === 'line') ? t('image-editor.border-size') : t('image-editor.size');
         }
     }
 
@@ -940,7 +941,7 @@
             icon.parentNode.replaceChild(newIcon, icon);
             if (typeof initLucide === 'function') initLucide();
         }
-        if (label) label.textContent = on ? 'Saving…' : 'Save';
+        if (label) label.textContent = on ? t('image-editor.saving') : t('image-editor.save');
     }
 
     // ── Save ─────────────────────────────────────────────────────────
@@ -949,10 +950,10 @@
         var inputEl  = $id('sh-ie-prompt-input');
         if (!promptEl || !inputEl) {
             shPrompt({
-                title: 'Save as new file',
-                message: 'Enter a name for the new file:',
+                title: t('image-editor.prompt.title'),
+                message: t('image-editor.prompt.desc'),
                 defaultValue: defaultName,
-                confirmText: 'Save'
+                confirmText: t('image-editor.save')
             }).then(function(name) {
                 if (name !== null) onConfirm(name);
                 else if (onCancel) onCancel();
@@ -1040,7 +1041,7 @@
         try {
             result = _opts.onSave(blob, choice || 'overwrite', customName);
         } catch (err) {
-            _showFooterError(err.message || 'Save failed.');
+            _showFooterError(err.message || t('image-editor.save-failed'));
             _setSaveSpinner(false);
             return;
         }
@@ -1049,7 +1050,7 @@
             result.then(function () {
                 close();
             }).catch(function (err) {
-                _showFooterError(err.message || 'Save failed. Please try again.');
+                _showFooterError(err.message || t('image-editor.save-failed-retry'));
                 _setSaveSpinner(false);
             });
         } else {
@@ -1062,9 +1063,9 @@
         var hasEdits = _history.length > 1;
         if (!hasEdits) { close(); return; }
         shConfirm({
-            title: 'Discard changes?',
-            message: 'You have unsaved edits. Close without saving?',
-            confirmText: 'Discard',
+            title: t('image-editor.discard.title'),
+            message: t('image-editor.discard.message'),
+            confirmText: t('image-editor.discard.confirm'),
             danger: true
         }).then(function(ok) { if (ok) close(); });
     }
@@ -1345,8 +1346,8 @@
         var titleEl = $id('sh-ie-title');
         if (titleEl) {
             titleEl.textContent = _opts.filename
-                ? 'Editor — ' + _opts.filename
-                : 'Image Editor';
+                ? t('image-editor.editor-title').replace('{0}', _opts.filename)
+                : t('image-editor.editor-title-default');
         }
 
         // Reset controls
