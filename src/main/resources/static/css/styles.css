@@ -4887,6 +4887,12 @@ iconify-icon {
         padding: 0.75rem;
     }
 
+    /* Bottom-bar breathing room applied to the leaf container so it works
+       regardless of which ancestor ends up scrolling. */
+    .sh-explorer-detail {
+        padding-bottom: 1.5rem;
+    }
+
     .sh-study-flip-container {
         min-height: 300px;
         height: auto;
@@ -4950,8 +4956,9 @@ iconify-icon {
     }
 
     .vb-source-scroll {
-        max-height: min(44vh, 28rem);
-        padding-bottom: 0.5rem;
+        max-height: none;
+        overflow: visible;
+        padding-bottom: 0;
     }
 
     .sh-deck-grid {
@@ -6507,7 +6514,7 @@ iconify-icon {
 
 @media (max-width: 767px) {
     .sh-dashboard-cockpit {
-        padding: 1rem 0;
+        padding: 0;
         gap: 1.25rem;
     }
 
