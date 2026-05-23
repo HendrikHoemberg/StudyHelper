@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -31,12 +32,17 @@ public class AdminController {
 
     @GetMapping("/admin")
     public String adminDashboard(Model model, Principal principal,
-                                  @RequestParam(value = "tab", defaultValue = "users") String tab) {
+                                  @RequestParam(value = "tab", defaultValue = "users") String tab,
+                                  @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User admin = userService.getByUsername(principal.getName());
         model.addAttribute("username", admin.getUsername());
         model.addAttribute("users", adminService.listUsers());
         model.addAttribute("registrationCodes", registrationCodeService.listSummaries());
         model.addAttribute("activeTab", tab);
+        if ("true".equals(hxRequest)) {
+            model.addAttribute("refreshSidebar", true);
+            return "fragments/admin-content :: content";
+        }
         return "admin";
     }
 

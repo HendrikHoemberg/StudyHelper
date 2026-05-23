@@ -69,7 +69,8 @@
                 <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
                 <span th:text="#{nav.past-exams}">Past Exams</span>
             </a>
-            <a th:if="${isAdmin}" href="/admin" class="topnav-link">
+            <a th:if="${isAdmin}" href="/admin" class="topnav-link"
+               hx-get="/admin" hx-target="#explorer-detail" hx-push-url="true">
                 <iconify-icon icon="lucide:shield"></iconify-icon>
                 <span th:text="#{nav.admin}">Admin</span>
             </a>
@@ -100,7 +101,8 @@
                     </div>
                 </div>
             </div>
-            <a href="/settings" class="topnav-user" th:title="#{nav.settings}">
+            <a href="/settings" class="topnav-user" th:title="#{nav.settings}"
+               hx-get="/settings" hx-target="#explorer-detail" hx-push-url="true">
                 <iconify-icon icon="lucide:settings"></iconify-icon>
                 <span th:text="#{nav.settings}">Settings</span>
             </a>
@@ -149,7 +151,8 @@
         <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
         <span th:text="#{nav.past-exams}">Past Exams</span>
     </a>
-    <a th:if="${isAdmin}" href="/admin" class="topnav-mobile-link">
+    <a th:if="${isAdmin}" href="/admin" class="topnav-mobile-link"
+       hx-get="/admin" hx-target="#explorer-detail" hx-push-url="true">
         <iconify-icon icon="lucide:shield"></iconify-icon>
         <span th:text="#{nav.admin}">Admin</span>
     </a>
@@ -179,7 +182,8 @@
         </div>
     </div>
     <div class="topnav-mobile-divider" th:if="${userQuota != null}"></div>
-    <a href="/settings" class="topnav-mobile-link">
+    <a href="/settings" class="topnav-mobile-link"
+       hx-get="/settings" hx-target="#explorer-detail" hx-push-url="true">
         <iconify-icon icon="lucide:settings"></iconify-icon>
         <span th:text="#{nav.settings}">Settings</span>
     </a>
@@ -289,13 +293,15 @@
                     <iconify-icon icon="lucide:chevron-right" class="sh-sheet-arrow"></iconify-icon>
                 </a>
 
-                <a href="/settings" class="sh-sheet-row-link">
+                <a href="/settings" class="sh-sheet-row-link"
+                   hx-get="/settings" hx-target="#explorer-detail" hx-push-url="true">
                     <iconify-icon icon="lucide:settings"></iconify-icon>
                     <span th:text="#{nav.settings}">Settings</span>
                     <iconify-icon icon="lucide:chevron-right" class="sh-sheet-arrow"></iconify-icon>
                 </a>
 
-                <a th:if="${isAdmin}" href="/admin" class="sh-sheet-row-link">
+                <a th:if="${isAdmin}" href="/admin" class="sh-sheet-row-link"
+                   hx-get="/admin" hx-target="#explorer-detail" hx-push-url="true">
                     <iconify-icon icon="lucide:shield"></iconify-icon>
                     <span th:text="#{nav.admin-panel}">Admin Panel</span>
                     <iconify-icon icon="lucide:chevron-right" class="sh-sheet-arrow"></iconify-icon>

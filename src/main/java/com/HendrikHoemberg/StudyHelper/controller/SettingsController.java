@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -26,8 +27,13 @@ public class SettingsController {
     }
 
     @GetMapping("/settings")
-    public String getSettings(Principal principal, Model model) {
+    public String getSettings(Principal principal, Model model,
+                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         addUserToModel(model, userService.getByUsername(principal.getName()));
+        if ("true".equals(hxRequest)) {
+            model.addAttribute("refreshSidebar", true);
+            return "fragments/settings-content :: content";
+        }
         return "settings";
     }
 
