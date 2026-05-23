@@ -7,37 +7,33 @@
 <section th:fragment="card" id="saved-session-card"
          th:if="${savedSession != null}"
          class="sh-saved-session-card">
-    <div class="sh-saved-session-icon">
-        <iconify-icon th:icon="${savedSession.type().name() == 'FLASHCARDS' ? 'lucide:book-open'
-                              : savedSession.type().name() == 'QUIZ' ? 'lucide:list-checks'
-                              : 'lucide:clipboard-list'}"></iconify-icon>
-    </div>
-    <div class="sh-saved-session-body">
-        <div class="sh-saved-session-eyebrow">
-            <span class="sh-saved-session-tag" th:text="${savedSession.type()}">FLASHCARDS</span>
-            <span class="sh-saved-session-paused">Paused</span>
-        </div>
-        <div class="sh-saved-session-title" th:text="${savedSession.title()}">Title</div>
-        <div class="sh-saved-session-progress" th:text="${savedSession.progressLabel()}">0 / 0 answered</div>
-    </div>
-    <div class="sh-saved-session-actions">
-        <a class="sh-btn sh-btn-primary"
-           th:href="@{${savedSession.resumeUrl()}}"
-           th:attr="hx-get=@{${savedSession.resumeUrl()}}"
-           hx-target="#explorer-detail"
-           hx-push-url="true">
+    <a class="sh-saved-session-link"
+       th:href="@{${savedSession.resumeUrl()}}"
+       th:attr="hx-get=@{${savedSession.resumeUrl()}}"
+       hx-target="#explorer-detail"
+       hx-push-url="true"
+       aria-label="Resume saved session">
+        <div class="sh-saved-session-icon">
             <iconify-icon icon="lucide:play"></iconify-icon>
-            Resume
-        </a>
-        <button type="button" class="sh-btn sh-btn-secondary"
-                hx-post="/sessions/saved/discard"
-                hx-target="#saved-session-card"
-                hx-swap="outerHTML"
-                hx-confirm="Discard this saved session? Your progress will be lost.">
-            <iconify-icon icon="lucide:x"></iconify-icon>
-            Discard
-        </button>
-    </div>
+        </div>
+        <div class="sh-saved-session-body">
+            <div class="sh-saved-session-eyebrow">
+                <span class="sh-saved-session-tag" th:text="${savedSession.type()}">FLASHCARDS</span>
+                <span class="sh-saved-session-paused">Paused</span>
+            </div>
+            <div class="sh-saved-session-title" th:text="${savedSession.title()}">Title</div>
+            <div class="sh-saved-session-progress" th:text="${savedSession.progressLabel()}">0 / 0 answered</div>
+        </div>
+        <span class="sh-saved-session-cta" aria-hidden="true">Resume</span>
+    </a>
+    <button type="button" class="sh-saved-session-dismiss"
+            aria-label="Discard saved session"
+            hx-post="/sessions/saved/discard"
+            hx-target="#saved-session-card"
+            hx-swap="outerHTML"
+            hx-confirm="Discard this saved session? Your progress will be lost.">
+        <iconify-icon icon="lucide:x"></iconify-icon>
+    </button>
 </section>
 
 <!-- Empty replacement after discard. Keeps the id so a re-save can target it. -->

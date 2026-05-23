@@ -4057,43 +4057,58 @@ textarea.sh-input {
    ============================================================ */
 
 .sh-saved-session-card {
+    --tile-color: var(--accent);
+    --tile-bg: color-mix(in srgb, var(--accent) 15%, transparent);
+    position: relative;
     grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.15rem 1.25rem;
-    background: var(--surface);
-    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border-soft));
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
     margin-bottom: 0.5rem;
-    transition: all var(--transition);
 }
 
-.sh-saved-session-card:hover {
-    border-color: color-mix(in srgb, var(--accent) 60%, var(--border-soft));
-    background: var(--surface-raised);
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
+.sh-saved-session-link {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    padding: 30px 20px;
+    padding-right: 56px;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+    border: 1px solid color-mix(in srgb, var(--tile-color) 35%, var(--border-soft));
+    transition: all 150ms ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sh-saved-session-link:hover {
+    border-color: color-mix(in srgb, var(--tile-color) 60%, var(--border-soft));
+    background: var(--surface);
+    transform: translateY(-1px);
 }
 
 .sh-saved-session-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    color: var(--accent);
-    font-size: 1.25rem;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: var(--tile-bg);
+    color: var(--tile-color);
     flex-shrink: 0;
-    transition: all var(--transition);
+    transition: all 150ms ease;
 }
 
-.sh-saved-session-card:hover .sh-saved-session-icon {
-    background: var(--accent);
+.sh-saved-session-icon iconify-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+.sh-saved-session-link:hover .sh-saved-session-icon {
+    background: var(--tile-color);
     color: #fff;
 }
 
@@ -4102,21 +4117,23 @@ textarea.sh-input {
     flex-direction: column;
     gap: 0.25rem;
     min-width: 0;
+    flex: 1;
 }
 
 .sh-saved-session-eyebrow {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     font-size: 0.6875rem;
     letter-spacing: 0.06em;
+    margin-bottom: 0.125rem;
 }
 
 .sh-saved-session-tag {
     text-transform: uppercase;
     font-weight: 700;
-    color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--tile-color);
+    background: var(--tile-bg);
     padding: 0.125rem 0.5rem;
     border-radius: 999px;
 }
@@ -4134,8 +4151,9 @@ textarea.sh-input {
 
 .sh-saved-session-title {
     font-family: var(--font-heading);
-    font-weight: 700;
-    font-size: 0.95rem;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.3;
     color: var(--text);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -4147,67 +4165,78 @@ textarea.sh-input {
     color: var(--text-muted);
 }
 
-.sh-saved-session-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+.sh-saved-session-cta {
     flex-shrink: 0;
-}
-
-.sh-saved-session-actions .sh-btn-primary {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius);
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    color: var(--accent);
-    border-color: transparent;
+    gap: 0.35rem;
+    font-family: var(--font-heading);
     font-weight: 700;
-    font-size: 0.85rem;
-    transition: all var(--transition);
-    white-space: nowrap;
+    font-size: 0.8125rem;
+    color: var(--tile-color);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0 0.25rem;
+    transition: transform 150ms ease;
 }
 
-.sh-saved-session-actions .sh-btn-primary:hover {
-    background: var(--accent) !important;
-    color: #fff !important;
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px var(--accent-glow);
+.sh-saved-session-cta::after {
+    content: "→";
+    font-size: 1rem;
+    transition: transform 150ms ease;
 }
 
-.sh-saved-session-actions .sh-btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius);
-    background: color-mix(in srgb, var(--text-muted) 10%, transparent);
-    color: var(--text-secondary);
-    border-color: transparent;
-    font-weight: 700;
-    font-size: 0.85rem;
-    transition: all var(--transition);
-    white-space: nowrap;
+.sh-saved-session-link:hover .sh-saved-session-cta::after {
+    transform: translateX(3px);
 }
 
-.sh-saved-session-actions .sh-btn-secondary:hover {
-    background: var(--danger) !important;
-    color: #fff !important;
-    border-color: var(--danger) !important;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+.sh-saved-session-dismiss {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all 150ms ease;
+    z-index: 1;
 }
 
-@media (max-width: 720px) {
-    .sh-saved-session-card {
-        grid-template-columns: auto minmax(0, 1fr);
-        grid-template-rows: auto auto;
-        row-gap: 0.75rem;
+.sh-saved-session-dismiss iconify-icon {
+    font-size: 18px;
+}
+
+.sh-saved-session-dismiss:hover {
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+    color: var(--danger);
+}
+
+@media (max-width: 540px) {
+    .sh-saved-session-link {
+        padding: 20px 16px;
+        padding-right: 52px;
+        gap: 14px;
     }
 
-    .sh-saved-session-actions {
-        grid-column: 1 / -1;
-        justify-content: flex-end;
+    .sh-saved-session-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+
+    .sh-saved-session-icon iconify-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+    }
+
+    .sh-saved-session-cta {
+        display: none;
     }
 }
 
