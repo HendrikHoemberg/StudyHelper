@@ -69,6 +69,21 @@
         updateFooter(step);
         const stepsIndicator = document.getElementById('sh-wizard-steps');
         if (stepsIndicator) stepsIndicator.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        if (step === 2) {
+            setTimeout(() => {
+                const checkedCheckbox = document.querySelector('.sh-ai-destination-body[data-destination-panel="NEW_DECK"] input[name="newDeckFolderId"]:checked');
+                if (checkedCheckbox) {
+                    let parent = checkedCheckbox.closest('.vb-group, .vb-subgroup');
+                    while (parent) {
+                        setFolderExpanded(parent, true);
+                        parent = parent.parentElement ? parent.parentElement.closest('.vb-group, .vb-subgroup') : null;
+                    }
+                    const targetElement = checkedCheckbox.closest('.sh-ai-tree-folder') || checkedCheckbox;
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }, 150);
+        }
     }
 
     function countSelectedPdfs(form) {
@@ -149,6 +164,13 @@
             cb.checked = isChecked;
             cb.indeterminate = false;
         });
+
+        if (isChecked) {
+            setFolderExpanded(folder, true);
+            folder.querySelectorAll('.vb-subgroup').forEach(subfolder => {
+                setFolderExpanded(subfolder, true);
+            });
+        }
 
         syncFolderBatchCheckboxes(form);
         updateNextEnabled();
