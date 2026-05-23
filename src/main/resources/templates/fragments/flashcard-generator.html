@@ -57,7 +57,7 @@
                         <span th:text="#{flashcard-gen.large-pdf-warning}">Large PDF — generation may be slow.</span>
                     </div>
 
-                    <div th:if="${!#lists.isEmpty(pdfFolderTree)}" class="vb-list sh-ai-tree" style="max-height: 560px;">
+                    <div th:if="${!#lists.isEmpty(pdfFolderTree)}" class="vb-list sh-ai-tree">
                         <div th:each="node : ${pdfFolderTree}" class="vb-group is-collapsed" th:style="'--folder-color: ' + ${node.colorHex}">
                             <div class="vb-group-head" style="cursor:pointer;">
                                 <button type="button" class="vb-folder-toggle" aria-expanded="false" title="Toggle folder">
@@ -215,7 +215,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="sh-setting-row" style="margin-top:1.25rem;">
+                    <div class="sh-setting-row" style="margin-top:0.75rem;">
                         <div>
                             <div class="sh-setting-label" th:text="#{flashcard-gen.card-count}">Card Count</div>
                             <div class="sh-setting-hint" th:text="#{flashcard-gen.card-count-hint}">Choose between 1 and 100 generated cards.</div>
