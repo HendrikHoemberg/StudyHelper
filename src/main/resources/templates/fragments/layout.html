@@ -29,10 +29,12 @@
     <!-- CSRF Meta Tags -->
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-    <script>
+    <script th:inline="javascript">
         (function() {
             var t = localStorage.getItem('theme') || 'light';
             document.documentElement.dataset.theme = t;
+            var lang = /*[[${currentLocale}]]*/ 'en';
+            if (lang) document.documentElement.lang = lang;
         })();
     </script>
 </head>
