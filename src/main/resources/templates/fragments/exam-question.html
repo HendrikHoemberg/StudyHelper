@@ -15,7 +15,7 @@
 
     <div class="sh-exam-question-card" th:data-q-index="${currentIndex}">
         <div class="sh-exam-progress mb-3">
-            Question <span th:text="${currentIndex + 1}">1</span> of <span th:text="${state.questions().size()}">5</span>
+            <span th:text="#{exam.question.progress(${currentIndex + 1}, ${state.questions().size()})}">Question 1 of 5</span>
         </div>
 
         <div class="sh-exam-question-text" th:text="${question.questionText()}">
@@ -24,6 +24,7 @@
 
         <textarea name="answer" 
                   class="sh-exam-answer" 
+                  th:placeholder="#{exam.question.placeholder}"
                   placeholder="Type your answer here..."
                   th:text="${state.answers().get(currentIndex)}"></textarea>
 
@@ -35,7 +36,7 @@
                         th:hx-vals="${'js:{currentIndex: ' + currentIndex + '}'}"
                         hx-target="#exam-runtime"
                         hx-swap="outerHTML">
-                    <iconify-icon icon="lucide:chevron-left"></iconify-icon> Previous
+                    <iconify-icon icon="lucide:chevron-left"></iconify-icon> <span th:text="#{exam.question.previous}">Previous</span>
                 </button>
             </div>
 
@@ -47,7 +48,7 @@
                         hx-target="#exam-runtime"
                         hx-swap="outerHTML"
                         hx-disabled-elt="this">
-                    Next <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                    <span th:text="#{exam.question.next}">Next</span> <iconify-icon icon="lucide:chevron-right"></iconify-icon>
                 </button>
 
                 <button th:if="${isLast}"
@@ -58,7 +59,7 @@
                         hx-swap="outerHTML"
                         hx-indicator="#grading-loader"
                         hx-disabled-elt="this">
-                    <iconify-icon icon="lucide:send"></iconify-icon> Submit Exam
+                    <iconify-icon icon="lucide:send"></iconify-icon> <span th:text="#{exam.question.submit}">Submit Exam</span>
                 </button>
             </div>
         </div>

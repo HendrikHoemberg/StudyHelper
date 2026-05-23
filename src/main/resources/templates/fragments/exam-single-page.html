@@ -12,7 +12,7 @@
     <form hx-post="/exam/submit" hx-target="#exam-runtime" hx-swap="outerHTML" hx-indicator="#grading-loader" hx-disabled-elt="find button[type='submit']">
         <div th:each="question, iter : ${state.questions()}" class="sh-exam-question-card">
             <div class="sh-exam-progress mb-3">
-                Question <span th:text="${iter.index + 1}">1</span> of <span th:text="${state.questions().size()}">5</span>
+                <span th:text="#{exam.question.progress(${iter.index + 1}, ${state.questions().size()})}">Question 1 of 5</span>
             </div>
 
             <div class="sh-exam-question-text" th:text="${question.questionText()}">
@@ -21,13 +21,14 @@
 
             <textarea th:name="${'answers[' + iter.index + ']'}" 
                       class="sh-exam-answer" 
+                      th:placeholder="#{exam.question.placeholder}"
                       placeholder="Type your answer here..."
                       th:text="${state.answers().get(iter.index)}"></textarea>
         </div>
 
         <div class="d-flex justify-content-center py-4">
             <button type="submit" class="sh-btn sh-btn-success sh-btn-lg">
-                <iconify-icon icon="lucide:send"></iconify-icon> Submit Exam
+                <iconify-icon icon="lucide:send"></iconify-icon> <span th:text="#{exam.question.submit}">Submit Exam</span>
             </button>
         </div>
     </form>

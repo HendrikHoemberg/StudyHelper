@@ -6,13 +6,13 @@
 
     <div class="sh-page-header">
         <div>
-            <h1 class="sh-page-title">Past Exams</h1>
-            <p class="sh-page-subtitle">Your previous long-form assessments and feedback.</p>
+            <h1 class="sh-page-title" th:text="#{exams.page.title}">Past Exams</h1>
+            <p class="sh-page-subtitle" th:text="#{exams.list.subtitle}">Your previous long-form assessments and feedback.</p>
         </div>
         <div class="sh-page-actions">
             <a href="/study/start?mode=EXAM" class="sh-btn sh-btn-primary"
                hx-get="/study/start?mode=EXAM" hx-target="#explorer-detail" hx-push-url="true">
-                <iconify-icon icon="lucide:pencil-line"></iconify-icon> Take New Exam
+                <iconify-icon icon="lucide:pencil-line"></iconify-icon> <span th:text="#{exams.list.take-new}">Take New Exam</span>
             </a>
         </div>
     </div>
@@ -21,10 +21,10 @@
         <div class="sh-empty-icon">
             <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
         </div>
-        <p class="sh-empty-text">No exams taken yet</p>
-        <p class="sh-empty-hint">Start an exam session to see your progress and AI feedback here.</p>
+        <p class="sh-empty-text" th:text="#{exams.list.empty}">No exams taken yet</p>
+        <p class="sh-empty-hint" th:text="#{exams.list.empty-hint}">Start an exam session to see your progress and AI feedback here.</p>
         <a href="/study/start?mode=EXAM" class="sh-btn sh-btn-primary mt-3"
-           hx-get="/study/start?mode=EXAM" hx-target="#explorer-detail" hx-push-url="true">
+           hx-get="/study/start?mode=EXAM" hx-target="#explorer-detail" hx-push-url="true" th:text="#{exams.list.take-first}">
             Take your first exam
         </a>
     </div>
@@ -52,13 +52,13 @@
                 <a th:href="@{/exams/{id}(id=${exam.id})}" class="sh-btn sh-btn-secondary sh-btn-sm"
                    hx-get th:hx-get="@{/exams/{id}(id=${exam.id})}"
                    hx-target="#explorer-detail" hx-push-url="true">
-                    <iconify-icon icon="lucide:eye"></iconify-icon> View Report
+                    <iconify-icon icon="lucide:eye"></iconify-icon> <span th:text="#{exams.list.view-report}">View Report</span>
                 </a>
                 <button class="sh-btn sh-btn-ghost sh-btn-icon sh-btn-sm ms-auto text-danger"
                         th:hx-delete="@{/exams/{id}(id=${exam.id})}"
                         hx-target="closest .sh-exam-card"
                         hx-swap="outerHTML"
-                        hx-confirm="Delete this exam result? This cannot be undone.">
+                        th:attr="hx-confirm=#{exam.delete.confirm}">
                     <iconify-icon icon="lucide:trash-2"></iconify-icon>
                 </button>
             </div>
