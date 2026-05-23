@@ -165,12 +165,10 @@
             cb.indeterminate = false;
         });
 
-        if (isChecked) {
-            setFolderExpanded(folder, true);
-            folder.querySelectorAll('.vb-subgroup').forEach(subfolder => {
-                setFolderExpanded(subfolder, true);
-            });
-        }
+        setFolderExpanded(folder, isChecked);
+        folder.querySelectorAll('.vb-subgroup').forEach(subfolder => {
+            setFolderExpanded(subfolder, isChecked);
+        });
 
         syncFolderBatchCheckboxes(form);
         updateNextEnabled();
