@@ -102,26 +102,26 @@
                                                 th:classappend="${!u.enabled()} ? 'sh-admin-row-disabled'">
 
                                                 <!-- Username -->
-                                                <td class="sh-admin-cell-user">
+                                                <td class="sh-admin-cell-user" th:data-label="#{admin.users.table.user}">
                                                     <div class="sh-admin-user-avatar"
                                                          th:text="${#strings.toUpperCase(#strings.substring(u.username(), 0, 1))}"></div>
                                                     <span th:text="${u.username()}"></span>
                                                 </td>
 
                                                 <!-- Role badge -->
-                                                <td>
+                                                <td class="sh-admin-cell-role" th:data-label="#{admin.users.table.role}">
                                                     <span th:if="${u.role() == 'ADMIN'}" th:text="#{admin.users.role.admin}" class="sh-badge sh-badge-accent">ADMIN</span>
                                                     <span th:unless="${u.role() == 'ADMIN'}" th:text="#{admin.users.role.user}" class="sh-badge sh-badge-muted">USER</span>
                                                 </td>
 
                                                 <!-- Enabled / Disabled badge -->
-                                                <td>
+                                                <td class="sh-admin-cell-status" th:data-label="#{admin.users.table.status}">
                                                     <span th:if="${u.enabled()}" th:text="#{admin.users.status.enabled}" class="sh-badge sh-badge-success">Enabled</span>
                                                     <span th:unless="${u.enabled()}" th:text="#{admin.users.status.disabled}" class="sh-badge sh-badge-danger">Disabled</span>
                                                 </td>
 
                                                 <!-- Storage with progress bar -->
-                                                <td class="sh-admin-cell-storage">
+                                                <td class="sh-admin-cell-storage" th:data-label="#{admin.users.table.storage}">
                                                     <div class="sh-admin-quota-label"
                                                          th:text="${u.formattedStorageUsed()} + ' / ' + ${u.formattedStorageQuota()}"></div>
                                                     <div class="sh-admin-progress">
@@ -132,7 +132,7 @@
                                                 </td>
 
                                                 <!-- AI usage -->
-                                                <td class="sh-admin-cell-ai">
+                                                <td class="sh-admin-cell-ai" th:data-label="#{admin.users.table.ai-today}">
                                                     <span th:text="${u.aiUsedToday()} + ' / ' + ${u.aiDailyLimit()}"></span>
                                                     <div class="sh-admin-progress">
                                                         <div class="sh-admin-progress-bar"
@@ -143,14 +143,14 @@
                                                 </td>
 
                                                 <!-- Created at -->
-                                                <td class="sh-admin-cell-date">
+                                                <td class="sh-admin-cell-date" th:data-label="#{admin.users.table.joined}">
                                                     <span th:if="${u.createdAt() != null}"
                                                           th:text="${#temporals.format(T(java.time.ZonedDateTime).ofInstant(u.createdAt(), T(java.time.ZoneId).systemDefault()), 'dd MMM yyyy')}"></span>
                                                     <span th:unless="${u.createdAt() != null}">—</span>
                                                 </td>
 
                                                 <!-- Actions column — use data-* to avoid JS string escaping issues -->
-                                                <td class="sh-admin-col-actions">
+                                                <td class="sh-admin-col-actions" th:data-label="#{admin.users.table.actions}">
                                                     <div class="sh-admin-actions">
 
                                                         <!-- Edit quotas → opens shared modal via data attributes -->
@@ -159,6 +159,8 @@
                                                                         th:data-username="${u.username()}"
                                                                         th:data-storage-gib="${u.storageQuotaGib()}"
                                                                         th:data-ai-limit="${u.aiDailyLimit()}"
+                                                                        th:title="#{admin.users.quotas}"
+                                                                        th:aria-label="#{admin.users.quotas}"
                                                                         onclick="adminOpenQuotaModal(this)">
                                                              <iconify-icon icon="lucide:sliders-horizontal"></iconify-icon>
                                                              <span th:text="#{admin.users.quotas}">Quotas</span>
@@ -240,21 +242,21 @@
                                             </thead>
                                             <tbody>
                                             <tr th:each="code : ${registrationCodes}">
-                                                <td th:text="${code.id()}"></td>
-                                                <td>
+                                                <td class="sh-admin-cell-code-id" th:data-label="#{admin.codes.table.num}" th:text="${code.id()}"></td>
+                                                <td class="sh-admin-cell-code-status" th:data-label="#{admin.codes.table.status}">
                                                     <span th:if="${code.status() == 'Unused'}"  th:text="#{admin.codes.status.unused}"  class="sh-badge sh-badge-success">Unused</span>
                                                     <span th:if="${code.status() == 'Used'}"    th:text="#{admin.codes.status.used}"    class="sh-badge sh-badge-muted">Used</span>
                                                     <span th:if="${code.status() == 'Revoked'}" th:text="#{admin.codes.status.revoked}" class="sh-badge sh-badge-warn">Revoked</span>
                                                     <span th:if="${code.status() == 'Expired'}" th:text="#{admin.codes.status.expired}" class="sh-badge sh-badge-muted">Expired</span>
                                                 </td>
-                                                <td th:text="${code.createdBy()} ?: '—'"></td>
-                                                <td th:text="${code.usedBy()} ?: '—'"></td>
-                                                <td>
+                                                <td class="sh-admin-cell-code-created" th:data-label="#{admin.codes.table.created-by}" th:text="${code.createdBy()} ?: '—'"></td>
+                                                <td class="sh-admin-cell-code-used" th:data-label="#{admin.codes.table.used-by}" th:text="${code.usedBy()} ?: '—'"></td>
+                                                <td class="sh-admin-cell-code-expires" th:data-label="#{admin.codes.table.expires}">
                                                     <span th:if="${code.expiresAt() != null}"
                                                           th:text="${#temporals.format(T(java.time.ZonedDateTime).ofInstant(code.expiresAt(), T(java.time.ZoneId).systemDefault()), 'dd MMM yyyy HH:mm')}"></span>
                                                     <span th:unless="${code.expiresAt() != null}">—</span>
                                                 </td>
-                                                <td>
+                                                <td class="sh-admin-cell-code-actions" th:data-label="#{admin.users.table.actions}">
                                                     <form th:if="${code.status() == 'Unused'}"
                                                           th:action="@{/admin/codes/{id}/revoke(id=${code.id()})}" method="post">
                                                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>

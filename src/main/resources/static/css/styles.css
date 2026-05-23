@@ -6276,6 +6276,226 @@ iconify-icon {
     }
 }
 
+/* ============================================================
+   ADMIN PANEL MOBILE OPTIMIZATION
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .sh-admin-page {
+        padding: 1.25rem 0.875rem;
+    }
+
+    .sh-admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .sh-admin-tab-content .sh-tab-panel {
+        padding: 1rem 0.75rem;
+    }
+
+    /* Swipeable Horizontally Scrollable Tab Bar on Mobile */
+    .sh-admin-tabs {
+        display: flex;
+        overflow-x: auto;
+        white-space: nowrap;
+        max-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+        padding: 0.25rem;
+        margin: 0 auto 1.25rem auto;
+    }
+    
+    .sh-admin-tabs::-webkit-scrollbar {
+        display: none; /* Safari & Chrome */
+    }
+
+    .sh-admin-tabs .sh-tab-link {
+        flex: 1 0 auto;
+        justify-content: center;
+        padding: 0.5rem 0.875rem;
+        font-size: 0.8125rem;
+        gap: 0.35rem;
+    }
+
+    /* Convert traditional tables into responsive mobile cards */
+    .sh-admin-table,
+    .sh-admin-table thead,
+    .sh-admin-table tbody,
+    .sh-admin-table tr,
+    .sh-admin-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .sh-admin-table thead {
+        display: none; /* Hide header row columns */
+    }
+
+    .sh-admin-table tr {
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 1rem 0.875rem;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow-sm);
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .sh-admin-table tr:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--border);
+    }
+
+    .sh-admin-table tr:last-child {
+        margin-bottom: 0;
+    }
+
+    .sh-admin-table td {
+        border-bottom: 1px solid var(--border-light);
+        padding: 0.75rem 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        text-align: right;
+    }
+
+    .sh-admin-table td:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    /* Highlight the first column (User or Code ID) as the header */
+    .sh-admin-table td:first-child {
+        border-bottom: 1px solid var(--border-light);
+        padding-top: 0;
+        padding-bottom: 0.875rem;
+        margin-bottom: 0.25rem;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    /* CSS Injection of translated data-label */
+    .sh-admin-table td[data-label]::before {
+        content: attr(data-label);
+        font-weight: 500;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        text-align: left;
+        flex-shrink: 0;
+    }
+
+    /* Adjust alignments for Storage / AI stats with progress bars */
+    .sh-admin-cell-storage,
+    .sh-admin-cell-ai {
+        flex-direction: column;
+        align-items: flex-end !important;
+        gap: 0.35rem !important;
+    }
+
+    .sh-admin-cell-storage::before,
+    .sh-admin-cell-ai::before {
+        align-self: flex-start;
+        margin-bottom: -0.25rem;
+    }
+
+    .sh-admin-progress {
+        width: 100%;
+        max-width: 150px;
+        margin-top: 0.15rem;
+    }
+
+    .sh-admin-quota-label {
+        font-size: 0.8125rem;
+    }
+
+    /* Adjust actions/buttons area at the bottom of the card */
+    .sh-admin-col-actions {
+        padding-top: 1rem !important;
+        justify-content: center !important;
+    }
+
+    .sh-admin-actions {
+        width: 100%;
+        justify-content: stretch;
+        gap: 0.5rem;
+    }
+
+    .sh-admin-actions form,
+    .sh-admin-actions button,
+    .sh-admin-actions a {
+        flex: 1;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .sh-admin-actions .sh-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.55rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+
+    .sh-admin-actions .admin-quota-btn {
+        flex: 0 0 38px !important;
+        width: 38px !important;
+        height: 38px;
+        padding: 0 !important;
+        justify-content: center;
+    }
+
+    .sh-admin-actions .admin-quota-btn span {
+        display: none;
+    }
+
+    /* Codes tab headers stack nicely */
+    .sh-admin-codes-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .sh-admin-codes-header form,
+    .sh-admin-codes-header button {
+        width: 100%;
+    }
+
+    .sh-admin-codes-header button {
+        justify-content: center;
+        padding: 0.625rem;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Generated code block layouts stack vertically */
+    .sh-admin-code-reveal-body {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .sh-admin-code-value {
+        text-align: center;
+        width: 100%;
+    }
+
+    .sh-admin-code-reveal-body button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 /* ─── Dashboard cockpit ───────────────────────────────────── */
 
 .sh-dashboard-cockpit {
