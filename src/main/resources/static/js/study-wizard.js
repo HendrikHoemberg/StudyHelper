@@ -826,6 +826,9 @@ document.addEventListener('click', (event) => {
         FLASHCARDS: { icon: 'lucide:book-open',   title: 'Flashcards', cardClass: 'sh-study-choice-study' },
         QUIZ:       { icon: 'lucide:list-checks',  title: 'AI Quiz',     cardClass: 'sh-study-choice-generate' },
         EXAM:       { icon: 'lucide:pencil-line',  title: 'Exam',        cardClass: 'sh-study-choice-exam' },
+        STUDY_DASHBOARD: { icon: 'lucide:book-open', title: 'Start Studying', cardClass: 'sh-action-tile-study', colorVar: '--tile-color' },
+        GENERATOR_DASHBOARD: { icon: 'lucide:sparkles', title: 'Generate Flashcards', cardClass: 'sh-action-tile-generate', colorVar: '--tile-color' },
+        DUE_DASHBOARD: { icon: 'lucide:alarm-clock', title: 'Due Today', cardClass: 'sh-action-tile-due', colorVar: '--tile-color' }
     };
 
     function openTutorial(mode) {
@@ -838,8 +841,9 @@ document.addEventListener('click', (event) => {
         iconEl.innerHTML = `<iconify-icon icon="${meta.icon}"></iconify-icon>`;
         // Match the modal header icon to the mode's card color (theme-aware).
         const card = meta.cardClass ? document.querySelector('.' + meta.cardClass) : null;
+        const colorVar = meta.colorVar || '--choice-color';
         const choiceColor = card
-            ? getComputedStyle(card).getPropertyValue('--choice-color').trim()
+            ? getComputedStyle(card).getPropertyValue(colorVar).trim()
             : '';
         iconEl.style.color = choiceColor || '';
         document.getElementById('sh-tutorial-title').textContent = meta.title;

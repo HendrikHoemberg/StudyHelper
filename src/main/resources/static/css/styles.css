@@ -6381,6 +6381,7 @@ iconify-icon {
 }
 
 .sh-action-tile {
+    position: relative;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -7015,15 +7016,15 @@ iconify-icon {
     border: none;
     border-radius: 999px;
     background: transparent;
-    color: var(--choice-color, var(--accent));
+    color: var(--choice-color, var(--tile-color, var(--accent)));
     font-size: 1.35rem;
     cursor: pointer;
     transition: background 120ms ease, color 120ms ease;
 }
 
 .sh-mode-info:hover {
-    background: color-mix(in srgb, var(--choice-color, var(--accent)) 15%, transparent);
-    color: var(--choice-color, var(--accent));
+    background: color-mix(in srgb, var(--choice-color, var(--tile-color, var(--accent))) 15%, transparent);
+    color: var(--choice-color, var(--tile-color, var(--accent)));
 }
 
 .sh-tutorial {

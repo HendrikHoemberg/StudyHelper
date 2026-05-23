@@ -53,6 +53,10 @@
 
                         <a class="sh-action-tile sh-action-tile-study" href="/study/start" hx-get="/study/start" hx-target="#explorer-detail"
                             hx-push-url="true">
+                            <span class="sh-mode-info" role="button" tabindex="0" aria-label="How Start Studying works"
+                                  onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('STUDY_DASHBOARD');">
+                                <iconify-icon icon="lucide:info"></iconify-icon>
+                            </span>
                             <div class="sh-action-tile-icon">
                                 <iconify-icon icon="lucide:book-open"></iconify-icon>
                             </div>
@@ -63,6 +67,10 @@
                         </a>
                         <a class="sh-action-tile sh-action-tile-generate" href="/flashcards/generate" hx-get="/flashcards/generate"
                             hx-target="#explorer-detail" hx-push-url="true">
+                            <span class="sh-mode-info" role="button" tabindex="0" aria-label="How Generate Flashcards works"
+                                  onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('GENERATOR_DASHBOARD');">
+                                <iconify-icon icon="lucide:info"></iconify-icon>
+                            </span>
                             <div class="sh-action-tile-icon">
                                 <iconify-icon icon="lucide:sparkles"></iconify-icon>
                             </div>
@@ -73,6 +81,10 @@
                         </a>
                         <a th:if="${vm.dueTodaySessionCount() > 0}" class="sh-action-tile sh-action-tile-due" href="#"
                             hx-post="/study/start-due" hx-target="#explorer-detail" hx-push-url="true">
+                            <span class="sh-mode-info" role="button" tabindex="0" aria-label="How Due Today works"
+                                  onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('DUE_DASHBOARD');">
+                                <iconify-icon icon="lucide:info"></iconify-icon>
+                            </span>
                             <div class="sh-action-tile-icon">
                                 <iconify-icon icon="lucide:alarm-clock"></iconify-icon>
                             </div>
@@ -84,6 +96,10 @@
                             </div>
                         </a>
                         <div th:unless="${vm.dueTodaySessionCount() > 0}" class="sh-action-tile sh-action-tile-due sh-action-tile--muted" aria-disabled="true">
+                            <span class="sh-mode-info" role="button" tabindex="0" aria-label="How Due Today works"
+                                  onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('DUE_DASHBOARD');">
+                                <iconify-icon icon="lucide:info"></iconify-icon>
+                            </span>
                             <div class="sh-action-tile-icon">
                                 <iconify-icon icon="lucide:check"></iconify-icon>
                             </div>
@@ -195,6 +211,9 @@
             </div>
 
         </main>
+        
+        <!-- Study mode tutorial modal + content -->
+        <div th:replace="~{fragments/study-tutorials :: tutorials}"></div>
     </div>
 
     <!-- Reusable tile fragment for both rails -->
