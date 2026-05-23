@@ -97,6 +97,21 @@ public class UserService {
         });
     }
 
+    @Transactional
+    public void changePassword(User user, String currentRaw, String nextRaw, String confirmRaw) {
+        if (!passwordEncoder.matches(currentRaw == null ? "" : currentRaw, user.getPassword())) {
+            throw new IllegalArgumentException("errors.password.wrong-current");
+        }
+        if (nextRaw == null || !nextRaw.equals(confirmRaw)) {
+            throw new IllegalArgumentException("errors.password.mismatch");
+        }
+        if (nextRaw.isBlank() || nextRaw.length() < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException("errors.password.too-short");
+        }
+        user.setPassword(passwordEncoder.encode(nextRaw));
+        userRepository.save(user);
+    }
+
     private String normalizeUsername(String username) {
         if (username == null) {
             throw new IllegalArgumentException("Username is required");

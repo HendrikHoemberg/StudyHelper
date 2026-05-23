@@ -138,4 +138,60 @@ class UserServiceTests {
         User user = new User();
         assertThat(user.getLanguage()).isNull();
     }
+
+    @Test
+    void changePassword_HappyPath_EncodesAndSaves() {
+        User existing = new User();
+        existing.setUsername("alice");
+        existing.setPassword("encoded-old");
+        when(passwordEncoder.matches("oldpw1234", "encoded-old")).thenReturn(true);
+        when(passwordEncoder.encode("newpw5678")).thenReturn("encoded-new");
+
+        userService.changePassword(existing, "oldpw1234", "newpw5678", "newpw5678");
+
+        assertThat(existing.getPassword()).isEqualTo("encoded-new");
+        verify(userRepository, times(1)).save(existing);
+    }
+
+    @Test
+    void changePassword_WrongCurrent_Throws() {
+        User existing = new User();
+        existing.setPassword("encoded-old");
+        when(passwordEncoder.matches("wrong", "encoded-old")).thenReturn(false);
+
+        assertThatThrownBy(() ->
+            userService.changePassword(existing, "wrong", "newpw5678", "newpw5678"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("errors.password.wrong-current");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void changePassword_Mismatch_Throws() {
+        User existing = new User();
+        existing.setPassword("encoded-old");
+        when(passwordEncoder.matches("oldpw1234", "encoded-old")).thenReturn(true);
+
+        assertThatThrownBy(() ->
+            userService.changePassword(existing, "oldpw1234", "newpw5678", "different"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("errors.password.mismatch");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void changePassword_TooShort_Throws() {
+        User existing = new User();
+        existing.setPassword("encoded-old");
+        when(passwordEncoder.matches("oldpw1234", "encoded-old")).thenReturn(true);
+
+        assertThatThrownBy(() ->
+            userService.changePassword(existing, "oldpw1234", "short", "short"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("errors.password.too-short");
+
+        verify(userRepository, never()).save(any());
+    }
 }
