@@ -3973,18 +3973,6 @@ textarea.sh-input {
     border-color: var(--accent);
 }
 
-.sh-wizard-card-count {
-    font-size: 0.8125rem;
-    color: var(--text-muted);
-    padding: 0.5rem 0 0;
-    font-weight: 500;
-}
-
-.sh-wizard-card-count #sh-card-count {
-    color: var(--accent);
-    font-weight: 700;
-}
-
 /* ============================================================
    CUSTOM MODAL
    ============================================================ */

@@ -841,12 +841,10 @@ class UiResourceRegressionTests {
     }
 
     @Test
-    void flashcardGeneratorOffersCardCountStepper() throws IOException {
+    void flashcardGeneratorHasNoCardCountStepper() throws IOException {
         String template = resource("templates/fragments/flashcard-generator.html");
 
-        assertThat(template)
-            .contains("name=\"cardCount\"")
-            .contains("max=\"100\"");
+        assertThat(template).doesNotContain("name=\"cardCount\"");
     }
 
     @Test

@@ -1,347 +1,209 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
-import com.HendrikHoemberg.StudyHelper.dto.FlashcardsResponse;
+import com.HendrikHoemberg.StudyHelper.dto.Concept;
+import com.HendrikHoemberg.StudyHelper.dto.ConceptOutline;
+import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
 import com.HendrikHoemberg.StudyHelper.dto.GeneratedFlashcard;
 import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
-import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
+import org.mockito.ArgumentCaptor;
 import org.springframework.core.io.ByteArrayResource;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AiFlashcardServiceTests {
 
-    private ChatClient.CallResponseSpec callSpec;
+    private ConceptExtractionService extractor;
+    private FlashcardWriterService writer;
     private AiFlashcardService service;
-    private final AtomicReference<String> capturedPrompt = new AtomicReference<>();
-    private final List<org.springframework.ai.content.Media> capturedMedia = new ArrayList<>();
-    private final AtomicReference<org.springframework.ai.chat.prompt.ChatOptions.Builder> capturedOptionsBuilder = new AtomicReference<>();
 
     @BeforeEach
     void setUp() {
-        capturedPrompt.set(null);
-        capturedMedia.clear();
-        capturedOptionsBuilder.set(null);
-
-        ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
-        callSpec = mock(ChatClient.CallResponseSpec.class);
-        ChatClient chatClient = mock(ChatClient.class);
-        ChatClient.Builder builder = mock(ChatClient.Builder.class);
-
-        when(builder.build()).thenReturn(chatClient);
-        when(chatClient.prompt()).thenReturn(requestSpec);
-
-        when(requestSpec.options(any(org.springframework.ai.chat.prompt.ChatOptions.Builder.class)))
-            .thenAnswer(invocation -> {
-                capturedOptionsBuilder.set(invocation.getArgument(0));
-                return requestSpec;
-            });
-
-        when(requestSpec.user(any(Consumer.class))).thenAnswer(invocation -> {
-            Consumer<ChatClient.PromptUserSpec> consumer = invocation.getArgument(0);
-            ChatClient.PromptUserSpec userSpec = mock(ChatClient.PromptUserSpec.class);
-            when(userSpec.text(anyString())).thenAnswer(a -> {
-                capturedPrompt.set(a.getArgument(0));
-                return userSpec;
-            });
-            when(userSpec.media(any(org.springframework.ai.content.Media[].class))).thenAnswer(a -> {
-                for (Object arg : a.getRawArguments()) {
-                    if (arg instanceof org.springframework.ai.content.Media m) {
-                        capturedMedia.add(m);
-                    } else if (arg instanceof org.springframework.ai.content.Media[] arr) {
-                        Collections.addAll(capturedMedia, arr);
-                    }
-                }
-                return userSpec;
-            });
-            consumer.accept(userSpec);
-            return requestSpec;
-        });
-        when(requestSpec.call()).thenReturn(callSpec);
-
-        service = new AiFlashcardService(builder, new JsonMapper());
+        extractor = mock(ConceptExtractionService.class);
+        writer = mock(FlashcardWriterService.class);
+        service = new AiFlashcardService(extractor, writer);
     }
 
     @Test
-    void generate_TextDocument_buildsPromptWithoutMedia() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+    void generate_TextDocument_RunsExtractorThenWriterAndReturnsCards() {
+        when(extractor.extract(any(List.class), any())).thenReturn(outline(
+            new Concept("c1", "Topic 1", "Essence 1", 1, ""),
+            new Concept("c2", "Topic 2", "Essence 2", 2, "")
+        ));
+        when(writer.write(any(ConceptOutline.class), any())).thenReturn(List.of(
             new GeneratedFlashcard("Front 1", "Back 1"),
             new GeneratedFlashcard("Front 2", "Back 2")
         ));
 
-        var doc = new TextDocument("notes.txt", "Photosynthesis converts light energy.");
-
-        List<GeneratedFlashcard> result = service.generate(doc);
+        List<GeneratedFlashcard> result = service.generate(new TextDocument("notes.txt", "Photosynthesis converts light energy."));
 
         assertThat(result).hasSize(2);
-        assertThat(capturedPrompt.get()).contains("=== DOCUMENTS ===");
-        assertThat(capturedPrompt.get()).contains("notes.txt");
-        assertThat(capturedPrompt.get()).contains("Photosynthesis converts light energy.");
-        assertThat(capturedPrompt.get()).contains("Generate exactly");
-        assertThat(capturedPrompt.get()).containsIgnoringCase("dominant educational content");
-        assertThat(capturedPrompt.get()).containsIgnoringCase("ignore metadata");
-        assertThat(capturedPrompt.get()).containsIgnoringCase("avoid duplicate cards");
-        assertThat(capturedPrompt.get()).containsIgnoringCase("self-contained");
-        assertThat(capturedPrompt.get()).contains("LANGUAGE:");
-        assertThat(capturedPrompt.get()).contains("COVERAGE:");
-        assertThat(capturedMedia).isEmpty();
+        ArgumentCaptor<List<DocumentInput>> docCaptor = ArgumentCaptor.forClass(List.class);
+        verify(extractor).extract(docCaptor.capture(), eq(null));
+        assertThat(docCaptor.getValue()).hasSize(1);
+        assertThat(docCaptor.getValue().get(0)).isInstanceOf(TextDocument.class);
+        verify(writer).write(any(ConceptOutline.class), eq(null));
     }
 
     @Test
-    void generate_PdfDocument_buildsPromptAndAttachesPdfMedia() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
-            new GeneratedFlashcard("Front 1", "Back 1"),
-            new GeneratedFlashcard("Front 2", "Back 2")
+    void generate_PdfDocument_RunsBothStages() {
+        when(extractor.extract(any(List.class), any())).thenReturn(outline(
+            new Concept("c1", "Topic 1", "Essence 1", 1, "page 3")
         ));
-
-        var doc = new PdfDocument("chapter5.pdf", new ByteArrayResource(new byte[]{0x25, 0x50, 0x44, 0x46}));
-
-        List<GeneratedFlashcard> result = service.generate(doc);
-
-        assertThat(result).hasSize(2);
-        assertThat(capturedPrompt.get()).contains("=== ATTACHED PDFs ===");
-        assertThat(capturedPrompt.get()).contains("chapter5.pdf");
-        assertThat(capturedPrompt.get()).contains("Generate exactly");
-        assertThat(capturedMedia).hasSize(1);
-        assertThat(capturedMedia.get(0).getMimeType().toString()).isEqualTo("application/pdf");
-    }
-
-    @Test
-    void generate_BlankCardsAreDroppedAndValuesAreTrimmed() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
-            new GeneratedFlashcard("  Front 1  ", "  Back 1  "),
-            new GeneratedFlashcard("   ", "ignored"),
-            new GeneratedFlashcard("Front 2", "   ")
-        ));
-
-        List<GeneratedFlashcard> result = service.generate(new TextDocument("notes.txt", "topic"));
-
-        assertThat(result).containsExactly(new GeneratedFlashcard("Front 1", "Back 1"));
-    }
-
-    @Test
-    void generate_AllCardsFilteredOut_ThrowsIllegalState() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
-            new GeneratedFlashcard("   ", "   "),
-            new GeneratedFlashcard("", "ignored")
-        ));
-
-        assertThatThrownBy(() -> service.generate(new TextDocument("notes.txt", "topic")))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("AI returned no valid flashcards; please retry.");
-    }
-
-    @Test
-    void generate_MoreThanRequestedCount_CapsAtRequestedCount() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(manyFlashcards(60)));
-
-        List<GeneratedFlashcard> result = service.generate(new TextDocument("notes.txt", "topic"), 40, null);
-
-        assertThat(result).hasSize(40);
-        assertThat(result.get(0)).isEqualTo(new GeneratedFlashcard("Front 1", "Back 1"));
-        assertThat(result.get(39)).isEqualTo(new GeneratedFlashcard("Front 40", "Back 40"));
-    }
-
-    @Test
-    void generate_RequestedCountAboveHundred_ClampedToHundred() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(manyFlashcards(150)));
-
-        List<GeneratedFlashcard> result = service.generate(new TextDocument("notes.txt", "topic"), 999, null);
-
-        assertThat(result).hasSize(100);
-    }
-
-    @Test
-    void generate_RequestedCount_AppearsInPrompt() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+        when(writer.write(any(ConceptOutline.class), any())).thenReturn(List.of(
             new GeneratedFlashcard("Front 1", "Back 1")
         ));
 
-        service.generate(new TextDocument("notes.txt", "topic"), 33, null);
+        List<GeneratedFlashcard> result = service.generate(
+            new PdfDocument("chapter5.pdf", new ByteArrayResource(new byte[] {0x25, 0x50, 0x44, 0x46}))
+        );
 
-        assertThat(capturedPrompt.get()).contains("Generate exactly 33 flashcards");
+        assertThat(result).hasSize(1);
+        verify(extractor).extract(any(List.class), eq(null));
+        verify(writer).write(any(ConceptOutline.class), eq(null));
     }
 
     @Test
-    void generate_ProviderFailure_throwsStableRetryMessage() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenThrow(new RuntimeException("provider offline"));
+    void generate_EmptyOutline_ThrowsExtractionEmptyDiagnostic() {
+        when(extractor.extract(any(List.class), any())).thenReturn(new ConceptOutline(List.of()));
 
         assertThatThrownBy(() -> service.generate(new TextDocument("notes.txt", "topic")))
             .isInstanceOf(AiGenerationException.class)
-            .hasMessage("AI request failed, please retry with fewer or smaller PDFs.")
-            .hasCauseInstanceOf(RuntimeException.class)
+            .hasMessageContaining("could not identify exam-worthy content")
             .satisfies(ex -> {
                 AiGenerationException aiEx = (AiGenerationException) ex;
-                assertThat(aiEx.diagnostics().generationId()).isNotBlank();
-                assertThat(aiEx.diagnostics().type()).isEqualTo("FLASHCARDS");
-                assertThat(aiEx.diagnostics().stage()).isEqualTo("PROVIDER_REQUEST");
-                assertThat(aiEx.diagnostics().exceptionClass()).contains("RuntimeException");
-                assertThat(aiEx.diagnostics().exceptionMessage()).contains("provider offline");
+                assertThat(aiEx.diagnostics().stage()).isEqualTo("EXTRACTION_EMPTY");
+            });
+        verify(writer, never()).write(any(), any());
+    }
+
+    @Test
+    void generate_WriterReturnsNoValidCards_ThrowsResponseValidationDiagnostic() {
+        when(extractor.extract(any(List.class), any())).thenReturn(outline(
+            new Concept("c1", "Topic 1", "Essence 1", 1, "")
+        ));
+        when(writer.write(any(ConceptOutline.class), any())).thenReturn(List.of());
+
+        assertThatThrownBy(() -> service.generate(new TextDocument("notes.txt", "topic")))
+            .isInstanceOf(AiGenerationException.class)
+            .hasMessage("AI returned no valid flashcards; please retry.")
+            .satisfies(ex -> {
+                AiGenerationException aiEx = (AiGenerationException) ex;
+                assertThat(aiEx.diagnostics().stage()).isEqualTo("RESPONSE_VALIDATION");
             });
     }
 
     @Test
-    void generate_ParseFailure_throwsStableRetryMessage() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenThrow(new RuntimeException("parse failed"));
+    void generate_MoreThanMaxFlashcards_CapsAtTwoHundred() {
+        when(extractor.extract(any(List.class), any())).thenReturn(outline(manyConcepts(220)));
+        when(writer.write(any(ConceptOutline.class), any())).thenReturn(manyCards(220));
 
-        assertThatThrownBy(() -> service.generate(new TextDocument("notes.txt", "topic")))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("AI request failed, please retry with fewer or smaller PDFs.");
+        List<GeneratedFlashcard> result = service.generate(new TextDocument("notes.txt", "topic"));
+
+        assertThat(result).hasSize(200);
+        assertThat(result.get(0)).isEqualTo(new GeneratedFlashcard("Front 1", "Back 1"));
+        assertThat(result.get(199)).isEqualTo(new GeneratedFlashcard("Front 200", "Back 200"));
     }
 
     @Test
-    void generate_NoUsableSources_throwsIllegalArgument() {
+    void generate_NoUsableSources_ThrowsIllegalArgument() {
         assertThatThrownBy(() -> service.generate(new TextDocument("notes.txt", "   ")))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("no usable");
+        verify(extractor, never()).extract(any(), any());
     }
 
     @Test
-    void generate_ConfiguresStructuredOutputOptions() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
-            new GeneratedFlashcard("Front 1", "Back 1"),
-            new GeneratedFlashcard("Front 2", "Back 2")
-        ));
-
-        service.generate(new TextDocument("notes.txt", "topic"));
-
-        assertThat(capturedOptionsBuilder.get()).isNotNull();
-        var built = (GoogleGenAiChatOptions) capturedOptionsBuilder.get().build();
-        assertThat(built.getResponseMimeType()).isEqualTo("application/json");
-        assertThat(built.getResponseSchema()).isNotBlank();
+    void generate_NullDocumentList_ThrowsIllegalArgument() {
+        assertThatThrownBy(() -> service.generate((List<DocumentInput>) null, null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("at least one PDF");
+        verify(extractor, never()).extract(any(), any());
     }
 
     @Test
-    void generate_PromptContainsLanguageAndCoverageBlocks() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
-            new GeneratedFlashcard("Front 1", "Back 1"),
-            new GeneratedFlashcard("Front 2", "Back 2")
+    void generate_AdditionalInstructionsArePassedToBothStages() {
+        when(extractor.extract(any(List.class), anyString())).thenReturn(outline(
+            new Concept("c1", "Topic 1", "Essence 1", 1, "")
+        ));
+        when(writer.write(any(ConceptOutline.class), anyString())).thenReturn(List.of(
+            new GeneratedFlashcard("Front 1", "Back 1")
         ));
 
-        service.generate(new TextDocument("notes.txt", "topic"));
+        service.generate(new TextDocument("notes.txt", "topic"), "focus on definitions");
 
-        assertThat(capturedPrompt.get()).contains("LANGUAGE:");
-        assertThat(capturedPrompt.get()).contains("Detect the dominant natural language");
-        assertThat(capturedPrompt.get()).contains("COVERAGE:");
-        assertThat(capturedPrompt.get()).contains("across the full source material");
+        verify(extractor).extract(any(List.class), eq("focus on definitions"));
+        verify(writer).write(any(ConceptOutline.class), eq("focus on definitions"));
     }
 
     @Test
-    void generate_WithAdditionalInstructions_AppendsUserInstructionsSection() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
-            new GeneratedFlashcard("Front 1", "Back 1"),
-            new GeneratedFlashcard("Front 2", "Back 2")
+    void generate_MultipleTextDocuments_PassedToExtractor() {
+        when(extractor.extract(any(List.class), any())).thenReturn(outline(
+            new Concept("c1", "Topic 1", "Essence 1", 1, "")
+        ));
+        when(writer.write(any(ConceptOutline.class), any())).thenReturn(List.of(
+            new GeneratedFlashcard("Front 1", "Back 1")
         ));
 
-        service.generate(new TextDocument("notes.txt", "topic"), " focus on the HTML examples ");
-
-        assertThat(capturedPrompt.get()).contains("USER INSTRUCTIONS:");
-        assertThat(capturedPrompt.get()).contains("focus on the HTML examples");
-        assertThat(capturedPrompt.get()).contains("UNTRUSTED user-supplied preferences");
-    }
-
-    @Test
-    void generate_BlankAdditionalInstructions_OmitsUserInstructionsSection() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
-            new GeneratedFlashcard("Front 1", "Back 1"),
-            new GeneratedFlashcard("Front 2", "Back 2")
-        ));
-
-        service.generate(new TextDocument("notes.txt", "topic"), "   ");
-
-        assertThat(capturedPrompt.get()).doesNotContain("USER INSTRUCTIONS:");
-    }
-
-    @Test
-    void generate_MultipleTextDocuments_ReturnsCombinedCards() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
-            new GeneratedFlashcard("Front 1", "Back 1"),
-            new GeneratedFlashcard("Front 2", "Back 2")
-        ));
-
-        List<GeneratedFlashcard> result = service.generate(List.of(
+        service.generate(List.of(
             new TextDocument("notes1.txt", "Content one"),
             new TextDocument("notes2.txt", "Content two")
-        ), 20, null);
+        ), null);
 
-        assertThat(result).hasSize(2);
-        assertThat(capturedPrompt.get()).contains("notes1.txt");
-        assertThat(capturedPrompt.get()).contains("notes2.txt");
+        ArgumentCaptor<List<DocumentInput>> docCaptor = ArgumentCaptor.forClass(List.class);
+        verify(extractor).extract(docCaptor.capture(), eq(null));
+        assertThat(docCaptor.getValue()).hasSize(2);
     }
 
     @Test
-    void generate_TwoPdfsViaSingleDocOverload_ReturnsCards() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
-            new GeneratedFlashcard("Front 1", "Back 1"),
-            new GeneratedFlashcard("Front 2", "Back 2")
+    void generate_MultiplePdfDocuments_PassedToExtractor() {
+        when(extractor.extract(any(List.class), any())).thenReturn(outline(
+            new Concept("c1", "Topic 1", "Essence 1", 1, "")
+        ));
+        when(writer.write(any(ConceptOutline.class), any())).thenReturn(List.of(
+            new GeneratedFlashcard("Front 1", "Back 1")
         ));
 
-        // Use the single-doc overload with a PdfDocument - internally creates List.of(1 doc)
-        List<GeneratedFlashcard> result = service.generate(
-            new PdfDocument("single.pdf", new ByteArrayResource(new byte[] {0x25, 0x50, 0x44, 0x46}))
-        );
-
-        assertThat(result).hasSize(2);
-        assertThat(capturedMedia).hasSize(1);
-    }
-
-    @Test
-    void generate_MultiplePdfDocuments_AttachesAllPdfMediaInOneRequest() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
-            new GeneratedFlashcard("Front 1", "Back 1"),
-            new GeneratedFlashcard("Front 2", "Back 2")
-        ));
-
-        List<GeneratedFlashcard> result = service.generate(List.of(
+        service.generate(List.of(
             new PdfDocument("chapter1.pdf", new ByteArrayResource(new byte[] {0x25, 0x50, 0x44, 0x46})),
             new PdfDocument("chapter2.pdf", new ByteArrayResource(new byte[] {0x25, 0x50, 0x44, 0x46}))
-        ), 20, "focus on formulas");
+        ), "cover both chapters");
 
-        assertThat(result).hasSize(2);
-        assertThat(capturedPrompt.get()).contains("chapter1.pdf");
-        assertThat(capturedPrompt.get()).contains("chapter2.pdf");
-        assertThat(capturedPrompt.get()).contains("focus on formulas");
-        assertThat(capturedMedia).hasSize(2);
-        assertThat(capturedMedia).allSatisfy(media ->
-            assertThat(media.getMimeType().toString()).isEqualTo("application/pdf"));
+        ArgumentCaptor<List<DocumentInput>> docCaptor = ArgumentCaptor.forClass(List.class);
+        verify(extractor).extract(docCaptor.capture(), eq("cover both chapters"));
+        assertThat(docCaptor.getValue()).hasSize(2);
+        assertThat(docCaptor.getValue()).allSatisfy(doc -> assertThat(doc).isInstanceOf(PdfDocument.class));
     }
 
-    @Test
-    void generate_LongAdditionalInstructions_CapsUserInstructionsAtOneThousandCharacters() {
-        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
-            new GeneratedFlashcard("Front 1", "Back 1"),
-            new GeneratedFlashcard("Front 2", "Back 2")
-        ));
-
-        service.generate(new TextDocument("notes.txt", "topic"), "x".repeat(1100));
-
-        assertThat(capturedPrompt.get()).contains("x".repeat(1000));
-        assertThat(capturedPrompt.get()).doesNotContain("x".repeat(1001));
+    private ConceptOutline outline(Concept... concepts) {
+        return new ConceptOutline(List.of(concepts));
     }
 
-    private FlashcardsResponse wrap(GeneratedFlashcard... cards) {
-        return new FlashcardsResponse(List.of(cards));
-    }
-
-    private GeneratedFlashcard[] manyFlashcards(int count) {
-        GeneratedFlashcard[] cards = new GeneratedFlashcard[count];
+    private Concept[] manyConcepts(int count) {
+        Concept[] concepts = new Concept[count];
         for (int i = 1; i <= count; i++) {
-            cards[i - 1] = new GeneratedFlashcard("Front " + i, "Back " + i);
+            concepts[i - 1] = new Concept("c" + i, "Topic " + i, "Essence " + i, 1, "");
+        }
+        return concepts;
+    }
+
+    private List<GeneratedFlashcard> manyCards(int count) {
+        List<GeneratedFlashcard> cards = new ArrayList<>(count);
+        for (int i = 1; i <= count; i++) {
+            cards.add(new GeneratedFlashcard("Front " + i, "Back " + i));
         }
         return cards;
     }

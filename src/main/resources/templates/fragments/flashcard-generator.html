@@ -215,22 +215,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="sh-setting-row" style="margin-top:0.75rem;">
-                        <div>
-                            <div class="sh-setting-label" th:text="#{flashcard-gen.card-count}">Card Count</div>
-                            <div class="sh-setting-hint" th:text="#{flashcard-gen.card-count-hint}">Choose between 1 and 100 generated cards.</div>
-                        </div>
-                        <div class="sh-number-stepper" data-stepper>
-                            <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" th:aria-label="#{flashcard-gen.card-count.decrease}" aria-label="Decrease card count">
-                                <iconify-icon icon="lucide:minus"></iconify-icon>
-                            </button>
-                            <input type="number" name="cardCount" class="sh-stepper-input"
-                                   th:value="${cardCount != null ? cardCount : 20}" min="1" max="100">
-                            <button type="button" class="sh-stepper-btn" data-stepper-action="increment" th:aria-label="#{flashcard-gen.card-count.increase}" aria-label="Increase card count">
-                                <iconify-icon icon="lucide:plus"></iconify-icon>
-                            </button>
-                        </div>
-                    </div>
                 </div>
         </div>
         <div class="sh-wizard-footer">

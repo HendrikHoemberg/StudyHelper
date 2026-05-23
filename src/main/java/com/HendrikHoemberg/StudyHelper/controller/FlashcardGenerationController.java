@@ -90,7 +90,6 @@ public class FlashcardGenerationController {
     public String generate(@RequestParam(name = "fileId", required = false) List<Long> fileIds,
                            @RequestParam(defaultValue = "TEXT") DocumentMode documentMode,
                            @RequestParam(required = false) String additionalInstructions,
-                           @RequestParam(required = false, defaultValue = "20") int cardCount,
                            @RequestParam(required = false) FlashcardGenerationDestination destination,
                            @RequestParam(required = false) Long existingDeckId,
                            @RequestParam(required = false) Long newDeckFolderId,
@@ -104,7 +103,7 @@ public class FlashcardGenerationController {
             List<DocumentInput> inputs = validateAndBuildInputs(fileIds, documentMode, destination, existingDeckId, newDeckFolderId, newDeckName, user);
             aiRequestQuotaService.checkAndRecord(user);
             response.addHeader("HX-Trigger", "refresh-quota");
-            List<GeneratedFlashcard> generated = aiFlashcardService.generate(inputs, cardCount, additionalInstructions);
+            List<GeneratedFlashcard> generated = aiFlashcardService.generate(inputs, additionalInstructions);
             Deck savedDeck = persistenceService.saveGeneratedCards(
                 destination,
                 existingDeckId,
@@ -135,7 +134,6 @@ public class FlashcardGenerationController {
             model.addAttribute("selectedFileId", firstFileId(fileIds));
             model.addAttribute("selectedDocumentMode", documentMode);
             model.addAttribute("additionalInstructions", additionalInstructions);
-            model.addAttribute("cardCount", cardCount);
             model.addAttribute("selectedDestination", destination);
             model.addAttribute("selectedExistingDeckId", existingDeckId);
             model.addAttribute("selectedNewDeckFolderId", newDeckFolderId);
