@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Settings')}"></head>
+<body>
+
+<div class="app-layout">
+    <nav th:replace="~{fragments/layout :: topnav}"></nav>
+    <div id="main-content" class="app-main-content">
+        <div class="sh-fade-in">
+            <div class="sh-dashboard-shell">
+                <div class="sh-explorer-shell">
+                    <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+                    <div id="explorer-detail" class="sh-explorer-detail sh-explorer-detail-content">
+
+                        <div class="sh-admin-page">
+                            <div class="sh-admin-header">
+                                <h1 class="sh-page-title" th:text="#{settings.title}">Settings</h1>
+                                <span class="sh-admin-subtitle"
+                                      th:text="#{settings.subtitle(${username})}">Signed in as user</span>
+                            </div>
+
+                            <div th:if="${successMessage}" class="sh-alert sh-alert-success sh-admin-alert" role="alert">
+                                <iconify-icon icon="lucide:check-circle-2" class="sh-alert-icon"></iconify-icon>
+                                <div class="sh-alert-body" th:text="${successMessage}"></div>
+                            </div>
+
+                            <!-- Change password card -->
+                            <div class="sh-card">
+                                <div class="sh-card-header">
+                                    <div class="sh-card-header-title" th:text="#{settings.password.title}">Change password</div>
+                                </div>
+                                <div class="sh-card-body">
+                                    <div th:if="${passwordError}" class="sh-alert sh-alert-danger" role="alert">
+                                        <iconify-icon icon="lucide:alert-circle" class="sh-alert-icon"></iconify-icon>
+                                        <div class="sh-alert-body" th:text="${passwordError}"></div>
+                                    </div>
+                                    <form th:action="@{/settings/password}" method="post" class="sh-form-group-stack">
+                                        <div class="sh-login-field">
+                                            <label for="currentPassword" class="sh-label" th:text="#{settings.password.current}">Current password</label>
+                                            <input type="password" id="currentPassword" name="currentPassword"
+                                                   class="sh-input" required autocomplete="current-password">
+                                        </div>
+                                        <div class="sh-login-field">
+                                            <label for="newPassword" class="sh-label" th:text="#{settings.password.new}">New password</label>
+                                            <input type="password" id="newPassword" name="newPassword"
+                                                   class="sh-input" required autocomplete="new-password">
+                                        </div>
+                                        <div class="sh-login-field">
+                                            <label for="confirmPassword" class="sh-label" th:text="#{settings.password.confirm}">Confirm new password</label>
+                                            <input type="password" id="confirmPassword" name="confirmPassword"
+                                                   class="sh-input" required autocomplete="new-password">
+                                        </div>
+                                        <div class="sh-login-submit">
+                                            <button type="submit" class="sh-btn sh-btn-primary" th:text="#{settings.password.submit}">Update password</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Language card -->
+                            <div class="sh-card">
+                                <div class="sh-card-header">
+                                    <div class="sh-card-header-title" th:text="#{settings.language.title}">Language</div>
+                                </div>
+                                <div class="sh-card-body">
+                                    <form th:action="@{/settings/language}" method="post" class="sh-form-group-stack">
+                                        <label class="sh-login-field" style="display:flex;align-items:center;gap:0.5rem;">
+                                            <input type="radio" name="language" value="de"
+                                                   th:checked="${currentLanguage == 'de'}">
+                                            <span th:text="#{settings.language.de}">Deutsch</span>
+                                        </label>
+                                        <label class="sh-login-field" style="display:flex;align-items:center;gap:0.5rem;">
+                                            <input type="radio" name="language" value="en"
+                                                   th:checked="${currentLanguage == 'en'}">
+                                            <span th:text="#{settings.language.en}">English</span>
+                                        </label>
+                                        <div class="sh-login-submit">
+                                            <button type="submit" class="sh-btn sh-btn-primary" th:text="#{settings.language.submit}">Save language</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-placeholder"></div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

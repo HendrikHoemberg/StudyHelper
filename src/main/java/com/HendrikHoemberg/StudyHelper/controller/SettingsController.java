@@ -27,9 +27,7 @@ public class SettingsController {
 
     @GetMapping("/settings")
     public String getSettings(Principal principal, Model model) {
-        User user = userService.getByUsername(principal.getName());
-        model.addAttribute("username", user.getUsername());
-        model.addAttribute("currentLanguage", user.getLanguage() == null ? "en" : user.getLanguage());
+        addUserToModel(model, userService.getByUsername(principal.getName()));
         return "settings";
     }
 
@@ -49,8 +47,7 @@ public class SettingsController {
                 translate("settings.password.updated"));
             return "redirect:/settings";
         } catch (IllegalArgumentException ex) {
-            model.addAttribute("username", user.getUsername());
-            model.addAttribute("currentLanguage", user.getLanguage() == null ? "en" : user.getLanguage());
+            addUserToModel(model, user);
             model.addAttribute("passwordError", translate(ex.getMessage()));
             return "settings";
         }
@@ -75,5 +72,10 @@ public class SettingsController {
         } catch (NoSuchMessageException ex) {
             return key;
         }
+    }
+
+    private void addUserToModel(Model model, User user) {
+        model.addAttribute("username", user.getUsername());
+        model.addAttribute("currentLanguage", user.getLanguage() == null ? "en" : user.getLanguage());
     }
 }
