@@ -924,6 +924,40 @@ class UiResourceRegressionTests {
             .contains(".sh-quiz-answer-form[data-question-type=\"MULTIPLE_SELECT\"] .sh-quiz-option.is-selected .sh-quiz-option-check");
     }
 
+    @Test
+    void aiFlashcardGeneratorIsA2StepWizard() throws IOException {
+        String template = resource("templates/fragments/flashcard-generator.html");
+        String layout = resource("templates/fragments/layout.html");
+        String wizardJs = resource("static/js/flashcard-gen-wizard.js");
+
+        // Step indicator + two panels live in the template.
+        assertThat(template)
+            .contains("id=\"sh-wizard-steps\"")
+            .contains("sh-wizard-panel")
+            .contains("data-step=\"1\"")
+            .contains("data-step=\"2\"")
+            .contains("id=\"ai-flashcard-form\"")
+            .contains("id=\"ai-flashcard-back\"")
+            .contains("id=\"ai-flashcard-next\"")
+            .contains("#{flashcard-gen.step.sources}")
+            .contains("#{flashcard-gen.step.destination}")
+            .contains("#{flashcard-gen.back}")
+            .contains("#{flashcard-gen.next}");
+
+        // Layout loads the new controller.
+        assertThat(layout).contains("/js/flashcard-gen-wizard.js");
+
+        // Controller toggles panels and gates Next on PDF selection.
+        assertThat(wizardJs)
+            .contains("ai-flashcard-form")
+            .contains("data-step")
+            .contains("is-active")
+            .contains("input[name=\"fileId\"]")
+            .contains("ai-flashcard-back")
+            .contains("ai-flashcard-next")
+            .contains("data-ai-generation-error");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }
