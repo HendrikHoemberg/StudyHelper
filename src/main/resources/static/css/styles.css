@@ -5859,6 +5859,70 @@ iconify-icon {
     border-style: solid;
 }
 
+/* Mobile tightening for AI-flashcard folder trees (step 1 PDF tree + step 2 destination trees).
+   Recovers horizontal space by trimming nested indents and padding, and lets long names wrap. */
+@media (max-width: 640px) {
+    .sh-ai-destination-head {
+        padding: 0.625rem 0.6rem;
+    }
+
+    .sh-ai-destination-body {
+        padding: 0.25rem 0.6rem 0.75rem 0.6rem;
+    }
+
+    .sh-ai-tree {
+        padding: 0.35rem;
+    }
+
+    .sh-ai-tree .vb-group-head {
+        padding: 0.55rem 0.6rem 0.55rem 0.7rem;
+        gap: 0.45rem;
+    }
+
+    .sh-ai-tree .vb-group-body {
+        padding: 0.4rem 0.5rem 0.55rem;
+    }
+
+    .sh-ai-tree .vb-subgroup-head {
+        margin-left: 8px;
+        padding: 0.4rem 0.5rem;
+        gap: 0.4rem;
+    }
+
+    .sh-ai-tree .vb-subgroup-body {
+        margin-left: 8px;
+    }
+
+    .sh-ai-tree .vb-group-cap {
+        width: 22px;
+        height: 22px;
+    }
+
+    .sh-ai-tree .vb-subgroup-cap {
+        width: 18px;
+        height: 18px;
+    }
+
+    .sh-ai-tree .vb-folder-toggle {
+        width: 24px;
+        height: 24px;
+    }
+
+    .sh-ai-tree .vb-group-title,
+    .sh-ai-tree .vb-subgroup-name,
+    .sh-ai-tree .vb-deck-name {
+        white-space: normal;
+        word-break: break-word;
+        overflow: visible;
+        text-overflow: clip;
+    }
+
+    .sh-ai-tree .vb-deck {
+        padding: 0.45rem 0.55rem;
+        gap: 0.5rem;
+    }
+}
+
 .sh-alert-success {
     border-color: rgba(34, 197, 94, 0.35);
     background: rgba(34, 197, 94, 0.1);
