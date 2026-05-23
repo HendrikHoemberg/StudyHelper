@@ -4,13 +4,13 @@
 
 <div th:fragment="tabContent" class="sh-tab-panel sh-fade-in" role="tabpanel">
     <div class="sh-tab-header">
-        <h6 class="sh-tab-header-title">Decks</h6>
+        <h6 class="sh-tab-header-title" th:text="#{tab.decks.title}">Decks</h6>
     </div>
 
     <div class="sh-tab-filterbar">
         <div class="sh-search-bar sh-search-bar-sm">
             <span class="sh-search-icon"><iconify-icon icon="lucide:search"></iconify-icon></span>
-            <input type="text" class="sh-input sh-tab-filter-input" placeholder="Filter decks..."
+            <input type="text" class="sh-input sh-tab-filter-input" th:placeholder="#{tab.decks.filter-placeholder}" placeholder="Filter decks..."
                    data-sh-tab-filter="#deck-grid" autocomplete="off">
         </div>
     </div>
@@ -20,7 +20,7 @@
              th:hx-get="@{/folders/{fid}/decks/new(fid=${view.folder.id})}"
              hx-target="#modal-placeholder">
             <iconify-icon icon="lucide:plus"></iconify-icon>
-            <span>New Deck</span>
+            <span th:text="#{tab.decks.new}">New Deck</span>
         </div>
 
         <div th:each="deck : ${view.decks}"
@@ -37,31 +37,31 @@
             </a>
             <div class="sh-deck-body">
                 <div class="sh-deck-title" th:text="${deck.name}">Deck Name</div>
-                <div class="sh-deck-meta" th:text="${deck.flashcards.size()} + ' cards'">0 cards</div>
+                <div class="sh-deck-meta" th:text="#{tab.decks.cards(${deck.flashcards.size()})}">0 cards</div>
             </div>
             <div class="sh-file-tile-actions">
-                <button class="sh-deck-edit-btn" th:title="${deck.pinned ? 'Unpin' : 'Pin'}"
+                <button class="sh-deck-edit-btn" th:title="${deck.pinned ? #{tab.decks.unpin} : #{tab.decks.pin}}"
                         th:hx-post="@{/decks/{id}/pin(id=${deck.id})}"
                         hx-target="#explorer-detail">
                     <iconify-icon th:attr="icon=${deck.pinned ? 'lucide:pin-off' : 'lucide:pin'}"></iconify-icon>
                 </button>
-                <button class="sh-deck-edit-btn" title="Edit Deck"
+                <button class="sh-deck-edit-btn" th:title="#{tab.decks.edit-title}" title="Edit Deck"
                         th:hx-get="@{/decks/{id}/rename(id=${deck.id})}"
                         hx-target="#modal-placeholder">
                     <iconify-icon icon="lucide:pencil"></iconify-icon>
                 </button>
                 <button class="sh-deck-edit-btn sh-file-delete-btn"
-                        title="Delete"
-                        aria-label="Delete deck"
+                        th:title="#{tab.decks.delete}" title="Delete"
+                        th:aria-label="#{tab.decks.delete-aria}" aria-label="Delete deck"
                         th:hx-post="@{/decks/{id}/delete(id=${deck.id})}"
-                        hx-confirm="Delete this deck and all its flashcards? This action cannot be undone."
+                        th:hx-confirm="#{tab.decks.delete-confirm}" hx-confirm="Delete this deck and all its flashcards? This action cannot be undone."
                         hx-target="#explorer-detail">
                     <iconify-icon icon="lucide:trash-2"></iconify-icon>
                 </button>
             </div>
         </div>
     </div>
-    <p class="sh-tab-filter-empty" data-sh-filter-empty-for="#deck-grid" hidden>No matching decks.</p>
+    <p class="sh-tab-filter-empty" data-sh-filter-empty-for="#deck-grid" hidden th:text="#{tab.decks.filter-empty}">No matching decks.</p>
 </div>
 
 </body>

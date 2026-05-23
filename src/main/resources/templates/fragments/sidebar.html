@@ -5,12 +5,12 @@
 <aside th:fragment="sidebar" id="sidebar-aside" hx-swap-oob="true" class="sh-dashboard-sidebar">
     <div class="sh-sidebar-card">
         <div class="sh-sidebar-header">
-            <div class="sh-sidebar-title">Folders</div>
-            <button class="sh-btn sh-btn-ghost sh-btn-icon" hx-get="/folders/new" hx-target="#modal-placeholder" title="New folder">
+            <div class="sh-sidebar-title" th:text="#{sidebar.title}">Folders</div>
+                <button class="sh-btn sh-btn-ghost sh-btn-icon" hx-get="/folders/new" hx-target="#modal-placeholder" th:title="#{sidebar.new-folder}" title="New folder">
                 <iconify-icon icon="lucide:plus"></iconify-icon>
             </button>
         </div>
-        <div th:if="${#lists.isEmpty(sidebarTree)}" class="sh-sidebar-empty">
+        <div th:if="${#lists.isEmpty(sidebarTree)}" class="sh-sidebar-empty" th:text="#{sidebar.empty}">
             No folders yet
         </div>
         <ul th:if="${!#lists.isEmpty(sidebarTree)}" class="sh-d-folders">
@@ -20,9 +20,9 @@
                 th:data-folder-id="${folder.id}"
                 th:style="'--folder-color:' + ${folder.colorHex}">
                 <div class="sh-d-pill">
-                    <button type="button" class="sh-d-pill-cap"
-                            th:if="${!#lists.isEmpty(folder.children)}"
-                            title="Expand / collapse">
+                            <button type="button" class="sh-d-pill-cap"
+                                    th:if="${!#lists.isEmpty(folder.children)}"
+                                    th:title="#{sidebar.expand-collapse}" title="Expand / collapse">
                         <iconify-icon th:attr="icon=${folder.iconName.contains(':') ? folder.iconName : 'lucide:' + (folder.iconName ?: 'folder')}" class="sh-d-cap-icon-closed"></iconify-icon>
                         <iconify-icon th:attr="icon=${folder.iconName.contains(':') ? folder.iconName : 'lucide:' + (folder.iconName ?: 'folder')}" class="sh-d-cap-icon-open"></iconify-icon>
                     </button>

@@ -4,13 +4,13 @@
 
 <div th:fragment="tabContent" class="sh-tab-panel sh-fade-in" role="tabpanel">
     <div class="sh-tab-header">
-        <h6 class="sh-tab-header-title">Files</h6>
+        <h6 class="sh-tab-header-title" th:text="#{tab.files.title}">Files</h6>
     </div>
 
     <div class="sh-tab-filterbar">
         <div class="sh-search-bar sh-search-bar-sm">
             <span class="sh-search-icon"><iconify-icon icon="lucide:search"></iconify-icon></span>
-            <input type="text" class="sh-input sh-tab-filter-input" placeholder="Filter files..."
+            <input type="text" class="sh-input sh-tab-filter-input" th:placeholder="#{tab.files.filter-placeholder}" placeholder="Filter files..."
                    data-sh-tab-filter="#file-grid" autocomplete="off">
         </div>
     </div>
@@ -20,7 +20,7 @@
              th:hx-get="@{/folders/{fid}/files/upload(fid=${view.folder.id})}"
              hx-target="#modal-placeholder">
             <iconify-icon icon="lucide:upload"></iconify-icon>
-            <span>New File</span>
+            <span th:text="#{tab.files.new}">New File</span>
         </div>
 
         <div th:each="file : ${view.files}"
@@ -37,10 +37,10 @@
                th:data-file-folder-id="${file.folder.id}">
                 <img th:if="${#strings.startsWith(file.mimeType, 'image/')}"
                      th:src="@{/files/{id}/view(id=${file.id})}"
-                     class="sh-deck-cover-img" alt="Preview">
+                     class="sh-deck-cover-img" th:alt="#{tab.files.preview-alt}" alt="Preview">
                 <img th:if="${file.mimeType == 'application/pdf'}"
                      th:src="@{/files/{id}/thumbnail(id=${file.id})}"
-                     class="sh-deck-cover-img sh-pdf-cover-img" alt="PDF preview">
+                     class="sh-deck-cover-img sh-pdf-cover-img" th:alt="#{tab.files.pdf-preview-alt}" alt="PDF preview">
                 <span th:unless="${#strings.startsWith(file.mimeType, 'image/') || file.mimeType == 'application/pdf'}" class="sh-deck-cover-icon">
                     <iconify-icon icon="lucide:file"></iconify-icon>
                 </span>
@@ -51,48 +51,48 @@
             <div class="sh-file-tile-actions">
                 <button type="button"
                         class="sh-deck-edit-btn sh-file-info-btn"
-                        aria-label="File information"
-                        title="File information"
+                        th:aria-label="#{tab.files.info-aria}" aria-label="File information"
+                        th:title="#{tab.files.info-title}" title="File information"
                         th:data-modal-target="'file-info-modal-' + ${file.id}"
                         onclick="document.getElementById(this.dataset.modalTarget).classList.add('is-open')">
                     <iconify-icon icon="lucide:info"></iconify-icon>
                 </button>
                 <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.txt') || #strings.endsWith(#strings.toLowerCase(file.originalFilename), '.md')}"
-                   class="sh-deck-test-btn sh-file-quiz-btn"
-                   title="Quiz this"
-                   aria-label="Quiz this file"
+                    class="sh-deck-test-btn sh-file-quiz-btn"
+                    th:title="#{tab.files.quiz-title}" title="Quiz this"
+                    th:aria-label="#{tab.files.quiz-aria}" aria-label="Quiz this file"
                    th:href="@{'/study/start'(mode='QUIZ', fileId=${file.id})}"
                    hx-get="/study/start" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
                    hx-target="#explorer-detail" hx-push-url="true">
                     <iconify-icon icon="lucide:sparkles"></iconify-icon>
                 </a>
                 <a th:if="${#strings.endsWith(#strings.toLowerCase(file.originalFilename), '.pdf')}"
-                   class="sh-deck-test-btn sh-deck-ai-flashcards-btn sh-file-flashcards-btn"
-                   title="Generate flashcards"
-                   aria-label="Generate flashcards"
+                    class="sh-deck-test-btn sh-deck-ai-flashcards-btn sh-file-flashcards-btn"
+                    th:title="#{tab.files.generate-title}" title="Generate flashcards"
+                    th:aria-label="#{tab.files.generate-aria}" aria-label="Generate flashcards"
                    th:href="@{'/flashcards/generate'(fileId=${file.id})}"
                    hx-get="/flashcards/generate" th:hx-vals="${'{&quot;fileId&quot;: ' + file.id + '}'}"
                    hx-target="#explorer-detail" hx-push-url="true">
                     <iconify-icon icon="lucide:badge-plus"></iconify-icon>
                 </a>
                 <button class="sh-deck-edit-btn sh-file-edit-btn"
-                        title="Edit Options"
-                        aria-label="Edit options"
+                        th:title="#{tab.files.edit-options-title}" title="Edit Options"
+                        th:aria-label="#{tab.files.edit-options-aria}" aria-label="Edit options"
                         th:hx-get="@{/files/{id}/edit-options(id=${file.id})}"
                         hx-target="#modal-placeholder">
                     <iconify-icon icon="lucide:pencil"></iconify-icon>
                 </button>
                 <a th:href="@{/files/{id}/download(id=${file.id})}"
                    class="sh-deck-test-btn sh-file-download-btn"
-                   title="Download"
-                   aria-label="Download file">
+                   th:title="#{tab.files.download-title}" title="Download"
+                   th:aria-label="#{tab.files.download-aria}" aria-label="Download file">
                     <iconify-icon icon="lucide:download"></iconify-icon>
                 </a>
                 <button class="sh-deck-edit-btn sh-file-delete-btn"
-                        title="Delete"
-                        aria-label="Delete file"
+                        th:title="#{tab.files.delete-title}" title="Delete"
+                        th:aria-label="#{tab.files.delete-aria}" aria-label="Delete file"
                         th:hx-post="@{/files/{id}/delete(id=${file.id})}"
-                        hx-confirm="Delete this file?"
+                        th:hx-confirm="#{tab.files.delete-confirm}" hx-confirm="Delete this file?"
                         hx-target="#explorer-detail">
                     <iconify-icon icon="lucide:trash-2"></iconify-icon>
                 </button>
@@ -107,22 +107,22 @@
             <div class="sh-modal-dialog sh-modal-dialog-sm">
                 <div class="sh-modal-content">
                     <div class="sh-modal-header">
-                        <h5 class="sh-modal-title" th:text="'Details for ' + ${file.originalFilename}">File details</h5>
-                        <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').classList.remove('is-open')" aria-label="Close">
+                        <h5 class="sh-modal-title" th:text="#{tab.files.details-for(${file.originalFilename})}">File details</h5>
+                        <button type="button" class="sh-modal-close" onclick="this.closest('.sh-modal').classList.remove('is-open')" th:aria-label="#{tab.files.close-aria}" aria-label="Close">
                             <iconify-icon icon="lucide:x"></iconify-icon>
                         </button>
                     </div>
                     <div class="sh-modal-body sh-file-info-modal-body">
                         <div class="sh-file-info-row">
-                            <span>Type</span>
+                            <span th:text="#{tab.files.info-type}">Type</span>
                             <strong th:text="${file.mimeType}">application/pdf</strong>
                         </div>
                         <div class="sh-file-info-row">
-                            <span>Size</span>
+                            <span th:text="#{tab.files.info-size}">Size</span>
                             <strong th:text="${#numbers.formatDecimal(file.fileSizeBytes / 1024.0, 1, 1) + ' KB'}">0 KB</strong>
                         </div>
                         <div class="sh-file-info-row">
-                            <span>Uploaded</span>
+                            <span th:text="#{tab.files.info-uploaded}">Uploaded</span>
                             <strong th:text="${#temporals.format(file.uploadedAt, 'dd MMM yyyy HH:mm')}">01 Jan 2025</strong>
                         </div>
                     </div>
@@ -130,7 +130,7 @@
             </div>
         </div>
     </div>
-    <p class="sh-tab-filter-empty" data-sh-filter-empty-for="#file-grid" hidden>No matching files.</p>
+    <p class="sh-tab-filter-empty" data-sh-filter-empty-for="#file-grid" hidden th:text="#{tab.files.filter-empty}">No matching files.</p>
 </div>
 
 </body>

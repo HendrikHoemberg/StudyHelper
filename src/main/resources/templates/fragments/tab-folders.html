@@ -4,13 +4,13 @@
 
 <div th:fragment="tabContent" class="sh-tab-panel sh-fade-in" role="tabpanel">
     <div class="sh-tab-header">
-        <h6 class="sh-tab-header-title">Subfolders</h6>
+        <h6 class="sh-tab-header-title" th:text="#{tab.subfolders.title}">Subfolders</h6>
     </div>
 
     <div class="sh-tab-filterbar">
         <div class="sh-search-bar sh-search-bar-sm">
             <span class="sh-search-icon"><iconify-icon icon="lucide:search"></iconify-icon></span>
-            <input type="text" class="sh-input sh-tab-filter-input" placeholder="Filter subfolders..."
+            <input type="text" class="sh-input sh-tab-filter-input" th:placeholder="#{tab.subfolders.filter-placeholder}" placeholder="Filter subfolders..."
                    data-sh-tab-filter="#subfolder-grid" autocomplete="off">
         </div>
     </div>
@@ -20,7 +20,7 @@
              th:hx-get="@{/folders/new(parentId=${view.folder.id})}"
              hx-target="#modal-placeholder">
             <iconify-icon icon="lucide:plus"></iconify-icon>
-            <span>NEW SUBFOLDER</span>
+            <span th:text="#{tab.subfolders.new}">NEW SUBFOLDER</span>
         </div>
 
         <a th:each="sub : ${view.subFolders}"
@@ -39,7 +39,7 @@
             </span>
         </a>
     </div>
-    <p class="sh-tab-filter-empty" data-sh-filter-empty-for="#subfolder-grid" hidden>No matching subfolders.</p>
+    <p class="sh-tab-filter-empty" data-sh-filter-empty-for="#subfolder-grid" hidden th:text="#{tab.subfolders.filter-empty}">No matching subfolders.</p>
 </div>
 
 </body>
