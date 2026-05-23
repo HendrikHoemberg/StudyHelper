@@ -7151,6 +7151,13 @@ iconify-icon {
         padding-bottom: 56px !important;
     }
 
+    /* Avoid bottom cutoff from fixed bottom bar */
+    .sh-dashboard-shell,
+    .app-main-content,
+    .sh-explorer-detail {
+        padding-bottom: 72px !important;
+    }
+
     /* App Bottom Bar */
     .app-bottom-bar {
         position: fixed;
