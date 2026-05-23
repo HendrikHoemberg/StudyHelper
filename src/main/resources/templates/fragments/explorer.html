@@ -47,26 +47,6 @@
                     <th:block th:replace="~{fragments/saved-session :: card}"></th:block>
                 </th:block>
 
-                <div class="sh-review-banner" th:if="${vm.dueTodaySessionCount() > 0}">
-                    <a class="sh-review-card" href="#" hx-post="/study/start-due" hx-target="#explorer-detail" hx-push-url="true">
-                        <span class="sh-review-card-main">
-                            <span class="sh-review-card-icon">
-                                <iconify-icon icon="lucide:alarm-clock"></iconify-icon>
-                            </span>
-                            <span class="sh-review-card-body">
-                                <div class="sh-review-card-title-row">
-                                    <span class="sh-review-card-title">Due today</span>
-                                    <span class="sh-review-card-badge">
-                                        <span th:text="${vm.dueTodaySessionCount()}">0</span> due
-                                    </span>
-                                </div>
-                                <span class="sh-review-card-meta">Cards scheduled for review</span>
-                            </span>
-                        </span>
-                        <span class="sh-review-card-cta">Study now</span>
-                    </a>
-                </div>
-
                 <!-- Action tiles row wrapped in an extra container for better visibility and coherence -->
                 <div class="sh-action-tiles-wrapper">
                     <div class="sh-action-tile-row">
@@ -91,16 +71,27 @@
                                 <span class="sh-action-tile-hint">From PDF, text, or images</span>
                             </div>
                         </a>
-                        <a class="sh-action-tile sh-action-tile-exam" th:href="@{/study/start(mode='EXAM')}"
-                            th:hx-get="@{/study/start(mode='EXAM')}" hx-target="#explorer-detail" hx-push-url="true">
+                        <a th:if="${vm.dueTodaySessionCount() > 0}" class="sh-action-tile sh-action-tile-due" href="#"
+                            hx-post="/study/start-due" hx-target="#explorer-detail" hx-push-url="true">
                             <div class="sh-action-tile-icon">
-                                <iconify-icon icon="lucide:file-edit"></iconify-icon>
+                                <iconify-icon icon="lucide:alarm-clock"></iconify-icon>
                             </div>
                             <div class="sh-action-tile-body">
-                                <span class="sh-action-tile-label">Take an exam</span>
-                                <span class="sh-action-tile-hint">Single, set, or open questions</span>
+                                <span class="sh-action-tile-label">Due today</span>
+                                <span class="sh-action-tile-hint">
+                                    <span th:text="${vm.dueTodaySessionCount()}">0</span> cards scheduled for review
+                                </span>
                             </div>
                         </a>
+                        <div th:unless="${vm.dueTodaySessionCount() > 0}" class="sh-action-tile sh-action-tile-due sh-action-tile--muted" aria-disabled="true">
+                            <div class="sh-action-tile-icon">
+                                <iconify-icon icon="lucide:check"></iconify-icon>
+                            </div>
+                            <div class="sh-action-tile-body">
+                                <span class="sh-action-tile-label">Due today</span>
+                                <span class="sh-action-tile-hint">All caught up</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

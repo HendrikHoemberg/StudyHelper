@@ -6247,14 +6247,6 @@ iconify-icon {
 
 }
 
-/* --- High-Priority Dashboard Study Banner --- */
-.sh-review-banner {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    width: 100%;
-}
-
 .sh-dashboard-greeting .sh-page-title {
     margin-bottom: 0.25rem;
 }
@@ -6313,14 +6305,37 @@ iconify-icon {
     --tile-bg: rgba(167, 139, 250, 0.15);
 }
 
-.sh-action-tile-exam {
+.sh-action-tile-due {
     --tile-color: #e11d48;
     --tile-bg: rgba(225, 29, 72, 0.12);
 }
 
-[data-theme="dark"] .sh-action-tile-exam {
+[data-theme="dark"] .sh-action-tile-due {
     --tile-color: #fb7185;
     --tile-bg: rgba(251, 113, 133, 0.15);
+}
+
+/* Muted state — used by the Due tile when nothing is due */
+.sh-action-tile--muted {
+    --tile-color: var(--text-muted);
+    --tile-bg: color-mix(in srgb, var(--text-muted) 12%, transparent);
+    cursor: default;
+    opacity: 0.75;
+}
+
+.sh-action-tile--muted:hover {
+    transform: none;
+    border-color: color-mix(in srgb, var(--text-muted) 35%, var(--border-soft));
+    background: var(--surface);
+}
+
+.sh-action-tile--muted:hover .sh-action-tile-icon {
+    background: var(--tile-bg);
+    color: var(--tile-color);
+}
+
+.sh-action-tile--muted .sh-action-tile-label {
+    color: var(--text-muted);
 }
 
 .sh-action-tile {
@@ -6383,124 +6398,6 @@ iconify-icon {
     color: #fff;
 }
 
-
-.sh-review-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.15rem 1.25rem;
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-    border: 1px solid color-mix(in srgb, var(--color-review) 35%, var(--border-soft));
-    box-shadow: var(--shadow-sm);
-    color: inherit;
-    text-decoration: none;
-    transition: all var(--transition);
-    position: relative;
-    overflow: hidden;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.sh-review-card:hover {
-    border-color: color-mix(in srgb, var(--color-review) 60%, var(--border-soft));
-    background: var(--surface-raised);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-.sh-review-card-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: color-mix(in srgb, var(--color-review) 12%, transparent);
-    color: var(--color-review);
-    flex-shrink: 0;
-    transition: all var(--transition);
-}
-
-.sh-review-card-icon iconify-icon {
-    font-size: 1.25rem;
-    display: flex !important;
-}
-
-.sh-review-card:hover .sh-review-card-icon {
-    background: var(--color-review);
-    color: #fff;
-}
-
-.sh-review-card-main {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1;
-    min-width: 0;
-}
-
-.sh-review-card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    flex: 1;
-    min-width: 0;
-}
-
-.sh-review-card-title-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.sh-review-card-title {
-    font-family: var(--font-heading);
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--text);
-}
-
-.sh-review-card-badge {
-    display: inline-flex;
-    align-items: center;
-    font-family: var(--font-body);
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 0.125rem 0.5rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-review) 12%, transparent);
-    color: var(--color-review);
-    letter-spacing: 0.02em;
-    font-variant-numeric: tabular-nums;
-    text-transform: uppercase;
-}
-
-.sh-review-card-meta {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    line-height: 1.3;
-}
-
-.sh-review-card-cta {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius);
-    background: color-mix(in srgb, var(--color-review) 12%, transparent);
-    color: var(--color-review);
-    font-weight: 700;
-    font-size: 0.85rem;
-    transition: all var(--transition);
-    border: 1px solid transparent;
-    white-space: nowrap;
-}
-
-.sh-review-card:hover .sh-review-card-cta {
-    background: var(--color-review);
-    color: #fff;
-}
 
 .sh-dashboard-section .sh-section-title {
     margin-bottom: 0.75rem;
@@ -6602,44 +6499,24 @@ iconify-icon {
         order: 2;
     }
 
-    .sh-review-banner {
+    .sh-action-tiles-wrapper {
         order: 3;
     }
 
-    .sh-action-tiles-wrapper {
+    .sh-activity-panel {
         order: 4;
     }
 
-    .sh-activity-panel {
+    .sh-pinned-decks-section {
         order: 5;
     }
 
-    .sh-pinned-decks-section {
-        order: 6;
-    }
-
     .sh-recently-studied-section {
-        order: 7;
+        order: 6;
     }
 }
 
 @media (max-width: 480px) {
-    .sh-review-card {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.75rem;
-    }
-
-    .sh-review-card-main {
-        align-items: flex-start;
-        gap: 0.75rem;
-    }
-
-    .sh-review-card-cta {
-        align-self: stretch;
-        text-align: center;
-    }
-
     .sh-deck-rail {
         grid-template-columns: minmax(0, 1fr);
     }

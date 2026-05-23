@@ -853,17 +853,20 @@ class UiResourceRegressionTests {
     }
 
     @Test
-    void dashboardUsesOnlyDueStudyBannerAndNoMistakesMode() throws IOException {
+    void dashboardUsesDueActionTileAndNoMistakesMode() throws IOException {
         String template = resource("templates/fragments/explorer.html");
         String styles = resource("static/css/styles.css");
 
         assertThat(template)
-            .contains("class=\"sh-review-banner\"")
-            .contains("class=\"sh-review-card-main\"")
+            .contains("class=\"sh-action-tile sh-action-tile-due\"")
+            .contains("sh-action-tile--muted")
             .contains("th:if=\"${vm.dueTodaySessionCount() > 0}\"")
+            .contains("th:unless=\"${vm.dueTodaySessionCount() > 0}\"")
             .contains("hx-post=\"/study/start-due\"")
             .contains("Due today")
-            .contains("Cards scheduled for review")
+            .contains("All caught up")
+            .doesNotContain("class=\"sh-review-banner\"")
+            .doesNotContain("sh-action-tile-exam")
             .doesNotContain("reviewMistakesCount")
             .doesNotContain("hx-post=\"/study/review-mistakes\"")
             .doesNotContain("Review mistakes")
@@ -872,12 +875,9 @@ class UiResourceRegressionTests {
             .doesNotContain("sh-review-card-mobile")
             .doesNotContain("sh-review-card-desktop");
 
-        assertThat(template.indexOf("class=\"sh-review-banner\""))
-            .isLessThan(template.indexOf("class=\"sh-action-tiles-wrapper\""));
-
         assertThat(styles)
-            .contains(".sh-review-banner")
-            .contains(".sh-review-card-main")
+            .contains(".sh-action-tile-due")
+            .contains(".sh-action-tile--muted")
             .doesNotContain(".sh-action-tile-review")
             .doesNotContain(".sh-review-card-mobile")
             .doesNotContain(".sh-review-card-desktop");
