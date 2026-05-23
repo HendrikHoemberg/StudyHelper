@@ -281,6 +281,13 @@
 
             <!-- Controls Section -->
             <div class="sh-sheet-section">
+                <a href="/exams" class="sh-sheet-row-link"
+                   hx-get="/exams" hx-target="#explorer-detail" hx-push-url="true">
+                    <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
+                    <span th:text="#{nav.past-exams}">Past Exams</span>
+                    <iconify-icon icon="lucide:chevron-right" class="sh-sheet-arrow"></iconify-icon>
+                </a>
+
                 <a href="/settings" class="sh-sheet-row-link">
                     <iconify-icon icon="lucide:settings"></iconify-icon>
                     <span th:text="#{nav.settings}">Settings</span>
