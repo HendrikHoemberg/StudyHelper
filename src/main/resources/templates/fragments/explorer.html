@@ -25,16 +25,16 @@
             <header class="sh-dashboard-greeting">
                 <div class="sh-greet-row">
                     <div class="sh-greet-text">
-                        <h1 class="sh-page-title" th:text="'Welcome back, ' + ${vm.greetingName()}">Welcome back</h1>
+                        <h1 class="sh-page-title" th:text="#{explorer.greeting.welcome-back(${vm.greetingName()})}">Welcome back</h1>
                     </div>
                     <div class="sh-greet-pills" th:if="${vm.streakDays() > 0 or vm.dueTodayCount() > 0}">
                         <span class="sh-pill sh-pill-warm" th:if="${vm.streakDays() > 0}">
                             <iconify-icon icon="lucide:flame"></iconify-icon>
-                            <span th:text="${vm.streakDays()} + ' day streak'">12 day streak</span>
+                            <span th:text="#{explorer.streak.day-streak(${vm.streakDays()})}">12 day streak</span>
                         </span>
                         <span class="sh-pill sh-pill-accent" th:if="${vm.dueTodayCount() > 0}">
                             <iconify-icon icon="lucide:target"></iconify-icon>
-                            <span th:text="${vm.dueTodayCount()} + ' to master'">38 to master</span>
+                            <span th:text="#{explorer.streak.to-master(${vm.dueTodayCount()})}">38 to master</span>
                         </span>
                     </div>
                 </div>
@@ -53,7 +53,7 @@
 
                         <a class="sh-action-tile sh-action-tile-study" href="/study/start" hx-get="/study/start" hx-target="#explorer-detail"
                             hx-push-url="true">
-                            <span class="sh-mode-info" role="button" tabindex="0" aria-label="How Start Studying works"
+                            <span class="sh-mode-info" role="button" tabindex="0" th:aria-label="#{explorer.action-tile.study.aria-label}" aria-label="How Start Studying works"
                                   onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('STUDY_DASHBOARD');">
                                 <iconify-icon icon="lucide:info"></iconify-icon>
                             </span>
@@ -61,13 +61,13 @@
                                 <iconify-icon icon="lucide:book-open"></iconify-icon>
                             </div>
                             <div class="sh-action-tile-body">
-                                <span class="sh-action-tile-label">Start studying</span>
-                                <span class="sh-action-tile-hint">Mixed deck · spaced repetition</span>
+                                <span class="sh-action-tile-label" th:text="#{explorer.action-tile.study.label}">Start studying</span>
+                                <span class="sh-action-tile-hint" th:text="#{explorer.action-tile.study.hint}">Mixed deck · spaced repetition</span>
                             </div>
                         </a>
                         <a class="sh-action-tile sh-action-tile-generate" href="/flashcards/generate" hx-get="/flashcards/generate"
                             hx-target="#explorer-detail" hx-push-url="true">
-                            <span class="sh-mode-info" role="button" tabindex="0" aria-label="How Generate Flashcards works"
+                            <span class="sh-mode-info" role="button" tabindex="0" th:aria-label="#{explorer.action-tile.generate.aria-label}" aria-label="How Generate Flashcards works"
                                   onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('GENERATOR_DASHBOARD');">
                                 <iconify-icon icon="lucide:info"></iconify-icon>
                             </span>
@@ -75,13 +75,13 @@
                                 <iconify-icon icon="lucide:sparkles"></iconify-icon>
                             </div>
                             <div class="sh-action-tile-body">
-                                <span class="sh-action-tile-label">Generate flashcards</span>
-                                <span class="sh-action-tile-hint">From PDF, text, or images</span>
+                                <span class="sh-action-tile-label" th:text="#{explorer.action-tile.generate.label}">Generate flashcards</span>
+                                <span class="sh-action-tile-hint" th:text="#{explorer.action-tile.generate.hint}">From PDF, text, or images</span>
                             </div>
                         </a>
                         <a th:if="${vm.dueTodaySessionCount() > 0}" class="sh-action-tile sh-action-tile-due" href="#"
                             hx-post="/study/start-due" hx-target="#explorer-detail" hx-push-url="true">
-                            <span class="sh-mode-info" role="button" tabindex="0" aria-label="How Due Today works"
+                            <span class="sh-mode-info" role="button" tabindex="0" th:aria-label="#{explorer.action-tile.due.aria-label}" aria-label="How Due Today works"
                                   onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('DUE_DASHBOARD');">
                                 <iconify-icon icon="lucide:info"></iconify-icon>
                             </span>
@@ -89,14 +89,14 @@
                                 <iconify-icon icon="lucide:alarm-clock"></iconify-icon>
                             </div>
                             <div class="sh-action-tile-body">
-                                <span class="sh-action-tile-label">Due today</span>
+                                <span class="sh-action-tile-label" th:text="#{explorer.action-tile.due.label}">Due today</span>
                                 <span class="sh-action-tile-hint">
-                                    <span th:text="${vm.dueTodaySessionCount()}">0</span> cards scheduled for review
+                                    <span th:text="#{explorer.action-tile.due.scheduled(${vm.dueTodaySessionCount()})}">0 cards scheduled for review</span>
                                 </span>
                             </div>
                         </a>
                         <div th:unless="${vm.dueTodaySessionCount() > 0}" class="sh-action-tile sh-action-tile-due sh-action-tile--muted" aria-disabled="true">
-                            <span class="sh-mode-info" role="button" tabindex="0" aria-label="How Due Today works"
+                            <span class="sh-mode-info" role="button" tabindex="0" th:aria-label="#{explorer.action-tile.due.aria-label}" aria-label="How Due Today works"
                                   onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('DUE_DASHBOARD');">
                                 <iconify-icon icon="lucide:info"></iconify-icon>
                             </span>
@@ -104,8 +104,8 @@
                                 <iconify-icon icon="lucide:check"></iconify-icon>
                             </div>
                             <div class="sh-action-tile-body">
-                                <span class="sh-action-tile-label">Due today</span>
-                                <span class="sh-action-tile-hint">All caught up</span>
+                                <span class="sh-action-tile-label" th:text="#{explorer.action-tile.due.label}">Due today</span>
+                                <span class="sh-action-tile-hint" th:text="#{explorer.action-tile.due.caught-up}">All caught up</span>
                             </div>
                         </div>
                     </div>
@@ -115,7 +115,7 @@
 
                 <!-- Pinned decks rail -->
                 <section th:if="${!vm.pinnedDecks().isEmpty()}" class="sh-dashboard-section sh-pinned-decks-section">
-                    <h2 class="sh-section-title">Pinned</h2>
+                    <h2 class="sh-section-title" th:text="#{explorer.section.pinned}">Pinned</h2>
                     <div class="sh-deck-rail">
                         <th:block th:each="deck : ${vm.pinnedDecks()}">
                             <div th:replace="~{fragments/explorer :: dashboardDeckTile(${deck})}"></div>
@@ -126,7 +126,7 @@
                 <!-- Recent decks rail -->
                 <section th:if="${!vm.recentDecks().isEmpty()}" class="sh-dashboard-section sh-recently-studied-section">
                     <div class="sh-section-header">
-                        <h2 class="sh-section-title">Recently studied</h2>
+                        <h2 class="sh-section-title" th:text="#{explorer.section.recently-studied}">Recently studied</h2>
                         <span class="sh-section-rule"></span>
                     </div>
                     <div class="sh-deck-rail">
@@ -154,18 +154,18 @@
                                 </svg>
                                 <div class="sh-ring-label">
                                     <span class="sh-ring-num" th:text="${vm.todayMinutes()}">0</span>
-                                    <span class="sh-ring-unit">MIN</span>
+                                    <span class="sh-ring-unit" th:text="#{explorer.activity.minutes-unit}">MIN</span>
                                 </div>
                             </div>
                             <div class="sh-activity-stats">
-                                <span class="sh-stat-label">Today's goal</span>
+                                <span class="sh-stat-label" th:text="#{explorer.activity.todays-goal}">Today's goal</span>
                                 <span class="sh-stat-value"
-                                    th:text="${vm.todayMinutes()} + ' / ' + ${vm.dailyMinuteGoal()} + ' min'">0 / 60
+                                    th:text="#{explorer.activity.goal-progress(${vm.todayMinutes()}, ${vm.dailyMinuteGoal()})}">0 / 60
                                     min</span>
                                 <span class="sh-stat-hint">
-                                    <span th:text="${vm.todayAccuracyPercent() != null ? vm.todayAccuracyPercent() + '% accuracy' : '—% accuracy'}">—% accuracy</span>
+                                    <span th:text="#{explorer.activity.accuracy(${#strings.defaultString(vm.todayAccuracyPercent(), '—')})}">—% accuracy</span>
                                     <span> · </span>
-                                    <span th:text="${vm.cardsReviewedToday()} + ' cards reviewed'">0 cards
+                                    <span th:text="#{explorer.activity.cards-reviewed(${vm.cardsReviewedToday()})}">0 cards
                                         reviewed</span>
                                 </span>
                             </div>
@@ -180,14 +180,15 @@
                                         <div th:each="col : ${heatmapColumns}" class="sh-heat-column">
                                             <div th:each="entry : ${col}" class="sh-heat-cell"
                                                 th:classappend="${entry.today()} ? ' today' : ''"
-                                                th:attr="data-l=${entry.level()},title=${entry.sessions() + ' sessions on ' + entry.date()}">
+                                                th:attr="data-l=${entry.level()}"
+                                                th:title="#{explorer.heatmap.cell-title(${entry.sessions()}, ${entry.date()})}">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="sh-heat-legend">
-                                <span>Less</span>
+                                <span th:text="#{explorer.heatmap.less}">Less</span>
                                 <div class="sh-heat-legend-cells">
                                     <div class="sh-heat-cell" data-l="0"></div>
                                     <div class="sh-heat-cell" data-l="1"></div>
@@ -195,9 +196,9 @@
                                     <div class="sh-heat-cell" data-l="3"></div>
                                     <div class="sh-heat-cell" data-l="4"></div>
                                 </div>
-                                <span>More</span>
+                                <span th:text="#{explorer.heatmap.more}">More</span>
                                 <span class="sh-heat-total"
-                                    th:text="${vm.heatmapTotalSessions()} + ' sessions in the last 4 months'">0 sessions
+                                    th:text="#{explorer.heatmap.total-sessions(${vm.heatmapTotalSessions()})}">0 sessions
                                     in the last 4 months</span>
                             </div>
                         </div>
@@ -237,11 +238,11 @@
             </div>
             <div class="sh-deck-title" th:text="${d.deckName()}">Name</div>
             <div class="sh-deck-meta" th:text="${d.folderPath()}">Folder</div>
-            <div class="sh-deck-meta" th:text="${d.masteredCards()} + ' / ' + ${d.totalCards()} + ' mastered'">0 / 0
+            <div class="sh-deck-meta" th:text="#{explorer.deck-tile.mastered(${d.masteredCards()}, ${d.totalCards()})}">0 / 0
                 mastered</div>
         </div>
         <div class="sh-file-tile-actions">
-            <button class="sh-deck-edit-btn" th:title="${d.pinned() ? 'Unpin' : 'Pin'}"
+            <button class="sh-deck-edit-btn" th:title="${d.pinned()} ? #{explorer.deck-tile.unpin} : #{explorer.deck-tile.pin}"
                 th:hx-post="@{/decks/{id}/pin(id=${d.deckId()})}" hx-target="#explorer-detail" hx-trigger="click">
                 <iconify-icon th:attr="icon=${d.pinned() ? 'lucide:pin-off' : 'lucide:pin'}"></iconify-icon>
             </button>
