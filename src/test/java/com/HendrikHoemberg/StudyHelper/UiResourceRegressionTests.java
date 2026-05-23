@@ -26,11 +26,15 @@ class UiResourceRegressionTests {
 
         assertThat(messages)
             .contains("nav.your-limits=Ihre Limits")
-            .contains("explorer.streak.day-streak={0}-Tage-Serie")
-            .contains("explorer.streak.to-master={0} noch zu meistern")
+            .contains("explorer.streak.day-streak={0}-Tage-Streak")
+            .contains("explorer.streak.to-master={0} noch nicht gemeistert")
             .contains("explorer.action-tile.study.hint=Gemischtes Deck · Spaced Repetition")
+            .contains("study.complete.redo-incorrect=Falsche Antworten wiederholen ({0})")
+            .contains("wizard.exam.depth=Antwortlänge")
+            .contains("wizard.quiz.format.tf-desc=Schneller Check.")
             .contains("exam.delete.confirm=Dieses Prüfungsergebnis löschen? Dies kann nicht rückgängig gemacht werden.")
             .contains("admin.users.table.joined=Registriert seit")
+            .contains("admin.quota.ai-label=Tägliches Limit für KI-Anfragen")
             .contains("flashcard.form.front-placeholder=Frage oder Prompt eingeben...")
             .doesNotContain("Spaced-Re petition")
             .doesNotContain("ihn/sie");
