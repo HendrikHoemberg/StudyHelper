@@ -52,26 +52,26 @@
             <a href="/dashboard" class="topnav-link"
                hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
                 <iconify-icon icon="lucide:layout-dashboard"></iconify-icon>
-                Dashboard
+                <span th:text="#{nav.dashboard}">Dashboard</span>
             </a>
             <a href="/study/start" class="topnav-link"
                hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
                 <iconify-icon icon="lucide:book-open"></iconify-icon>
-                Study Session
+                <span th:text="#{nav.study}">Study Session</span>
             </a>
             <a href="/flashcards/generate" class="topnav-link"
                hx-get="/flashcards/generate" hx-target="#explorer-detail" hx-push-url="true">
                 <iconify-icon icon="lucide:sparkles"></iconify-icon>
-                AI Flashcards
+                <span th:text="#{nav.ai-flashcards}">AI Flashcards</span>
             </a>
             <a href="/exams" class="topnav-link"
                hx-get="/exams" hx-target="#explorer-detail" hx-push-url="true">
                 <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
-                Past Exams
+                <span th:text="#{nav.past-exams}">Past Exams</span>
             </a>
             <a th:if="${isAdmin}" href="/admin" class="topnav-link">
                 <iconify-icon icon="lucide:shield"></iconify-icon>
-                Admin
+                <span th:text="#{nav.admin}">Admin</span>
             </a>
         </div>
 
@@ -79,7 +79,7 @@
             <div id="quota-desktop" class="topnav-quotas" th:if="${userQuota != null}">
                 <div class="topnav-quota" th:title="'Storage: ' + ${userQuota.storageLabel()}">
                     <div class="topnav-quota-label">
-                        <span>Storage</span>
+                        <span th:text="#{nav.quota.storage}">Storage</span>
                         <strong th:text="${userQuota.storageLabel()}">512 MB / 1.0 GB</strong>
                     </div>
                     <div class="topnav-quota-progress">
@@ -90,7 +90,7 @@
                 </div>
                 <div class="topnav-quota" th:title="'AI today: ' + ${userQuota.aiLabel()}">
                     <div class="topnav-quota-label">
-                        <span>AI</span>
+                        <span th:text="#{nav.quota.ai}">AI</span>
                         <strong th:text="${userQuota.aiLabel()}">7 / 10</strong>
                     </div>
                     <div class="topnav-quota-progress">
@@ -104,21 +104,21 @@
                 <iconify-icon icon="lucide:settings"></iconify-icon>
                 <span th:text="#{nav.settings}">Settings</span>
             </a>
-            <button class="sh-btn sh-btn-ghost sh-btn-icon topnav-theme-btn" type="button" onclick="toggleTheme()" title="Toggle theme">
+            <button class="sh-btn sh-btn-ghost sh-btn-icon topnav-theme-btn" type="button" onclick="toggleTheme()" th:title="#{nav.toggle-theme}">
                 <iconify-icon icon="lucide:sun" class="theme-icon-light"></iconify-icon>
                 <iconify-icon icon="lucide:moon" class="theme-icon-dark"></iconify-icon>
             </button>
             <form th:action="@{/logout}" method="post" style="display:contents;">
                 <button type="submit" class="sh-btn sh-btn-ghost sh-btn-sm topnav-logout-btn">
                     <iconify-icon icon="lucide:log-out"></iconify-icon>
-                    Sign out
+                    <span th:text="#{nav.sign-out}">Sign out</span>
                 </button>
             </form>
         </div>
 
-        <button id="topnav-folders-btn" class="sh-btn sh-btn-ghost sh-btn-sm topnav-folders-btn" type="button" title="Show folders">
+        <button id="topnav-folders-btn" class="sh-btn sh-btn-ghost sh-btn-sm topnav-folders-btn" type="button" th:title="#{nav.show-folders}">
             <iconify-icon icon="lucide:folder"></iconify-icon>
-            <span>Folders</span>
+            <span th:text="#{nav.folders}">Folders</span>
         </button>
 
         <button id="topnav-menu-btn" class="sh-btn sh-btn-ghost sh-btn-icon topnav-mobile-toggle" type="button">
@@ -132,32 +132,32 @@
     <a href="/dashboard" class="topnav-mobile-link"
        hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
         <iconify-icon icon="lucide:layout-dashboard"></iconify-icon>
-        Dashboard
+        <span th:text="#{nav.dashboard}">Dashboard</span>
     </a>
     <a href="/study/start" class="topnav-mobile-link"
        hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
         <iconify-icon icon="lucide:book-open"></iconify-icon>
-        Study Session
+        <span th:text="#{nav.study}">Study Session</span>
     </a>
     <a href="/flashcards/generate" class="topnav-mobile-link"
        hx-get="/flashcards/generate" hx-target="#explorer-detail" hx-push-url="true">
         <iconify-icon icon="lucide:sparkles"></iconify-icon>
-        AI Flashcards
+        <span th:text="#{nav.ai-flashcards}">AI Flashcards</span>
     </a>
     <a href="/exams" class="topnav-mobile-link"
        hx-get="/exams" hx-target="#explorer-detail" hx-push-url="true">
         <iconify-icon icon="lucide:clipboard-list"></iconify-icon>
-        Past Exams
+        <span th:text="#{nav.past-exams}">Past Exams</span>
     </a>
     <a th:if="${isAdmin}" href="/admin" class="topnav-mobile-link">
         <iconify-icon icon="lucide:shield"></iconify-icon>
-        Admin
+        <span th:text="#{nav.admin}">Admin</span>
     </a>
     <div class="topnav-mobile-divider"></div>
     <div id="quota-mobile" class="topnav-mobile-quotas" th:if="${userQuota != null}">
         <div class="topnav-mobile-quota">
             <div class="topnav-quota-label">
-                <span>Storage</span>
+                <span th:text="#{nav.quota.storage}">Storage</span>
                 <strong th:text="${userQuota.storageLabel()}">512 MB / 1.0 GB</strong>
             </div>
             <div class="topnav-quota-progress">
@@ -168,7 +168,7 @@
         </div>
         <div class="topnav-mobile-quota">
             <div class="topnav-quota-label">
-                <span>AI today</span>
+                <span th:text="#{nav.quota.ai-today}">AI today</span>
                 <strong th:text="${userQuota.aiLabel()}">7 / 10</strong>
             </div>
             <div class="topnav-quota-progress">
@@ -186,13 +186,13 @@
     <form th:action="@{/logout}" method="post">
         <button type="submit" class="topnav-mobile-link topnav-logout-btn">
             <iconify-icon icon="lucide:log-out"></iconify-icon>
-            Sign out
+            <span th:text="#{nav.sign-out}">Sign out</span>
         </button>
     </form>
     <button class="topnav-mobile-link topnav-theme-btn" type="button" onclick="toggleTheme()">
         <iconify-icon icon="lucide:sun" class="theme-icon-light"></iconify-icon>
         <iconify-icon icon="lucide:moon" class="theme-icon-dark"></iconify-icon>
-        Toggle theme
+        <span th:text="#{nav.toggle-theme}">Toggle theme</span>
     </button>
 </div>
 
@@ -223,25 +223,25 @@
             <a href="/dashboard" class="bottom-tab"
                hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
                 <iconify-icon icon="lucide:layout-dashboard"></iconify-icon>
-                <span class="bottom-tab-label">Dashboard</span>
+                <span class="bottom-tab-label" th:text="#{nav.dashboard}">Dashboard</span>
             </a>
             <a href="/study/start" class="bottom-tab"
                hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
                 <iconify-icon icon="lucide:book-open"></iconify-icon>
-                <span class="bottom-tab-label">Study</span>
+                <span class="bottom-tab-label" th:text="#{nav.study-short}">Study</span>
             </a>
             <a href="/flashcards/generate" class="bottom-tab"
                hx-get="/flashcards/generate" hx-target="#explorer-detail" hx-push-url="true">
                 <iconify-icon icon="lucide:sparkles"></iconify-icon>
-                <span class="bottom-tab-label">AI</span>
+                <span class="bottom-tab-label" th:text="#{nav.ai-short}">AI</span>
             </a>
             <button id="bottom-folders-btn" class="bottom-tab-btn" type="button">
                 <iconify-icon icon="lucide:folder"></iconify-icon>
-                <span class="bottom-tab-label">Folders</span>
+                <span class="bottom-tab-label" th:text="#{nav.folders}">Folders</span>
             </button>
             <button id="bottom-more-btn" class="bottom-tab-btn" type="button">
                 <iconify-icon icon="lucide:more-horizontal"></iconify-icon>
-                <span class="bottom-tab-label">More</span>
+                <span class="bottom-tab-label" th:text="#{nav.more}">More</span>
             </button>
         </div>
     </nav>
@@ -252,10 +252,10 @@
         <div class="sh-bottom-sheet-content">
             <!-- Quotas Section -->
             <div class="sh-sheet-section" th:if="${userQuota != null}">
-                <div class="sh-sheet-section-title">Your Limits</div>
+                <div class="sh-sheet-section-title" th:text="#{nav.your-limits}">Your Limits</div>
                 <div class="sh-sheet-quota">
                     <div class="sh-quota-label">
-                        <span>Storage</span>
+                        <span th:text="#{nav.quota.storage}">Storage</span>
                         <strong th:text="${userQuota.storageLabel()}">512 MB / 1.0 GB</strong>
                     </div>
                     <div class="sh-quota-progress">
@@ -266,7 +266,7 @@
                 </div>
                 <div class="sh-sheet-quota">
                     <div class="sh-quota-label">
-                        <span>AI Requests</span>
+                        <span th:text="#{nav.quota.ai-requests}">AI Requests</span>
                         <strong th:text="${userQuota.aiLabel()}">7 / 10</strong>
                     </div>
                     <div class="sh-quota-progress">
@@ -289,7 +289,7 @@
 
                 <a th:if="${isAdmin}" href="/admin" class="sh-sheet-row-link">
                     <iconify-icon icon="lucide:shield"></iconify-icon>
-                    <span>Admin Panel</span>
+                    <span th:text="#{nav.admin-panel}">Admin Panel</span>
                     <iconify-icon icon="lucide:chevron-right" class="sh-sheet-arrow"></iconify-icon>
                 </a>
 
@@ -298,7 +298,7 @@
                     <div class="sh-toggle-left">
                         <iconify-icon icon="lucide:sun" class="theme-icon-light"></iconify-icon>
                         <iconify-icon icon="lucide:moon" class="theme-icon-dark"></iconify-icon>
-                        <span>App Theme</span>
+                        <span th:text="#{nav.app-theme}">App Theme</span>
                     </div>
                     <div class="sh-toggle-switch">
                         <span class="sh-toggle-switch-handle"></span>
@@ -309,7 +309,7 @@
                 <form th:action="@{/logout}" method="post" class="sh-sheet-logout-form">
                     <button type="submit" class="sh-btn sh-btn-danger sh-sheet-logout-btn">
                         <iconify-icon icon="lucide:log-out"></iconify-icon>
-                        Sign out
+                        <span th:text="#{nav.sign-out}">Sign out</span>
                     </button>
                 </form>
             </div>
