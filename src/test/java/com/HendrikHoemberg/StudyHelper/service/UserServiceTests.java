@@ -194,4 +194,42 @@ class UserServiceTests {
 
         verify(userRepository, never()).save(any());
     }
+
+    @Test
+    void setLanguage_DE_PersistsDe() {
+        User user = new User();
+        user.setUsername("alice");
+
+        userService.setLanguage(user, "de");
+
+        assertThat(user.getLanguage()).isEqualTo("de");
+        verify(userRepository, times(1)).save(user);
+    }
+
+    @Test
+    void setLanguage_EN_PersistsEn() {
+        User user = new User();
+        userService.setLanguage(user, "en");
+
+        assertThat(user.getLanguage()).isEqualTo("en");
+        verify(userRepository, times(1)).save(user);
+    }
+
+    @Test
+    void setLanguage_Invalid_CoercesToEn() {
+        User user = new User();
+        userService.setLanguage(user, "fr");
+
+        assertThat(user.getLanguage()).isEqualTo("en");
+        verify(userRepository, times(1)).save(user);
+    }
+
+    @Test
+    void setLanguage_Null_CoercesToEn() {
+        User user = new User();
+        userService.setLanguage(user, null);
+
+        assertThat(user.getLanguage()).isEqualTo("en");
+        verify(userRepository, times(1)).save(user);
+    }
 }

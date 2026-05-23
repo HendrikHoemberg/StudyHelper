@@ -98,6 +98,13 @@ public class UserService {
     }
 
     @Transactional
+    public void setLanguage(User user, String lang) {
+        String normalized = "de".equals(lang) ? "de" : "en";
+        user.setLanguage(normalized);
+        userRepository.save(user);
+    }
+
+    @Transactional
     public void changePassword(User user, String currentRaw, String nextRaw, String confirmRaw) {
         if (!passwordEncoder.matches(currentRaw == null ? "" : currentRaw, user.getPassword())) {
             throw new IllegalArgumentException("errors.password.wrong-current");
