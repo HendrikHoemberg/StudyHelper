@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initLucide();
     initTopnav();
+    initBottomSheet();
     updateActiveNavLink();
     initSidebarDrawer();
     initSidebarFolderExpand();
@@ -194,6 +195,19 @@ document.body.addEventListener('htmx:afterSwap', () => {
     initQuizAnswerForm();
     initLazyExamRuntime(document);
     updateActiveNavLink();
+
+    // Auto-close bottom sheet and folders drawer on htmx swaps
+    const sheet = document.getElementById('mobile-more-sheet');
+    const sheetBackdrop = document.getElementById('sh-bottom-sheet-backdrop');
+    const moreBtn = document.getElementById('bottom-more-btn');
+    if (sheet) sheet.classList.remove('is-open');
+    if (sheetBackdrop) sheetBackdrop.classList.remove('is-open');
+    if (moreBtn) moreBtn.classList.remove('active');
+
+    const sidebar = document.getElementById('sidebar-aside');
+    const sidebarBackdrop = document.getElementById('sh-sidebar-backdrop');
+    if (sidebar) sidebar.classList.remove('is-open');
+    if (sidebarBackdrop) sidebarBackdrop.classList.remove('is-open');
 
     // Toggle sidebar visibility class to prevent flashing
     const shell = document.querySelector('.sh-explorer-shell');
@@ -441,6 +455,56 @@ function initTopnav() {
     });
 }
 
+/* ---------- Mobile Bottom Sheet Controller ---------- */
+function initBottomSheet() {
+    const moreBtn = document.getElementById('bottom-more-btn');
+    const folderBtn = document.getElementById('bottom-folders-btn');
+    const sheet = document.getElementById('mobile-more-sheet');
+    const backdrop = document.getElementById('sh-bottom-sheet-backdrop');
+    
+    if (!sheet || !backdrop) return;
+
+    const openSheet = () => {
+        // Automatically close Folders sidebar drawer to prevent double overlay
+        const sidebar = document.getElementById('sidebar-aside');
+        const shBackdrop = document.getElementById('sh-sidebar-backdrop');
+        if (sidebar) sidebar.classList.remove('is-open');
+        if (shBackdrop) shBackdrop.classList.remove('is-open');
+        
+        sheet.classList.add('is-open');
+        backdrop.classList.add('is-open');
+        moreBtn?.classList.add('active');
+    };
+
+    const closeSheet = () => {
+        sheet.classList.remove('is-open');
+        backdrop.classList.remove('is-open');
+        moreBtn?.classList.remove('active');
+    };
+
+    moreBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (sheet.classList.contains('is-open')) closeSheet();
+        else openSheet();
+    });
+
+    backdrop.addEventListener('click', closeSheet);
+
+    folderBtn?.addEventListener('click', (e) => {
+        closeSheet();
+        const topnavFoldersBtn = document.getElementById('topnav-folders-btn');
+        if (topnavFoldersBtn) {
+            topnavFoldersBtn.click();
+        }
+    });
+
+    sheet.querySelector('.sh-bottom-sheet-handle')?.addEventListener('click', closeSheet);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeSheet();
+    });
+}
+
 /* ---------- Active Navigation Indicator ---------- */
 function updateActiveNavLink() {
     const path = window.location.pathname;
@@ -461,6 +525,7 @@ function updateActiveNavLink() {
     
     const desktopLinks = document.querySelectorAll('.topnav-link');
     const mobileLinks = document.querySelectorAll('.topnav-mobile-link');
+    const bottomLinks = document.querySelectorAll('.bottom-tab');
     
     const updateLinks = (links) => {
         links.forEach(link => {
@@ -485,6 +550,7 @@ function updateActiveNavLink() {
     
     updateLinks(desktopLinks);
     updateLinks(mobileLinks);
+    updateLinks(bottomLinks);
 }
 
 /* ---------- Sidebar Drawer (mobile) ---------- */

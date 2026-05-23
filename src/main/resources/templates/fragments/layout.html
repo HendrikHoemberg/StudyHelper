@@ -213,6 +213,107 @@
          hx-swap="none"></div>
     <div id="sh-sidebar-backdrop" class="sh-sidebar-backdrop" aria-hidden="true"></div>
     <div th:replace="~{fragments/layout :: topnav-drawer}"></div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="app-bottom-bar">
+        <div class="bottom-bar-inner">
+            <a href="/dashboard" class="bottom-tab"
+               hx-get="/dashboard" hx-target="#explorer-detail" hx-push-url="true">
+                <iconify-icon icon="lucide:layout-dashboard"></iconify-icon>
+                <span class="bottom-tab-label">Dashboard</span>
+            </a>
+            <a href="/study/start" class="bottom-tab"
+               hx-get="/study/start" hx-target="#explorer-detail" hx-push-url="true">
+                <iconify-icon icon="lucide:book-open"></iconify-icon>
+                <span class="bottom-tab-label">Study</span>
+            </a>
+            <a href="/flashcards/generate" class="bottom-tab"
+               hx-get="/flashcards/generate" hx-target="#explorer-detail" hx-push-url="true">
+                <iconify-icon icon="lucide:sparkles"></iconify-icon>
+                <span class="bottom-tab-label">AI</span>
+            </a>
+            <button id="bottom-folders-btn" class="bottom-tab-btn" type="button">
+                <iconify-icon icon="lucide:folder"></iconify-icon>
+                <span class="bottom-tab-label">Folders</span>
+            </button>
+            <button id="bottom-more-btn" class="bottom-tab-btn" type="button">
+                <iconify-icon icon="lucide:more-horizontal"></iconify-icon>
+                <span class="bottom-tab-label">More</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Glassmorphism Bottom Sheet -->
+    <div id="mobile-more-sheet" class="sh-bottom-sheet">
+        <div class="sh-bottom-sheet-handle"></div>
+        <div class="sh-bottom-sheet-content">
+            <!-- Quotas Section -->
+            <div class="sh-sheet-section" th:if="${userQuota != null}">
+                <div class="sh-sheet-section-title">Your Limits</div>
+                <div class="sh-sheet-quota">
+                    <div class="sh-quota-label">
+                        <span>Storage</span>
+                        <strong th:text="${userQuota.storageLabel()}">512 MB / 1.0 GB</strong>
+                    </div>
+                    <div class="sh-quota-progress">
+                        <div class="sh-quota-bar"
+                             th:classappend="${userQuota.storageStateClass()}"
+                             th:style="'width:' + ${userQuota.storagePercent()} + '%'"></div>
+                    </div>
+                </div>
+                <div class="sh-sheet-quota">
+                    <div class="sh-quota-label">
+                        <span>AI Requests</span>
+                        <strong th:text="${userQuota.aiLabel()}">7 / 10</strong>
+                    </div>
+                    <div class="sh-quota-progress">
+                        <div class="sh-quota-bar"
+                             th:classappend="${userQuota.aiStateClass()}"
+                             th:style="'width:' + ${userQuota.aiPercent()} + '%'"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sh-sheet-divider" th:if="${userQuota != null}"></div>
+
+            <!-- Controls Section -->
+            <div class="sh-sheet-section">
+                <div class="sh-sheet-user-pill">
+                    <iconify-icon icon="lucide:user"></iconify-icon>
+                    <span class="sh-sheet-username" th:text="${username}">User</span>
+                </div>
+
+                <a th:if="${isAdmin}" href="/admin" class="sh-sheet-row-link">
+                    <iconify-icon icon="lucide:shield"></iconify-icon>
+                    <span>Admin Panel</span>
+                    <iconify-icon icon="lucide:chevron-right" class="sh-sheet-arrow"></iconify-icon>
+                </a>
+
+                <!-- Quick Theme Switcher Row -->
+                <div class="sh-sheet-row-toggle" onclick="toggleTheme()">
+                    <div class="sh-toggle-left">
+                        <iconify-icon icon="lucide:sun" class="theme-icon-light"></iconify-icon>
+                        <iconify-icon icon="lucide:moon" class="theme-icon-dark"></iconify-icon>
+                        <span>App Theme</span>
+                    </div>
+                    <div class="sh-toggle-switch">
+                        <span class="sh-toggle-switch-handle"></span>
+                    </div>
+                </div>
+
+                <!-- Sign Out Form -->
+                <form th:action="@{/logout}" method="post" class="sh-sheet-logout-form">
+                    <button type="submit" class="sh-btn sh-btn-danger sh-sheet-logout-btn">
+                        <iconify-icon icon="lucide:log-out"></iconify-icon>
+                        Sign out
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backdrop Overlay for Bottom Sheet -->
+    <div id="sh-bottom-sheet-backdrop" class="sh-bottom-sheet-backdrop"></div>
 </div>
 
 </html>
