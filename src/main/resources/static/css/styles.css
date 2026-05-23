@@ -1256,12 +1256,12 @@ textarea.sh-input {
     transform: rotate(-45deg) scale(1);
 }
 
-.sh-checkbox:indeterminate {
+.sh-checkbox:indeterminate:not([type="radio"]) {
     background: var(--accent);
     border-color: var(--accent);
 }
 
-.sh-checkbox:indeterminate::after {
+.sh-checkbox:indeterminate:not([type="radio"])::after {
     width: 8px;
     height: 2px;
     border-left: 0;
