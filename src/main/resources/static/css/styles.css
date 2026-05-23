@@ -4061,7 +4061,9 @@ textarea.sh-input {
     --tile-bg: color-mix(in srgb, var(--accent) 15%, transparent);
     position: relative;
     grid-column: 1 / -1;
-    margin-bottom: 0.5rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border-soft);
 }
 
 .sh-saved-session-link {
