@@ -301,13 +301,29 @@
                 <div class="sh-modal-body">
                     <div class="sh-admin-quota-field">
                         <label class="sh-label" for="admin-quota-storage" th:text="#{admin.quota.storage-label}">Storage quota (GB)</label>
-                        <input class="sh-input" type="number" min="0" step="1"
-                               name="storageQuotaGib" id="admin-quota-storage" required>
+                        <div class="sh-number-stepper" data-stepper>
+                            <button type="button" class="sh-stepper-btn" data-stepper-action="decrement">
+                                <iconify-icon icon="lucide:minus"></iconify-icon>
+                            </button>
+                            <input class="sh-stepper-input" type="number" min="0" step="1"
+                                   name="storageQuotaGib" id="admin-quota-storage" required>
+                            <button type="button" class="sh-stepper-btn" data-stepper-action="increment">
+                                <iconify-icon icon="lucide:plus"></iconify-icon>
+                            </button>
+                        </div>
                     </div>
                     <div class="sh-admin-quota-field">
                         <label class="sh-label" for="admin-quota-ai" th:text="#{admin.quota.ai-label}">Daily AI request limit</label>
-                        <input class="sh-input" type="number" min="0" step="1"
-                               name="dailyAiLimit" id="admin-quota-ai" required>
+                        <div class="sh-number-stepper" data-stepper>
+                            <button type="button" class="sh-stepper-btn" data-stepper-action="decrement">
+                                <iconify-icon icon="lucide:minus"></iconify-icon>
+                            </button>
+                            <input class="sh-stepper-input" type="number" min="0" step="1"
+                                   name="dailyAiLimit" id="admin-quota-ai" required>
+                            <button type="button" class="sh-stepper-btn" data-stepper-action="increment">
+                                <iconify-icon icon="lucide:plus"></iconify-icon>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="sh-modal-footer">
@@ -362,6 +378,11 @@
         modal.classList.add('is-open');
         storageIn.focus();
         document.addEventListener('keydown', adminQuotaEsc);
+
+        // Initialize and sync custom stepper buttons
+        if (typeof window.initCustomSteppers === 'function') {
+            window.initCustomSteppers(modal);
+        }
     }
 
     function adminCloseQuotaModal() {
