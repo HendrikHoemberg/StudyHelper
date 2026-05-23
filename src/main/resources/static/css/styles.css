@@ -7344,6 +7344,11 @@ iconify-icon {
         color: var(--text-muted);
     }
 
+    .sh-toggle-left {
+        display: flex;
+        align-items: center;
+    }
+
     /* Toggle switch styled matching studyhelper theme */
     .sh-toggle-switch {
         margin-left: auto;
