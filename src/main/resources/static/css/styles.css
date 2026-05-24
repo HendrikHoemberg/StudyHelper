@@ -6025,7 +6025,7 @@ iconify-icon {
 }
 
 .sh-flashcard-generator .sh-ai-estimate {
-    margin: 0.75rem 0 0.75rem;
+    margin: 0.4rem 0 0.4rem;
 }
 
 .sh-flashcard-generator .sh-ai-estimate > div {
@@ -6047,7 +6047,7 @@ iconify-icon {
 }
 
 .sh-flashcard-generator .sh-wizard-footer {
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
     padding: 0.875rem 1rem; /* Keep footer comfortable without crowding the content above */
 }
 
