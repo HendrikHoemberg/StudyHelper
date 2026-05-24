@@ -15,7 +15,7 @@ For the desired product behavior, the user should select PDFs and receive flashc
 - Generate comprehensive flashcards by covering every testable detail in the selected PDFs.
 - Make the quota cost predictable before generation starts.
 - Warn users when large PDFs are likely to consume significant quota, take longer, or produce weaker results.
-- Keep Gemini Flash Lite viable by turning one large global task into smaller bounded tasks.
+- Keep Gemini 3.1 Flash-Lite viable by turning one large global task into smaller bounded tasks.
 - Avoid long-running browser-held HTTP requests for generation.
 
 ## Non-goals
@@ -131,6 +131,27 @@ The final deck is the concatenation of all valid chunk outputs, followed by loca
 
 The pipeline runs inside the background job worker. Each chunk completion updates job progress.
 
+### Thinking Levels
+
+The app uses `gemini-3.1-flash-lite`. For this Gemini 3.1 model, use `thinkingLevel`, not `thinkingBudget`.
+
+Default thinking policy:
+
+```text
+Standard chunk generation: MEDIUM
+Future verified audit pass: HIGH
+JSON repair or mechanical retry: LOW
+```
+
+Rationale:
+
+- Gemini 3.1 Flash-Lite supports `minimal`, `low`, `medium`, and `high` thinking levels.
+- The model's default is `minimal`, which is optimized for low latency but is not ideal for exhaustive testable-detail extraction.
+- `MEDIUM` is the standard generation default because each chunk still needs careful coverage, but using `HIGH` on every chunk would multiply latency across many provider calls.
+- `HIGH` is reserved for a future Verified mode audit pass, where the model must reason about missed details.
+
+Thinking level does not change the app's AI request count. It can increase provider-side token use and latency, so the time estimate should assume `MEDIUM` for standard generation.
+
 ### Local Cleanup
 
 After all chunks complete:
@@ -147,6 +168,8 @@ The first version should prefer conservative dedupe over aggressive merging, bec
 Verified mode is a later enhancement, not required for the first implementation.
 
 It would add a second AI request per chunk that receives the chunk plus the generated cards for that chunk and asks which testable details are missing. Any missing details would be turned into additional cards.
+
+The audit request uses `thinkingLevel = HIGH`.
 
 Quota rule:
 
@@ -316,6 +339,8 @@ Expected new or changed components:
   - represents one generation unit with source filename, chunk index, page range if known, and text content.
 - `AiFlashcardService`
   - gains a chunk-generation path;
+  - applies `GoogleGenAiThinkingLevel.MEDIUM` to standard chunk generation;
+  - reserves `GoogleGenAiThinkingLevel.HIGH` for the future verified audit pass;
   - generates cards for each chunk and locally deduplicates the aggregate result.
 - `AiRequestQuotaService`
   - gains an amount-based check-and-record method.
@@ -357,6 +382,8 @@ Service tests:
 - job execution runs outside the controller request path;
 - job-level timeout marks stale running jobs failed;
 - Google GenAI client configuration applies the explicit provider-call timeout;
+- standard chunk generation uses `GoogleGenAiThinkingLevel.MEDIUM`;
+- no request uses `thinkingBudget` for Gemini 3.1 Flash-Lite;
 - chunk prompt asks for every testable detail and does not include a fixed card count;
 - generated cards from multiple chunks are aggregated;
 - exact duplicate cards are removed.
@@ -382,6 +409,7 @@ UI regression tests:
 
 - Background jobs add implementation complexity and likely require a new persisted job table.
 - The app needs both a finite provider-call timeout and a job-level timeout to avoid jobs running forever.
+- `MEDIUM` thinking can improve coverage but may increase latency compared with the model's `minimal` default.
 - Chunk-level generation may create style differences between chunks. Prompt wording and local cleanup should reduce this, but it will not disappear completely.
 - Context that spans chunks may produce weaker cards. Page/word chunk sizes are a pragmatic tradeoff for quota predictability.
 - Full-PDF visual chunking depends on reliable PDFBox page extraction for chunk PDFs.
