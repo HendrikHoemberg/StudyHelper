@@ -54,7 +54,7 @@ class ExamSessionServiceTests {
                 ExamQuestionSize.MEDIUM, 5, null, ExamLayout.PER_PAGE,
                 new User()))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("at least one source");
+            .hasMessageContaining("at least one deck");
     }
 
     @Test
@@ -88,7 +88,7 @@ class ExamSessionServiceTests {
         when(flashcardService.getFlashcardsFlattened(any())).thenReturn(Collections.emptyList());
 
         ExamQuestion q = new ExamQuestion("Q?", "rubric");
-        when(aiExamService.generate(any(), any(), anyInt(), any(ExamQuestionSize.class), any()))
+        when(aiExamService.generate(any(), anyInt(), any(ExamQuestionSize.class), any()))
             .thenReturn(List.of(q));
 
         HttpServletRequest req = new MockHttpServletRequest();
@@ -101,5 +101,16 @@ class ExamSessionServiceTests {
         assertThat(result.state().config().layout()).isEqualTo(ExamLayout.SINGLE_PAGE);
         assertThat(result.state().questions()).containsExactly(q);
         verify(aiRequestQuotaService).checkAndRecord(user);
+    }
+
+    @Test
+    void validateForPreflight_rejectsFileSelection() {
+        HttpServletRequest req = new MockHttpServletRequest();
+        assertThatThrownBy(() -> service.validateForPreflight(
+                List.of(1L), List.of(2L), req,
+                ExamQuestionSize.MEDIUM, 5, null, ExamLayout.PER_PAGE,
+                new User()))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Exams can only be generated from card decks.");
     }
 }

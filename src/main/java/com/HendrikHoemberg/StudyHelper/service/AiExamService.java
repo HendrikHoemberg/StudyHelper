@@ -38,28 +38,26 @@ public class AiExamService {
 
     public List<ExamQuestion> generate(
             List<Flashcard> flashcards,
-            List<DocumentInput> documents,
             int questionCount,
             ExamQuestionSize size) {
-        return generate(flashcards, documents, questionCount, size, null);
+        return generate(flashcards, questionCount, size, null);
     }
 
     public List<ExamQuestion> generate(
             List<Flashcard> flashcards,
-            List<DocumentInput> documents,
             int questionCount,
             ExamQuestionSize size,
             String additionalInstructions) {
-        String cardContent = AiGenerationSupport.cards(flashcards);
-        String docContent  = AiGenerationSupport.textDocuments(documents);
-        String pdfListing  = AiGenerationSupport.pdfListing(documents);
-        Media[] pdfMedia   = AiGenerationSupport.pdfMedia(documents);
-
-        if (cardContent.isBlank() && docContent.isBlank() && pdfMedia.length == 0) {
-            throw new IllegalArgumentException("Selected sources contain no usable text or PDFs. Pick a deck, a document with extractable content, or a PDF in full-document mode.");
+        if (flashcards == null || flashcards.isEmpty()) {
+            throw new IllegalArgumentException("Exam generation requires at least one flashcard.");
         }
 
-        String prompt = buildGenerationPrompt(cardContent, docContent, pdfListing, questionCount, size, additionalInstructions);
+        String cardContent = AiGenerationSupport.cards(flashcards);
+        if (cardContent.isBlank()) {
+            throw new IllegalArgumentException("Exam generation requires at least one flashcard.");
+        }
+
+        String prompt = buildGenerationPrompt(cardContent, questionCount, size, additionalInstructions);
 
         ExamQuestionsResponse response;
         try {
@@ -68,15 +66,12 @@ public class AiExamService {
                     .options(GoogleGenAiChatOptions.builder()
                             .responseMimeType("application/json")
                             .responseSchema(questionsResponseSchema))
-                    .user(u -> {
-                        u.text(prompt);
-                        if (pdfMedia.length > 0) u.media(pdfMedia);
-                    })
+                    .user(u -> u.text(prompt))
                     .call()
                     .entity(ExamQuestionsResponse.class);
         } catch (Exception e) {
             throw AiGenerationSupport.failure(log, "EXAM", "PROVIDER_REQUEST",
-                "AI request failed, please retry with fewer or smaller PDFs.", e);
+                "AI request failed, please retry with fewer flashcards.", e);
         }
 
         try {
@@ -129,7 +124,7 @@ public class AiExamService {
         }
     }
 
-    private String buildGenerationPrompt(String cardContent, String docContent, String pdfListing,
+    private String buildGenerationPrompt(String cardContent,
                                          int count, ExamQuestionSize size, String additionalInstructions) {
         String sizeInstruction = switch (size) {
             case SHORT -> "Each question should require a brief recall or definition answer (1–2 sentences, ~50 words).";
@@ -139,10 +134,8 @@ public class AiExamService {
         };
 
         String cardSection = cardContent.isBlank() ? "(none)" : cardContent;
-        String docSection  = docContent.isBlank()  ? "(none)" : docContent;
-        String pdfSection  = pdfListing.isBlank()  ? "(none)" : pdfListing;
 
-        return "You are a study assistant. Generate %d exam questions based on the source material below.\n\n".formatted(count)
+        return "You are a study assistant. Generate %d exam questions based on the source flashcards below.\n\n".formatted(count)
             + AiGenerationSupport.languageSection("question text and expectedAnswerHints") + "\n"
             + "QUESTION DEPTH:\n%s\n\n".formatted(sizeInstruction)
             + AiGenerationSupport.topicFocusSection() + "\n"
@@ -151,12 +144,10 @@ public class AiExamService {
             + "GENERAL RULES:\n"
             + "- Each question stands alone — do not reference \"the text\" or \"the document\".\n"
             + "- Test understanding, not exact wording.\n"
-            + "- Use all supplied sources (flashcards, text documents, and attached PDFs) consistently with the coverage plan.\n"
+            + "- Use all supplied flashcards consistently with the coverage plan.\n"
             + "- For each question, provide 'expectedAnswerHints' which is a 2–3 sentence rubric\n"
             + "  describing what a perfect answer should contain. This rubric is never shown to the user.\n\n"
-            + "=== FLASHCARDS ===\n%s\n\n".formatted(cardSection)
-            + "=== DOCUMENTS ===\n%s\n\n".formatted(docSection)
-            + "=== ATTACHED PDFs ===\n%s\n".formatted(pdfSection)
+            + "=== FLASHCARDS ===\n%s\n".formatted(cardSection)
             + AiInstructionSupport.section(additionalInstructions);
     }
 

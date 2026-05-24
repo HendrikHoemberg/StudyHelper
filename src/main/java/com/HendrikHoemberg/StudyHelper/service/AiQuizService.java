@@ -62,33 +62,31 @@ public class AiQuizService {
 
     public List<QuizQuestion> generate(
             List<Flashcard> flashcards,
-            List<DocumentInput> documents,
             int count,
             QuizQuestionMode mode,
             Difficulty difficulty) {
-        return generate(flashcards, documents, count, mode, difficulty, null);
+        return generate(flashcards, count, mode, difficulty, null);
     }
 
     public List<QuizQuestion> generate(
             List<Flashcard> flashcards,
-            List<DocumentInput> documents,
             int count,
             QuizQuestionMode mode,
             Difficulty difficulty,
             String additionalInstructions) {
-        String cardContent = AiGenerationSupport.cards(flashcards);
-        String docContent  = AiGenerationSupport.textDocuments(documents);
-        String pdfListing  = AiGenerationSupport.pdfListing(documents);
-        Media[] pdfMedia   = AiGenerationSupport.pdfMedia(documents);
+        if (flashcards == null || flashcards.isEmpty()) {
+            throw new IllegalArgumentException("Quiz generation requires at least one flashcard.");
+        }
 
-        if (cardContent.isBlank() && docContent.isBlank() && pdfMedia.length == 0) {
-            throw new IllegalArgumentException("Selected sources contain no usable text or PDFs. Pick a deck, a document with extractable content, or a PDF in full-document mode.");
+        String cardContent = AiGenerationSupport.cards(flashcards);
+        if (cardContent.isBlank()) {
+            throw new IllegalArgumentException("Quiz generation requires at least one flashcard.");
         }
 
         int mcqCount = count / 2;
         int tfCount = count - mcqCount;
 
-        String prompt = buildPrompt(cardContent, docContent, pdfListing, count, mode, difficulty, mcqCount, tfCount, additionalInstructions);
+        String prompt = buildPrompt(cardContent, count, mode, difficulty, mcqCount, tfCount, additionalInstructions);
 
         QuizQuestionsResponse response;
         try {
@@ -97,15 +95,12 @@ public class AiQuizService {
                 .options(GoogleGenAiChatOptions.builder()
                     .responseMimeType("application/json")
                     .responseSchema(responseSchema))
-                .user(u -> {
-                    u.text(prompt);
-                    if (pdfMedia.length > 0) u.media(pdfMedia);
-                })
+                .user(u -> u.text(prompt))
                 .call()
                 .entity(QuizQuestionsResponse.class);
         } catch (Exception e) {
             throw AiGenerationSupport.failure(log, "QUIZ", "PROVIDER_REQUEST",
-                "AI request failed, please retry with fewer or smaller PDFs.", e);
+                "AI request failed, please retry with fewer flashcards.", e);
         }
 
         try {
@@ -226,7 +221,7 @@ public class AiQuizService {
         return mixed;
     }
 
-    private String buildPrompt(String cardContent, String docContent, String pdfListing,
+    private String buildPrompt(String cardContent,
                                 int count, QuizQuestionMode mode, Difficulty difficulty,
                                 int mcqCount, int tfCount, String additionalInstructions) {
         String modeDescription = switch (mode) {
@@ -280,10 +275,8 @@ public class AiQuizService {
             """;
 
         String cardSection = cardContent.isBlank() ? "(none)" : cardContent;
-        String docSection  = docContent.isBlank()  ? "(none)" : docContent;
-        String pdfSection  = pdfListing.isBlank()  ? "(none)" : pdfListing;
 
-        return "You are a study assistant. Generate %d %s based on the source material below.\n\n".formatted(count, modeDescription)
+        return "You are a study assistant. Generate %d %s based on the source flashcards below.\n\n".formatted(count, modeDescription)
             + AiGenerationSupport.languageSection("question text, answer options, hints") + "\n"
             + "DIFFICULTY: %s\n\n".formatted(difficultyInstruction)
             + AiGenerationSupport.topicFocusSection() + "\n"
@@ -296,11 +289,8 @@ public class AiQuizService {
             + "- Each question stands alone — do not reference \"the text\" or \"the document\".\n"
             + "- correctOptionIndices entries are 0-based.\n"
             + "- Vary which option(s) are correct across questions.\n"
-            + "- Test understanding, not exact wording.\n"
-            + "- Use the attached PDF documents (including their figures, diagrams, and tables) as primary source material for question generation.\n\n"
-            + "=== FLASHCARDS ===\n%s\n\n".formatted(cardSection)
-            + "=== DOCUMENTS ===\n%s\n\n".formatted(docSection)
-            + "=== ATTACHED PDFs ===\n%s\n".formatted(pdfSection)
+            + "- Test understanding, not exact wording.\n\n"
+            + "=== FLASHCARDS ===\n%s\n".formatted(cardSection)
             + AiInstructionSupport.section(additionalInstructions);
     }
 }

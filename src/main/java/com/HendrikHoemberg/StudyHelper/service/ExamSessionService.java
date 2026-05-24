@@ -76,7 +76,6 @@ public class ExamSessionService {
 
         List<ExamQuestion> questions = aiExamService.generate(
             input.flashcards(),
-            input.documents(),
             qCount,
             questionSize,
             additionalInstructions
@@ -125,43 +124,21 @@ public class ExamSessionService {
                                                        List<Long> fileIds,
                                                        Map<Long, DocumentMode> pdfMode,
                                                        User user) throws Exception {
-        if (deckIds.isEmpty() && fileIds.isEmpty()) {
-            throw new IllegalArgumentException("Please select at least one source.");
+        if (!fileIds.isEmpty()) {
+            throw new IllegalArgumentException("Exams can only be generated from card decks.");
+        }
+        if (deckIds.isEmpty()) {
+            throw new IllegalArgumentException("Please select at least one deck.");
         }
 
         List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(deckIds, user);
         List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
-        List<DocumentInput> documents = new ArrayList<>();
         List<String> sourceNames = new ArrayList<>();
         decks.forEach(d -> sourceNames.add(d.getName()));
 
-        long totalChars = 0;
-        for (Long fileId : fileIds) {
-            FileEntry file = fileEntryService.getByIdAndUser(fileId, user);
-            if (StudySourceSupport.isPdf(file) && !documentExtractionService.isSupported(file)) {
-                throw new IllegalArgumentException("Please select a supported PDF under 10 MB.");
-            }
-            DocumentMode docMode = DocumentModeResolver.resolve(file, pdfMode);
-            switch (docMode) {
-                case TEXT -> {
-                    String text = StudySourceSupport.requireExtractedText(documentExtractionService, file);
-                    documents.add(new TextDocument(file.getOriginalFilename(), text));
-                    totalChars += text.length();
-                }
-                case FULL_PDF -> documents.add(new PdfDocument(file.getOriginalFilename(),
-                    documentExtractionService.loadResource(file)));
-            }
-            sourceNames.add(file.getOriginalFilename());
-        }
-
-        if (totalChars > StudySourceSupport.MAX_SELECTION_CHARS) {
-            throw new IllegalArgumentException("Selection too large — please deselect some sources.");
-        }
-
-        return new GenerationInput(flashcards, documents, sourceNames);
+        return new GenerationInput(flashcards, sourceNames);
     }
 
     private record GenerationInput(List<Flashcard> flashcards,
-                                   List<DocumentInput> documents,
                                    List<String> sourceNames) {}
 }

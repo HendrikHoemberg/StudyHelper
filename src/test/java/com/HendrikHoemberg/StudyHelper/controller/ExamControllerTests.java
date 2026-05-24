@@ -214,7 +214,7 @@ class ExamControllerTests {
             any(), anyInt(), any(), any(), any()
         );
         verify(aiRequestQuotaService, never()).checkAndRecord(any());
-        verify(aiExamService, never()).generate(anyList(), anyList(), anyInt(), any(), any());
+        verify(aiExamService, never()).generate(anyList(), anyInt(), any(), any());
     }
 
     @Test

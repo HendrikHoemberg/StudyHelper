@@ -1,21 +1,17 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.Difficulty;
-import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
 import com.HendrikHoemberg.StudyHelper.dto.GeneratedQuizQuestion;
-import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.QuestionType;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionMode;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionsResponse;
-import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
-import org.springframework.core.io.ByteArrayResource;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -91,7 +87,7 @@ class AiQuizServiceTests {
             mcq("Q1", 0), mcq("Q2", 1), mcq("Q3", 2), mcq("Q4", 3), mcq("Q5", 0)
         ));
 
-        List<QuizQuestion> result = service.generate(cards(3), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
+        List<QuizQuestion> result = service.generate(cards(3), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
 
         assertThat(result).hasSize(5);
         assertThat(result).allMatch(q -> q.type() == QuestionType.MULTIPLE_CHOICE);
@@ -105,7 +101,7 @@ class AiQuizServiceTests {
             tf("Q1", 0), tf("Q2", 1), tf("Q3", 0)
         ));
 
-        List<QuizQuestion> result = service.generate(cards(3), List.of(), 3, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
+        List<QuizQuestion> result = service.generate(cards(3), 3, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
 
         assertThat(result).hasSize(3);
         assertThat(result).allMatch(q -> q.type() == QuestionType.TRUE_FALSE);
@@ -118,7 +114,7 @@ class AiQuizServiceTests {
             mcq("Q1", 0), tf("Q2", 1), mcq("Q3", 2), tf("Q4", 0)
         ));
 
-        List<QuizQuestion> result = service.generate(cards(3), List.of(), 4, QuizQuestionMode.MIXED, Difficulty.MEDIUM);
+        List<QuizQuestion> result = service.generate(cards(3), 4, QuizQuestionMode.MIXED, Difficulty.MEDIUM);
 
         assertThat(result).hasSize(4);
         assertThat(result).anyMatch(q -> q.type() == QuestionType.MULTIPLE_CHOICE);
@@ -132,7 +128,7 @@ class AiQuizServiceTests {
             tf("Q4", 0), tf("Q5", 1), tf("Q6", 0)
         ));
 
-        List<QuizQuestion> result = service.generate(cards(6), List.of(), 6, QuizQuestionMode.MIXED, Difficulty.MEDIUM);
+        List<QuizQuestion> result = service.generate(cards(6), 6, QuizQuestionMode.MIXED, Difficulty.MEDIUM);
 
         assertThat(result).extracting(QuizQuestion::type).containsExactly(
             QuestionType.MULTIPLE_CHOICE,
@@ -150,7 +146,7 @@ class AiQuizServiceTests {
             tfLower("Q1", 0), tfLower("Q2", 1)
         ));
 
-        List<QuizQuestion> result = service.generate(cards(2), List.of(), 2, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
+        List<QuizQuestion> result = service.generate(cards(2), 2, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
 
         assertThat(result).hasSize(2);
         assertThat(result).allMatch(q -> q.options().equals(List.of("True", "False")));
@@ -162,7 +158,7 @@ class AiQuizServiceTests {
             mcqTypeless("Q1", 0), tfTypeless("Q2", 1)
         ));
 
-        List<QuizQuestion> result = service.generate(cards(2), List.of(), 2, QuizQuestionMode.MIXED, Difficulty.MEDIUM);
+        List<QuizQuestion> result = service.generate(cards(2), 2, QuizQuestionMode.MIXED, Difficulty.MEDIUM);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).type()).isEqualTo(QuestionType.MULTIPLE_CHOICE);
@@ -176,16 +172,16 @@ class AiQuizServiceTests {
             gen(QuestionType.MULTIPLE_CHOICE, "Q2", List.of("only", "two"), List.of(0))
         ));
 
-        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
+        assertThatThrownBy(() -> service.generate(cards(2), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("too few valid questions");
     }
 
     @Test
-    void generate_EmptyFlashcardsAndDocs_ThrowsIllegalArgument() {
-        assertThatThrownBy(() -> service.generate(List.of(), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
+    void generate_EmptyFlashcards_ThrowsIllegalArgument() {
+        assertThatThrownBy(() -> service.generate(List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("no usable");
+            .hasMessageContaining("requires at least one flashcard");
     }
 
     @Test
@@ -195,9 +191,9 @@ class AiQuizServiceTests {
         imageOnly.setBackText("");
         imageOnly.setFrontImageFilename("diagram.png");
 
-        assertThatThrownBy(() -> service.generate(List.of(imageOnly), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
+        assertThatThrownBy(() -> service.generate(List.of(imageOnly), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("no usable");
+            .hasMessageContaining("requires at least one flashcard");
     }
 
     @Test
@@ -210,7 +206,7 @@ class AiQuizServiceTests {
         withNull.add(cards(1).get(0));
         withNull.add(null);
 
-        List<QuizQuestion> result = service.generate(withNull, List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
+        List<QuizQuestion> result = service.generate(withNull, 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
 
         assertThat(result).hasSize(3);
     }
@@ -222,7 +218,7 @@ class AiQuizServiceTests {
             gen(QuestionType.MULTIPLE_CHOICE, "Q2", Arrays.asList("a", null, "c", "d"), List.of(0))
         ));
 
-        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
+        assertThatThrownBy(() -> service.generate(cards(2), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("too few valid questions");
     }
@@ -234,80 +230,18 @@ class AiQuizServiceTests {
             gen(QuestionType.TRUE_FALSE, "Q2", Arrays.asList(null, "False"), List.of(1))
         ));
 
-        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.TF_ONLY, Difficulty.EASY))
+        assertThatThrownBy(() -> service.generate(cards(2), 5, QuizQuestionMode.TF_ONLY, Difficulty.EASY))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("too few valid questions");
-    }
-
-    @Test
-    void generate_TextDocument_includedInPromptDocumentsSection() {
-        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
-            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
-        ));
-
-        var docs = List.<DocumentInput>of(new TextDocument("lecture.pdf", "photosynthesis is awesome"));
-        service.generate(cards(2), docs, 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
-
-        assertThat(capturedPrompt.get()).contains("=== DOCUMENTS ===");
-        assertThat(capturedPrompt.get()).contains("lecture.pdf");
-        assertThat(capturedPrompt.get()).contains("photosynthesis is awesome");
-        assertThat(capturedMedia).isEmpty();
-    }
-
-    @Test
-    void generate_PdfDocument_attachedAsMediaAndListedInPrompt() {
-        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
-            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
-        ));
-
-        var resource = new ByteArrayResource(new byte[]{0x25, 0x50, 0x44, 0x46});
-        var docs = List.<DocumentInput>of(new PdfDocument("chapter5.pdf", resource));
-        service.generate(cards(2), docs, 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
-
-        assertThat(capturedPrompt.get()).contains("=== ATTACHED PDFs ===");
-        assertThat(capturedPrompt.get()).contains("chapter5.pdf");
-        assertThat(capturedMedia).hasSize(1);
-        assertThat(capturedMedia.get(0).getMimeType().toString()).isEqualTo("application/pdf");
-    }
-
-    @Test
-    void generate_MixedTextAndPdfDocs_bothSectionsPopulated() {
-        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
-            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
-        ));
-
-        var resource = new ByteArrayResource(new byte[]{0x25, 0x50, 0x44, 0x46});
-        var docs = List.<DocumentInput>of(
-            new TextDocument("notes.md", "Mitochondria are the powerhouse"),
-            new PdfDocument("biology.pdf", resource)
-        );
-        service.generate(cards(2), docs, 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
-
-        assertThat(capturedPrompt.get()).contains("Mitochondria are the powerhouse");
-        assertThat(capturedPrompt.get()).contains("biology.pdf");
-        assertThat(capturedMedia).hasSize(1);
-    }
-
-    @Test
-    void generate_PdfOnly_NoFlashcardsNoText_DoesNotThrow() {
-        when(callSpec.entity(QuizQuestionsResponse.class)).thenReturn(wrap(
-            mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
-        ));
-
-        var resource = new ByteArrayResource(new byte[]{0x25, 0x50, 0x44, 0x46});
-        var docs = List.<DocumentInput>of(new PdfDocument("only.pdf", resource));
-
-        List<QuizQuestion> result = service.generate(List.of(), docs, 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
-        assertThat(result).hasSize(3);
     }
 
     @Test
     void generate_ProviderFailure_throwsStableRetryMessage() {
         when(callSpec.entity(QuizQuestionsResponse.class)).thenThrow(new RuntimeException("provider offline"));
 
-        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY))
+        assertThatThrownBy(() -> service.generate(cards(2), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("AI request failed, please retry with fewer or smaller PDFs.")
+            .hasMessage("AI request failed, please retry with fewer flashcards.")
             .hasCauseInstanceOf(RuntimeException.class);
     }
 
@@ -317,7 +251,7 @@ class AiQuizServiceTests {
             mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
         ));
 
-        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
+        service.generate(cards(2), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
 
         assertThat(capturedOptionsBuilder.get()).isNotNull();
         var built = (GoogleGenAiChatOptions) capturedOptionsBuilder.get().build();
@@ -331,7 +265,7 @@ class AiQuizServiceTests {
             mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
         ));
 
-        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
+        service.generate(cards(2), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
 
         String schema = ((GoogleGenAiChatOptions) capturedOptionsBuilder.get().build()).getResponseSchema();
         int ordering = schema.indexOf("propertyOrdering");
@@ -350,7 +284,7 @@ class AiQuizServiceTests {
             mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
         ));
 
-        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
+        service.generate(cards(2), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY);
 
         assertThat(capturedPrompt.get()).contains("LANGUAGE:");
         assertThat(capturedPrompt.get()).contains("Detect the dominant natural language");
@@ -364,7 +298,7 @@ class AiQuizServiceTests {
             mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
         ));
 
-        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY, "focus on diagrams");
+        service.generate(cards(2), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY, "focus on diagrams");
 
         assertThat(capturedPrompt.get()).contains("USER INSTRUCTIONS:");
         assertThat(capturedPrompt.get()).contains("focus on diagrams");
@@ -376,7 +310,7 @@ class AiQuizServiceTests {
             mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
         ));
 
-        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY, "");
+        service.generate(cards(2), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.EASY, "");
 
         assertThat(capturedPrompt.get()).doesNotContain("USER INSTRUCTIONS:");
     }
@@ -387,7 +321,7 @@ class AiQuizServiceTests {
             multiSelect("Q1", 0, 2), multiSelect("Q2", 1, 2, 3), mcq("Q3", 0)
         ));
 
-        List<QuizQuestion> result = service.generate(cards(3), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
+        List<QuizQuestion> result = service.generate(cards(3), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
 
         assertThat(result).hasSize(3);
         assertThat(result.get(0).type()).isEqualTo(QuestionType.MULTIPLE_SELECT);
@@ -402,7 +336,7 @@ class AiQuizServiceTests {
             gen(QuestionType.MULTIPLE_SELECT, "Q2", List.of("a", "b", "c", "d"), List.of(1))
         ));
 
-        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
+        assertThatThrownBy(() -> service.generate(cards(2), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("too few valid questions");
     }
@@ -414,7 +348,7 @@ class AiQuizServiceTests {
             gen(QuestionType.MULTIPLE_SELECT, "Q2", List.of("a", "b", "c", "d"), List.of(0, 1, 2, 3))
         ));
 
-        assertThatThrownBy(() -> service.generate(cards(2), List.of(), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
+        assertThatThrownBy(() -> service.generate(cards(2), 5, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("too few valid questions");
     }
@@ -425,7 +359,7 @@ class AiQuizServiceTests {
             mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
         ));
 
-        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
+        service.generate(cards(2), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
 
         assertThat(capturedPrompt.get()).contains("QUESTION-TYPE SELECTION");
         assertThat(capturedPrompt.get()).contains("NEVER collapse a multi-answer question");
@@ -438,7 +372,7 @@ class AiQuizServiceTests {
             tf("Q1", 0), tf("Q2", 1), tf("Q3", 0)
         ));
 
-        service.generate(cards(2), List.of(), 3, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
+        service.generate(cards(2), 3, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
 
         assertThat(capturedPrompt.get()).doesNotContain("QUESTION-TYPE SELECTION");
     }
@@ -449,7 +383,7 @@ class AiQuizServiceTests {
             mcq("Q1", 0), mcq("Q2", 0), mcq("Q3", 0)
         ));
 
-        service.generate(cards(2), List.of(), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
+        service.generate(cards(2), 3, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
 
         assertThat(capturedPrompt.get()).contains("PER-OPTION ANALYSIS");
         assertThat(capturedPrompt.get()).contains("fill optionAnalysis before choosing type");
@@ -461,7 +395,7 @@ class AiQuizServiceTests {
             tf("Q1", 0), tf("Q2", 1), tf("Q3", 0)
         ));
 
-        service.generate(cards(2), List.of(), 3, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
+        service.generate(cards(2), 3, QuizQuestionMode.TF_ONLY, Difficulty.EASY);
 
         assertThat(capturedPrompt.get()).contains("PER-OPTION ANALYSIS");
     }

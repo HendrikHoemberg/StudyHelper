@@ -46,8 +46,8 @@
 
             <div class="vb-source-scroll">
             <div class="vb-list">
-                <!-- Flashcards Mode: Decks Only -->
-                <th:block th:if="${#strings.toString(mode) == 'FLASHCARDS'}">
+                <!-- Decks Only (All study modes) -->
+                <th:block th:if="${#strings.toString(mode) == 'FLASHCARDS' or #strings.toString(mode) == 'QUIZ' or #strings.toString(mode) == 'EXAM'}">
                     <div th:if="${#lists.isEmpty(deckGroups)}" class="sh-empty" style="padding:1.25rem 1rem;">
                         <p class="sh-empty-text mb-1" th:text="#{wizard.source.no-decks}">No decks available</p>
                     </div>
@@ -116,8 +116,8 @@
                     </div>
                 </th:block>
 
-                <!-- Quiz/Exam Mode: Decks + Files -->
-                <th:block th:if="${#strings.toString(mode) == 'QUIZ' or #strings.toString(mode) == 'EXAM'}">
+                <!-- Quiz/Exam Mode: Decks + Files (Deprecated, restricted to Decks above) -->
+                <th:block th:if="${false}">
                     <div th:if="${#lists.isEmpty(quizSourceTree)}" class="sh-empty" style="padding:1.25rem 1rem;">
                         <p class="sh-empty-text mb-1" th:text="#{wizard.source.no-sources}">No sources available</p>
                     </div>
