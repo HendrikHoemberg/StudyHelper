@@ -981,6 +981,24 @@ class UiResourceRegressionTests {
             .contains("data-ai-generation-error");
     }
 
+    @Test
+    void flashcardGeneratorDesktopHidesSidebarAndCentersConstrainedSetupPanels() throws IOException {
+        String styles = resource("static/css/styles.css");
+        String page = file("src/main/resources/templates/flashcard-generator-page.html");
+        String appJs = resource("static/js/app.js");
+
+        assertThat(page)
+            .contains("class=\"sh-explorer-shell sh-hide-sidebar\"");
+
+        assertThat(appJs)
+            .contains("document.querySelector('.sh-flashcard-generator') !== null");
+
+        assertThat(styles)
+            .contains(".sh-explorer-detail:has(.sh-flashcard-generator)")
+            .contains("max-width: min(70%, 80rem)")
+            .contains("margin-inline: auto");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }

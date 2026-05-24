@@ -215,7 +215,8 @@ document.body.addEventListener('htmx:afterSwap', () => {
     const shell = document.querySelector('.sh-explorer-shell');
     if (shell) {
         const hasStudy = document.getElementById('study-session-content') !== null ||
-                         document.getElementById('quiz-session-content') !== null;
+                         document.getElementById('quiz-session-content') !== null ||
+                         document.querySelector('.sh-flashcard-generator') !== null;
         shell.classList.toggle('sh-hide-sidebar', hasStudy);
     }
 

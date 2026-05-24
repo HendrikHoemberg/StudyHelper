@@ -677,7 +677,8 @@ a {
         display: none;
     }
 
-    .sh-explorer-detail:has(.sh-study-setup-card) {
+    .sh-explorer-detail:has(.sh-study-setup-card),
+    .sh-explorer-detail:has(.sh-flashcard-generator) {
         width: 100%;
         max-width: min(70%, 80rem);
         margin-inline: auto;
@@ -685,7 +686,8 @@ a {
 
     /* Fluid expansion on zoomed/scaled desktops */
     @media (min-width: 769px) and (max-width: 1300px) {
-        .sh-explorer-detail:has(.sh-study-setup-card) {
+        .sh-explorer-detail:has(.sh-study-setup-card),
+        .sh-explorer-detail:has(.sh-flashcard-generator) {
             max-width: min(90%, 80rem);
         }
     }
