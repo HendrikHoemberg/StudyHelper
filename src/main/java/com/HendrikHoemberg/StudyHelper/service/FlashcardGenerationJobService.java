@@ -103,8 +103,8 @@ public class FlashcardGenerationJobService {
     }
 
     void runJob(Long jobId) {
-        FlashcardGenerationJob job = markRunning(jobId);
         try {
+            FlashcardGenerationJob job = markRunning(jobId);
             User user = job.getUser();
             List<FlashcardChunk> chunks = chunksForJob(job, user);
             List<GeneratedFlashcard> generated = aiFlashcardService.generateChunks(
@@ -114,6 +114,8 @@ public class FlashcardGenerationJobService {
             );
             var deck = persistenceService.saveGeneratedCards(job.getDestination(), job.getExistingDeckId(), job.getNewDeckFolderId(), job.getNewDeckName(), user, generated);
             markSucceeded(jobId, deck.getId(), generated.size());
+        } catch (JobCancelledException ex) {
+            // Keep it CANCELLED, do not mark as FAILED
         } catch (Exception ex) {
             markFailed(jobId, ex.getMessage() == null ? "Flashcard generation failed." : ex.getMessage());
         }
@@ -123,6 +125,9 @@ public class FlashcardGenerationJobService {
     FlashcardGenerationJob markRunning(Long jobId) {
         return transactionTemplate.execute(status -> {
             FlashcardGenerationJob job = jobRepository.findById(jobId).orElseThrow();
+            if (job.getStatus() == FlashcardGenerationJobStatus.CANCELLED) {
+                throw new JobCancelledException("Job was cancelled");
+            }
             job.setStatus(FlashcardGenerationJobStatus.RUNNING);
             job.setStartedAt(Instant.now());
             return job;
@@ -145,6 +150,9 @@ public class FlashcardGenerationJobService {
     void updateCompletedChunks(Long jobId, int completedChunkCount) {
         transactionTemplate.executeWithoutResult(status -> {
             FlashcardGenerationJob job = jobRepository.findById(jobId).orElseThrow();
+            if (job.getStatus() == FlashcardGenerationJobStatus.CANCELLED) {
+                throw new JobCancelledException("Job was cancelled");
+            }
             job.setCompletedChunkCount(Math.min(completedChunkCount, job.getChunkCount()));
         });
     }
@@ -156,6 +164,13 @@ public class FlashcardGenerationJobService {
             job.setStatus(FlashcardGenerationJobStatus.FAILED);
             job.setFailureMessage(message.length() > 1000 ? message.substring(0, 1000) : message);
             job.setFinishedAt(Instant.now());
+
+            // Refund unused quota
+            int refundAmount = job.getChargedRequestCost() - job.getCompletedChunkCount();
+            if (refundAmount > 0) {
+                aiRequestQuotaService.refund(job.getUser(), refundAmount);
+                job.setChargedRequestCost(job.getCompletedChunkCount());
+            }
         });
     }
 
@@ -283,5 +298,30 @@ public class FlashcardGenerationJobService {
     private static String decodeSnapshotText(String value) {
         if (value == null || value.isEmpty()) return "";
         return new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8);
+    }
+
+    @Transactional
+    public void cancelJob(Long jobId, User user) {
+        transactionTemplate.executeWithoutResult(status -> {
+            FlashcardGenerationJob job = jobRepository.findByIdAndUser(jobId, user)
+                .orElseThrow(() -> new ResourceNotFoundException("Generation job not found"));
+            if (job.getStatus() == FlashcardGenerationJobStatus.QUEUED || job.getStatus() == FlashcardGenerationJobStatus.RUNNING) {
+                job.setStatus(FlashcardGenerationJobStatus.CANCELLED);
+                job.setFinishedAt(Instant.now());
+
+                // Refund quota
+                int refundAmount = job.getChargedRequestCost() - job.getCompletedChunkCount();
+                if (refundAmount > 0) {
+                    aiRequestQuotaService.refund(job.getUser(), refundAmount);
+                    job.setChargedRequestCost(job.getCompletedChunkCount());
+                }
+            }
+        });
+    }
+
+    public static class JobCancelledException extends RuntimeException {
+        public JobCancelledException(String message) {
+            super(message);
+        }
     }
 }

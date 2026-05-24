@@ -540,4 +540,20 @@ class FlashcardGenerationControllerTests {
         assertThat(view).isEqualTo("fragments/flashcard-generator :: progress");
         assertThat(response.getHeader("HX-Trigger")).isEqualTo("refresh-quota");
     }
+
+    @Test
+    void cancelJob_cancelsJobAndRefreshesQuota() {
+        job.setStatus(FlashcardGenerationJobStatus.CANCELLED);
+        when(jobService.getJob(77L, user)).thenReturn(job);
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.cancelJob(77L, model, () -> "alice", response);
+
+        assertThat(view).isEqualTo("fragments/flashcard-generator :: progress");
+        assertThat(model.get("generationJob")).isEqualTo(job);
+        assertThat(response.getHeader("HX-Trigger")).isEqualTo("refresh-quota");
+        verify(jobService).cancelJob(77L, user);
+    }
 }

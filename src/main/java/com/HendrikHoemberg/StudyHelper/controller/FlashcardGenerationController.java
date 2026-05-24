@@ -176,6 +176,19 @@ public class FlashcardGenerationController {
         return "fragments/flashcard-generator :: progress";
     }
 
+    @PostMapping("/flashcards/generate/jobs/{jobId}/cancel")
+    public String cancelJob(@PathVariable Long jobId,
+                            Model model,
+                            Principal principal,
+                            HttpServletResponse response) {
+        User user = userService.getByUsername(principal.getName());
+        jobService.cancelJob(jobId, user);
+        FlashcardGenerationJob job = jobService.getJob(jobId, user);
+        model.addAttribute("generationJob", job);
+        response.addHeader("HX-Trigger", "refresh-quota");
+        return "fragments/flashcard-generator :: progress";
+    }
+
     @PostMapping("/flashcards/generate/preflight")
     public String preflightGenerate(@RequestParam(name = "fileId", required = false) List<Long> fileIds,
                                     @RequestParam(defaultValue = "TEXT") DocumentMode documentMode,

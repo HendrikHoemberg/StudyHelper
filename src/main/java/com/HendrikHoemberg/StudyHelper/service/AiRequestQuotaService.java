@@ -55,6 +55,18 @@ public class AiRequestQuotaService {
         aiRequestUsageRepository.save(usage);
     }
 
+    @Transactional
+    public void refund(User user, int requestCount) {
+        if (requestCount < 1) {
+            return;
+        }
+        LocalDate today = LocalDate.now(clock);
+        aiRequestUsageRepository.findByUserAndUsageDateForUpdate(user, today).ifPresent(usage -> {
+            usage.setRequestCount(Math.max(0, usage.getRequestCount() - requestCount));
+            aiRequestUsageRepository.save(usage);
+        });
+    }
+
     private AiRequestUsage lockOrCreateUsageRow(User user, LocalDate today) {
         return aiRequestUsageRepository.findByUserAndUsageDateForUpdate(user, today)
             .orElseGet(() -> createAndLockUsageRow(user, today));

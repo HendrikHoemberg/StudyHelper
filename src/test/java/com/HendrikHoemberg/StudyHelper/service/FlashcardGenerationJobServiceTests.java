@@ -294,6 +294,78 @@ class FlashcardGenerationJobServiceTests {
         assertThat(stillAllowed.getStatus()).isEqualTo(FlashcardGenerationJobStatus.RUNNING);
     }
 
+    @Test
+    void cancelJob_updatesStatusToCancelledAndRefundsQuota() {
+        FlashcardGenerationJob job = new FlashcardGenerationJob();
+        job.setId(1L);
+        job.setUser(user);
+        job.setStatus(FlashcardGenerationJobStatus.RUNNING);
+        job.setChargedRequestCost(5);
+        job.setCompletedChunkCount(2);
+        when(jobRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(job));
+
+        service.cancelJob(1L, user);
+
+        assertThat(job.getStatus()).isEqualTo(FlashcardGenerationJobStatus.CANCELLED);
+        assertThat(job.getFinishedAt()).isNotNull();
+        assertThat(job.getChargedRequestCost()).isEqualTo(2);
+        verify(aiRequestQuotaService).refund(user, 3);
+    }
+
+    @Test
+    void markRunning_throwsJobCancelledException_ifJobCancelled() {
+        FlashcardGenerationJob job = new FlashcardGenerationJob();
+        job.setId(1L);
+        job.setStatus(FlashcardGenerationJobStatus.CANCELLED);
+        when(jobRepository.findById(1L)).thenReturn(Optional.of(job));
+
+        assertThatThrownBy(() -> service.markRunning(1L))
+            .isInstanceOf(FlashcardGenerationJobService.JobCancelledException.class);
+    }
+
+    @Test
+    void updateCompletedChunks_throwsJobCancelledException_ifJobCancelled() {
+        FlashcardGenerationJob job = new FlashcardGenerationJob();
+        job.setId(1L);
+        job.setStatus(FlashcardGenerationJobStatus.CANCELLED);
+        when(jobRepository.findById(1L)).thenReturn(Optional.of(job));
+
+        assertThatThrownBy(() -> service.updateCompletedChunks(1L, 3))
+            .isInstanceOf(FlashcardGenerationJobService.JobCancelledException.class);
+    }
+
+    @Test
+    void runJob_terminatesGracefully_onJobCancelledException() {
+        FlashcardGenerationJob job = new FlashcardGenerationJob();
+        job.setId(1L);
+        job.setUser(user);
+        job.setStatus(FlashcardGenerationJobStatus.CANCELLED);
+        when(jobRepository.findById(1L)).thenReturn(Optional.of(job));
+
+        service.runJob(1L);
+
+        // Should not fail and should not mark job as failed
+        assertThat(job.getStatus()).isEqualTo(FlashcardGenerationJobStatus.CANCELLED);
+    }
+
+    @Test
+    void markFailed_refundsUnusedQuota() {
+        FlashcardGenerationJob job = new FlashcardGenerationJob();
+        job.setId(1L);
+        job.setUser(user);
+        job.setChargedRequestCost(5);
+        job.setCompletedChunkCount(2);
+        when(jobRepository.findById(1L)).thenReturn(Optional.of(job));
+
+        service.markFailed(1L, "Something went wrong");
+
+        assertThat(job.getStatus()).isEqualTo(FlashcardGenerationJobStatus.FAILED);
+        assertThat(job.getFailureMessage()).isEqualTo("Something went wrong");
+        assertThat(job.getFinishedAt()).isNotNull();
+        assertThat(job.getChargedRequestCost()).isEqualTo(2);
+        verify(aiRequestQuotaService).refund(user, 3);
+    }
+
     private TransactionTemplate testTransactionTemplate() {
         return new TransactionTemplate(new PlatformTransactionManager() {
             @Override

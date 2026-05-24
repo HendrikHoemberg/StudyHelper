@@ -1110,9 +1110,33 @@ document.body.addEventListener('click', (e) => {
         });
         updateAiFlashcardDestinationPanels();
     }
-    if (e.target.closest('#ai-gen-abort-btn')) {
-        const form = document.querySelector('form.sh-ai-flashcard-form');
-        if (form) htmx.trigger(form, 'htmx:abort');
+    const abortBtn = e.target.closest('#ai-gen-abort-btn');
+    if (abortBtn) {
+        const jobId = abortBtn.dataset.jobId;
+        if (jobId) {
+            e.preventDefault();
+            shConfirm({
+                title: t('flashcard-gen.cancel-confirm-title') || 'Cancel AI Generation',
+                message: t('flashcard-gen.cancel-confirm-msg') || 'Are you sure you want to cancel the AI generation?',
+                danger: true,
+                confirmText: t('flashcard-gen.cancel-confirm-yes') || 'Yes, cancel',
+                cancelText: t('flashcard-gen.cancel-confirm-no') || 'No, continue'
+            }).then((ok) => {
+                if (!ok) return;
+                fetch(`/flashcards/generate/jobs/${jobId}/cancel`, {
+                    method: 'POST',
+                    headers: getCsrfHeaders()
+                });
+                const form = document.querySelector('form.sh-ai-flashcard-form');
+                if (form) htmx.trigger(form, 'htmx:abort');
+
+                const progressTarget = document.getElementById('ai-flashcard-progress-target');
+                if (progressTarget) htmx.trigger(progressTarget, 'htmx:abort');
+            });
+        } else {
+            const form = document.querySelector('form.sh-ai-flashcard-form');
+            if (form) htmx.trigger(form, 'htmx:abort');
+        }
     }
     const withInstructionsBtn = e.target.closest('#ai-flashcard-submit-with-instructions');
     if (withInstructionsBtn) {
@@ -1163,6 +1187,7 @@ document.body.addEventListener('htmx:beforeRequest', (event) => {
 
 document.body.addEventListener('htmx:afterRequest', (event) => {
     if (!event.detail.elt?.matches?.('form.sh-ai-flashcard-form')) return;
+    if (event.detail.successful) return; // Keep modal open during polling
     const modal = document.getElementById('ai-generating-modal');
     if (modal) modal.style.display = 'none';
 });
@@ -1211,7 +1236,7 @@ function hideAiGenerationModal() {
 }
 
 function isAiGenerationRequest(source) {
-    return source?.matches?.('form.sh-ai-flashcard-form, form.sh-study-setup-card');
+    return source?.matches?.('form.sh-ai-flashcard-form, form.sh-study-setup-card, #ai-flashcard-progress-target');
 }
 
 function showAiGenerationFailure(message, technicalDetails) {

@@ -27,8 +27,8 @@
           id="ai-flashcard-form"
           method="post"
           hx-post="/flashcards/generate"
-          hx-target="#explorer-detail"
-          hx-swap="innerHTML swap:500ms"
+          hx-target="#ai-flashcard-progress-target"
+          hx-swap="innerHTML"
           hx-indicator="#ai-generating-modal"
           hx-sync="this:drop"
           hx-disabled-elt="#ai-flashcard-submit">
@@ -243,22 +243,53 @@
             </div>
         </div>
 
-        <div th:fragment="progress" class="sh-card sh-ai-generation-progress"
+        <div th:fragment="progress"
+             id="ai-flashcard-progress-target"
              th:if="${generationJob != null}"
-             th:attr="hx-get=@{/flashcards/generate/jobs/{id}(id=${generationJob.id})}"
+             th:attr="hx-get=${(#strings.toString(generationJob.status) == 'QUEUED' or #strings.toString(generationJob.status) == 'RUNNING') ? '/flashcards/generate/jobs/' + generationJob.id : null}"
              hx-trigger="every 2s"
              hx-target="this"
              hx-swap="outerHTML">
-            <div class="sh-card-body">
-                <div class="sh-section-title" th:text="#{flashcard-gen.progress.title}">Generating flashcards</div>
-                <p class="sh-setting-hint"
-                   th:text="#{flashcard-gen.progress.detail(${generationJob.completedChunkCount}, ${generationJob.chunkCount})}">
-                    Processing chunks...
-                </p>
-                <div th:if="${#strings.toString(generationJob.status) == 'FAILED'}" class="sh-alert sh-alert-danger">
-                    <div class="sh-alert-body" th:text="${generationJob.failureMessage}">Generation failed.</div>
-                </div>
+
+            <!-- Out of Band swaps to update the preexisting modal overlay -->
+            <div id="ai-gen-title" hx-swap-oob="true" class="sh-ai-gen-title" th:text="#{flashcard-gen.progress.title}">Generating flashcards</div>
+
+            <div id="ai-gen-subtitle" hx-swap-oob="true" class="sh-ai-gen-subtitle"
+                 th:text="#{flashcard-gen.progress.detail(${generationJob.completedChunkCount}, ${generationJob.chunkCount})}">
+                 Processing chunks...
             </div>
+
+            <button type="button" id="ai-gen-abort-btn" hx-swap-oob="true" class="sh-btn sh-btn-secondary sh-btn-sm"
+                    th:attr="data-job-id=${generationJob.id}"
+                    th:text="#{flashcard-gen.generating-cancel}">Cancel</button>
+
+            <!-- Script block to handle completion alerts and modal closing -->
+            <script th:if="${#strings.toString(generationJob.status) == 'FAILED' or #strings.toString(generationJob.status) == 'CANCELLED'}" th:inline="javascript">
+                /*<![CDATA[*/
+                (function() {
+                    var failureMessage = /*[[${generationJob.failureMessage}]]*/ 'Generation failed.';
+                    var status = /*[[${#strings.toString(generationJob.status)}]]*/ 'FAILED';
+
+                    var modal = document.getElementById('ai-generating-modal');
+                    if (modal) modal.style.display = 'none';
+
+                    if (status === 'CANCELLED') {
+                        shAlert({
+                            title: 'AI generation cancelled',
+                            message: 'The AI generation request was cancelled.',
+                            confirmText: 'OK'
+                        });
+                    } else {
+                        shAlert({
+                            title: 'AI generation failed',
+                            message: failureMessage || 'Please try again. If this keeps happening, reduce the selected sources or switch PDF mode.',
+                            confirmText: 'Try again',
+                            danger: true
+                        });
+                    }
+                })();
+                /*]]>*/
+            </script>
         </div>
         </div>
         <div class="sh-wizard-footer">
@@ -294,6 +325,8 @@
             <button type="button" class="sh-btn sh-btn-secondary sh-btn-sm" id="ai-gen-abort-btn" th:text="#{flashcard-gen.generating-cancel}">Cancel</button>
         </div>
     </div>
+
+    <div id="ai-flashcard-progress-target" style="display:none;"></div>
 </div>
 
 </body>
