@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -101,6 +102,67 @@ class DocumentExtractionServiceTests {
         assertThat(service.isSupported(entry)).isTrue();
     }
 
+    @Test
+    void pdfPageCount_returnsNumberOfPages() throws Exception {
+        FileEntry file = pdfFile("pages.pdf", 3);
+
+        assertThat(service.pdfPageCount(file)).isEqualTo(3);
+    }
+
+    @Test
+    void extractPdfTextPages_returnsOneEntryPerPage() throws Exception {
+        FileEntry file = pdfFileWithText("pages.pdf", "Alpha", "Beta");
+
+        List<String> pages = service.extractPdfTextPages(file);
+
+        assertThat(pages).hasSize(2);
+        assertThat(pages.get(0)).contains("Alpha");
+        assertThat(pages.get(1)).contains("Beta");
+    }
+
+    @Test
+    void loadPdfPageRangeResource_returnsOnlyRequestedPages() throws Exception {
+        FileEntry file = pdfFile("pages.pdf", 4);
+
+        org.springframework.core.io.Resource range = service.loadPdfPageRangeResource(file, 2, 3);
+
+        try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(range.getContentAsByteArray())) {
+            assertThat(doc.getNumberOfPages()).isEqualTo(2);
+        }
+    }
+
+    @Test
+    void pdfPageCount_nonPdf_throwsIllegalArgument() {
+        FileEntry entry = fileEntry("notes.txt", "stored.txt", 100L);
+        assertThatThrownBy(() -> service.pdfPageCount(entry))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Expected pdf file");
+    }
+
+    @Test
+    void extractPdfTextPages_nonPdf_throwsIllegalArgument() {
+        FileEntry entry = fileEntry("notes.md", "stored.md", 100L);
+        assertThatThrownBy(() -> service.extractPdfTextPages(entry))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Expected pdf file");
+    }
+
+    @Test
+    void loadPdfPageRangeResource_invalidRange_throwsIllegalArgument() throws Exception {
+        FileEntry file = pdfFile("invalid.pdf", 3);
+        assertThatThrownBy(() -> service.loadPdfPageRangeResource(file, 4, 2))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Invalid PDF page range.");
+    }
+
+    @Test
+    void loadPdfPageRangeResource_nonPdf_throwsIllegalArgument() {
+        FileEntry entry = fileEntry("notes.txt", "stored.txt", 100L);
+        assertThatThrownBy(() -> service.loadPdfPageRangeResource(entry, 1, 1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Expected pdf file");
+    }
+
     private FileEntry fileEntry(String originalFilename, String storedFilename, long sizeBytes) {
         FileEntry entry = new FileEntry();
         entry.setOriginalFilename(originalFilename);
@@ -164,5 +226,47 @@ class DocumentExtractionServiceTests {
             }
             doc.save(dest.toFile());
         }
+    }
+
+    private FileEntry pdfFile(String filename, int pageCount) throws IOException {
+        Path path = tempDir.resolve(filename);
+        try (PDDocument doc = new PDDocument()) {
+            for (int i = 0; i < pageCount; i++) {
+                PDPage page = new PDPage();
+                doc.addPage(page);
+                try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                    cs.beginText();
+                    cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                    cs.newLineAtOffset(50, 700);
+                    cs.showText("Page " + (i + 1));
+                    cs.endText();
+                }
+            }
+            doc.save(path.toFile());
+        }
+        FileEntry entry = fileEntry(filename, filename, Files.size(path));
+        when(fileStorageService.resolvePath(filename)).thenReturn(path);
+        return entry;
+    }
+
+    private FileEntry pdfFileWithText(String filename, String... pageTexts) throws IOException {
+        Path path = tempDir.resolve(filename);
+        try (PDDocument doc = new PDDocument()) {
+            for (String text : pageTexts) {
+                PDPage page = new PDPage();
+                doc.addPage(page);
+                try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                    cs.beginText();
+                    cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                    cs.newLineAtOffset(50, 700);
+                    cs.showText(text);
+                    cs.endText();
+                }
+            }
+            doc.save(path.toFile());
+        }
+        FileEntry entry = fileEntry(filename, filename, Files.size(path));
+        when(fileStorageService.resolvePath(filename)).thenReturn(path);
+        return entry;
     }
 }
