@@ -15,14 +15,14 @@ import java.util.List;
 @Service
 public class FlashcardGenerationPlanService {
 
-    static final int WARNING_THRESHOLD = 11;
-    static final int HIGH_THRESHOLD = 31;
-    static final int MAX_PAGES_PER_CHUNK = 2;
-    static final int MAX_WORDS_PER_CHUNK = 1500;
-    static final int SECONDS_LOW_PER_CHUNK = 8;
-    static final int SECONDS_HIGH_PER_CHUNK = 12;
-    static final int CARDS_LOW_PER_CHUNK = 5;
-    static final int CARDS_HIGH_PER_CHUNK = 15;
+    static final int WARNING_THRESHOLD = 5;
+    static final int HIGH_THRESHOLD = 13;
+    static final int MAX_PAGES_PER_CHUNK = 5;
+    static final int MAX_WORDS_PER_CHUNK = 4000;
+    static final int SECONDS_LOW_PER_CHUNK = 12;
+    static final int SECONDS_HIGH_PER_CHUNK = 20;
+    static final int CARDS_LOW_PER_CHUNK = 12;
+    static final int CARDS_HIGH_PER_CHUNK = 35;
 
     private final DocumentExtractionService documentExtractionService;
 

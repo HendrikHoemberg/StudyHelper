@@ -29,19 +29,19 @@ class FlashcardGenerationPlanServiceTests {
     }
 
     @Test
-    void planTextMode_splitsEveryTwoPagesWhenWordsAreSmall() throws Exception {
-        when(documentExtractionService.extractPdfTextPages(pdf)).thenReturn(List.of("one", "two", "three", "four", "five"));
+    void planTextMode_splitsEveryFivePagesWhenWordsAreSmall() throws Exception {
+        when(documentExtractionService.extractPdfTextPages(pdf)).thenReturn(List.of("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"));
 
         var plan = service.plan(List.of(pdf), DocumentMode.TEXT);
 
         assertThat(plan.requestCost()).isEqualTo(3);
-        assertThat(plan.chunks()).extracting("startPage").containsExactly(1, 3, 5);
-        assertThat(plan.chunks()).extracting("endPage").containsExactly(2, 4, 5);
+        assertThat(plan.chunks()).extracting("startPage").containsExactly(1, 6, 11);
+        assertThat(plan.chunks()).extracting("endPage").containsExactly(5, 10, 11);
     }
 
     @Test
-    void planTextMode_splitsOnFifteenHundredWords() throws Exception {
-        String words = "word ".repeat(1600);
+    void planTextMode_splitsOnFourThousandWords() throws Exception {
+        String words = "word ".repeat(4100);
         when(documentExtractionService.extractPdfTextPages(pdf)).thenReturn(List.of(words));
 
         var plan = service.plan(List.of(pdf), DocumentMode.TEXT);
@@ -52,7 +52,7 @@ class FlashcardGenerationPlanServiceTests {
 
     @Test
     void planTextMode_whenSinglePageExceedsWordLimit_keepsValidPageRange() throws Exception {
-        String words = "word ".repeat(1600);
+        String words = "word ".repeat(4100);
         when(documentExtractionService.extractPdfTextPages(pdf)).thenReturn(List.of(words));
 
         var plan = service.plan(List.of(pdf), DocumentMode.TEXT);
@@ -63,11 +63,13 @@ class FlashcardGenerationPlanServiceTests {
 
     @Test
     void plan_assignsRiskFromRequestCost() throws Exception {
-        when(documentExtractionService.extractPdfTextPages(pdf)).thenReturn(List.of("x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x"));
+        List<String> pages = new java.util.ArrayList<>();
+        for (int i = 0; i < 25; i++) pages.add("x");
+        when(documentExtractionService.extractPdfTextPages(pdf)).thenReturn(pages);
 
         var plan = service.plan(List.of(pdf), DocumentMode.TEXT);
 
-        assertThat(plan.requestCost()).isEqualTo(16);
+        assertThat(plan.requestCost()).isEqualTo(5);
         assertThat(plan.risk()).isEqualTo(FlashcardGenerationRisk.WARNING);
     }
 
@@ -84,11 +86,11 @@ class FlashcardGenerationPlanServiceTests {
     }
 
     @Test
-    void planFullPdfMode_splitsEveryTwoPages() throws Exception {
-        when(documentExtractionService.pdfPageCount(pdf)).thenReturn(5);
-        when(documentExtractionService.loadPdfPageRangeResource(pdf, 1, 2)).thenReturn(mock(org.springframework.core.io.Resource.class));
-        when(documentExtractionService.loadPdfPageRangeResource(pdf, 3, 4)).thenReturn(mock(org.springframework.core.io.Resource.class));
-        when(documentExtractionService.loadPdfPageRangeResource(pdf, 5, 5)).thenReturn(mock(org.springframework.core.io.Resource.class));
+    void planFullPdfMode_splitsEveryFivePages() throws Exception {
+        when(documentExtractionService.pdfPageCount(pdf)).thenReturn(11);
+        when(documentExtractionService.loadPdfPageRangeResource(pdf, 1, 5)).thenReturn(mock(org.springframework.core.io.Resource.class));
+        when(documentExtractionService.loadPdfPageRangeResource(pdf, 6, 10)).thenReturn(mock(org.springframework.core.io.Resource.class));
+        when(documentExtractionService.loadPdfPageRangeResource(pdf, 11, 11)).thenReturn(mock(org.springframework.core.io.Resource.class));
 
         var plan = service.plan(List.of(pdf), DocumentMode.FULL_PDF);
 
@@ -96,11 +98,11 @@ class FlashcardGenerationPlanServiceTests {
         assertThat(plan.chunks()).hasSize(3);
         assertThat(plan.chunks().get(0).hasPdfResource()).isTrue();
         assertThat(plan.chunks().get(0).startPage()).isEqualTo(1);
-        assertThat(plan.chunks().get(0).endPage()).isEqualTo(2);
-        assertThat(plan.chunks().get(1).startPage()).isEqualTo(3);
-        assertThat(plan.chunks().get(1).endPage()).isEqualTo(4);
-        assertThat(plan.chunks().get(2).startPage()).isEqualTo(5);
-        assertThat(plan.chunks().get(2).endPage()).isEqualTo(5);
+        assertThat(plan.chunks().get(0).endPage()).isEqualTo(5);
+        assertThat(plan.chunks().get(1).startPage()).isEqualTo(6);
+        assertThat(plan.chunks().get(1).endPage()).isEqualTo(10);
+        assertThat(plan.chunks().get(2).startPage()).isEqualTo(11);
+        assertThat(plan.chunks().get(2).endPage()).isEqualTo(11);
     }
 
     @Test
@@ -116,12 +118,12 @@ class FlashcardGenerationPlanServiceTests {
     @Test
     void plan_assignsHighRiskForHighCost() throws Exception {
         List<String> manyPages = new java.util.ArrayList<>();
-        for (int i = 0; i < 62; i++) manyPages.add("x");
+        for (int i = 0; i < 65; i++) manyPages.add("x");
         when(documentExtractionService.extractPdfTextPages(pdf)).thenReturn(manyPages);
 
         var plan = service.plan(List.of(pdf), DocumentMode.TEXT);
 
-        assertThat(plan.requestCost()).isEqualTo(31);
+        assertThat(plan.requestCost()).isEqualTo(13);
         assertThat(plan.risk()).isEqualTo(FlashcardGenerationRisk.HIGH);
         assertThat(plan.highRisk()).isTrue();
     }
