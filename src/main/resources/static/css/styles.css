@@ -7654,11 +7654,10 @@ iconify-icon {
         display: none !important;
     }
 
-    /* Establish body as a vertical flex container so bottom bar naturally occupies its own space */
     body {
         display: flex;
         flex-direction: column;
-        height: 100vh !important;
+        height: 100dvh !important;
         overflow: hidden !important;
         padding-top: 0 !important;
         padding-bottom: 0 !important;
@@ -7671,6 +7670,7 @@ iconify-icon {
         height: auto !important;
         min-height: 0;
         overflow: hidden;
+        padding-bottom: calc(56px + env(safe-area-inset-bottom));
     }
 
     /* Shift body/shell layout up since top nav is hidden */
@@ -7680,19 +7680,19 @@ iconify-icon {
         height: 100% !important;
     }
 
-    /* App Bottom Bar as a relative block element in layout flow */
+    /* Pin to the visual viewport; body 100vh can sit below mobile browser chrome. */
     .app-bottom-bar {
-        position: relative !important;
-        bottom: auto !important;
-        left: auto !important;
-        right: auto !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
         height: 56px;
+        padding-bottom: env(safe-area-inset-bottom);
         background: var(--surface);
         border-top: 1px solid var(--border-light);
         z-index: 999;
         display: block;
         box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
-        flex-shrink: 0;
     }
 
     .bottom-bar-inner {

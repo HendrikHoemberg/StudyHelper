@@ -450,6 +450,16 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void mobileBottomBarIsPinnedToVisualViewport() throws IOException {
+        String styles = resource("static/css/styles.css");
+
+        assertThat(styles)
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*body \\{[^}]*height: 100dvh !important;[^}]*\\}")
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.app-layout \\{[^}]*padding-bottom: calc\\(56px \\+ env\\(safe-area-inset-bottom\\)\\);[^}]*\\}")
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.app-bottom-bar \\{[^}]*position: fixed !important;[^}]*bottom: 0 !important;[^}]*padding-bottom: env\\(safe-area-inset-bottom\\);[^}]*\\}");
+    }
+
+    @Test
     void appExposesInstallablePwaMetadataWithoutOfflineCaching() throws IOException {
         String layout = resource("templates/fragments/layout.html");
         String appJs = resource("static/js/app.js");
