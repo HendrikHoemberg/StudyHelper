@@ -51,6 +51,17 @@ class FlashcardGenerationPlanServiceTests {
     }
 
     @Test
+    void planTextMode_whenSinglePageExceedsWordLimit_keepsValidPageRange() throws Exception {
+        String words = "word ".repeat(1600);
+        when(documentExtractionService.extractPdfTextPages(pdf)).thenReturn(List.of(words));
+
+        var plan = service.plan(List.of(pdf), DocumentMode.TEXT);
+
+        assertThat(plan.chunks()).extracting("startPage").containsExactly(1, 1);
+        assertThat(plan.chunks()).extracting("endPage").containsExactly(1, 1);
+    }
+
+    @Test
     void plan_assignsRiskFromRequestCost() throws Exception {
         when(documentExtractionService.extractPdfTextPages(pdf)).thenReturn(List.of("x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x", "x"));
 

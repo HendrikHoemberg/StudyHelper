@@ -245,6 +245,7 @@ class FlashcardGenerationControllerTests {
         assertThat(view).isEqualTo("fragments/flashcard-generator :: generator");
         assertThat(response.getStatus()).isEqualTo(400);
         assertThat(model.get("generationError")).isEqualTo("Please confirm the high-risk generation warning before continuing.");
+        assertThat(model.get("generationPlan")).isEqualTo(plan);
         verify(jobService, never()).acceptJob(any(), anyList(), any(), any(), any(), any(), any(), any(), any());
     }
 

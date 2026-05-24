@@ -219,10 +219,6 @@
                          th:replace="~{fragments/flashcard-generator :: estimate}">
                     </div>
 
-                    <label class="sh-quiz-warn-banner sh-ai-high-risk-ack" th:if="${generationPlan != null and generationPlan.highRisk()}">
-                        <input type="checkbox" name="highRiskAcknowledged" value="true">
-                        <span th:text="#{flashcard-gen.estimate.high-risk-ack}">I understand this generation may use significant quota and take several minutes.</span>
-                    </label>
                 </div>
 
         <div th:fragment="estimate" id="ai-generation-estimate" class="sh-ai-estimate">
@@ -240,6 +236,10 @@
                     <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
                     <span th:text="#{flashcard-gen.estimate.warning}">Large PDFs can take longer and may produce uneven cards. Split by chapter for best results.</span>
                 </div>
+                <label class="sh-quiz-warn-banner sh-ai-high-risk-ack" th:if="${generationPlan.highRisk()}">
+                    <input type="checkbox" name="highRiskAcknowledged" value="true">
+                    <span th:text="#{flashcard-gen.estimate.high-risk-ack}">I understand this generation may use significant quota and take several minutes.</span>
+                </label>
             </div>
         </div>
 

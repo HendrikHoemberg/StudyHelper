@@ -850,7 +850,11 @@ class UiResourceRegressionTests {
             .contains("id=\"ai-generation-estimate\"")
             .contains("th:fragment=\"estimate\"")
             .contains("th:fragment=\"progress\"")
-            .contains("name=\"highRiskAcknowledged\"");
+            .contains("name=\"highRiskAcknowledged\"")
+            .contains("th:if=\"${generationPlan.highRisk()}\"");
+        assertThat(template.indexOf("name=\"highRiskAcknowledged\""))
+            .isGreaterThan(template.indexOf("th:fragment=\"estimate\""))
+            .isLessThan(template.indexOf("th:fragment=\"progress\""));
         assertThat(appJs).contains("/flashcards/generate/estimate");
     }
 

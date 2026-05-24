@@ -55,6 +55,7 @@ public class FlashcardGenerationPlanService {
         List<FlashcardChunk> chunks = new ArrayList<>();
         int chunkIndex = 1;
         int startPage = 1;
+        int endPage = 1;
         StringBuilder text = new StringBuilder();
         int words = 0;
         for (int i = 0; i < pages.size(); i++) {
@@ -62,20 +63,22 @@ public class FlashcardGenerationPlanService {
             int pageNumber = i + 1;
             for (String part : splitByWordLimit(pageText)) {
                 int partWords = wordCount(part);
-                boolean pageLimitReached = pageNumber - startPage >= MAX_PAGES_PER_CHUNK;
+                boolean pageLimitReached = pageNumber > endPage && pageNumber - startPage >= MAX_PAGES_PER_CHUNK;
                 boolean wordLimitReached = words > 0 && words + partWords > MAX_WORDS_PER_CHUNK;
                 if (text.length() > 0 && (pageLimitReached || wordLimitReached)) {
-                    chunks.add(new FlashcardChunk(pdf.getOriginalFilename(), chunkIndex++, startPage, pageNumber - 1, text.toString().strip(), null));
+                    chunks.add(new FlashcardChunk(pdf.getId(), pdf.getOriginalFilename(), chunkIndex++, startPage, endPage, text.toString().strip(), null));
                     text.setLength(0);
                     words = 0;
                     startPage = pageNumber;
+                    endPage = pageNumber;
                 }
                 text.append("Page ").append(pageNumber).append(":\n").append(part).append("\n\n");
+                endPage = pageNumber;
                 words += partWords;
             }
         }
         if (text.length() > 0) {
-            chunks.add(new FlashcardChunk(pdf.getOriginalFilename(), chunkIndex, startPage, pages.size(), text.toString().strip(), null));
+            chunks.add(new FlashcardChunk(pdf.getId(), pdf.getOriginalFilename(), chunkIndex, startPage, endPage, text.toString().strip(), null));
         }
         return chunks;
     }
@@ -87,7 +90,7 @@ public class FlashcardGenerationPlanService {
         for (int start = 1; start <= pages; start += MAX_PAGES_PER_CHUNK) {
             int end = Math.min(start + MAX_PAGES_PER_CHUNK - 1, pages);
             Resource resource = documentExtractionService.loadPdfPageRangeResource(pdf, start, end);
-            chunks.add(new FlashcardChunk(pdf.getOriginalFilename(), chunkIndex++, start, end, "", resource));
+            chunks.add(new FlashcardChunk(pdf.getId(), pdf.getOriginalFilename(), chunkIndex++, start, end, "", resource));
         }
         return chunks;
     }

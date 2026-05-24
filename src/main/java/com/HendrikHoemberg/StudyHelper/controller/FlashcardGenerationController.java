@@ -123,10 +123,11 @@ public class FlashcardGenerationController {
                            HttpServletResponse response,
                            @RequestHeader(value = "HX-Request", required = false) String hxRequest) throws Exception {
         User user = userService.getByUsername(principal.getName());
+        FlashcardGenerationPlan plan = null;
         try {
             List<FileEntry> files = validateAndResolveFiles(fileIds, documentMode, destination, existingDeckId, newDeckFolderId, newDeckName, user);
             List<Long> selectedIds = safeFileIds(fileIds);
-            FlashcardGenerationPlan plan = planService.plan(files, documentMode);
+            plan = planService.plan(files, documentMode);
             if (plan.highRisk() && !highRiskAcknowledged) {
                 throw new IllegalArgumentException("Please confirm the high-risk generation warning before continuing.");
             }
@@ -148,6 +149,9 @@ public class FlashcardGenerationController {
             model.addAttribute("selectedExistingDeckId", existingDeckId);
             model.addAttribute("selectedNewDeckFolderId", newDeckFolderId);
             model.addAttribute("newDeckName", newDeckName);
+            if (plan != null) {
+                model.addAttribute("generationPlan", plan);
+            }
             if (hxRequest != null) return "fragments/flashcard-generator :: generator";
             model.addAttribute("username", user.getUsername());
             model.addAttribute("sidebarTree", folderService.getSidebarTree(user));

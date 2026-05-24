@@ -17,6 +17,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntConsumer;
 
 @Service
 public class AiFlashcardService {
@@ -139,12 +140,19 @@ public class AiFlashcardService {
     }
 
     public List<GeneratedFlashcard> generateChunks(List<FlashcardChunk> chunks, String additionalInstructions) {
+        return generateChunks(chunks, additionalInstructions, completedChunks -> {});
+    }
+
+    public List<GeneratedFlashcard> generateChunks(List<FlashcardChunk> chunks, String additionalInstructions, IntConsumer progressCallback) {
         if (chunks == null || chunks.isEmpty()) {
             throw new IllegalArgumentException("Flashcard generation requires at least one source chunk.");
         }
+        IntConsumer progress = progressCallback == null ? completedChunks -> {} : progressCallback;
         List<GeneratedFlashcard> all = new ArrayList<>();
-        for (FlashcardChunk chunk : chunks) {
+        for (int i = 0; i < chunks.size(); i++) {
+            FlashcardChunk chunk = chunks.get(i);
             all.addAll(generateChunk(chunk, additionalInstructions));
+            progress.accept(i + 1);
         }
         return dedupe(all);
     }

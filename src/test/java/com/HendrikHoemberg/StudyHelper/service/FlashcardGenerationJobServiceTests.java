@@ -5,6 +5,8 @@ import com.HendrikHoemberg.StudyHelper.dto.FlashcardChunk;
 import com.HendrikHoemberg.StudyHelper.dto.FlashcardGenerationDestination;
 import com.HendrikHoemberg.StudyHelper.dto.FlashcardGenerationPlan;
 import com.HendrikHoemberg.StudyHelper.dto.FlashcardGenerationRisk;
+import com.HendrikHoemberg.StudyHelper.dto.GeneratedFlashcard;
+import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.FlashcardGenerationJob;
 import com.HendrikHoemberg.StudyHelper.entity.FlashcardGenerationJobStatus;
 import com.HendrikHoemberg.StudyHelper.entity.User;
@@ -16,6 +18,7 @@ import org.springframework.core.task.TaskExecutor;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.IntConsumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,6 +31,7 @@ class FlashcardGenerationJobServiceTests {
     private AiRequestQuotaService aiRequestQuotaService;
     private TaskExecutor taskExecutor;
     private FileEntryService fileEntryService;
+    private DocumentExtractionService documentExtractionService;
     private FlashcardGenerationPlanService planService;
     private AiFlashcardService aiFlashcardService;
     private FlashcardGenerationPersistenceService persistenceService;
@@ -41,12 +45,13 @@ class FlashcardGenerationJobServiceTests {
         aiRequestQuotaService = mock(AiRequestQuotaService.class);
         taskExecutor = mock(TaskExecutor.class);
         fileEntryService = mock(FileEntryService.class);
+        documentExtractionService = mock(DocumentExtractionService.class);
         planService = mock(FlashcardGenerationPlanService.class);
         aiFlashcardService = mock(AiFlashcardService.class);
         persistenceService = mock(FlashcardGenerationPersistenceService.class);
         service = new FlashcardGenerationJobService(
             jobRepository, aiRequestQuotaService, taskExecutor,
-            fileEntryService, planService, aiFlashcardService, persistenceService
+            fileEntryService, documentExtractionService, planService, aiFlashcardService, persistenceService
         );
 
         user = new User();
@@ -84,8 +89,78 @@ class FlashcardGenerationJobServiceTests {
         assertThat(job.getEstimatedRequestCost()).isEqualTo(3);
         assertThat(job.getChargedRequestCost()).isEqualTo(3);
         assertThat(job.getChunkCount()).isEqualTo(1);
+        assertThat(job.getChunkPlanSnapshot()).isNotBlank();
+        assertThat(job.getChunkPlanSnapshot()).contains("lecture.pdf");
         verify(aiRequestQuotaService).checkAndRecord(user, 3);
         verify(taskExecutor).execute(any(Runnable.class));
+    }
+
+    @Test
+    void runJob_usesAcceptedChunkPlanSnapshot() throws Exception {
+        FlashcardGenerationJob job = new FlashcardGenerationJob();
+        job.setId(1L);
+        job.setUser(user);
+        job.setSourceFileIdsCsv("99");
+        job.setDocumentMode(DocumentMode.TEXT);
+        job.setDestination(FlashcardGenerationDestination.NEW_DECK);
+        job.setNewDeckFolderId(10L);
+        job.setNewDeckName("Generated");
+        job.setChunkCount(plan.chunks().size());
+        job.setChunkPlanSnapshot(FlashcardGenerationJobService.serializePlanSnapshot(plan));
+        when(jobRepository.findById(1L)).thenReturn(Optional.of(job));
+        when(aiFlashcardService.generateChunks(eq(plan.chunks()), eq(null), any(IntConsumer.class)))
+            .thenReturn(List.of(new GeneratedFlashcard("Q", "A")));
+        Deck deck = new Deck();
+        deck.setId(20L);
+        when(persistenceService.saveGeneratedCards(eq(FlashcardGenerationDestination.NEW_DECK), eq(null), eq(10L), eq("Generated"), eq(user), anyList()))
+            .thenReturn(deck);
+
+        service.runJob(1L);
+
+        verify(planService, never()).plan(anyList(), any());
+        verify(fileEntryService, never()).getByIdAndUser(any(), any());
+        verify(aiFlashcardService).generateChunks(eq(plan.chunks()), eq(null), any(IntConsumer.class));
+        assertThat(job.getStatus()).isEqualTo(FlashcardGenerationJobStatus.SUCCEEDED);
+    }
+
+    @Test
+    void runJob_updatesCompletedChunksFromAiCallback() {
+        FlashcardGenerationPlan twoChunkPlan = new FlashcardGenerationPlan(
+            List.of(
+                new FlashcardChunk("lecture.pdf", 1, 1, 2, "one", null),
+                new FlashcardChunk("lecture.pdf", 2, 3, 4, "two", null)
+            ),
+            2, 16, 24, 10, 30, FlashcardGenerationRisk.NORMAL
+        );
+        FlashcardGenerationJob job = new FlashcardGenerationJob();
+        job.setId(1L);
+        job.setUser(user);
+        job.setSourceFileIdsCsv("99");
+        job.setDocumentMode(DocumentMode.TEXT);
+        job.setDestination(FlashcardGenerationDestination.NEW_DECK);
+        job.setNewDeckFolderId(10L);
+        job.setNewDeckName("Generated");
+        job.setChunkCount(twoChunkPlan.chunks().size());
+        job.setChunkPlanSnapshot(FlashcardGenerationJobService.serializePlanSnapshot(twoChunkPlan));
+        when(jobRepository.findById(1L)).thenReturn(Optional.of(job));
+        when(aiFlashcardService.generateChunks(eq(twoChunkPlan.chunks()), eq(null), any(IntConsumer.class)))
+            .thenAnswer(invocation -> {
+                IntConsumer progress = invocation.getArgument(2);
+                progress.accept(1);
+                assertThat(job.getCompletedChunkCount()).isEqualTo(1);
+                progress.accept(2);
+                assertThat(job.getCompletedChunkCount()).isEqualTo(2);
+                return List.of(new GeneratedFlashcard("Q", "A"));
+            });
+        Deck deck = new Deck();
+        deck.setId(20L);
+        when(persistenceService.saveGeneratedCards(eq(FlashcardGenerationDestination.NEW_DECK), eq(null), eq(10L), eq("Generated"), eq(user), anyList()))
+            .thenReturn(deck);
+
+        service.runJob(1L);
+
+        assertThat(job.getCompletedChunkCount()).isEqualTo(2);
+        assertThat(job.getStatus()).isEqualTo(FlashcardGenerationJobStatus.SUCCEEDED);
     }
 
     @Test

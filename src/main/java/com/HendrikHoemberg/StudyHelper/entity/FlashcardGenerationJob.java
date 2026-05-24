@@ -63,6 +63,10 @@ public class FlashcardGenerationJob {
     @Column(nullable = false)
     private int generatedCardCount;
 
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String chunkPlanSnapshot;
+
     private Long savedDeckId;
 
     @Column(length = 1000)
