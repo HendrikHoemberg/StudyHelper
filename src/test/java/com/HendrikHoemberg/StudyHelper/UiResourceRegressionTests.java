@@ -454,9 +454,24 @@ class UiResourceRegressionTests {
         String styles = resource("static/css/styles.css");
 
         assertThat(styles)
-            .containsPattern("(?s)@media \\(max-width: 768px\\).*body \\{[^}]*height: 100dvh !important;[^}]*\\}")
-            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.app-layout \\{[^}]*padding-bottom: calc\\(56px \\+ env\\(safe-area-inset-bottom\\)\\);[^}]*\\}")
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*body \\{[^}]*min-height: 100dvh !important;[^}]*\\}")
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.app-main-content \\{[^}]*padding-bottom: calc\\(56px \\+ env\\(safe-area-inset-bottom\\)\\);[^}]*\\}")
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.app-main-content:has\\(\\.sh-dashboard-shell\\) \\{[^}]*padding-bottom: calc\\(56px \\+ env\\(safe-area-inset-bottom\\)\\);[^}]*\\}")
             .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.app-bottom-bar \\{[^}]*position: fixed !important;[^}]*bottom: 0 !important;[^}]*padding-bottom: env\\(safe-area-inset-bottom\\);[^}]*\\}");
+    }
+
+    @Test
+    void mobileLayoutKeepsRootPageScrollableForPullToRefresh() throws IOException {
+        String styles = resource("static/css/styles.css");
+
+        assertThat(styles)
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*body \\{[^}]*min-height: 100dvh !important;[^}]*\\}")
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.app-layout \\{[^}]*min-height: 100dvh !important;[^}]*\\}")
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.app-main-content \\{[^}]*overflow: visible;[^}]*\\}")
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.app-main-content \\{[^}]*padding-bottom: calc\\(56px \\+ env\\(safe-area-inset-bottom\\)\\);[^}]*\\}")
+            .containsPattern("(?s)@media \\(max-width: 768px\\).*\\.sh-explorer-detail \\{[^}]*padding-bottom: 1\\.5rem;[^}]*\\}")
+            .doesNotContain("padding-bottom: calc(56px + env(safe-area-inset-bottom) + 1.5rem)")
+            .doesNotContainPattern("(?s)@media \\(max-width: 768px\\).*body \\{[^}]*overflow: hidden !important;[^}]*\\}");
     }
 
     @Test
