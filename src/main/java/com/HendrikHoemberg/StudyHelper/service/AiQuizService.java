@@ -12,6 +12,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.content.Media;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
+import org.springframework.ai.google.genai.common.GoogleGenAiThinkingLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -94,7 +95,8 @@ public class AiQuizService {
             response = chatClient.prompt()
                 .options(GoogleGenAiChatOptions.builder()
                     .responseMimeType("application/json")
-                    .responseSchema(responseSchema))
+                    .responseSchema(responseSchema)
+                    .thinkingLevel(GoogleGenAiThinkingLevel.MEDIUM))
                 .user(u -> u.text(prompt))
                 .call()
                 .entity(QuizQuestionsResponse.class);

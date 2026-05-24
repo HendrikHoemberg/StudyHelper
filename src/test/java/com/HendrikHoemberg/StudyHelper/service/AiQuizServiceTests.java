@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
+import org.springframework.ai.google.genai.common.GoogleGenAiThinkingLevel;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -257,6 +258,8 @@ class AiQuizServiceTests {
         var built = (GoogleGenAiChatOptions) capturedOptionsBuilder.get().build();
         assertThat(built.getResponseMimeType()).isEqualTo("application/json");
         assertThat(built.getResponseSchema()).isNotBlank();
+        assertThat(built.getThinkingLevel()).isEqualTo(GoogleGenAiThinkingLevel.MEDIUM);
+        assertThat(built.getThinkingBudget()).isNull();
     }
 
     @Test
