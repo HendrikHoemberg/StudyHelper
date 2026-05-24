@@ -14,6 +14,11 @@ import com.HendrikHoemberg.StudyHelper.repository.FlashcardGenerationJobReposito
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.SimpleTransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
 import java.util.List;
@@ -50,7 +55,7 @@ class FlashcardGenerationJobServiceTests {
         aiFlashcardService = mock(AiFlashcardService.class);
         persistenceService = mock(FlashcardGenerationPersistenceService.class);
         service = new FlashcardGenerationJobService(
-            jobRepository, aiRequestQuotaService, taskExecutor,
+            jobRepository, aiRequestQuotaService, taskExecutor, testTransactionTemplate(),
             fileEntryService, documentExtractionService, planService, aiFlashcardService, persistenceService
         );
 
@@ -235,14 +240,16 @@ class FlashcardGenerationJobServiceTests {
 
     @Test
     void failTimedOutJobs_marksStaleJobsFailed() {
-        Instant cutoff = Instant.now();
+        Instant now = Instant.parse("2026-05-24T12:00:00Z");
         FlashcardGenerationJob stale = new FlashcardGenerationJob();
         stale.setId(1L);
         stale.setStatus(FlashcardGenerationJobStatus.RUNNING);
-        when(jobRepository.findByStatusAndStartedAtBefore(FlashcardGenerationJobStatus.RUNNING, cutoff))
+        stale.setStartedAt(now.minusSeconds(11 * 60));
+        stale.setChunkCount(1);
+        when(jobRepository.findByStatus(FlashcardGenerationJobStatus.RUNNING))
             .thenReturn(List.of(stale));
 
-        int failed = service.failTimedOutJobs(cutoff);
+        int failed = service.failTimedOutJobs(now);
 
         assertThat(failed).isEqualTo(1);
         assertThat(stale.getStatus()).isEqualTo(FlashcardGenerationJobStatus.FAILED);
@@ -252,12 +259,55 @@ class FlashcardGenerationJobServiceTests {
 
     @Test
     void failTimedOutJobs_noStale_returnsZero() {
-        Instant cutoff = Instant.now();
-        when(jobRepository.findByStatusAndStartedAtBefore(FlashcardGenerationJobStatus.RUNNING, cutoff))
+        Instant now = Instant.parse("2026-05-24T12:00:00Z");
+        when(jobRepository.findByStatus(FlashcardGenerationJobStatus.RUNNING))
             .thenReturn(List.of());
 
-        int failed = service.failTimedOutJobs(cutoff);
+        int failed = service.failTimedOutJobs(now);
 
         assertThat(failed).isZero();
+    }
+
+    @Test
+    void failTimedOutJobs_usesPerJobRuntimeDeadline() {
+        Instant now = Instant.parse("2026-05-24T12:00:00Z");
+        FlashcardGenerationJob timedOut = new FlashcardGenerationJob();
+        timedOut.setId(1L);
+        timedOut.setStatus(FlashcardGenerationJobStatus.RUNNING);
+        timedOut.setStartedAt(now.minusSeconds(11 * 60));
+        timedOut.setChunkCount(1);
+
+        FlashcardGenerationJob stillAllowed = new FlashcardGenerationJob();
+        stillAllowed.setId(2L);
+        stillAllowed.setStatus(FlashcardGenerationJobStatus.RUNNING);
+        stillAllowed.setStartedAt(now.minusSeconds(12 * 60));
+        stillAllowed.setChunkCount(5);
+
+        when(jobRepository.findByStatus(FlashcardGenerationJobStatus.RUNNING))
+            .thenReturn(List.of(timedOut, stillAllowed));
+
+        int failed = service.failTimedOutJobs(now);
+
+        assertThat(failed).isEqualTo(1);
+        assertThat(timedOut.getStatus()).isEqualTo(FlashcardGenerationJobStatus.FAILED);
+        assertThat(timedOut.getFailureMessage()).isEqualTo("Flashcard generation timed out.");
+        assertThat(stillAllowed.getStatus()).isEqualTo(FlashcardGenerationJobStatus.RUNNING);
+    }
+
+    private TransactionTemplate testTransactionTemplate() {
+        return new TransactionTemplate(new PlatformTransactionManager() {
+            @Override
+            public TransactionStatus getTransaction(TransactionDefinition definition) {
+                return new SimpleTransactionStatus();
+            }
+
+            @Override
+            public void commit(TransactionStatus status) {
+            }
+
+            @Override
+            public void rollback(TransactionStatus status) {
+            }
+        });
     }
 }

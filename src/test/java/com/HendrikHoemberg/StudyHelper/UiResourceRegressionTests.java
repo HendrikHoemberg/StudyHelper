@@ -52,6 +52,20 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void flashcardGeneratorRefreshesEstimateOnDestinationStepAndBlocksHighRiskSubmit() throws IOException {
+        String appJs = resource("static/js/app.js");
+        String wizardJs = resource("static/js/flashcard-gen-wizard.js");
+
+        assertThat(appJs)
+            .contains("window.refreshFlashcardGenerationEstimate = refreshFlashcardGenerationEstimate")
+            .contains("function hasUncheckedHighRiskAcknowledgement")
+            .contains("input[name=\"highRiskAcknowledged\"]")
+            .contains("event.preventDefault()");
+        assertThat(wizardJs)
+            .contains("window.refreshFlashcardGenerationEstimate(form)");
+    }
+
+    @Test
     void deckViewShowsAddCardTileBeforeExistingFlashcards() throws IOException {
         String template = resource("templates/fragments/deck.html");
 

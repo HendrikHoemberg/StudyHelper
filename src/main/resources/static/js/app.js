@@ -1136,6 +1136,11 @@ document.body.addEventListener('click', (e) => {
 document.body.addEventListener('submit', (event) => {
     const form = event.target;
     if (!form.matches?.('form.sh-ai-flashcard-form')) return;
+    if (hasUncheckedHighRiskAcknowledgement(form)) {
+        event.preventDefault();
+        showAiGenerationFailure('Please confirm the high-risk generation warning before continuing.');
+        return;
+    }
     const hidden = form.querySelector('input[name="additionalInstructions"]');
     if (!hidden) return;
     if (form.dataset.instructionsSubmit === 'true') {
@@ -1183,6 +1188,13 @@ function refreshFlashcardGenerationEstimate(form) {
             }
         })
         .catch(() => {});
+}
+
+window.refreshFlashcardGenerationEstimate = refreshFlashcardGenerationEstimate;
+
+function hasUncheckedHighRiskAcknowledgement(form) {
+    const acknowledgement = form?.querySelector?.('input[name="highRiskAcknowledged"]');
+    return !!acknowledgement && !acknowledgement.checked;
 }
 
 document.body.addEventListener('change', (event) => {

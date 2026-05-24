@@ -71,6 +71,9 @@
         if (stepsIndicator) stepsIndicator.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
         if (step === 2) {
+            if (window.refreshFlashcardGenerationEstimate) {
+                window.refreshFlashcardGenerationEstimate(form);
+            }
             setTimeout(() => {
                 const checkedCheckbox = document.querySelector('#ai-flashcard-panel-2 input[name="newDeckFolderId"]:checked');
                 if (checkedCheckbox) {

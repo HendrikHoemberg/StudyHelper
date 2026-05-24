@@ -12,8 +12,12 @@ import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.exception.ResourceNotFoundException;
 import com.HendrikHoemberg.StudyHelper.repository.FlashcardGenerationJobRepository;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -28,9 +32,15 @@ import java.util.stream.Collectors;
 @Service
 public class FlashcardGenerationJobService {
 
+    private static final long MIN_JOB_TIMEOUT_SECONDS = 10 * 60;
+    private static final long ESTIMATED_HIGH_SECONDS_PER_CHUNK = 12;
+    private static final long PROVIDER_TIMEOUT_SECONDS_PER_CHUNK = 180;
+    private static final long JOB_TIMEOUT_GRACE_SECONDS = 2 * 60;
+
     private final FlashcardGenerationJobRepository jobRepository;
     private final AiRequestQuotaService aiRequestQuotaService;
     private final TaskExecutor flashcardGenerationTaskExecutor;
+    private final TransactionTemplate transactionTemplate;
     private final FileEntryService fileEntryService;
     private final DocumentExtractionService documentExtractionService;
     private final FlashcardGenerationPlanService planService;
@@ -40,6 +50,7 @@ public class FlashcardGenerationJobService {
     public FlashcardGenerationJobService(FlashcardGenerationJobRepository jobRepository,
                                          AiRequestQuotaService aiRequestQuotaService,
                                          TaskExecutor flashcardGenerationTaskExecutor,
+                                         TransactionTemplate transactionTemplate,
                                          FileEntryService fileEntryService,
                                          DocumentExtractionService documentExtractionService,
                                          FlashcardGenerationPlanService planService,
@@ -48,6 +59,7 @@ public class FlashcardGenerationJobService {
         this.jobRepository = jobRepository;
         this.aiRequestQuotaService = aiRequestQuotaService;
         this.flashcardGenerationTaskExecutor = flashcardGenerationTaskExecutor;
+        this.transactionTemplate = transactionTemplate;
         this.fileEntryService = fileEntryService;
         this.documentExtractionService = documentExtractionService;
         this.planService = planService;
@@ -80,7 +92,7 @@ public class FlashcardGenerationJobService {
         job.setChunkCount(plan.chunks().size());
         job.setChunkPlanSnapshot(serializePlanSnapshot(plan));
         FlashcardGenerationJob saved = jobRepository.save(job);
-        flashcardGenerationTaskExecutor.execute(() -> runJob(saved.getId()));
+        enqueueAfterCommit(saved.getId());
         return saved;
     }
 
@@ -109,45 +121,93 @@ public class FlashcardGenerationJobService {
 
     @Transactional
     FlashcardGenerationJob markRunning(Long jobId) {
-        FlashcardGenerationJob job = jobRepository.findById(jobId).orElseThrow();
-        job.setStatus(FlashcardGenerationJobStatus.RUNNING);
-        job.setStartedAt(Instant.now());
-        return job;
+        return transactionTemplate.execute(status -> {
+            FlashcardGenerationJob job = jobRepository.findById(jobId).orElseThrow();
+            job.setStatus(FlashcardGenerationJobStatus.RUNNING);
+            job.setStartedAt(Instant.now());
+            return job;
+        });
     }
 
     @Transactional
     void markSucceeded(Long jobId, Long deckId, int generatedCardCount) {
-        FlashcardGenerationJob job = jobRepository.findById(jobId).orElseThrow();
-        job.setStatus(FlashcardGenerationJobStatus.SUCCEEDED);
-        job.setSavedDeckId(deckId);
-        job.setGeneratedCardCount(generatedCardCount);
-        job.setCompletedChunkCount(job.getChunkCount());
-        job.setFinishedAt(Instant.now());
+        transactionTemplate.executeWithoutResult(status -> {
+            FlashcardGenerationJob job = jobRepository.findById(jobId).orElseThrow();
+            job.setStatus(FlashcardGenerationJobStatus.SUCCEEDED);
+            job.setSavedDeckId(deckId);
+            job.setGeneratedCardCount(generatedCardCount);
+            job.setCompletedChunkCount(job.getChunkCount());
+            job.setFinishedAt(Instant.now());
+        });
     }
 
     @Transactional
     void updateCompletedChunks(Long jobId, int completedChunkCount) {
-        FlashcardGenerationJob job = jobRepository.findById(jobId).orElseThrow();
-        job.setCompletedChunkCount(Math.min(completedChunkCount, job.getChunkCount()));
+        transactionTemplate.executeWithoutResult(status -> {
+            FlashcardGenerationJob job = jobRepository.findById(jobId).orElseThrow();
+            job.setCompletedChunkCount(Math.min(completedChunkCount, job.getChunkCount()));
+        });
     }
 
     @Transactional
     void markFailed(Long jobId, String message) {
-        FlashcardGenerationJob job = jobRepository.findById(jobId).orElseThrow();
-        job.setStatus(FlashcardGenerationJobStatus.FAILED);
-        job.setFailureMessage(message.length() > 1000 ? message.substring(0, 1000) : message);
-        job.setFinishedAt(Instant.now());
+        transactionTemplate.executeWithoutResult(status -> {
+            FlashcardGenerationJob job = jobRepository.findById(jobId).orElseThrow();
+            job.setStatus(FlashcardGenerationJobStatus.FAILED);
+            job.setFailureMessage(message.length() > 1000 ? message.substring(0, 1000) : message);
+            job.setFinishedAt(Instant.now());
+        });
     }
 
     @Transactional
-    public int failTimedOutJobs(Instant olderThan) {
-        List<FlashcardGenerationJob> stale = jobRepository.findByStatusAndStartedAtBefore(FlashcardGenerationJobStatus.RUNNING, olderThan);
-        for (FlashcardGenerationJob job : stale) {
-            job.setStatus(FlashcardGenerationJobStatus.FAILED);
-            job.setFailureMessage("Flashcard generation timed out.");
-            job.setFinishedAt(Instant.now());
+    public int failTimedOutJobs(Instant now) {
+        Instant referenceTime = now == null ? Instant.now() : now;
+        List<FlashcardGenerationJob> running = jobRepository.findByStatus(FlashcardGenerationJobStatus.RUNNING);
+        int failed = 0;
+        for (FlashcardGenerationJob job : running) {
+            if (job.getStartedAt() == null || !hasTimedOut(job, referenceTime)) {
+                continue;
+            }
+            markJobTimedOut(job, referenceTime);
+            failed++;
         }
-        return stale.size();
+        return failed;
+    }
+
+    @Scheduled(fixedDelayString = "${flashcard.generation.timeout-scan-ms:60000}")
+    public void failTimedOutJobs() {
+        failTimedOutJobs(Instant.now());
+    }
+
+    private void enqueueAfterCommit(Long jobId) {
+        Runnable task = () -> flashcardGenerationTaskExecutor.execute(() -> runJob(jobId));
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    task.run();
+                }
+            });
+        } else {
+            task.run();
+        }
+    }
+
+    private boolean hasTimedOut(FlashcardGenerationJob job, Instant now) {
+        return !job.getStartedAt().plusSeconds(maxJobRuntimeSeconds(job)).isAfter(now);
+    }
+
+    private long maxJobRuntimeSeconds(FlashcardGenerationJob job) {
+        long chunks = Math.max(1, job.getChunkCount());
+        long estimatedUpperBound = chunks * ESTIMATED_HIGH_SECONDS_PER_CHUNK * 2;
+        long providerBound = chunks * PROVIDER_TIMEOUT_SECONDS_PER_CHUNK + JOB_TIMEOUT_GRACE_SECONDS;
+        return Math.max(MIN_JOB_TIMEOUT_SECONDS, Math.max(estimatedUpperBound, providerBound));
+    }
+
+    private void markJobTimedOut(FlashcardGenerationJob job, Instant now) {
+        job.setStatus(FlashcardGenerationJobStatus.FAILED);
+        job.setFailureMessage("Flashcard generation timed out.");
+        job.setFinishedAt(now);
     }
 
     private List<Long> parseFileIds(String csv) {

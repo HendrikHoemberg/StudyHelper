@@ -244,6 +244,7 @@
         </div>
 
         <div th:fragment="progress" class="sh-card sh-ai-generation-progress"
+             th:if="${generationJob != null}"
              th:attr="hx-get=@{/flashcards/generate/jobs/{id}(id=${generationJob.id})}"
              hx-trigger="every 2s"
              hx-target="this"

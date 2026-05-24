@@ -17,6 +17,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.IntConsumer;
 
 @Service
@@ -234,13 +235,62 @@ public class AiFlashcardService {
 
     private List<GeneratedFlashcard> dedupe(List<GeneratedFlashcard> cards) {
         List<GeneratedFlashcard> deduped = new ArrayList<>();
-        java.util.Set<String> seen = new java.util.LinkedHashSet<>();
         for (GeneratedFlashcard card : cards) {
-            String key = (card.frontText().strip() + "\n" + card.backText().strip()).toLowerCase();
-            if (seen.add(key)) {
+            boolean duplicate = deduped.stream().anyMatch(existing -> duplicateCard(existing, card));
+            if (!duplicate) {
                 deduped.add(card);
             }
         }
         return deduped;
+    }
+
+    private boolean duplicateCard(GeneratedFlashcard left, GeneratedFlashcard right) {
+        return similarText(left.frontText(), right.frontText())
+            && similarText(left.backText(), right.backText());
+    }
+
+    private boolean similarText(String left, String right) {
+        String a = normalizeForDedupe(left);
+        String b = normalizeForDedupe(right);
+        if (a.equals(b)) return true;
+        int maxLength = Math.max(a.length(), b.length());
+        if (maxLength < 40) return false;
+        return levenshteinSimilarity(a, b) >= 0.94;
+    }
+
+    private String normalizeForDedupe(String value) {
+        if (value == null) return "";
+        return value.toLowerCase(Locale.ROOT)
+            .replaceAll("[^\\p{L}\\p{N}]+", " ")
+            .strip()
+            .replaceAll("\\s+", " ");
+    }
+
+    private double levenshteinSimilarity(String left, String right) {
+        int maxLength = Math.max(left.length(), right.length());
+        if (maxLength == 0) return 1.0;
+        return 1.0 - ((double) levenshteinDistance(left, right) / maxLength);
+    }
+
+    private int levenshteinDistance(String left, String right) {
+        int[] previous = new int[right.length() + 1];
+        int[] current = new int[right.length() + 1];
+        for (int j = 0; j <= right.length(); j++) {
+            previous[j] = j;
+        }
+        for (int i = 1; i <= left.length(); i++) {
+            current[0] = i;
+            for (int j = 1; j <= right.length(); j++) {
+                int substitutionCost = left.charAt(i - 1) == right.charAt(j - 1) ? 0 : 1;
+                current[j] = Math.min(
+                    Math.min(current[j - 1] + 1, previous[j] + 1),
+                    previous[j - 1] + substitutionCost
+                );
+            }
+            int[] tmp = previous;
+            previous = current;
+            current = tmp;
+        }
+        return previous[right.length()];
     }
 }

@@ -371,6 +371,26 @@ class AiFlashcardServiceTests {
         );
     }
 
+    @Test
+    void generateChunks_removesConservativeNearDuplicateCardsAcrossChunks() {
+        when(callSpec.entity(FlashcardsResponse.class))
+            .thenReturn(wrap(new GeneratedFlashcard("What is mitosis?", "Cell division in body cells.")))
+            .thenReturn(wrap(
+                new GeneratedFlashcard("What is mitosis", "Cell division in body cells"),
+                new GeneratedFlashcard("What is meiosis?", "Cell division that creates gametes.")
+            ));
+
+        List<GeneratedFlashcard> result = service.generateChunks(List.of(
+            new FlashcardChunk("lecture.pdf", 1, 1, 2, "one", null),
+            new FlashcardChunk("lecture.pdf", 2, 3, 4, "two", null)
+        ), null);
+
+        assertThat(result).containsExactly(
+            new GeneratedFlashcard("What is mitosis?", "Cell division in body cells."),
+            new GeneratedFlashcard("What is meiosis?", "Cell division that creates gametes.")
+        );
+    }
+
     private FlashcardsResponse wrap(GeneratedFlashcard... cards) {
         return new FlashcardsResponse(List.of(cards));
     }
