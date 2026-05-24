@@ -38,12 +38,20 @@ public class AiRequestQuotaService {
 
     @Transactional
     public void checkAndRecord(User user) {
+        checkAndRecord(user, 1);
+    }
+
+    @Transactional
+    public void checkAndRecord(User user, int requestCount) {
+        if (requestCount < 1) {
+            throw new IllegalArgumentException("AI request amount must be positive.");
+        }
         LocalDate today = LocalDate.now(clock);
         AiRequestUsage usage = lockOrCreateUsageRow(user, today);
-        if (usage.getRequestCount() >= user.getDailyAiRequestLimit()) {
+        if (usage.getRequestCount() + requestCount > user.getDailyAiRequestLimit()) {
             throw new AiQuotaExceededException("Daily AI request limit reached.");
         }
-        usage.setRequestCount(usage.getRequestCount() + 1);
+        usage.setRequestCount(usage.getRequestCount() + requestCount);
         aiRequestUsageRepository.save(usage);
     }
 

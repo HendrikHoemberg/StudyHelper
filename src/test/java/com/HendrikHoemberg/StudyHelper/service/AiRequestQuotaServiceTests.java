@@ -118,4 +118,43 @@ class AiRequestQuotaServiceTests {
 
         verify(aiRequestUsageRepository, times(1)).findByUserAndUsageDateForUpdate(user, today);
     }
+
+    @Test
+    void checkAndRecordAmount_WhenQuotaAvailable_RecordsRequestedAmount() {
+        user.setDailyAiRequestLimit(10);
+        AiRequestUsage usage = new AiRequestUsage();
+        usage.setUser(user);
+        usage.setUsageDate(today);
+        usage.setRequestCount(3);
+        when(aiRequestUsageRepository.findByUserAndUsageDateForUpdate(user, today)).thenReturn(Optional.of(usage));
+        when(aiRequestUsageRepository.save(usage)).thenReturn(usage);
+
+        aiRequestQuotaService.checkAndRecord(user, 4);
+
+        assertThat(usage.getRequestCount()).isEqualTo(7);
+        verify(aiRequestUsageRepository).save(usage);
+    }
+
+    @Test
+    void checkAndRecordAmount_WhenAmountWouldExceedLimit_ThrowsAndDoesNotSave() {
+        user.setDailyAiRequestLimit(10);
+        AiRequestUsage usage = new AiRequestUsage();
+        usage.setUser(user);
+        usage.setUsageDate(today);
+        usage.setRequestCount(8);
+        when(aiRequestUsageRepository.findByUserAndUsageDateForUpdate(user, today)).thenReturn(Optional.of(usage));
+
+        assertThatThrownBy(() -> aiRequestQuotaService.checkAndRecord(user, 3))
+            .isInstanceOf(AiQuotaExceededException.class)
+            .hasMessage("Daily AI request limit reached.");
+
+        verify(aiRequestUsageRepository, never()).save(any(AiRequestUsage.class));
+    }
+
+    @Test
+    void checkAndRecordAmount_WhenAmountIsLessThanOne_ThrowsIllegalArgument() {
+        assertThatThrownBy(() -> aiRequestQuotaService.checkAndRecord(user, 0))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("AI request amount must be positive.");
+    }
 }
