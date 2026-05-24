@@ -82,7 +82,7 @@ class AiQuizServiceTests {
         });
         when(requestSpec.call()).thenReturn(callSpec);
 
-        service = new AiQuizService(builder, new JsonMapper());
+        service = new AiQuizService(builder, new JsonMapper(), new AiThrottlingService());
     }
 
     @Test

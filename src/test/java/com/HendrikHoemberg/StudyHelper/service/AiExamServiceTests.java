@@ -80,7 +80,7 @@ class AiExamServiceTests {
         });
         when(requestSpec.call()).thenReturn(callSpec);
 
-        service = new AiExamService(builder, new JsonMapper());
+        service = new AiExamService(builder, new JsonMapper(), new AiThrottlingService());
     }
 
     @Test

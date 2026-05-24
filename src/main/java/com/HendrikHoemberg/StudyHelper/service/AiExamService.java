@@ -27,11 +27,13 @@ public class AiExamService {
     private final ChatClient chatClient;
     private final String questionsResponseSchema;
     private final String gradingResponseSchema;
+    private final AiThrottlingService throttlingService;
 
-    public AiExamService(ChatClient.Builder builder, JsonMapper objectMapper) {
+    public AiExamService(ChatClient.Builder builder, JsonMapper objectMapper, AiThrottlingService throttlingService) {
         this.chatClient = builder.build();
         this.questionsResponseSchema = new BeanOutputConverter<>(ExamQuestionsResponse.class, objectMapper).getJsonSchema();
         this.gradingResponseSchema = new BeanOutputConverter<>(ExamGradingResult.class, objectMapper).getJsonSchema();
+        this.throttlingService = throttlingService;
     }
 
     public List<ExamQuestion> generate(
@@ -61,6 +63,7 @@ public class AiExamService {
 
         ExamQuestionsResponse response;
         try {
+            throttlingService.throttle();
             response = chatClient.prompt()
                     .options(GoogleGenAiChatOptions.builder()
                             .responseMimeType("application/json")
@@ -113,6 +116,7 @@ public class AiExamService {
         String prompt = buildGradingPrompt(safeQuestions, safeUserAnswers, size);
 
         try {
+            throttlingService.throttle();
             return chatClient.prompt()
                     .options(GoogleGenAiChatOptions.builder()
                             .responseMimeType("application/json")

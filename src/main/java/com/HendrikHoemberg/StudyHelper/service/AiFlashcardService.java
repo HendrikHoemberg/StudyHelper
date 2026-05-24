@@ -29,10 +29,12 @@ public class AiFlashcardService {
 
     private final ChatClient chatClient;
     private final String responseSchema;
+    private final AiThrottlingService throttlingService;
 
-    public AiFlashcardService(ChatClient.Builder builder, JsonMapper objectMapper) {
+    public AiFlashcardService(ChatClient.Builder builder, JsonMapper objectMapper, AiThrottlingService throttlingService) {
         this.chatClient = builder.build();
         this.responseSchema = new BeanOutputConverter<>(FlashcardsResponse.class, objectMapper).getJsonSchema();
+        this.throttlingService = throttlingService;
     }
 
     public List<GeneratedFlashcard> generate(DocumentInput document) {
@@ -76,6 +78,7 @@ public class AiFlashcardService {
 
         FlashcardsResponse response;
         try {
+            throttlingService.throttle();
             response = chatClient.prompt()
                     .options(GoogleGenAiChatOptions.builder()
                             .responseMimeType("application/json")
@@ -165,6 +168,7 @@ public class AiFlashcardService {
             : new Media[0];
         FlashcardsResponse response;
         try {
+            throttlingService.throttle();
             response = chatClient.prompt()
                 .options(GoogleGenAiChatOptions.builder()
                     .responseMimeType("application/json")

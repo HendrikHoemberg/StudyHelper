@@ -31,11 +31,13 @@ public class AiQuizService {
 
     private final ChatClient chatClient;
     private final String responseSchema;
+    private final AiThrottlingService throttlingService;
 
-    public AiQuizService(ChatClient.Builder builder, JsonMapper objectMapper) {
+    public AiQuizService(ChatClient.Builder builder, JsonMapper objectMapper, AiThrottlingService throttlingService) {
         this.chatClient = builder.build();
         String rawSchema = new BeanOutputConverter<>(QuizQuestionsResponse.class, objectMapper).getJsonSchema();
         this.responseSchema = withQuestionPropertyOrdering(rawSchema, objectMapper);
+        this.throttlingService = throttlingService;
     }
 
     private static String withQuestionPropertyOrdering(String schema, JsonMapper objectMapper) {
@@ -90,6 +92,7 @@ public class AiQuizService {
 
         QuizQuestionsResponse response;
         try {
+            throttlingService.throttle();
             response = chatClient.prompt()
                 .options(GoogleGenAiChatOptions.builder()
                     .responseMimeType("application/json")

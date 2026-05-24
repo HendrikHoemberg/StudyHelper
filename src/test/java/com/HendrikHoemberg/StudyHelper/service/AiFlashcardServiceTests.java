@@ -76,7 +76,7 @@ class AiFlashcardServiceTests {
         });
         when(requestSpec.call()).thenReturn(callSpec);
 
-        service = new AiFlashcardService(builder, new JsonMapper());
+        service = new AiFlashcardService(builder, new JsonMapper(), new AiThrottlingService());
     }
 
     @Test
