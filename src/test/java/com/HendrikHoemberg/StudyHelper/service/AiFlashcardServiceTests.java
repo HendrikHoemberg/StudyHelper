@@ -1,9 +1,11 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.dto.FlashcardChunk;
 import com.HendrikHoemberg.StudyHelper.dto.FlashcardsResponse;
 import com.HendrikHoemberg.StudyHelper.dto.GeneratedFlashcard;
 import com.HendrikHoemberg.StudyHelper.dto.PdfDocument;
 import com.HendrikHoemberg.StudyHelper.dto.TextDocument;
+import org.springframework.ai.google.genai.common.GoogleGenAiThinkingLevel;
 import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -332,6 +334,41 @@ class AiFlashcardServiceTests {
 
         assertThat(capturedPrompt.get()).contains("x".repeat(1000));
         assertThat(capturedPrompt.get()).doesNotContain("x".repeat(1001));
+    }
+
+    @Test
+    void generateChunks_usesMediumThinkingAndNoFixedCount() {
+        when(callSpec.entity(FlashcardsResponse.class)).thenReturn(wrap(
+            new GeneratedFlashcard("Q", "A")
+        ));
+
+        List<GeneratedFlashcard> result = service.generateChunks(List.of(
+            new FlashcardChunk("lecture.pdf", 1, 1, 2, "Mitosis has prophase.", null)
+        ), null);
+
+        assertThat(result).containsExactly(new GeneratedFlashcard("Q", "A"));
+        assertThat(capturedPrompt.get()).contains("every testable detail");
+        assertThat(capturedPrompt.get()).doesNotContain("Generate exactly");
+        var built = (GoogleGenAiChatOptions) capturedOptionsBuilder.get().build();
+        assertThat(built.getThinkingLevel()).isEqualTo(GoogleGenAiThinkingLevel.MEDIUM);
+        assertThat(built.getThinkingBudget()).isNull();
+    }
+
+    @Test
+    void generateChunks_removesExactDuplicateCardsAcrossChunks() {
+        when(callSpec.entity(FlashcardsResponse.class))
+            .thenReturn(wrap(new GeneratedFlashcard("Q", "A")))
+            .thenReturn(wrap(new GeneratedFlashcard(" Q ", " A "), new GeneratedFlashcard("Q2", "A2")));
+
+        List<GeneratedFlashcard> result = service.generateChunks(List.of(
+            new FlashcardChunk("lecture.pdf", 1, 1, 2, "one", null),
+            new FlashcardChunk("lecture.pdf", 2, 3, 4, "two", null)
+        ), null);
+
+        assertThat(result).containsExactly(
+            new GeneratedFlashcard("Q", "A"),
+            new GeneratedFlashcard("Q2", "A2")
+        );
     }
 
     private FlashcardsResponse wrap(GeneratedFlashcard... cards) {

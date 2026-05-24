@@ -1,12 +1,15 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.DocumentInput;
+import com.HendrikHoemberg.StudyHelper.dto.FlashcardChunk;
 import com.HendrikHoemberg.StudyHelper.dto.FlashcardsResponse;
 import com.HendrikHoemberg.StudyHelper.dto.GeneratedFlashcard;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.content.Media;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
+import org.springframework.ai.google.genai.common.GoogleGenAiThinkingLevel;
+import org.springframework.util.MimeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -88,27 +91,7 @@ public class AiFlashcardService {
         }
 
         try {
-            List<GeneratedFlashcard> rawList = response == null || response.flashcards() == null
-                    ? List.of()
-                    : response.flashcards();
-
-            List<GeneratedFlashcard> valid = new ArrayList<>();
-            for (GeneratedFlashcard card : rawList) {
-                if (card == null)
-                    continue;
-                String front = card.frontText() == null ? null : card.frontText().trim();
-                String back = card.backText() == null ? null : card.backText().trim();
-                if (front == null || front.isBlank() || back == null || back.isBlank())
-                    continue;
-                valid.add(new GeneratedFlashcard(front, back));
-            }
-
-            if (valid.isEmpty()) {
-                throw AiGenerationSupport.failure(log, "FLASHCARDS", "RESPONSE_VALIDATION",
-                    "AI returned no valid flashcards; please retry.",
-                    new IllegalStateException("AI response contained no flashcards with both frontText and backText."));
-            }
-
+            List<GeneratedFlashcard> valid = validCards(response);
             return valid.stream().limit(normalizedCount).toList();
 
         } catch (IllegalStateException | IllegalArgumentException e) {
@@ -153,5 +136,103 @@ public class AiFlashcardService {
                 + "=== ATTACHED PDFs ===\n"
                 + "%s\n").formatted(cardCount, cardCount, docSection, pdfSection)
                 + AiInstructionSupport.section(additionalInstructions);
+    }
+
+    public List<GeneratedFlashcard> generateChunks(List<FlashcardChunk> chunks, String additionalInstructions) {
+        if (chunks == null || chunks.isEmpty()) {
+            throw new IllegalArgumentException("Flashcard generation requires at least one source chunk.");
+        }
+        List<GeneratedFlashcard> all = new ArrayList<>();
+        for (FlashcardChunk chunk : chunks) {
+            all.addAll(generateChunk(chunk, additionalInstructions));
+        }
+        return dedupe(all);
+    }
+
+    private List<GeneratedFlashcard> generateChunk(FlashcardChunk chunk, String additionalInstructions) {
+        String prompt = buildChunkPrompt(chunk, additionalInstructions);
+        Media[] media = chunk.hasPdfResource()
+            ? new Media[] { new Media(new MimeType("application", "pdf"), chunk.pdfResource()) }
+            : new Media[0];
+        FlashcardsResponse response;
+        try {
+            response = chatClient.prompt()
+                .options(GoogleGenAiChatOptions.builder()
+                    .responseMimeType("application/json")
+                    .responseSchema(responseSchema)
+                    .thinkingLevel(GoogleGenAiThinkingLevel.MEDIUM))
+                .user(u -> {
+                    u.text(prompt);
+                    if (media.length > 0) u.media(media);
+                })
+                .call()
+                .entity(FlashcardsResponse.class);
+        } catch (Exception e) {
+            throw AiGenerationSupport.failure(log, "FLASHCARDS", "PROVIDER_REQUEST",
+                "AI request failed while generating flashcards for " + chunk.sourceFilename() + " pages "
+                    + chunk.startPage() + "-" + chunk.endPage() + ".", e);
+        }
+        return validCards(response);
+    }
+
+    private List<GeneratedFlashcard> validCards(FlashcardsResponse response) {
+        List<GeneratedFlashcard> rawList = response == null || response.flashcards() == null
+            ? List.of()
+            : response.flashcards();
+        List<GeneratedFlashcard> valid = new ArrayList<>();
+        for (GeneratedFlashcard card : rawList) {
+            if (card == null) continue;
+            String front = card.frontText() == null ? null : card.frontText().trim();
+            String back = card.backText() == null ? null : card.backText().trim();
+            if (front == null || front.isBlank() || back == null || back.isBlank()) continue;
+            valid.add(new GeneratedFlashcard(front, back));
+        }
+        if (valid.isEmpty()) {
+            throw AiGenerationSupport.failure(log, "FLASHCARDS", "RESPONSE_VALIDATION",
+                "AI returned no valid flashcards; please retry.",
+                new IllegalStateException("AI response contained no flashcards with both frontText and backText."));
+        }
+        return valid;
+    }
+
+    private String buildChunkPrompt(FlashcardChunk chunk, String additionalInstructions) {
+        String source = chunk.hasPdfResource()
+            ? "Attached PDF page range is the source. Filename: " + chunk.sourceFilename()
+            : chunk.text();
+        return """
+            You are a study assistant. Generate flashcards from exactly this source chunk.
+
+            SOURCE:
+            %s pages %d-%d, chunk %d.
+
+            TASK:
+            Create one concise, self-contained flashcard for every testable detail in this chunk.
+            A testable detail is a definition, fact, formula, rule, process step, comparison,
+            cause/effect relationship, named concept, exception, caveat, or example that teaches a concept.
+
+            RULES:
+            - Do not target a fixed number of flashcards.
+            - Do not omit testable details just to keep the deck short.
+            - Skip metadata, headers, footers, page numbers, bibliographies, acknowledgements, and layout-only details.
+            - Skip vague image references unless the needed information is present in the chunk.
+            - Preserve the dominant source language.
+            - Avoid duplicates within this chunk.
+
+            CHUNK CONTENT:
+            %s
+            """.formatted(chunk.sourceFilename(), chunk.startPage(), chunk.endPage(), chunk.chunkIndex(), source)
+            + AiInstructionSupport.section(additionalInstructions);
+    }
+
+    private List<GeneratedFlashcard> dedupe(List<GeneratedFlashcard> cards) {
+        List<GeneratedFlashcard> deduped = new ArrayList<>();
+        java.util.Set<String> seen = new java.util.LinkedHashSet<>();
+        for (GeneratedFlashcard card : cards) {
+            String key = (card.frontText().strip() + "\n" + card.backText().strip()).toLowerCase();
+            if (seen.add(key)) {
+                deduped.add(card);
+            }
+        }
+        return deduped;
     }
 }
