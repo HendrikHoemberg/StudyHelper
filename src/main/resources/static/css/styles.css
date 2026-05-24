@@ -3733,9 +3733,15 @@ textarea.sh-input {
 }
 
 .sh-quiz-warn-banner {
-    background: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffc107;
+    background: rgba(245, 158, 11, 0.12);
+    color: #92400e;
+    border: 1px solid rgba(245, 158, 11, 0.38);
+}
+
+[data-theme="dark"] .sh-quiz-warn-banner {
+    background: rgba(245, 158, 11, 0.10);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.28);
 }
 
 .sh-quiz-error-banner {
@@ -6019,7 +6025,13 @@ iconify-icon {
 }
 
 .sh-flashcard-generator .sh-ai-estimate {
-    margin: 0.75rem 0 1rem;
+    margin: 0.75rem 0 0.75rem;
+}
+
+.sh-flashcard-generator .sh-ai-estimate > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .sh-flashcard-generator .sh-ai-destination-toggle {
@@ -6035,8 +6047,8 @@ iconify-icon {
 }
 
 .sh-flashcard-generator .sh-wizard-footer {
-    margin-top: 0.75rem;
-    padding: 0.75rem 1rem; /* Tighter footer controls spacing */
+    margin-top: 0.5rem;
+    padding: 0.875rem 1rem; /* Keep footer comfortable without crowding the content above */
 }
 
 /* Compact tree styling specific to the flashcard generator to maximize vertical screenspace */

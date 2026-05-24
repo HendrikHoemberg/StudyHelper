@@ -68,6 +68,16 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void quizWarningBannersUseSofterAmberTreatment() throws IOException {
+        String styles = resource("static/css/styles.css");
+
+        assertThat(styles)
+            .contains("background: rgba(245, 158, 11, 0.12);")
+            .contains("border: 1px solid rgba(245, 158, 11, 0.38);")
+            .contains("color: #92400e;");
+    }
+
+    @Test
     void deckViewShowsAddCardTileBeforeExistingFlashcards() throws IOException {
         String template = resource("templates/fragments/deck.html");
 
