@@ -1162,6 +1162,37 @@ document.body.addEventListener('htmx:afterRequest', (event) => {
     if (modal) modal.style.display = 'none';
 });
 
+function refreshFlashcardGenerationEstimate(form) {
+    if (!form) return;
+    const target = form.querySelector('#ai-generation-estimate');
+    if (!target) return;
+    fetch('/flashcards/generate/estimate', {
+        method: 'POST',
+        headers: {
+            ...getCsrfHeaders(),
+            'HX-Request': 'true'
+        },
+        body: new URLSearchParams(new FormData(form))
+    })
+        .then((response) => response.text())
+        .then((html) => {
+            target.outerHTML = html;
+            const freshTarget = document.getElementById('ai-generation-estimate');
+            if (window.htmx && freshTarget) {
+                htmx.process(freshTarget);
+            }
+        })
+        .catch(() => {});
+}
+
+document.body.addEventListener('change', (event) => {
+    const form = event.target.closest?.('form.sh-ai-flashcard-form');
+    if (!form) return;
+    if (event.target.matches('input[name="fileId"], input[name="documentMode"], .sh-ai-global-pdf-mode input[name="documentMode"]')) {
+        refreshFlashcardGenerationEstimate(form);
+    }
+});
+
 function hideAiGenerationModal() {
     const modal = document.getElementById('ai-generating-modal');
     if (modal) modal.style.display = 'none';

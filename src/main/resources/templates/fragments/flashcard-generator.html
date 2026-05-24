@@ -215,23 +215,50 @@
                             </div>
                         </div>
                     </div>
-                    <div class="sh-setting-row" style="margin-top:0.75rem;">
-                        <div>
-                            <div class="sh-setting-label" th:text="#{flashcard-gen.card-count}">Card Count</div>
-                            <div class="sh-setting-hint" th:text="#{flashcard-gen.card-count-hint}">Choose between 1 and 100 generated cards.</div>
-                        </div>
-                        <div class="sh-number-stepper" data-stepper>
-                            <button type="button" class="sh-stepper-btn" data-stepper-action="decrement" th:aria-label="#{flashcard-gen.card-count.decrease}" aria-label="Decrease card count">
-                                <iconify-icon icon="lucide:minus"></iconify-icon>
-                            </button>
-                            <input type="number" name="cardCount" class="sh-stepper-input"
-                                   th:value="${cardCount != null ? cardCount : 20}" min="1" max="100">
-                            <button type="button" class="sh-stepper-btn" data-stepper-action="increment" th:aria-label="#{flashcard-gen.card-count.increase}" aria-label="Increase card count">
-                                <iconify-icon icon="lucide:plus"></iconify-icon>
-                            </button>
-                        </div>
+                    <div id="ai-generation-estimate"
+                         th:replace="~{fragments/flashcard-generator :: estimate}">
                     </div>
+
+                    <label class="sh-quiz-warn-banner sh-ai-high-risk-ack" th:if="${generationPlan != null and generationPlan.highRisk()}">
+                        <input type="checkbox" name="highRiskAcknowledged" value="true">
+                        <span th:text="#{flashcard-gen.estimate.high-risk-ack}">I understand this generation may use significant quota and take several minutes.</span>
+                    </label>
                 </div>
+
+        <div th:fragment="estimate" id="ai-generation-estimate" class="sh-ai-estimate">
+            <div th:if="${generationPlan == null}" class="sh-empty-hint" th:text="#{flashcard-gen.estimate.select-sources}">
+                Select sources to estimate AI usage.
+            </div>
+            <div th:if="${generationPlan != null}">
+                <div class="sh-setting-label" th:text="#{flashcard-gen.estimate.title}">Generation estimate</div>
+                <div class="sh-setting-hint"
+                     th:text="#{flashcard-gen.estimate.summary(${generationPlan.requestCost()}, ${generationPlan.estimatedSecondsLow()}, ${generationPlan.estimatedSecondsHigh()}, ${generationPlan.estimatedCardsLow()}, ${generationPlan.estimatedCardsHigh()})}">
+                    Uses 1 AI request.
+                </div>
+                <div th:if="${#strings.toString(generationPlan.risk()) == 'WARNING' or #strings.toString(generationPlan.risk()) == 'HIGH'}"
+                     class="sh-quiz-warn-banner">
+                    <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
+                    <span th:text="#{flashcard-gen.estimate.warning}">Large PDFs can take longer and may produce uneven cards. Split by chapter for best results.</span>
+                </div>
+            </div>
+        </div>
+
+        <div th:fragment="progress" class="sh-card sh-ai-generation-progress"
+             th:attr="hx-get=@{/flashcards/generate/jobs/{id}(id=${generationJob.id})}"
+             hx-trigger="every 2s"
+             hx-target="this"
+             hx-swap="outerHTML">
+            <div class="sh-card-body">
+                <div class="sh-section-title" th:text="#{flashcard-gen.progress.title}">Generating flashcards</div>
+                <p class="sh-setting-hint"
+                   th:text="#{flashcard-gen.progress.detail(${generationJob.completedChunkCount}, ${generationJob.chunkCount})}">
+                    Processing chunks...
+                </p>
+                <div th:if="${#strings.toString(generationJob.status) == 'FAILED'}" class="sh-alert sh-alert-danger">
+                    <div class="sh-alert-body" th:text="${generationJob.failureMessage}">Generation failed.</div>
+                </div>
+            </div>
+        </div>
         </div>
         <div class="sh-wizard-footer">
             <button type="button" id="ai-flashcard-back" class="sh-btn sh-btn-secondary" style="display:none;">

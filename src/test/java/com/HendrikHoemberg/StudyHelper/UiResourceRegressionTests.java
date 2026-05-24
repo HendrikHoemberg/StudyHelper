@@ -841,12 +841,17 @@ class UiResourceRegressionTests {
     }
 
     @Test
-    void flashcardGeneratorOffersCardCountStepper() throws IOException {
+    void flashcardGeneratorShowsEstimateAndProgressHooksInsteadOfCardCountStepper() throws IOException {
         String template = resource("templates/fragments/flashcard-generator.html");
+        String appJs = resource("static/js/app.js");
 
         assertThat(template)
-            .contains("name=\"cardCount\"")
-            .contains("max=\"100\"");
+            .doesNotContain("name=\"cardCount\"")
+            .contains("id=\"ai-generation-estimate\"")
+            .contains("th:fragment=\"estimate\"")
+            .contains("th:fragment=\"progress\"")
+            .contains("name=\"highRiskAcknowledged\"");
+        assertThat(appJs).contains("/flashcards/generate/estimate");
     }
 
     @Test
