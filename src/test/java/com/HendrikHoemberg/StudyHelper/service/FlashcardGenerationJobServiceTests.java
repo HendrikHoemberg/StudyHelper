@@ -366,6 +366,18 @@ class FlashcardGenerationJobServiceTests {
         verify(aiRequestQuotaService).refund(user, 3);
     }
 
+    @Test
+    void setJobThrottled_updatesThrottledField() {
+        FlashcardGenerationJob job = new FlashcardGenerationJob();
+        job.setId(1L);
+        job.setThrottled(false);
+        when(jobRepository.findById(1L)).thenReturn(Optional.of(job));
+
+        service.setJobThrottled(1L, true);
+
+        assertThat(job.isThrottled()).isTrue();
+    }
+
     private TransactionTemplate testTransactionTemplate() {
         return new TransactionTemplate(new PlatformTransactionManager() {
             @Override

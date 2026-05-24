@@ -61,11 +61,30 @@ public class AiThrottlingService {
 
                     if (waitTime > 0) {
                         log.warn("RPM Limit Protection: {} requests reached. Throttling AI request. Queueing/sleeping thread for {} ms", maxRequests, waitTime);
+                        
+                        Runnable startCallback = onThrottleStart.get();
+                        if (startCallback != null) {
+                            try {
+                                startCallback.run();
+                            } catch (Exception ex) {
+                                log.error("Error executing throttle start callback", ex);
+                            }
+                        }
+
                         try {
                             Thread.sleep(waitTime);
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                             log.error("Throttling thread sleep interrupted", e);
+                        } finally {
+                            Runnable endCallback = onThrottleEnd.get();
+                            if (endCallback != null) {
+                                try {
+                                    endCallback.run();
+                                } catch (Exception ex) {
+                                    log.error("Error executing throttle end callback", ex);
+                                }
+                            }
                         }
                     }
                 }
@@ -80,5 +99,21 @@ public class AiThrottlingService {
             // Record the current request timestamp
             requestTimestamps.offer(timeSupplier.getAsLong());
         }
+    }
+
+    private static final ThreadLocal<Runnable> onThrottleStart = new ThreadLocal<>();
+    private static final ThreadLocal<Runnable> onThrottleEnd = new ThreadLocal<>();
+
+    public static void setOnThrottleStart(Runnable callback) {
+        onThrottleStart.set(callback);
+    }
+
+    public static void setOnThrottleEnd(Runnable callback) {
+        onThrottleEnd.set(callback);
+    }
+
+    public static void clearCallbacks() {
+        onThrottleStart.remove();
+        onThrottleEnd.remove();
     }
 }

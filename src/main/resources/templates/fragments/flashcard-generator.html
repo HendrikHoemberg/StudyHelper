@@ -255,7 +255,7 @@
             <div id="ai-gen-title" hx-swap-oob="true" class="sh-ai-gen-title" th:text="#{flashcard-gen.progress.title}">Generating flashcards</div>
 
             <div id="ai-gen-subtitle" hx-swap-oob="true" class="sh-ai-gen-subtitle"
-                 th:text="#{flashcard-gen.progress.detail(${generationJob.completedChunkCount}, ${generationJob.chunkCount})}">
+                 th:text="${generationJob.throttled} ? #{flashcard-gen.progress.throttled} : #{flashcard-gen.progress.detail(${generationJob.completedChunkCount}, ${generationJob.chunkCount})}">
                  Processing chunks...
             </div>
 
@@ -319,8 +319,8 @@
         <div class="sh-ai-gen-dialog">
             <div class="sh-ai-gen-spinner"></div>
             <div>
-                <div id="ai-gen-title" class="sh-ai-gen-title" th:text="#{flashcard-gen.generating-title}">Generating your flashcards with AI…</div>
-                <div class="sh-ai-gen-subtitle" th:text="#{flashcard-gen.generating-subtitle}">This may take a few seconds.</div>
+                <div id="ai-gen-title" class="sh-ai-gen-title" th:text="#{flashcard-gen.progress.title}">Generating flashcards</div>
+                <div id="ai-gen-subtitle" class="sh-ai-gen-subtitle" th:text="#{flashcard-gen.progress.initial}">Preparing...</div>
             </div>
             <button type="button" class="sh-btn sh-btn-secondary sh-btn-sm" id="ai-gen-abort-btn" th:text="#{flashcard-gen.generating-cancel}">Cancel</button>
         </div>

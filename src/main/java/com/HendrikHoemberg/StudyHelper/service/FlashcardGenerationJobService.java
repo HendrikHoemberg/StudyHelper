@@ -104,6 +104,10 @@ public class FlashcardGenerationJobService {
 
     void runJob(Long jobId) {
         try {
+            // Set thread-local callbacks for throttling
+            AiThrottlingService.setOnThrottleStart(() -> setJobThrottled(jobId, true));
+            AiThrottlingService.setOnThrottleEnd(() -> setJobThrottled(jobId, false));
+
             FlashcardGenerationJob job = markRunning(jobId);
             User user = job.getUser();
             List<FlashcardChunk> chunks = chunksForJob(job, user);
@@ -118,6 +122,8 @@ public class FlashcardGenerationJobService {
             // Keep it CANCELLED, do not mark as FAILED
         } catch (Exception ex) {
             markFailed(jobId, ex.getMessage() == null ? "Flashcard generation failed." : ex.getMessage());
+        } finally {
+            AiThrottlingService.clearCallbacks();
         }
     }
 
@@ -316,6 +322,14 @@ public class FlashcardGenerationJobService {
                     job.setChargedRequestCost(job.getCompletedChunkCount());
                 }
             }
+        });
+    }
+
+    @Transactional
+    public void setJobThrottled(Long jobId, boolean throttled) {
+        transactionTemplate.executeWithoutResult(status -> {
+            FlashcardGenerationJob job = jobRepository.findById(jobId).orElseThrow();
+            job.setThrottled(throttled);
         });
     }
 

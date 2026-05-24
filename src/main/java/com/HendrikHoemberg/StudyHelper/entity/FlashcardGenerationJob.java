@@ -69,6 +69,9 @@ public class FlashcardGenerationJob {
 
     private Long savedDeckId;
 
+    @Column(nullable = false)
+    private boolean throttled;
+
     @Column(length = 1000)
     private String failureMessage;
 
