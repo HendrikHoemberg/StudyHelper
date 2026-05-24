@@ -512,10 +512,14 @@ class FlashcardGenerationControllerTests {
     }
 
     @Test
-    void generationStatus_Succeeded_RedirectsToDeck() {
+    void generationStatus_Succeeded_ShowsSummaryAndRefreshesQuota() {
         job.setStatus(FlashcardGenerationJobStatus.SUCCEEDED);
         job.setSavedDeckId(42L);
+        job.setGeneratedCardCount(120);
+        job.setChargedRequestCost(12);
+        user.setDailyAiRequestLimit(100);
         when(jobService.getJob(77L, user)).thenReturn(job);
+        when(aiRequestQuotaService.todayUsed(user)).thenReturn(15);
 
         ExtendedModelMap model = new ExtendedModelMap();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -523,7 +527,13 @@ class FlashcardGenerationControllerTests {
         String view = controller.generationStatus(77L, model, () -> "alice", response);
 
         assertThat(view).isEqualTo("fragments/flashcard-generator :: progress");
-        assertThat(response.getHeader("HX-Redirect")).isEqualTo("/decks/42");
+        assertThat(model.get("generationJob")).isEqualTo(job);
+        assertThat(model.get("generatedCardCount")).isEqualTo(120);
+        assertThat(model.get("chargedRequestCost")).isEqualTo(12);
+        assertThat(model.get("remainingDailyAi")).isEqualTo(85);
+        assertThat(model.get("dailyAiLimit")).isEqualTo(100);
+        assertThat(response.getHeader("HX-Redirect")).isNull();
+        assertThat(response.getHeader("HX-Trigger")).isEqualTo("refresh-quota");
     }
 
     @Test

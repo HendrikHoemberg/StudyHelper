@@ -168,7 +168,12 @@ public class FlashcardGenerationController {
         FlashcardGenerationJob job = jobService.getJob(jobId, user);
         model.addAttribute("generationJob", job);
         if (job.getStatus() == FlashcardGenerationJobStatus.SUCCEEDED && job.getSavedDeckId() != null) {
-            response.setHeader("HX-Redirect", "/decks/" + job.getSavedDeckId());
+            int remainingDaily = user.getDailyAiRequestLimit() - aiRequestQuotaService.todayUsed(user);
+            model.addAttribute("generatedCardCount", job.getGeneratedCardCount());
+            model.addAttribute("chargedRequestCost", job.getChargedRequestCost());
+            model.addAttribute("remainingDailyAi", remainingDaily);
+            model.addAttribute("dailyAiLimit", user.getDailyAiRequestLimit());
+            response.addHeader("HX-Trigger", "refresh-quota");
         }
         if (job.getStatus() == FlashcardGenerationJobStatus.FAILED) {
             response.addHeader("HX-Trigger", "refresh-quota");

@@ -251,17 +251,36 @@
              hx-target="this"
              hx-swap="outerHTML">
 
-            <!-- Out of Band swaps to update the preexisting modal overlay -->
-            <div id="ai-gen-title" hx-swap-oob="true" class="sh-ai-gen-title" th:text="#{flashcard-gen.progress.title}">Generating flashcards</div>
+            <!-- Out of Band swaps for RUNNING / QUEUED -->
+            <th:block th:if="${#strings.toString(generationJob.status) != 'SUCCEEDED'}">
+                <div id="ai-gen-title" hx-swap-oob="true" class="sh-ai-gen-title" th:text="#{flashcard-gen.progress.title}">Generating flashcards</div>
 
-            <div id="ai-gen-subtitle" hx-swap-oob="true" class="sh-ai-gen-subtitle"
-                 th:text="${generationJob.throttled} ? #{flashcard-gen.progress.throttled} : #{flashcard-gen.progress.detail(${generationJob.completedChunkCount}, ${generationJob.chunkCount})}">
-                 Processing chunks...
-            </div>
+                <div id="ai-gen-subtitle" hx-swap-oob="true" class="sh-ai-gen-subtitle"
+                     th:text="${generationJob.throttled} ? #{flashcard-gen.progress.throttled} : #{flashcard-gen.progress.detail(${generationJob.completedChunkCount}, ${generationJob.chunkCount})}">
+                     Processing chunks...
+                </div>
 
-            <button type="button" id="ai-gen-abort-btn" hx-swap-oob="true" class="sh-btn sh-btn-secondary sh-btn-sm"
-                    th:attr="data-job-id=${generationJob.id}"
-                    th:text="#{flashcard-gen.generating-cancel}">Cancel</button>
+                <button type="button" id="ai-gen-abort-btn" hx-swap-oob="true" class="sh-btn sh-btn-secondary sh-btn-sm"
+                        th:attr="data-job-id=${generationJob.id}"
+                        th:text="#{flashcard-gen.generating-cancel}">Cancel</button>
+            </th:block>
+
+            <!-- Out of Band swaps for SUCCEEDED -->
+            <th:block th:if="${#strings.toString(generationJob.status) == 'SUCCEEDED'}">
+                <div id="ai-gen-title" hx-swap-oob="true" class="sh-ai-gen-title" th:text="#{flashcard-gen.success.title}">Flashcards generated</div>
+
+                <div id="ai-gen-subtitle" hx-swap-oob="true" class="sh-ai-gen-subtitle"
+                     th:text="#{flashcard-gen.success.summary(${generatedCardCount}, ${chargedRequestCost}, ${remainingDailyAi}, ${dailyAiLimit})}">
+                     Cards generated.
+                </div>
+
+                <div id="ai-gen-spinner" hx-swap-oob="true" style="display:none;"></div>
+
+                <button type="button" id="ai-gen-abort-btn" hx-swap-oob="true" class="sh-btn sh-btn-primary sh-btn-sm"
+                        data-success="true"
+                        th:text="#{flashcard-gen.success.view-deck}"
+                        th:attr="onclick=|var m=document.getElementById('ai-generating-modal');if(m)m.style.display='none';window.location.href='/decks/${generationJob.savedDeckId}'|">View deck</button>
+            </th:block>
 
             <!-- Script block to handle completion alerts and modal closing -->
             <script th:if="${#strings.toString(generationJob.status) == 'FAILED' or #strings.toString(generationJob.status) == 'CANCELLED'}" th:inline="javascript">
@@ -317,7 +336,7 @@
     <div id="ai-generating-modal" class="sh-ai-gen-modal" role="dialog" aria-modal="true">
         <div class="sh-ai-gen-backdrop"></div>
         <div class="sh-ai-gen-dialog">
-            <div class="sh-ai-gen-spinner"></div>
+            <div class="sh-ai-gen-spinner" id="ai-gen-spinner"></div>
             <div>
                 <div id="ai-gen-title" class="sh-ai-gen-title" th:text="#{flashcard-gen.progress.title}">Generating flashcards</div>
                 <div id="ai-gen-subtitle" class="sh-ai-gen-subtitle" th:text="#{flashcard-gen.progress.initial}">Preparing...</div>

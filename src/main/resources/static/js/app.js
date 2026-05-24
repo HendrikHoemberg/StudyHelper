@@ -1113,6 +1113,7 @@ document.body.addEventListener('click', (e) => {
     }
     const abortBtn = e.target.closest('#ai-gen-abort-btn');
     if (abortBtn) {
+        if (abortBtn.dataset.success === 'true') return;
         const jobId = abortBtn.dataset.jobId;
         if (jobId) {
             e.preventDefault();
