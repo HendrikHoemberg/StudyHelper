@@ -6018,6 +6018,10 @@ iconify-icon {
     margin-bottom: 0.5rem; /* Tighter margin below pdf warning */
 }
 
+.sh-flashcard-generator .sh-ai-estimate {
+    margin: 0.75rem 0 1rem;
+}
+
 .sh-flashcard-generator .sh-ai-destination-toggle {
     margin-bottom: 0.75rem; /* Tighter margin under destination selector */
 }
@@ -6031,6 +6035,7 @@ iconify-icon {
 }
 
 .sh-flashcard-generator .sh-wizard-footer {
+    margin-top: 0.75rem;
     padding: 0.75rem 1rem; /* Tighter footer controls spacing */
 }
 

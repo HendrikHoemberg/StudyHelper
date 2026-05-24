@@ -48,7 +48,9 @@ class UiResourceRegressionTests {
             .contains("hx-post=\"/flashcards/generate\"")
             .contains("hx-sync=\"this:drop\"")
             .contains("name=\"additionalInstructions\"")
-            .contains("ai-flashcard-submit-with-instructions");
+            .contains("ai-flashcard-submit-with-instructions")
+            .doesNotContain("flashcard-gen.estimate.select-sources")
+            .doesNotContain("Select sources to estimate AI usage.");
     }
 
     @Test

@@ -222,9 +222,6 @@
                 </div>
 
         <div th:fragment="estimate" id="ai-generation-estimate" class="sh-ai-estimate">
-            <div th:if="${generationPlan == null}" class="sh-empty-hint" th:text="#{flashcard-gen.estimate.select-sources}">
-                Select sources to estimate AI usage.
-            </div>
             <div th:if="${generationPlan != null}">
                 <div class="sh-setting-label" th:text="#{flashcard-gen.estimate.title}">Generation estimate</div>
                 <div class="sh-setting-hint"
