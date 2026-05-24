@@ -4,6 +4,5 @@ public record Concept(
     String id,
     String topic,
     String essence,
-    Integer importance,
     String location
 ) {}

@@ -49,7 +49,7 @@ public class ConceptExtractionService {
                 .options(GoogleGenAiChatOptions.builder()
                     .responseMimeType("application/json")
                     .responseSchema(responseSchema)
-                    .thinkingLevel(GoogleGenAiThinkingLevel.MEDIUM)
+                    .thinkingLevel(GoogleGenAiThinkingLevel.HIGH)
                     .maxOutputTokens(MAX_OUTPUT_TOKENS))
                 .user(u -> {
                     u.text(prompt);
@@ -71,9 +71,7 @@ public class ConceptExtractionService {
             if (topic == null || topic.isBlank() || essence == null || essence.isBlank()) continue;
             String id = c.id() == null || c.id().isBlank() ? "c" + (cleaned.size() + 1) : c.id().strip();
             String location = c.location() == null ? "" : c.location().strip();
-            Integer importance = c.importance();
-            if (importance != null && (importance < 1 || importance > 3)) importance = null;
-            cleaned.add(new Concept(id, topic, essence, importance, location));
+            cleaned.add(new Concept(id, topic, essence, location));
         }
         return new ConceptOutline(cleaned);
     }
@@ -85,55 +83,63 @@ public class ConceptExtractionService {
         return """
             You are a study analyst preparing material for flashcard creation.
             Your sole job in this step is to enumerate every distinct,
-            exam-worthy concept the source material teaches. A downstream step
-            will turn each concept into a single flashcard, so the number and
-            quality of concepts you list directly determines the final deck.
+            exam-worthy concept the source material teaches. A downstream
+            step will turn each concept into exactly one flashcard, so the
+            number of concepts you list IS the size of the final deck.
+
+            DENSITY EXPECTATION:
+            Educational PDFs typically support roughly 2-5 concepts per
+            content page (lecture slides commonly 1-3 per slide). A 20-page
+            chapter should normally yield 40-80+ concepts. If your draft is
+            far below that range for the material at hand, you are missing
+            content — re-read and add more.
 
             EXTRACTION RULES:
-            - Be EXHAUSTIVE. Err on the side of including a borderline concept
-              rather than omitting one. Under-extraction is a worse failure
-              than over-extraction.
+            - Be EXHAUSTIVE. Include every distinct testable idea, including
+              borderline ones. Under-extraction is the primary failure
+              mode of this step; over-extraction is acceptable.
             - One concept = one atomic, testable idea. Split compound ideas
-              into separate concepts. Do NOT bundle multiple facts into one
-              entry.
-            - Avoid near-duplicates: if two candidate concepts would produce
-              flashcards with the same answer, merge them.
+              into separate concepts. Definitions, properties, formulas,
+              causes, effects, examples, comparisons, edge cases, and named
+              entities are each their own concept.
+            - Include concepts from every part of the document — beginning,
+              middle, AND end. Long documents commonly contain important
+              material in the middle third that is easy to under-attend to;
+              counteract that bias explicitly.
+            - Do NOT merge or de-duplicate aggressively. Only collapse
+              concepts that would produce literally identical flashcards.
+              Two concepts that share a topic but target different facts
+              remain separate entries.
+            - Do NOT skip a concept because its essence feels short or
+              simple. Short essences become short cards; that is fine.
+              The downstream writer step will produce one card per concept
+              regardless.
             - Ignore metadata, page numbers, headers, footers, tables of
               contents, bibliographies, and incidental asides. Do not list
               authors, dates, or publication details as concepts unless they
               are themselves the subject matter.
-            - Cover the ENTIRE document. Sample evenly from the early third,
-              middle third, and final third (by page count for PDFs, by
-              length for text). Long documents commonly contain important
-              material in the middle that is easy to under-attend to —
-              counteract that bias explicitly.
             - If multiple sources are supplied, treat each as a separate
               source and ensure every source contributes concepts.
 
             LANGUAGE:
             Detect the dominant natural language of the supplied source
-            material. Write every `topic`, `essence`, and `location` value in
-            that same language. If sources mix languages, use the most
-            prevalent one. Do not translate technical terms, proper nouns, or
-            code.
+            material. Write every `topic`, `essence`, and `location` value
+            in that same language. If sources mix languages, use the most
+            prevalent one. Do not translate technical terms, proper nouns,
+            or code.
 
             FIELD RULES (for each concept):
-            - id:         A stable short slug (lowercase, hyphenated, unique
-                          within this output). Used only to reference the
-                          concept internally; does not appear in the final
-                          flashcard.
-            - topic:      5-10 word label naming the concept.
-            - essence:    1-2 sentence factual core. Must be rich enough on
-                          its own to support one focused question and a
-                          concise correct answer. If you cannot write a rich
-                          essence for a candidate, the concept is too thin —
-                          skip it.
-            - importance: 1 = core (central to the subject matter),
-                          2 = supporting (useful but not essential),
-                          3 = peripheral (worth knowing if room allows).
-            - location:   Short hint of where the concept appears, e.g.
-                          "Section 2.3" or "page 14". Free text; may be
-                          empty if unclear.
+            - id:       A stable short slug (lowercase, hyphenated, unique
+                        within this output). Used only to reference the
+                        concept internally; does not appear in the final
+                        flashcard.
+            - topic:    5-10 word label naming the concept.
+            - essence:  1-2 sentence factual core. Can be short for a
+                        simple fact; do not pad. Must contain the answer
+                        the eventual card will ask about.
+            - location: Short hint of where the concept appears, e.g.
+                        "Section 2.3" or "page 14". Free text; may be
+                        empty if unclear.
 
             === DOCUMENTS ===
             %s

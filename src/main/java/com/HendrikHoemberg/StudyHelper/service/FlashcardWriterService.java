@@ -18,9 +18,9 @@ import java.util.List;
 
 /**
  * Stage 2 of the two-stage flashcard pipeline: turn the concept outline from
- * {@link ConceptExtractionService} into a flashcard per concept. This stage
- * does not see the original PDFs — the outline already contains every fact it
- * needs — so it runs on minimal thinking and small input.
+ * {@link ConceptExtractionService} into one flashcard per concept. This stage
+ * does not see the original PDFs — every fact it needs is in the `essence`
+ * field of each concept — so it runs on minimal thinking and small input.
  */
 @Service
 public class FlashcardWriterService {
@@ -89,20 +89,25 @@ public class FlashcardWriterService {
             material. You do NOT have the source material yourself — every
             fact you need is in the `essence` field of each concept.
 
-            WRITING RULES:
-            - Produce EXACTLY one flashcard per concept, in the same order
-              the concepts appear.
+            HARD CONTRACT:
+            Produce EXACTLY one flashcard per concept, in the same order
+            the concepts appear. The number of cards you return MUST equal
+            the number of concepts in the input. Do not skip, merge, or
+            drop concepts. The upstream step has already validated that
+            every concept supports a card.
+
+            CARD RULES:
             - Front: a focused, self-contained question that elicits the
               concept's `essence`. Do not reference "the text", "the
               document", or "the source".
-            - Back: a concise answer drawn from `essence`. Be complete but
-              not verbose.
+            - Back: a concise answer drawn from `essence`. Match the depth
+              of the essence — if the essence is short, the back is short.
+              Do not pad. Do not invent facts beyond what the essence
+              states.
             - Use the same natural language as the `essence` field of each
-              concept (do not translate).
-            - If a concept's essence is genuinely too thin to support a
-              high-value card, you may omit that card. Do not invent facts
-              to pad a thin essence.
-            - Do not duplicate question/answer pairs across cards.
+              concept; do not translate.
+            - Do not produce two cards with literally identical fronts or
+              literally identical backs.
 
             CONCEPTS (JSON):
             %s

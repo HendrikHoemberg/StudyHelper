@@ -40,8 +40,8 @@ class AiFlashcardServiceTests {
     @Test
     void generate_TextDocument_RunsExtractorThenWriterAndReturnsCards() {
         when(extractor.extract(any(List.class), any())).thenReturn(outline(
-            new Concept("c1", "Topic 1", "Essence 1", 1, ""),
-            new Concept("c2", "Topic 2", "Essence 2", 2, "")
+            new Concept("c1", "Topic 1", "Essence 1", ""),
+            new Concept("c2", "Topic 2", "Essence 2", "")
         ));
         when(writer.write(any(ConceptOutline.class), any())).thenReturn(List.of(
             new GeneratedFlashcard("Front 1", "Back 1"),
@@ -61,7 +61,7 @@ class AiFlashcardServiceTests {
     @Test
     void generate_PdfDocument_RunsBothStages() {
         when(extractor.extract(any(List.class), any())).thenReturn(outline(
-            new Concept("c1", "Topic 1", "Essence 1", 1, "page 3")
+            new Concept("c1", "Topic 1", "Essence 1", "page 3")
         ));
         when(writer.write(any(ConceptOutline.class), any())).thenReturn(List.of(
             new GeneratedFlashcard("Front 1", "Back 1")
@@ -93,7 +93,7 @@ class AiFlashcardServiceTests {
     @Test
     void generate_WriterReturnsNoValidCards_ThrowsResponseValidationDiagnostic() {
         when(extractor.extract(any(List.class), any())).thenReturn(outline(
-            new Concept("c1", "Topic 1", "Essence 1", 1, "")
+            new Concept("c1", "Topic 1", "Essence 1", "")
         ));
         when(writer.write(any(ConceptOutline.class), any())).thenReturn(List.of());
 
@@ -137,7 +137,7 @@ class AiFlashcardServiceTests {
     @Test
     void generate_AdditionalInstructionsArePassedToBothStages() {
         when(extractor.extract(any(List.class), anyString())).thenReturn(outline(
-            new Concept("c1", "Topic 1", "Essence 1", 1, "")
+            new Concept("c1", "Topic 1", "Essence 1", "")
         ));
         when(writer.write(any(ConceptOutline.class), anyString())).thenReturn(List.of(
             new GeneratedFlashcard("Front 1", "Back 1")
@@ -152,7 +152,7 @@ class AiFlashcardServiceTests {
     @Test
     void generate_MultipleTextDocuments_PassedToExtractor() {
         when(extractor.extract(any(List.class), any())).thenReturn(outline(
-            new Concept("c1", "Topic 1", "Essence 1", 1, "")
+            new Concept("c1", "Topic 1", "Essence 1", "")
         ));
         when(writer.write(any(ConceptOutline.class), any())).thenReturn(List.of(
             new GeneratedFlashcard("Front 1", "Back 1")
@@ -171,7 +171,7 @@ class AiFlashcardServiceTests {
     @Test
     void generate_MultiplePdfDocuments_PassedToExtractor() {
         when(extractor.extract(any(List.class), any())).thenReturn(outline(
-            new Concept("c1", "Topic 1", "Essence 1", 1, "")
+            new Concept("c1", "Topic 1", "Essence 1", "")
         ));
         when(writer.write(any(ConceptOutline.class), any())).thenReturn(List.of(
             new GeneratedFlashcard("Front 1", "Back 1")
@@ -195,7 +195,7 @@ class AiFlashcardServiceTests {
     private Concept[] manyConcepts(int count) {
         Concept[] concepts = new Concept[count];
         for (int i = 1; i <= count; i++) {
-            concepts[i - 1] = new Concept("c" + i, "Topic " + i, "Essence " + i, 1, "");
+            concepts[i - 1] = new Concept("c" + i, "Topic " + i, "Essence " + i, "");
         }
         return concepts;
     }
