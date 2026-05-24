@@ -95,6 +95,17 @@ class FolderControllerTests {
 
     @Test
     @WithMockUser(username = "alice")
+    void newFolderModal_RendersCreateButton() throws Exception {
+        mockMvc.perform(get("/folders/new")
+                .with(csrf())
+                .principal(() -> "alice"))
+            .andExpect(status().isOk())
+            .andExpect(view().name("fragments/folder-form :: folderModal"))
+            .andExpect(content().string(containsString("Create")));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
     void viewFolder_DefaultTab_IsFolders() throws Exception {
         mockMvc.perform(get("/folders/42")
                 .with(csrf())

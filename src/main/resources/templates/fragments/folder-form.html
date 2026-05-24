@@ -74,7 +74,7 @@
                         <button type="button" class="sh-btn sh-btn-secondary"
                             onclick="this.closest('.sh-modal').remove()" th:text="#{folder.form.cancel}">Cancel</button>
                         <button type="submit" class="sh-btn sh-btn-primary"
-                            th:text="${folder.id == null ? #{folder.form.create} : #{folder.form.save}}">Save</button>
+                            th:text="${folder.id == null} ? #{folder.form.create} : #{folder.form.save}">Save</button>
                     </div>
                 </form>
             </div>
