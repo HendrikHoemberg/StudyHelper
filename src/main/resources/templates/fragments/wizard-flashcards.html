@@ -31,12 +31,16 @@
 
         <!-- Practice toggle (within sub-mode step) -->
         <div class="flex gap-4 justify-center mt-6">
-            <label class="sh-study-inline-choice">
-                <input class="sh-checkbox" type="radio" name="practice" value="false" checked>
+            <label class="sh-study-inline-choice" th:classappend="${dueTodaySessionCount != null and dueTodaySessionCount == 0} ? 'opacity-50 cursor-not-allowed' : ''">
+                <input class="sh-checkbox" type="radio" name="practice" value="false" 
+                       th:checked="${dueTodaySessionCount == null or dueTodaySessionCount > 0}" 
+                       th:disabled="${dueTodaySessionCount != null and dueTodaySessionCount == 0}">
                 <span th:text="#{wizard.flashcards.practice.scheduled}">Scheduled review</span>
+                <span th:if="${dueTodaySessionCount != null and dueTodaySessionCount == 0}" class="text-xs text-muted-foreground ml-1" th:text="#{wizard.flashcards.practice.no-due-hint}">(0 due today)</span>
             </label>
             <label class="sh-study-inline-choice">
-                <input class="sh-checkbox" type="radio" name="practice" value="true">
+                <input class="sh-checkbox" type="radio" name="practice" value="true" 
+                       th:checked="${dueTodaySessionCount != null and dueTodaySessionCount == 0}">
                 <span th:text="#{wizard.flashcards.practice.unscheduled}">Practice (no scheduling)</span>
             </label>
         </div>

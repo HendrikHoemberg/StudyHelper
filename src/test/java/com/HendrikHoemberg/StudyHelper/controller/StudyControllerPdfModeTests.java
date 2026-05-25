@@ -33,6 +33,7 @@ class StudyControllerPdfModeTests {
     private DocumentExtractionService documentExtractionService;
     private FileEntryService fileEntryService;
     private AiRequestQuotaService aiRequestQuotaService;
+    private DashboardService dashboardService;
     private StudyController controller;
     private User user;
 
@@ -58,10 +59,11 @@ class StudyControllerPdfModeTests {
                 documentExtractionService, aiRequestQuotaService);
         SavedSessionService savedSessionService = mock(SavedSessionService.class);
         SrsScheduler srsScheduler = mock(SrsScheduler.class);
+        dashboardService = mock(DashboardService.class);
         controller = new StudyController(
                 studySessionService, quizSessionService, deckService, folderService,
                 userService, documentExtractionService, fileEntryService, examSessionService, savedSessionService,
-                flashcardService, srsScheduler);
+                flashcardService, srsScheduler, dashboardService);
 
         user = new User();
         user.setId(1L);
@@ -70,6 +72,10 @@ class StudyControllerPdfModeTests {
         when(userService.getByUsername("alice")).thenReturn(user);
         when(folderService.getStudyFolderTree(eq(user), anyList())).thenReturn(List.of());
         when(folderService.getQuizSourceTree(eq(user), anyList(), anyList())).thenReturn(List.of());
+
+        DashboardViewModel dashboardViewModel = mock(DashboardViewModel.class);
+        when(dashboardViewModel.dueTodaySessionCount()).thenReturn(5L);
+        when(dashboardService.buildFor(any(User.class))).thenReturn(dashboardViewModel);
     }
 
     @Test

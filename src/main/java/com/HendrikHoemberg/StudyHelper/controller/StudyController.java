@@ -36,6 +36,7 @@ public class StudyController {
     private final SavedSessionService savedSessionService;
     private final FlashcardService flashcardService;
     private final SrsScheduler srsScheduler;
+    private final DashboardService dashboardService;
     private static final String DEFAULT_STUDY_CANCEL_URL = "/dashboard";
 
     @Autowired
@@ -49,7 +50,8 @@ public class StudyController {
                            ExamSessionService examSessionService,
                            SavedSessionService savedSessionService,
                            FlashcardService flashcardService,
-                           SrsScheduler srsScheduler) {
+                           SrsScheduler srsScheduler,
+                           DashboardService dashboardService) {
         this.studySessionService = studySessionService;
         this.quizSessionService = quizSessionService;
         this.deckService = deckService;
@@ -61,6 +63,7 @@ public class StudyController {
         this.savedSessionService = savedSessionService;
         this.flashcardService = flashcardService;
         this.srsScheduler = srsScheduler;
+        this.dashboardService = dashboardService;
     }
 
     @GetMapping("/study/start")
@@ -372,6 +375,9 @@ public class StudyController {
         model.addAttribute("deckOrderModes", DeckOrderMode.values());
         model.addAttribute("quizQuestionModes", QuizQuestionMode.values());
         model.addAttribute("difficulties", Difficulty.values());
+
+        long dueTodaySessionCount = dashboardService.buildFor(user).dueTodaySessionCount();
+        model.addAttribute("dueTodaySessionCount", dueTodaySessionCount);
 
         Map<Long, long[]> charCache = (Map<Long, long[]>) session.getAttribute("quizFileCharCache");
         if (charCache == null) {

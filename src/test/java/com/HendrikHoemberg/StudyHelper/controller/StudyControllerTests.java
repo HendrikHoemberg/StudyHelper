@@ -35,6 +35,7 @@ class StudyControllerTests {
     private SavedSessionService savedSessionService;
     private UserService userService;
     private User user;
+    private DashboardService dashboardService;
 
     @BeforeEach
     void setUp() {
@@ -50,6 +51,7 @@ class StudyControllerTests {
         savedSessionService = mock(SavedSessionService.class);
         FlashcardService flashcardService = mock(FlashcardService.class);
         SrsScheduler srsScheduler = mock(SrsScheduler.class);
+        dashboardService = mock(DashboardService.class);
         controller = new StudyController(
             studySessionService,
             quizSessionService,
@@ -61,7 +63,8 @@ class StudyControllerTests {
             examSessionService,
             savedSessionService,
             flashcardService,
-            srsScheduler
+            srsScheduler,
+            dashboardService
         );
 
         user = new User();
@@ -70,6 +73,10 @@ class StudyControllerTests {
         when(userService.getByUsername("alice")).thenReturn(user);
         when(quizSessionService.estimateSelectionSize(any(), any(), any(), any()))
             .thenReturn(new QuizSessionService.SelectionSize(0, false, false));
+
+        DashboardViewModel dashboardViewModel = mock(DashboardViewModel.class);
+        when(dashboardViewModel.dueTodaySessionCount()).thenReturn(5L);
+        when(dashboardService.buildFor(any(User.class))).thenReturn(dashboardViewModel);
     }
 
     @Test
@@ -384,5 +391,26 @@ class StudyControllerTests {
 
         verify(savedSessionService).discard(user);
         verify(savedSessionService, never()).findForUser(any());
+    }
+
+    @Test
+    void prepareWizardModel_addsDueTodaySessionCountToModel() {
+        ExtendedModelMap model = new ExtendedModelMap();
+
+        String view = controller.start(
+            null,
+            null,
+            null,
+            null,
+            model,
+            () -> "alice",
+            new MockHttpSession(),
+            null,
+            null,
+            "true"
+        );
+
+        assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
+        assertThat(model.get("dueTodaySessionCount")).isEqualTo(5L);
     }
 }
