@@ -49,6 +49,22 @@ class SrsSchedulerTest {
     }
 
     @Test
+    void secondHardAdvancesToThreeDays() {
+        SrsState s = scheduler.next(1, 2.5, 1, Grade.HARD, today);
+        assertThat(s.repetitions()).isEqualTo(2);
+        assertThat(s.intervalDays()).isEqualTo(3);
+        assertThat(s.dueDate()).isEqualTo(today.plusDays(3));
+    }
+
+    @Test
+    void secondEasyAdvancesToEightDays() {
+        SrsState s = scheduler.next(1, 2.5, 1, Grade.EASY, today);
+        assertThat(s.repetitions()).isEqualTo(2);
+        assertThat(s.intervalDays()).isEqualTo(8);
+        assertThat(s.dueDate()).isEqualTo(today.plusDays(8));
+    }
+
+    @Test
     void thirdGoodMultipliesByEase() {
         SrsState s = scheduler.next(6, 2.5, 2, Grade.GOOD, today);
         assertThat(s.repetitions()).isEqualTo(3);

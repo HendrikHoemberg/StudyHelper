@@ -37,9 +37,12 @@ public class SrsScheduler {
                 newInterval = 3;
             }
         } else if (newReps == 2) {
-            newInterval = SECOND_INTERVAL;
-            if (grade == Grade.EASY) {
-                newInterval = (int) Math.round(newInterval * EASY_BONUS);
+            if (grade == Grade.HARD) {
+                newInterval = 3;
+            } else if (grade == Grade.GOOD) {
+                newInterval = SECOND_INTERVAL;
+            } else { // Grade.EASY
+                newInterval = (int) Math.round(SECOND_INTERVAL * EASY_BONUS);
             }
         } else {
             newInterval = (int) Math.round(intervalDays * newEf);
