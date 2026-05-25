@@ -3471,6 +3471,13 @@ textarea.sh-input {
     margin-top: 2rem;
 }
 
+@media (max-width: 576px) {
+    .sh-study-complete-actions {
+        grid-template-columns: 1fr;
+        gap: 0.65rem;
+    }
+}
+
 .sh-study-complete-actions form,
 .sh-study-complete-actions .sh-btn {
     width: 100%;
