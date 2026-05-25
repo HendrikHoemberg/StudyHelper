@@ -279,6 +279,49 @@ class StudySessionServiceTests {
         verify(flashcardRepository).save(card);
     }
 
+    @Test
+    void recordAnswer_tracksDetailedGrades() {
+        Deck deck = deck(1L, "Test Deck", "Root");
+        Flashcard card = card(100L, deck);
+        StudyCardView view = new StudyCardView(
+            card.getId(), "Front", "Back",
+            deck.getId(), deck.getName(), "Root",
+            "#000", "layers", null, null
+        );
+
+        StudySessionState state = new StudySessionState(
+            new StudySessionConfig(List.of(1L), SessionMode.SHUFFLED, DeckOrderMode.SELECTED_ORDER, false, 20),
+            Map.of(1L, List.of(view)),
+            List.of(view),
+            0, 0, 0, 0, List.of()
+        );
+
+        when(flashcardRepository.findById(100L)).thenReturn(Optional.of(card));
+
+        // Test AGAIN
+        StudySessionState stateAgain = studySessionService.recordAnswer(state, 100L, Grade.AGAIN);
+        assertThat(stateAgain.againCount()).isEqualTo(1);
+        assertThat(stateAgain.hardCount()).isZero();
+
+        // Test HARD
+        StudySessionState stateHard = studySessionService.recordAnswer(state, 100L, Grade.HARD);
+        assertThat(stateHard.hardCount()).isEqualTo(1);
+        assertThat(stateHard.againCount()).isZero();
+
+        // Test GOOD
+        StudySessionState stateGood = studySessionService.recordAnswer(state, 100L, Grade.GOOD);
+        assertThat(stateGood.goodCount()).isEqualTo(1);
+
+        // Test EASY
+        StudySessionState stateEasy = studySessionService.recordAnswer(state, 100L, Grade.EASY);
+        assertThat(stateEasy.easyCount()).isEqualTo(1);
+        
+        // Test stats mapping
+        StudySessionStats stats = studySessionService.buildStats(stateEasy);
+        assertThat(stats.easyCount()).isEqualTo(1);
+        assertThat(stats.easyPercent()).isEqualTo(100);
+    }
+
     private Deck deck(Long id, String name, String pathTail) {
         String[] parts = pathTail.split(" / ");
         Folder current = null;

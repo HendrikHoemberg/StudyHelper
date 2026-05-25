@@ -98,7 +98,8 @@ public class StudySessionService {
             0,
             0,
             0,
-            List.of()
+            List.of(),
+            0, 0, 0, 0
         );
     }
 
@@ -133,6 +134,11 @@ public class StudySessionService {
         int nextCorrect = state.correctAnswers() + (isCorrect ? 1 : 0);
         int nextIncorrect = state.incorrectAnswers() + (isCorrect ? 0 : 1);
 
+        int nextAgain = state.againCount() + (grade == Grade.AGAIN ? 1 : 0);
+        int nextHard = state.hardCount() + (grade == Grade.HARD ? 1 : 0);
+        int nextGood = state.goodCount() + (grade == Grade.GOOD ? 1 : 0);
+        int nextEasy = state.easyCount() + (grade == Grade.EASY ? 1 : 0);
+
         List<StudyCardView> queue = state.queue();
         List<Long> newIncorrectIds = isCorrect
             ? state.incorrectCardIds()
@@ -152,7 +158,11 @@ public class StudySessionService {
             state.totalAnswered() + 1,
             nextCorrect,
             nextIncorrect,
-            newIncorrectIds
+            newIncorrectIds,
+            nextAgain,
+            nextHard,
+            nextGood,
+            nextEasy
         );
     }
 
@@ -197,7 +207,7 @@ public class StudySessionService {
 
     public StudySessionStats buildStats(StudySessionState state) {
         if (state == null) {
-            return new StudySessionStats(0, 0, 0, 0, 0);
+            return new StudySessionStats(0, 0, 0, 0, 0, 0, 0, 0, 0);
         }
 
         int answered = state.totalAnswered();
@@ -210,7 +220,11 @@ public class StudySessionService {
             state.queue().size(),
             correct,
             incorrect,
-            percentage
+            percentage,
+            state.againCount(),
+            state.hardCount(),
+            state.goodCount(),
+            state.easyCount()
         );
     }
 
@@ -231,7 +245,8 @@ public class StudySessionService {
             0,
             0,
             0,
-            List.of()
+            List.of(),
+            0, 0, 0, 0
         );
     }
 
@@ -252,7 +267,8 @@ public class StudySessionService {
         return new StudySessionState(
             state.config(), state.cardsByDeck(), List.copyOf(queue),
             0, 0, 0, 0,
-            List.of()
+            List.of(),
+            0, 0, 0, 0
         );
     }
 

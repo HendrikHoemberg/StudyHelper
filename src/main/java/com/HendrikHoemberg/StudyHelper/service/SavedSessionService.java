@@ -214,7 +214,11 @@ public class SavedSessionService {
             state.totalAnswered(),
             state.correctAnswers(),
             state.incorrectAnswers(),
-            newIncorrect
+            newIncorrect,
+            state.againCount(),
+            state.hardCount(),
+            state.goodCount(),
+            state.easyCount()
         );
 
         return new ReconcileResult(newState, before - newQueue.size());
