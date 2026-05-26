@@ -55,10 +55,15 @@
 
     function readMapTiles() {
         var script = document.getElementById('dungeon-map-state');
-        if (!script) return null;
+        if (!script) {
+            console.log("readMapTiles: script element '#dungeon-map-state' not found");
+            return null;
+        }
         try {
-            return JSON.parse(script.textContent);
+            var data = JSON.parse(script.textContent);
+            return data;
         } catch (e) {
+            console.error("readMapTiles: Failed to parse JSON text content:", script.textContent, e);
             return null;
         }
     }
@@ -72,94 +77,116 @@
     }
 
     function drawDungeon() {
-        var canvas = document.getElementById('dungeon-map-canvas');
-        if (!canvas) return;
-
-        var ctx = canvas.getContext('2d');
-        var mapTiles = readMapTiles();
-        if (!mapTiles) return;
-
-        var mapWidth = parseInt(canvas.dataset.mapWidth, 10);
-        var mapHeight = parseInt(canvas.dataset.mapHeight, 10);
-        var playerX = parseInt(canvas.dataset.playerX, 10);
-        var playerY = parseInt(canvas.dataset.playerY, 10);
-        var tileSize = Math.floor(canvas.width / mapWidth);
-
-        var tileMap = {};
-        for (var i = 0; i < mapTiles.length; i++) {
-            var t = mapTiles[i];
-            var key = t.x + ',' + t.y;
-            tileMap[key] = t;
-        }
-
-        var theme = getThemeColors();
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // 1. Draw tiles (wall, floor, fog, type colors)
-        for (var y = 0; y < mapHeight; y++) {
-            for (var x = 0; x < mapWidth; x++) {
-                var key = x + ',' + y;
-                var tile = tileMap[key];
-                if (!tile) continue;
-
-                var px = x * tileSize;
-                var py = y * tileSize;
-
-                if (!tile.revealed) {
-                    ctx.fillStyle = theme.fogColor;
-                    ctx.fillRect(px, py, tileSize, tileSize);
-                    continue;
-                }
-
-                var color = theme.tileColors[tile.type] || theme.tileColors.FLOOR;
-                ctx.fillStyle = color;
-                ctx.fillRect(px, py, tileSize, tileSize);
-
-                if (tile.revealed && !tile.explored) {
-                    ctx.fillStyle = theme.exploredOverlay;
-                    ctx.fillRect(px, py, tileSize, tileSize);
-                }
-
-                drawTileIndicator(ctx, tile, px, py, tileSize, theme);
+        console.log("drawDungeon starting execution...");
+        try {
+            var canvas = document.getElementById('dungeon-map-canvas');
+            if (!canvas) {
+                console.log("drawDungeon abort: canvas '#dungeon-map-canvas' not found in DOM");
+                return;
             }
+
+            var ctx = canvas.getContext('2d');
+            var mapTiles = readMapTiles();
+            if (!mapTiles) {
+                console.log("drawDungeon abort: mapTiles could not be loaded");
+                return;
+            }
+
+            var mapWidth = parseInt(canvas.dataset.mapWidth, 10);
+            var mapHeight = parseInt(canvas.dataset.mapHeight, 10);
+            var playerX = parseInt(canvas.dataset.playerX, 10);
+            var playerY = parseInt(canvas.dataset.playerY, 10);
+            var tileSize = Math.floor(canvas.width / mapWidth);
+
+            console.log("drawDungeon parameters successfully read:", {
+                mapWidth: mapWidth,
+                mapHeight: mapHeight,
+                playerX: playerX,
+                playerY: playerY,
+                tileSize: tileSize,
+                tilesCount: mapTiles.length
+            });
+
+            var tileMap = {};
+            for (var i = 0; i < mapTiles.length; i++) {
+                var t = mapTiles[i];
+                var key = t.x + ',' + t.y;
+                tileMap[key] = t;
+            }
+
+            var theme = getThemeColors();
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Draw tiles (wall, floor, fog, type colors)
+            for (var y = 0; y < mapHeight; y++) {
+                for (var x = 0; x < mapWidth; x++) {
+                    var key = x + ',' + y;
+                    var tile = tileMap[key];
+                    if (!tile) continue;
+
+                    var px = x * tileSize;
+                    var py = y * tileSize;
+
+                    if (!tile.revealed) {
+                        ctx.fillStyle = theme.fogColor;
+                        ctx.fillRect(px, py, tileSize, tileSize);
+                        continue;
+                    }
+
+                    var color = theme.tileColors[tile.type] || theme.tileColors.FLOOR;
+                    ctx.fillStyle = color;
+                    ctx.fillRect(px, py, tileSize, tileSize);
+
+                    if (tile.revealed && !tile.explored) {
+                        ctx.fillStyle = theme.exploredOverlay;
+                        ctx.fillRect(px, py, tileSize, tileSize);
+                    }
+
+                    drawTileIndicator(ctx, tile, px, py, tileSize, theme);
+                }
+            }
+
+            // 2. Draw modern high-end grid lines to give depth to the pixel look
+            ctx.strokeStyle = theme.gridColor;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (var x = 0; x <= mapWidth; x++) {
+                var px = x * tileSize;
+                ctx.moveTo(px, 0);
+                ctx.lineTo(px, mapHeight * tileSize);
+            }
+            for (var y = 0; y <= mapHeight; y++) {
+                var py = y * tileSize;
+                ctx.moveTo(0, py);
+                ctx.lineTo(mapWidth * tileSize, py);
+            }
+            ctx.stroke();
+
+            // 3. Draw player with glow shadow and a crisp dual-tone inner-core avatar
+            var px = playerX * tileSize;
+            var py = playerY * tileSize;
+
+            ctx.save();
+            ctx.shadowColor = theme.playerGlowColor;
+            ctx.shadowBlur = 8;
+            ctx.fillStyle = theme.playerColor;
+
+            var padding = 6;
+            var playerSize = tileSize - padding * 2;
+
+            ctx.fillRect(px + padding, py + padding, playerSize, playerSize);
+
+            // Draw internal high-contrast center dot
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(px + padding + 3, py + padding + 3, playerSize - 6, playerSize - 6);
+            ctx.restore();
+
+            console.log("drawDungeon execution successfully completed");
+        } catch (err) {
+            console.error("drawDungeon error caught:", err);
         }
-
-        // 2. Draw modern high-end grid lines to give depth to the pixel look
-        ctx.strokeStyle = theme.gridColor;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (var x = 0; x <= mapWidth; x++) {
-            var px = x * tileSize;
-            ctx.moveTo(px, 0);
-            ctx.lineTo(px, mapHeight * tileSize);
-        }
-        for (var y = 0; y <= mapHeight; y++) {
-            var py = y * tileSize;
-            ctx.moveTo(0, py);
-            ctx.lineTo(mapWidth * tileSize, py);
-        }
-        ctx.stroke();
-
-        // 3. Draw player with glow shadow and a crisp dual-tone inner-core avatar
-        var px = playerX * tileSize;
-        var py = playerY * tileSize;
-
-        ctx.save();
-        ctx.shadowColor = theme.playerGlowColor;
-        ctx.shadowBlur = 8;
-        ctx.fillStyle = theme.playerColor;
-
-        var padding = 6;
-        var playerSize = tileSize - padding * 2;
-
-        ctx.fillRect(px + padding, py + padding, playerSize, playerSize);
-
-        // Draw internal high-contrast center dot
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(px + padding + 3, py + padding + 3, playerSize - 6, playerSize - 6);
-        ctx.restore();
     }
 
     function drawTileIndicator(ctx, tile, px, py, size, theme) {
@@ -206,13 +233,41 @@
         }
     }
 
-    // Broadened listener: trigger drawing whenever a swap returns HTML containing the map canvas.
+    // Direct listener on DOMContentLoaded
     document.addEventListener('DOMContentLoaded', drawDungeon);
-    document.addEventListener('htmx:afterSwap', function (e) {
-        if (document.getElementById('dungeon-map-canvas')) {
-            drawDungeon();
-        }
-    });
+
+    // Multi-lifecycle event triggers on document body & document to ensure absolute reliability
+    function registerLifecycleHooks(element) {
+        if (!element) return;
+        element.addEventListener('htmx:afterSwap', function (e) {
+            console.log("htmx:afterSwap event triggered on target:", e.detail.target);
+            if (document.getElementById('dungeon-map-canvas')) {
+                drawDungeon();
+            }
+        });
+        element.addEventListener('htmx:afterSettle', function (e) {
+            console.log("htmx:afterSettle event triggered on target:", e.detail.target);
+            if (document.getElementById('dungeon-map-canvas')) {
+                drawDungeon();
+            }
+        });
+        element.addEventListener('htmx:load', function (e) {
+            console.log("htmx:load event triggered on element:", e.target);
+            if (document.getElementById('dungeon-map-canvas')) {
+                drawDungeon();
+            }
+        });
+    }
+
+    // Register on both document level and body level for absolute safety coverage
+    registerLifecycleHooks(document);
+    if (document.body) {
+        registerLifecycleHooks(document.body);
+    } else {
+        document.addEventListener('DOMContentLoaded', function () {
+            registerLifecycleHooks(document.body);
+        });
+    }
 
     document.addEventListener('keydown', function (e) {
         var canvas = document.getElementById('dungeon-map-canvas');
