@@ -769,16 +769,6 @@
                 drawDungeon();
             }
         });
-        element.addEventListener('htmx:afterSettle', function (e) {
-            if (document.getElementById('dungeon-map-canvas')) {
-                drawDungeon();
-            }
-        });
-        element.addEventListener('htmx:load', function (e) {
-            if (document.getElementById('dungeon-map-canvas')) {
-                drawDungeon();
-            }
-        });
     }
 
     registerLifecycleHooks(document);
