@@ -144,6 +144,8 @@
         var canvas = document.getElementById('dungeon-map-canvas');
         if (!canvas) return;
 
+        if (document.querySelector('.sh-dungeon-encounter-active')) return;
+
         var dir = null;
         switch (e.key) {
             case 'ArrowUp':

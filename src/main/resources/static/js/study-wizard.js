@@ -276,8 +276,8 @@
                 const count = selectedDungeonCardCount();
                 const sizeEl = document.querySelector('input[name="dungeonSize"]:checked');
                 if (sizeEl) {
-                    const thresholds = { SMALL: 10, MEDIUM: 20, LARGE: 40 };
-                    const min = thresholds[sizeEl.value] || 10;
+                    const thresholds = { SMALL: 8, MEDIUM: 12, LARGE: 20 };
+                    const min = thresholds[sizeEl.value] || 8;
                     if (count < min) {
                         shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.dungeon-not-enough-cards').replace('{0}', min).replace('{1}', count) });
                         return false;
