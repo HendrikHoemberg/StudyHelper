@@ -6,6 +6,17 @@ import com.HendrikHoemberg.StudyHelper.entity.SavedSessionType;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.repository.FlashcardRepository;
 import com.HendrikHoemberg.StudyHelper.repository.SavedSessionRepository;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonConfig;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonEncounter;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonMap;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonMode;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonPosition;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonSessionState;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonSize;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonTile;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonTileType;
+import com.HendrikHoemberg.StudyHelper.dto.Difficulty;
+import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionMode;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -187,6 +198,126 @@ class SavedSessionServiceTests {
         assertThat(result.state().queue()).extracting(StudyCardView::cardId).containsExactly(102L);
     }
 
+    @Test
+    void saveDungeon_createsRowWithResumeUrlAndProgress() {
+        DungeonSessionState state = sampleDungeonState();
+        when(repository.findByUser(user)).thenReturn(Optional.empty());
+        when(repository.save(any(SavedSession.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        service.saveDungeon(user, state);
+
+        ArgumentCaptor<SavedSession> captor = ArgumentCaptor.forClass(SavedSession.class);
+        verify(repository).save(captor.capture());
+        SavedSession saved = captor.getValue();
+        assertThat(saved.getUser()).isSameAs(user);
+        assertThat(saved.getType()).isEqualTo(SavedSessionType.DUNGEON);
+        assertThat(saved.getTitle()).isEqualTo("Dungeon · Flashcards · Small");
+        assertThat(saved.getProgressLabel()).isEqualTo("0 / 8 cleared");
+    }
+
+    @Test
+    void loadDungeon_roundTripsPayload() {
+        DungeonSessionState state = sampleDungeonState();
+        SavedSession row = new SavedSession();
+        row.setUser(user);
+        row.setType(SavedSessionType.DUNGEON);
+        row.setPayload(asJson(state));
+        row.setTitle("t");
+        row.setProgressLabel("p");
+        when(repository.findByUser(user)).thenReturn(Optional.of(row));
+
+        DungeonSessionState loaded = service.loadDungeon(user).orElseThrow();
+
+        assertThat(loaded.config().mode()).isEqualTo(DungeonMode.FLASHCARDS);
+        assertThat(loaded.config().size()).isEqualTo(DungeonSize.SMALL);
+    }
+
+    @Test
+    void findForUser_dungeonUsesDungeonResumeUrl() {
+        SavedSession row = new SavedSession();
+        row.setUser(user);
+        row.setType(SavedSessionType.DUNGEON);
+        row.setTitle("Dungeon · Flashcards · Small");
+        row.setProgressLabel("3 / 8 cleared");
+        when(repository.findByUser(user)).thenReturn(Optional.of(row));
+
+        SavedSessionSummary summary = service.findForUser(user).orElseThrow();
+
+        assertThat(summary.type()).isEqualTo(SavedSessionType.DUNGEON);
+        assertThat(summary.resumeUrl()).isEqualTo("/dungeon/resume");
+    }
+
+    @Test
+    void reconcileDungeonFlashcards_dropsMissingNormalEncounterAndKeepsRunPlayable() {
+        DungeonSessionState state = sampleDungeonStateWithFlashcards();
+        when(flashcardRepository.findExistingIdsByIdIn(anyCollection()))
+            .thenReturn(List.of(102L, 201L, 202L));
+
+        SavedSessionService.ReconcileDungeonResult result = service.reconcileDungeonFlashcards(state, user);
+
+        assertThat(result.removedCount()).isEqualTo(1);
+        assertThat(result.canContinue()).isTrue();
+        assertThat(result.state().encounters()).doesNotContainKey("enc-0");
+        assertThat(result.state().encounters()).containsKey("enc-1");
+        assertThat(result.state().encounters()).containsKey("boss-0");
+        assertThat(result.state().encounters()).containsKey("boss-1");
+    }
+
+    @Test
+    void reconcileDungeonFlashcards_blocksRunWhenBossPromptIsMissing() {
+        DungeonSessionState state = sampleDungeonStateWithFlashcards();
+        when(flashcardRepository.findExistingIdsByIdIn(anyCollection()))
+            .thenReturn(List.of(101L, 102L, 202L));
+
+        SavedSessionService.ReconcileDungeonResult result = service.reconcileDungeonFlashcards(state, user);
+
+        assertThat(result.removedCount()).isEqualTo(1);
+        assertThat(result.canContinue()).isFalse();
+    }
+
+    @Test
+    void reconcileDungeonFlashcards_blocksRunWhenNoNormalPromptRemainsBeforeBoss() {
+        DungeonSessionState state = sampleDungeonStateWithFlashcards();
+        when(flashcardRepository.findExistingIdsByIdIn(anyCollection()))
+            .thenReturn(List.of(201L, 202L));
+
+        SavedSessionService.ReconcileDungeonResult result = service.reconcileDungeonFlashcards(state, user);
+
+        assertThat(result.removedCount()).isEqualTo(2);
+        assertThat(result.canContinue()).isFalse();
+    }
+
+    @Test
+    void reconcileDungeonFlashcards_allowsRunWhenNormalPromptsAreAlreadyClearedAndBossRemains() {
+        DungeonSessionState state = sampleDungeonStateWithFlashcards();
+        Map<String, DungeonEncounter> clearedEncounters = new LinkedHashMap<>();
+        for (var entry : state.encounters().entrySet()) {
+            DungeonEncounter enc = entry.getValue();
+            if (!enc.boss() && enc.status() == DungeonEncounterStatus.PENDING) {
+                clearedEncounters.put(entry.getKey(),
+                    new DungeonEncounter(enc.id(), enc.type(), DungeonEncounterStatus.CLEARED, enc.boss(),
+                        enc.flashcardId(), enc.frontText(), enc.backText(), enc.frontImageUrl(), enc.backImageUrl(),
+                        enc.quizQuestion(), enc.selectedOptions(), enc.correct()));
+            } else {
+                clearedEncounters.put(entry.getKey(), enc);
+            }
+        }
+        DungeonSessionState clearedState = new DungeonSessionState(
+            state.config(), state.map(), state.playerPosition(), clearedEncounters,
+            state.bossEncounterIds(), state.bossIndex(), state.activeEncounterId(),
+            state.health(), state.score(), state.answeredCount(), state.correctCount(),
+            state.visibleTiles(), state.won(), state.defeated()
+        );
+
+        when(flashcardRepository.findExistingIdsByIdIn(anyCollection()))
+            .thenReturn(List.of(101L, 102L, 201L, 202L));
+
+        SavedSessionService.ReconcileDungeonResult result = service.reconcileDungeonFlashcards(clearedState, user);
+
+        assertThat(result.removedCount()).isEqualTo(0);
+        assertThat(result.canContinue()).isTrue();
+    }
+
     private String asJson(Object value) {
         try {
             return objectMapper.writeValueAsString(value);
@@ -212,5 +343,43 @@ class SavedSessionServiceTests {
         QuizConfig config = new QuizConfig(List.of(10L), List.of(), 1, QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM);
         QuizQuestion q = new QuizQuestion(QuestionType.MULTIPLE_CHOICE, "Q?", List.of("a", "b"), List.of(0));
         return new QuizSessionState(config, List.of(q), 0, Map.of());
+    }
+
+    private DungeonSessionState sampleDungeonState() {
+        DungeonConfig config = new DungeonConfig(
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(10L),
+            QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, ""
+        );
+        DungeonPosition entrance = new DungeonPosition(0, 0);
+        Map<DungeonPosition, DungeonTile> tiles = new LinkedHashMap<>();
+        tiles.put(entrance, new DungeonTile(entrance, DungeonTileType.ENTRANCE, true, true, null));
+        DungeonMap map = new DungeonMap(5, 5, entrance, new DungeonPosition(4, 4), tiles);
+        return new DungeonSessionState(
+            config, map, entrance, new LinkedHashMap<>(), List.of(), 0, null, 10, 0, 0, 0, Set.of(), false, false
+        );
+    }
+
+    private DungeonSessionState sampleDungeonStateWithFlashcards() {
+        DungeonConfig config = new DungeonConfig(
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(10L),
+            QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, ""
+        );
+        DungeonPosition entrance = new DungeonPosition(0, 0);
+        Map<String, DungeonEncounter> encounters = new LinkedHashMap<>();
+        encounters.put("enc-0", DungeonEncounter.flashcard("enc-0", false, 101L, "Q1", "A1", null, null));
+        encounters.put("enc-1", DungeonEncounter.flashcard("enc-1", false, 102L, "Q2", "A2", null, null));
+        encounters.put("boss-0", DungeonEncounter.flashcard("boss-0", true, 201L, "BQ1", "BA1", null, null));
+        encounters.put("boss-1", DungeonEncounter.flashcard("boss-1", true, 202L, "BQ2", "BA2", null, null));
+        Map<DungeonPosition, DungeonTile> tiles = new LinkedHashMap<>();
+        tiles.put(new DungeonPosition(0, 0), new DungeonTile(new DungeonPosition(0, 0), DungeonTileType.ENTRANCE, true, true, null));
+        tiles.put(new DungeonPosition(1, 0), new DungeonTile(new DungeonPosition(1, 0), DungeonTileType.ENCOUNTER, true, true, "enc-0"));
+        tiles.put(new DungeonPosition(2, 0), new DungeonTile(new DungeonPosition(2, 0), DungeonTileType.ENCOUNTER, true, true, "enc-1"));
+        tiles.put(new DungeonPosition(3, 0), new DungeonTile(new DungeonPosition(3, 0), DungeonTileType.BOSS, true, true, "boss-0"));
+        tiles.put(new DungeonPosition(4, 0), new DungeonTile(new DungeonPosition(4, 0), DungeonTileType.BOSS, true, true, "boss-1"));
+        DungeonMap map = new DungeonMap(5, 5, entrance, new DungeonPosition(4, 4), tiles);
+        return new DungeonSessionState(
+            config, map, new DungeonPosition(0, 0), encounters,
+            List.of("boss-0", "boss-1"), 0, null, 10, 0, 0, 0, Set.of(), false, false
+        );
     }
 }

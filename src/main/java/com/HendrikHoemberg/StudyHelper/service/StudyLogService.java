@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.dto.DungeonRunStats;
 import com.HendrikHoemberg.StudyHelper.dto.QuizSessionState;
 import com.HendrikHoemberg.StudyHelper.dto.StudyCardView;
 import com.HendrikHoemberg.StudyHelper.dto.StudySessionState;
@@ -147,6 +148,51 @@ public class StudyLogService {
         log.setDurationSec(duration);
         log.setCompletedAt(exam.getCompletedAt() != null ? exam.getCompletedAt() : LocalDateTime.now());
         studyLogRepository.save(log);
+    }
+
+    @Transactional
+    public void recordDungeon(User user, DungeonRunStats stats, List<Long> deckIds) {
+        if (stats == null) return;
+        if (deckIds != null) touchDecks(new HashSet<>(deckIds));
+        StudyLog log = buildDungeonLog(user, stats);
+        log.setTitle(dungeonTitle(stats, false));
+        studyLogRepository.save(log);
+    }
+
+    @Transactional
+    public void recordDungeonAbandoned(User user, DungeonRunStats stats, List<Long> deckIds) {
+        if (stats == null) return;
+        if (deckIds != null) touchDecks(new HashSet<>(deckIds));
+        StudyLog log = buildDungeonLog(user, stats);
+        log.setTitle(dungeonTitle(stats, true));
+        studyLogRepository.save(log);
+    }
+
+    private StudyLog buildDungeonLog(User user, DungeonRunStats stats) {
+        StudyLog log = new StudyLog();
+        log.setUser(user);
+        log.setType(SavedSessionType.DUNGEON);
+        log.setCardCount(stats.answeredPrompts());
+        log.setCorrectCount(stats.correctPrompts());
+        log.setDurationSec(null);
+        log.setCompletedAt(LocalDateTime.now());
+        return log;
+    }
+
+    private String dungeonTitle(DungeonRunStats stats, boolean abandoned) {
+        String mode = stats.mode() == com.HendrikHoemberg.StudyHelper.dto.DungeonMode.FLASHCARDS ? "Flashcards" : "AI Quiz";
+        String size = switch (stats.size()) {
+            case SMALL -> "Small";
+            case MEDIUM -> "Medium";
+            case LARGE -> "Large";
+        };
+        String result;
+        if (abandoned) {
+            result = "Abandoned";
+        } else {
+            result = stats.won() ? "Victory" : "Defeat";
+        }
+        return "Dungeon · " + mode + " · " + size + " · " + result;
     }
 
     private void touchDecks(Set<Long> deckIds) {

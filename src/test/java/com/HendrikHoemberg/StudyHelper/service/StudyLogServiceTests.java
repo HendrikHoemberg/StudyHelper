@@ -1,5 +1,8 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.dto.DungeonMode;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonRunStats;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonSize;
 import com.HendrikHoemberg.StudyHelper.dto.QuizConfig;
 import com.HendrikHoemberg.StudyHelper.dto.QuizQuestion;
 import com.HendrikHoemberg.StudyHelper.dto.QuizSessionState;
@@ -206,5 +209,47 @@ class StudyLogServiceTests {
         assertThat(flashcardRepository.findById(card1.getId()).orElseThrow().getCorrectStreak()).isEqualTo(2);
         // Deck lastStudiedAt updated
         assertThat(deckRepository.findById(deck.getId()).orElseThrow().getLastStudiedAt()).isNotNull();
+    }
+
+    @Test
+    void recordDungeon_savesWonDungeonLog() {
+        DungeonRunStats stats = new DungeonRunStats(DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 8, 6, 2, true);
+        studyLogService.recordDungeon(user, stats, List.of(deck.getId()));
+
+        var logs = studyLogRepository.findByUserOrderByCompletedAtDesc(user,
+            org.springframework.data.domain.PageRequest.of(0, 10));
+        assertThat(logs).hasSize(1);
+        StudyLog log = logs.get(0);
+        assertThat(log.getType()).isEqualTo(SavedSessionType.DUNGEON);
+        assertThat(log.getTitle()).isEqualTo("Dungeon · Flashcards · Small · Victory");
+        assertThat(log.getCardCount()).isEqualTo(8);
+        assertThat(log.getCorrectCount()).isEqualTo(6);
+        assertThat(log.getCompletedAt()).isNotNull();
+    }
+
+    @Test
+    void recordDungeon_savesDefeatDungeonLog() {
+        DungeonRunStats stats = new DungeonRunStats(DungeonMode.AI_QUIZ, DungeonSize.MEDIUM, 12, 7, 4, 0, false);
+        studyLogService.recordDungeon(user, stats, List.of());
+
+        var logs = studyLogRepository.findByUserOrderByCompletedAtDesc(user,
+            org.springframework.data.domain.PageRequest.of(0, 10));
+        assertThat(logs).hasSize(1);
+        StudyLog log = logs.get(0);
+        assertThat(log.getTitle()).isEqualTo("Dungeon · AI Quiz · Medium · Defeat");
+        assertThat(log.getCardCount()).isEqualTo(7);
+    }
+
+    @Test
+    void recordDungeonAbandoned_savesAbandonedDungeonLog() {
+        DungeonRunStats stats = new DungeonRunStats(DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 3, 2, 4, false);
+        studyLogService.recordDungeonAbandoned(user, stats, List.of(deck.getId()));
+
+        var logs = studyLogRepository.findByUserOrderByCompletedAtDesc(user,
+            org.springframework.data.domain.PageRequest.of(0, 10));
+        assertThat(logs).hasSize(1);
+        StudyLog log = logs.get(0);
+        assertThat(log.getTitle()).isEqualTo("Dungeon · Flashcards · Small · Abandoned");
+        assertThat(log.getCardCount()).isEqualTo(3);
     }
 }

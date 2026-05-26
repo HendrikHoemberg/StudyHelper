@@ -175,7 +175,110 @@ public class SavedSessionService {
         return state.answers().size() + " / " + state.questions().size() + " answered";
     }
 
+    String dungeonTitle(DungeonSessionState state) {
+        String mode = state.config().mode() == DungeonMode.FLASHCARDS ? "Flashcards" : "AI Quiz";
+        String size = switch (state.config().size()) {
+            case SMALL -> "Small";
+            case MEDIUM -> "Medium";
+            case LARGE -> "Large";
+        };
+        return "Dungeon · " + mode + " · " + size;
+    }
+
+    String dungeonProgress(DungeonSessionState state) {
+        return state.answeredCount() + " / " + state.config().size().totalPrompts() + " cleared";
+    }
+
     public record ReconcileResult(StudySessionState state, int removedCount) {}
+
+    public record ReconcileDungeonResult(DungeonSessionState state, int removedCount, boolean canContinue) {}
+
+    @Transactional(readOnly = true)
+    public Optional<DungeonSessionState> loadDungeon(User user) {
+        return loadTyped(user, SavedSessionType.DUNGEON, DungeonSessionState.class);
+    }
+
+    public void saveDungeon(User user, DungeonSessionState state) {
+        upsert(user, SavedSessionType.DUNGEON, state,
+            dungeonTitle(state), dungeonProgress(state));
+    }
+
+    @Transactional(readOnly = true)
+    public ReconcileDungeonResult reconcileDungeonFlashcards(DungeonSessionState state, User user) {
+        if (state == null || state.config().mode() != DungeonMode.FLASHCARDS) {
+            return new ReconcileDungeonResult(state, 0, true);
+        }
+
+        Set<Long> flashcardIds = new HashSet<>();
+        for (DungeonEncounter encounter : state.encounters().values()) {
+            if (encounter.flashcardId() != null) {
+                flashcardIds.add(encounter.flashcardId());
+            }
+        }
+
+        if (flashcardIds.isEmpty()) {
+            return new ReconcileDungeonResult(state, 0, true);
+        }
+
+        Set<Long> aliveIds = new HashSet<>(flashcardRepository.findExistingIdsByIdIn(flashcardIds));
+
+        Set<String> removedEncounterIds = new HashSet<>();
+        Map<String, DungeonEncounter> remainingEncounters = new LinkedHashMap<>();
+        for (Map.Entry<String, DungeonEncounter> entry : state.encounters().entrySet()) {
+            DungeonEncounter enc = entry.getValue();
+            if (enc.flashcardId() != null && !aliveIds.contains(enc.flashcardId())) {
+                removedEncounterIds.add(entry.getKey());
+            } else {
+                remainingEncounters.put(entry.getKey(), enc);
+            }
+        }
+
+        Map<DungeonPosition, DungeonTile> updatedTiles = new LinkedHashMap<>();
+        for (Map.Entry<DungeonPosition, DungeonTile> entry : state.map().tiles().entrySet()) {
+            DungeonTile tile = entry.getValue();
+            if (tile.encounterId() != null && removedEncounterIds.contains(tile.encounterId())) {
+                updatedTiles.put(entry.getKey(), tile.withType(DungeonTileType.FLOOR, null));
+            } else {
+                updatedTiles.put(entry.getKey(), tile);
+            }
+        }
+
+        List<String> remainingBossIds = state.bossEncounterIds().stream()
+            .filter(id -> remainingEncounters.containsKey(id))
+            .toList();
+
+        boolean allBossAlive = state.bossEncounterIds().stream()
+            .allMatch(id -> remainingEncounters.containsKey(id));
+
+        boolean hasUnresolvedNormal = remainingEncounters.values().stream()
+            .anyMatch(e -> !e.boss() && e.status() != DungeonEncounterStatus.CLEARED);
+
+        boolean hasAnyNormal = remainingEncounters.values().stream().anyMatch(e -> !e.boss());
+        boolean allNormalsCleared = hasAnyNormal && remainingEncounters.values().stream()
+            .filter(e -> !e.boss())
+            .allMatch(e -> e.status() == DungeonEncounterStatus.CLEARED);
+
+        boolean canContinue = allBossAlive && (state.bossIndex() > 0 || hasUnresolvedNormal || allNormalsCleared);
+
+        DungeonSessionState newState = new DungeonSessionState(
+            state.config(),
+            new DungeonMap(state.map().width(), state.map().height(), state.map().entrance(), state.map().boss(), updatedTiles),
+            state.playerPosition(),
+            remainingEncounters,
+            remainingBossIds,
+            state.bossIndex(),
+            removedEncounterIds.contains(state.activeEncounterId()) ? null : state.activeEncounterId(),
+            state.health(),
+            state.score(),
+            state.answeredCount(),
+            state.correctCount(),
+            state.visibleTiles(),
+            state.won(),
+            state.defeated()
+        );
+
+        return new ReconcileDungeonResult(newState, removedEncounterIds.size(), canContinue);
+    }
 
     @Transactional(readOnly = true)
     public ReconcileResult reconcileFlashcards(StudySessionState state, User user) {
