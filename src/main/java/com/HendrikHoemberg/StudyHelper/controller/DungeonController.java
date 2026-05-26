@@ -13,6 +13,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import tools.jackson.databind.ObjectMapper;
+
 import java.security.Principal;
 import java.util.*;
 
@@ -21,6 +23,7 @@ public class DungeonController {
 
     private static final Logger log = LoggerFactory.getLogger(DungeonController.class);
     private static final String DUNGEON_SESSION_KEY = "dungeonSessionState";
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final DungeonSessionService dungeonSessionService;
     private final SavedSessionService savedSessionService;
@@ -260,6 +263,12 @@ public class DungeonController {
         model.addAttribute("activeEncounter", state.activeEncounter());
         model.addAttribute("stats", dungeonSessionService.buildStats(state));
         model.addAttribute("mapTiles", mapTiles(state));
+        try {
+            model.addAttribute("mapTilesJson", objectMapper.writeValueAsString(mapTiles(state)));
+        } catch (Exception e) {
+            log.error("Failed to serialize map tiles to JSON", e);
+            model.addAttribute("mapTilesJson", "[]");
+        }
         if (hxRequest != null) {
             return "fragments/dungeon-game :: dungeonGame";
         }

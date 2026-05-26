@@ -35,10 +35,8 @@
                         th:data-map-height="${state.map.height}">
                 </canvas>
 
-                <script id="dungeon-map-state" type="application/json" th:inline="javascript">
-                    /*<![CDATA[*/
-                    [[${mapTiles}]]
-                    /*]]>*/
+                <script id="dungeon-map-state" type="application/json">
+                    [(${mapTilesJson})]
                 </script>
 
                 <!-- Direction Controls -->
