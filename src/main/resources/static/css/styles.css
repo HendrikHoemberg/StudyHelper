@@ -2285,12 +2285,8 @@ textarea.sh-input {
     right: 0.5rem;
     display: flex;
     gap: 0.25rem;
-    opacity: 0;
-    transition: opacity var(--transition-fast);
-}
-
-.sh-flashcard:hover .sh-flashcard-actions {
     opacity: 1;
+    transition: opacity var(--transition-fast);
 }
 
 /* ============================================================
