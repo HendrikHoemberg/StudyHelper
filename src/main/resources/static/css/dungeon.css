@@ -362,3 +362,21 @@
         border-color: var(--border);
     }
 }
+
+/* High-end active battle encounter feedback */
+.sh-dungeon-encounter-panel:has(.sh-dungeon-encounter-active) {
+    border-color: var(--accent, #2dd4bf);
+    animation: sh-dungeon-pulse-active 2s infinite ease-in-out;
+}
+
+@keyframes sh-dungeon-pulse-active {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(45, 212, 191, 0.12);
+        border-color: var(--border);
+    }
+    50% {
+        box-shadow: 0 0 22px rgba(45, 212, 191, 0.35);
+        border-color: var(--accent);
+    }
+}
+

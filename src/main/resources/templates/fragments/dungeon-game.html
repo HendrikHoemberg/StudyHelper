@@ -32,7 +32,9 @@
                         th:data-player-x="${state.playerPosition.x()}"
                         th:data-player-y="${state.playerPosition.y()}"
                         th:data-map-width="${state.map.width}"
-                        th:data-map-height="${state.map.height}">
+                        th:data-map-height="${state.map.height}"
+                        th:data-active-encounter-id="${activeEncounter != null ? activeEncounter.id : ''}"
+                        th:data-active-encounter-boss="${activeEncounter != null ? activeEncounter.boss : 'false'}">
                 </canvas>
 
                 <script id="dungeon-map-state" type="application/json">
