@@ -926,7 +926,7 @@
         ctx.fillRect(20, 20, 220, 65);
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 12px "Courier New", Courier, monospace';
+        ctx.font = 'bold 13px "Courier New", Courier, monospace';
         ctx.textAlign = 'left';
         ctx.fillText("HELD (SCORE: " + score + ")", 30, 40);
 
@@ -941,7 +941,7 @@
         ctx.strokeRect(30, 48, 120, 12);
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 11px "Courier New", Courier, monospace';
+        ctx.font = 'bold 12px "Courier New", Courier, monospace';
         ctx.fillText("HP: " + health + "/5", 160, 58);
 
         // Draw Enemy HUD Panel (Right)
@@ -952,7 +952,7 @@
         ctx.fillRect(canvas.width - 240, 20, 220, 65);
 
         ctx.fillStyle = activeEncBoss ? '#ef4444' : '#ffffff';
-        ctx.font = 'bold 12px "Courier New", Courier, monospace';
+        ctx.font = 'bold 13px "Courier New", Courier, monospace';
         ctx.fillText(enemyName, canvas.width - 230, 40);
 
         // Enemy progress/health bar
@@ -972,7 +972,7 @@
         ctx.strokeRect(canvas.width - 230, 48, 120, 12);
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 11px "Courier New", Courier, monospace';
+        ctx.font = 'bold 12px "Courier New", Courier, monospace';
         ctx.fillText("HP: " + Math.round((1 - progressPercent) * 100) + "%", canvas.width - 100, 58);
 
         // Enemy Sprite (Bobbing)
@@ -1017,13 +1017,13 @@
             var isRevealed = document.querySelector('.sh-dungeon-flashcard-details')?.open === true;
 
             ctx.fillStyle = '#f59e0b';
-            ctx.font = 'bold 12px "Courier New", Courier, monospace';
+            ctx.font = 'bold 13px "Courier New", Courier, monospace';
             ctx.fillText("⚔️ ENCOUNTER: KARTE GEZOGEN ⚔️", boxX + 20, boxY + 28);
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = '13px "Courier New", Courier, monospace';
-            var lines = wrapText(ctx, "FRAGE: " + frontText, boxX + 20, boxY + 55, boxW - 40, 18, true);
-            var questionHeight = lines.length * 18;
+            ctx.font = 'bold 15px "Courier New", Courier, monospace';
+            var lines = wrapText(ctx, "FRAGE: " + frontText, boxX + 20, boxY + 55, boxW - 40, 20, true);
+            var questionHeight = lines.length * 20;
 
             if (!isRevealed) {
                 var btnY = boxY + 55 + questionHeight + 35;
@@ -1048,19 +1048,19 @@
                 ctx.strokeRect(btnX, btnY, btnW, btnH);
 
                 ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 12px "Courier New", Courier, monospace';
+                ctx.font = 'bold 13px "Courier New", Courier, monospace';
                 ctx.textAlign = 'center';
                 ctx.fillText((isHovered ? "▶ " : "") + "ZEIGE ANTWORT", btnX + btnW / 2, btnY + 20);
                 ctx.textAlign = 'left';
             } else {
                 ctx.fillStyle = '#2dd4bf';
-                ctx.font = 'bold 11px "Courier New", Courier, monospace';
+                ctx.font = 'bold 12px "Courier New", Courier, monospace';
                 ctx.fillText("ANTWORT:", boxX + 20, boxY + 55 + questionHeight + 15);
 
                 ctx.fillStyle = '#ffffff';
-                ctx.font = '13px "Courier New", Courier, monospace';
-                var backLines = wrapText(ctx, backText, boxX + 20, boxY + 55 + questionHeight + 32, boxW - 40, 18, true);
-                var answerHeight = backLines.length * 18;
+                ctx.font = 'bold 15px "Courier New", Courier, monospace';
+                var backLines = wrapText(ctx, backText, boxX + 20, boxY + 55 + questionHeight + 32, boxW - 40, 20, true);
+                var answerHeight = backLines.length * 20;
 
                 var btnW = 100;
                 var btnH = 32;
@@ -1085,7 +1085,7 @@
                 ctx.strokeRect(xMissed, startY, btnW, btnH);
 
                 ctx.fillStyle = '#ef4444';
-                ctx.font = 'bold 12px "Courier New", Courier, monospace';
+                ctx.font = 'bold 13px "Courier New", Courier, monospace';
                 ctx.textAlign = 'center';
                 ctx.fillText((isHoveredMissed ? "▶ " : "") + "FALSCH [M]", xMissed + btnW / 2, startY + 20);
 
@@ -1108,7 +1108,7 @@
                 ctx.strokeRect(xGot, startY, btnW, btnH);
 
                 ctx.fillStyle = '#10b981';
-                ctx.font = 'bold 12px "Courier New", Courier, monospace';
+                ctx.font = 'bold 13px "Courier New", Courier, monospace';
                 ctx.textAlign = 'center';
                 ctx.fillText((isHoveredGot ? "▶ " : "") + "RICHTIG [G]", xGot + btnW / 2, startY + 20);
 
@@ -1127,16 +1127,16 @@
             });
 
             ctx.fillStyle = '#2dd4bf';
-            ctx.font = 'bold 12px "Courier New", Courier, monospace';
+            ctx.font = 'bold 13px "Courier New", Courier, monospace';
             ctx.fillText("⚔️ BATTLE MODE: QUIZ FRAGE ⚔️", boxX + 20, boxY + 28);
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = '13px "Courier New", Courier, monospace';
-            var lines = wrapText(ctx, quizQuestion, boxX + 20, boxY + 52, boxW - 40, 18, true);
-            var questionHeight = lines.length * 18;
+            ctx.font = 'bold 15px "Courier New", Courier, monospace';
+            var lines = wrapText(ctx, quizQuestion, boxX + 20, boxY + 52, boxW - 40, 20, true);
+            var questionHeight = lines.length * 20;
 
-            var optionsStartY = Math.max(320, boxY + 52 + questionHeight + 15);
-            var optionHeight = 24;
+            var optionsStartY = Math.max(310, boxY + 52 + questionHeight + 15);
+            var optionHeight = 28;
             var optionSpacing = 6;
 
             rawOptions.forEach(function(opt, idx) {
@@ -1158,17 +1158,17 @@
                 }
 
                 ctx.fillStyle = isHovered ? '#2dd4bf' : '#ffffff';
-                ctx.font = 'bold 13px "Courier New", Courier, monospace';
+                ctx.font = 'bold 15px "Courier New", Courier, monospace';
 
                 var bullet = opt.isCheckbox ? (opt.checked ? "[X]" : "[ ]") : (opt.checked ? "(•)" : "( )");
                 var cursor = isHovered ? "▶ " : "  ";
-                ctx.fillText(cursor + bullet + " " + opt.text, boxX + 20, optY + 16);
+                ctx.fillText(cursor + bullet + " " + opt.text, boxX + 20, optY + 18);
             });
 
             // Submit button
             var submitY = optionsStartY + rawOptions.length * (optionHeight + optionSpacing) + 12;
-            var subW = 150;
-            var subH = 30;
+            var subW = 180;
+            var subH = 34;
             var subX = boxX + (boxW - subW) / 2;
 
             optionBoxes.push({
@@ -1187,9 +1187,9 @@
             ctx.strokeRect(subX, submitY, subW, subH);
 
             ctx.fillStyle = '#2dd4bf';
-            ctx.font = 'bold 11px "Courier New", Courier, monospace';
+            ctx.font = 'bold 12px "Courier New", Courier, monospace';
             ctx.textAlign = 'center';
-            ctx.fillText((isHoveredSubmit ? "▶ " : "") + "ABSENDEN [ENTER]", subX + subW / 2, submitY + 18);
+            ctx.fillText((isHoveredSubmit ? "▶ " : "") + "ABSENDEN [ENTER]", subX + subW / 2, submitY + 21);
             ctx.textAlign = 'left';
         }
 

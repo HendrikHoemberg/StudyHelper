@@ -23,7 +23,7 @@
         </div>
 
         <!-- Map + Encounter Layout -->
-        <div class="sh-dungeon-layout">
+        <div class="sh-dungeon-layout" th:classappend="${activeEncounter != null} ? 'is-encounter-active'">
             <!-- Map Panel -->
             <div class="sh-dungeon-map-panel">
                 <canvas id="dungeon-map-canvas"
