@@ -139,6 +139,7 @@ public class SavedSessionService {
             case FLASHCARDS -> "/study/resume";
             case QUIZ -> "/quiz/resume";
             case EXAM -> "/exam/resume";
+            case DUNGEON -> "/dungeon/resume";
         };
     }
 

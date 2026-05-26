@@ -1,8 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.dto;
 
-public enum StudyMode {
+public enum DungeonMode {
     FLASHCARDS,
-    QUIZ,
-    EXAM,
-    DUNGEON
+    AI_QUIZ
 }
