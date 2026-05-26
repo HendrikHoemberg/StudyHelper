@@ -901,14 +901,16 @@
     // Permanent Interactive JRPG Battle Renderer
     // ============================================================
     function renderJRPGCombat(canvas, ctx, activeEncId) {
+        var scale = canvas.width / 512.0;
+
         // Clear canvas with deep dark blue background
         ctx.fillStyle = '#020617';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw pixelated scanlines in background
+        // Draw scanlines
         ctx.fillStyle = 'rgba(51, 65, 85, 0.05)';
-        for (var y = 0; y < canvas.height; y += 4) {
-            ctx.fillRect(0, y, canvas.width, 2);
+        for (var y = 0; y < canvas.height; y += Math.floor(4 * scale)) {
+            ctx.fillRect(0, y, canvas.width, Math.floor(2 * scale));
         }
 
         // Fetch values from DOM
@@ -920,44 +922,44 @@
 
         // Draw Player HUD Panel (Left)
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(20, 20, 220, 65);
+        ctx.lineWidth = 2 * scale;
+        ctx.strokeRect(20 * scale, 20 * scale, 220 * scale, 65 * scale);
         ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-        ctx.fillRect(20, 20, 220, 65);
+        ctx.fillRect(20 * scale, 20 * scale, 220 * scale, 65 * scale);
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 13px "Courier New", Courier, monospace';
+        ctx.font = 'bold ' + Math.floor(13 * scale) + 'px "Courier New", Courier, monospace';
         ctx.textAlign = 'left';
-        ctx.fillText("HELD (SCORE: " + score + ")", 30, 40);
+        ctx.fillText("HELD (SCORE: " + score + ")", 30 * scale, 40 * scale);
 
         // HP progress bar
         ctx.fillStyle = '#1e293b';
-        ctx.fillRect(30, 48, 120, 12);
+        ctx.fillRect(30 * scale, 48 * scale, 120 * scale, 12 * scale);
         var healthPercent = Math.max(0, Math.min(1, health / 5.0));
         ctx.fillStyle = healthPercent > 0.5 ? '#10b981' : (healthPercent > 0.2 ? '#f59e0b' : '#ef4444');
-        ctx.fillRect(30, 48, 120 * healthPercent, 12);
+        ctx.fillRect(30 * scale, 48 * scale, 120 * scale * healthPercent, 12 * scale);
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(30, 48, 120, 12);
+        ctx.lineWidth = 1 * scale;
+        ctx.strokeRect(30 * scale, 48 * scale, 120 * scale, 12 * scale);
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 12px "Courier New", Courier, monospace';
-        ctx.fillText("HP: " + health + "/5", 160, 58);
+        ctx.font = 'bold ' + Math.floor(12 * scale) + 'px "Courier New", Courier, monospace';
+        ctx.fillText("HP: " + health + "/5", 160 * scale, 58 * scale);
 
         // Draw Enemy HUD Panel (Right)
         ctx.strokeStyle = activeEncBoss ? '#ef4444' : '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(canvas.width - 240, 20, 220, 65);
+        ctx.lineWidth = 2 * scale;
+        ctx.strokeRect(canvas.width - 240 * scale, 20 * scale, 220 * scale, 65 * scale);
         ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-        ctx.fillRect(canvas.width - 240, 20, 220, 65);
+        ctx.fillRect(canvas.width - 240 * scale, 20 * scale, 220 * scale, 65 * scale);
 
         ctx.fillStyle = activeEncBoss ? '#ef4444' : '#ffffff';
-        ctx.font = 'bold 13px "Courier New", Courier, monospace';
-        ctx.fillText(enemyName, canvas.width - 230, 40);
+        ctx.font = 'bold ' + Math.floor(13 * scale) + 'px "Courier New", Courier, monospace';
+        ctx.fillText(enemyName, canvas.width - 230 * scale, 40 * scale);
 
         // Enemy progress/health bar
         ctx.fillStyle = '#1e293b';
-        ctx.fillRect(canvas.width - 230, 48, 120, 12);
+        ctx.fillRect(canvas.width - 230 * scale, 48 * scale, 120 * scale, 12 * scale);
         
         var progParts = progress.split('/');
         var progressPercent = 0.5;
@@ -967,41 +969,42 @@
             progressPercent = Math.max(0, Math.min(1, solved / total));
         }
         ctx.fillStyle = activeEncBoss ? '#ef4444' : '#2dd4bf';
-        ctx.fillRect(canvas.width - 230, 48, 120 * (1 - progressPercent + 0.1), 12);
+        ctx.fillRect(canvas.width - 230 * scale, 48 * scale, 120 * scale * (1 - progressPercent + 0.1), 12 * scale);
         ctx.strokeStyle = activeEncBoss ? '#ef4444' : '#ffffff';
-        ctx.strokeRect(canvas.width - 230, 48, 120, 12);
+        ctx.lineWidth = 1 * scale;
+        ctx.strokeRect(canvas.width - 230 * scale, 48 * scale, 120 * scale, 12 * scale);
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 12px "Courier New", Courier, monospace';
-        ctx.fillText("HP: " + Math.round((1 - progressPercent) * 100) + "%", canvas.width - 100, 58);
+        ctx.font = 'bold ' + Math.floor(12 * scale) + 'px "Courier New", Courier, monospace';
+        ctx.fillText("HP: " + Math.round((1 - progressPercent) * 100) + "%", canvas.width - 100 * scale, 58 * scale);
 
         // Enemy Sprite (Bobbing)
         var bob = Math.sin(Date.now() / 180) * 10;
         var monsterSprite = window.dungeonSplashMonster || (activeEncBoss ? 'DRAGON' : 'SLIME');
-        var spriteSize = activeEncBoss ? 128 : 96;
+        var spriteSize = activeEncBoss ? 128 * scale : 96 * scale;
         var sx = (canvas.width - spriteSize) / 2;
-        var sy = 100 + bob;
+        var sy = 100 * scale + bob * scale;
         drawPixelSprite(ctx, monsterSprite, sx, sy, spriteSize);
 
         // Dialog Message Box
-        var boxX = 20;
-        var boxY = 230;
-        var boxW = canvas.width - 40;
-        var boxH = canvas.height - boxY - 20;
+        var boxX = 20 * scale;
+        var boxY = 230 * scale;
+        var boxW = canvas.width - 40 * scale;
+        var boxH = canvas.height - boxY - 20 * scale;
 
         ctx.fillStyle = '#020617';
         ctx.fillRect(boxX, boxY, boxW, boxH);
 
         // Thick Double-Line retro borders
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 4 * scale;
         ctx.strokeRect(boxX, boxY, boxW, boxH);
         ctx.strokeStyle = '#020617';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(boxX + 3, boxY + 3, boxW - 6, boxH - 6);
+        ctx.lineWidth = 2 * scale;
+        ctx.strokeRect(boxX + 3 * scale, boxY + 3 * scale, boxW - 6 * scale, boxH - 6 * scale);
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(boxX + 5, boxY + 5, boxW - 10, boxH - 10);
+        ctx.lineWidth = 1 * scale;
+        ctx.strokeRect(boxX + 5 * scale, boxY + 5 * scale, boxW - 10 * scale, boxH - 10 * scale);
 
         var isFlashcard = !!document.querySelector('.sh-dungeon-flashcard');
         var isQuiz = !!document.querySelector('.sh-dungeon-quiz-form');
@@ -1010,31 +1013,57 @@
         ctx.textAlign = 'left';
 
         var optionBoxes = [];
+        var startY = boxY + boxH - 50 * scale;
 
         if (isFlashcard) {
             var frontText = document.querySelector('.sh-dungeon-flashcard-front .sh-dungeon-flashcard-text')?.textContent || "";
             var backText = document.querySelector('.sh-dungeon-flashcard-back .sh-dungeon-flashcard-text')?.textContent || "";
             var isRevealed = document.querySelector('.sh-dungeon-flashcard-details')?.open === true;
 
+            // Loop to dynamically size fonts to fit available height!
+            var fontSize = 15 * scale;
+            var lineHeight = 20 * scale;
+            var maxTextHeight = startY - (boxY + 60 * scale);
+            var textHeight = 9999;
+            var questionLines, answerLines;
+
+            while (fontSize >= 9 * scale) {
+                ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
+                questionLines = wrapText(ctx, "FRAGE: " + frontText, boxX + 20 * scale, boxY + 55 * scale, boxW - 40 * scale, lineHeight, false);
+                var qH = questionLines.length * lineHeight;
+                
+                if (isRevealed) {
+                    answerLines = wrapText(ctx, backText, boxX + 20 * scale, boxY + 55 * scale + qH + 20 * scale, boxW - 40 * scale, lineHeight, false);
+                    textHeight = qH + 20 * scale + answerLines.length * lineHeight;
+                } else {
+                    textHeight = qH;
+                }
+
+                if (textHeight <= maxTextHeight) {
+                    break;
+                }
+                fontSize -= 0.5 * scale;
+                lineHeight -= 0.8 * scale;
+            }
+
             ctx.fillStyle = '#f59e0b';
-            ctx.font = 'bold 13px "Courier New", Courier, monospace';
-            ctx.fillText("⚔️ ENCOUNTER: KARTE GEZOGEN ⚔️", boxX + 20, boxY + 28);
+            ctx.font = 'bold ' + Math.floor(13 * scale) + 'px "Courier New", Courier, monospace';
+            ctx.fillText("⚔️ ENCOUNTER: KARTE GEZOGEN ⚔️", boxX + 20 * scale, boxY + 28 * scale);
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 15px "Courier New", Courier, monospace';
-            var lines = wrapText(ctx, "FRAGE: " + frontText, boxX + 20, boxY + 55, boxW - 40, 20, true);
-            var questionHeight = lines.length * 20;
+            ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
+            var lines = wrapText(ctx, "FRAGE: " + frontText, boxX + 20 * scale, boxY + 55 * scale, boxW - 40 * scale, lineHeight, true);
+            var questionHeight = lines.length * lineHeight;
 
             if (!isRevealed) {
-                var btnY = boxY + 55 + questionHeight + 35;
-                var btnW = 180;
-                var btnH = 32;
+                var btnW = 180 * scale;
+                var btnH = 32 * scale;
                 var btnX = boxX + (boxW - btnW) / 2;
 
                 optionBoxes.push({
                     type: 'reveal',
                     x: btnX,
-                    y: btnY,
+                    y: startY,
                     w: btnW,
                     h: btnH
                 });
@@ -1042,32 +1071,30 @@
                 var isHovered = window.dungeonHoveredOptionIndex === 0;
 
                 ctx.fillStyle = isHovered ? '#1e293b' : '#020617';
-                ctx.fillRect(btnX, btnY, btnW, btnH);
+                ctx.fillRect(btnX, startY, btnW, btnH);
                 ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(btnX, btnY, btnW, btnH);
+                ctx.lineWidth = 1 * scale;
+                ctx.strokeRect(btnX, startY, btnW, btnH);
 
                 ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 13px "Courier New", Courier, monospace';
+                ctx.font = 'bold ' + Math.floor(13 * scale) + 'px "Courier New", Courier, monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText((isHovered ? "▶ " : "") + "ZEIGE ANTWORT", btnX + btnW / 2, btnY + 20);
+                ctx.fillText((isHovered ? "▶ " : "") + "ZEIGE ANTWORT [SPACE]", btnX + btnW / 2, startY + 20 * scale);
                 ctx.textAlign = 'left';
             } else {
                 ctx.fillStyle = '#2dd4bf';
-                ctx.font = 'bold 12px "Courier New", Courier, monospace';
-                ctx.fillText("ANTWORT:", boxX + 20, boxY + 55 + questionHeight + 15);
+                ctx.font = 'bold ' + Math.floor(12 * scale) + 'px "Courier New", Courier, monospace';
+                ctx.fillText("ANTWORT:", boxX + 20 * scale, boxY + 55 * scale + questionHeight + 15 * scale);
 
                 ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 15px "Courier New", Courier, monospace';
-                var backLines = wrapText(ctx, backText, boxX + 20, boxY + 55 + questionHeight + 32, boxW - 40, 20, true);
-                var answerHeight = backLines.length * 20;
+                ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
+                wrapText(ctx, backText, boxX + 20 * scale, boxY + 55 * scale + questionHeight + 32 * scale, boxW - 40 * scale, lineHeight, true);
 
-                var btnW = 100;
-                var btnH = 32;
-                var startY = boxY + 55 + questionHeight + 32 + answerHeight + 25;
+                var btnW = 110 * scale;
+                var btnH = 32 * scale;
 
                 // Falsch
-                var xMissed = boxX + 80;
+                var xMissed = boxX + 60 * scale;
                 optionBoxes.push({
                     type: 'answer',
                     value: false,
@@ -1081,16 +1108,16 @@
                 ctx.fillStyle = isHoveredMissed ? '#7f1d1d' : '#0f172a';
                 ctx.fillRect(xMissed, startY, btnW, btnH);
                 ctx.strokeStyle = '#ef4444';
-                ctx.lineWidth = 1;
+                ctx.lineWidth = 1 * scale;
                 ctx.strokeRect(xMissed, startY, btnW, btnH);
 
                 ctx.fillStyle = '#ef4444';
-                ctx.font = 'bold 13px "Courier New", Courier, monospace';
+                ctx.font = 'bold ' + Math.floor(13 * scale) + 'px "Courier New", Courier, monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText((isHoveredMissed ? "▶ " : "") + "FALSCH [M]", xMissed + btnW / 2, startY + 20);
+                ctx.fillText((isHoveredMissed ? "▶ " : "") + "FALSCH [M]", xMissed + btnW / 2, startY + 20 * scale);
 
                 // Richtig
-                var xGot = boxX + boxW - 180;
+                var xGot = boxX + boxW - 170 * scale;
                 optionBoxes.push({
                     type: 'answer',
                     value: true,
@@ -1104,13 +1131,13 @@
                 ctx.fillStyle = isHoveredGot ? '#064e3b' : '#0f172a';
                 ctx.fillRect(xGot, startY, btnW, btnH);
                 ctx.strokeStyle = '#10b981';
-                ctx.lineWidth = 1;
+                ctx.lineWidth = 1 * scale;
                 ctx.strokeRect(xGot, startY, btnW, btnH);
 
                 ctx.fillStyle = '#10b981';
-                ctx.font = 'bold 13px "Courier New", Courier, monospace';
+                ctx.font = 'bold ' + Math.floor(13 * scale) + 'px "Courier New", Courier, monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText((isHoveredGot ? "▶ " : "") + "RICHTIG [G]", xGot + btnW / 2, startY + 20);
+                ctx.fillText((isHoveredGot ? "▶ " : "") + "RICHTIG [G]", xGot + btnW / 2, startY + 20 * scale);
 
                 ctx.textAlign = 'left';
             }
@@ -1126,18 +1153,36 @@
                 };
             });
 
+            // Loop to dynamically size fonts to fit available height!
+            var fontSize = 15 * scale;
+            var lineHeight = 20 * scale;
+            var maxTextHeight = startY - (boxY + 60 * scale) - (rawOptions.length * 32 * scale);
+            var questionLines;
+
+            while (fontSize >= 9 * scale) {
+                ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
+                questionLines = wrapText(ctx, quizQuestion, boxX + 20 * scale, boxY + 52 * scale, boxW - 40 * scale, lineHeight, false);
+                var qH = questionLines.length * lineHeight;
+                
+                if (qH <= maxTextHeight || fontSize <= 9 * scale) {
+                    break;
+                }
+                fontSize -= 0.5 * scale;
+                lineHeight -= 0.8 * scale;
+            }
+
             ctx.fillStyle = '#2dd4bf';
-            ctx.font = 'bold 13px "Courier New", Courier, monospace';
-            ctx.fillText("⚔️ BATTLE MODE: QUIZ FRAGE ⚔️", boxX + 20, boxY + 28);
+            ctx.font = 'bold ' + Math.floor(13 * scale) + 'px "Courier New", Courier, monospace';
+            ctx.fillText("⚔️ BATTLE MODE: QUIZ FRAGE ⚔️", boxX + 20 * scale, boxY + 28 * scale);
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 15px "Courier New", Courier, monospace';
-            var lines = wrapText(ctx, quizQuestion, boxX + 20, boxY + 52, boxW - 40, 20, true);
-            var questionHeight = lines.length * 20;
+            ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
+            var lines = wrapText(ctx, quizQuestion, boxX + 20 * scale, boxY + 52 * scale, boxW - 40 * scale, lineHeight, true);
+            var questionHeight = lines.length * lineHeight;
 
-            var optionsStartY = Math.max(310, boxY + 52 + questionHeight + 15);
-            var optionHeight = 28;
-            var optionSpacing = 6;
+            var optionsStartY = Math.max(300 * scale, boxY + 52 * scale + questionHeight + 12 * scale);
+            var optionHeight = 26 * scale;
+            var optionSpacing = 5 * scale;
 
             rawOptions.forEach(function(opt, idx) {
                 var optY = optionsStartY + idx * (optionHeight + optionSpacing);
@@ -1146,50 +1191,48 @@
                 optionBoxes.push({
                     type: 'quiz_option',
                     index: idx,
-                    x: boxX + 20,
+                    x: boxX + 20 * scale,
                     y: optY,
-                    w: boxW - 40,
+                    w: boxW - 40 * scale,
                     h: optionHeight
                 });
 
                 if (isHovered) {
                     ctx.fillStyle = 'rgba(51, 65, 85, 0.35)';
-                    ctx.fillRect(boxX + 15, optY - 2, boxW - 30, optionHeight + 4);
+                    ctx.fillRect(boxX + 15 * scale, optY - 2 * scale, boxW - 30 * scale, optionHeight + 4 * scale);
                 }
 
                 ctx.fillStyle = isHovered ? '#2dd4bf' : '#ffffff';
-                ctx.font = 'bold 15px "Courier New", Courier, monospace';
+                ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
 
                 var bullet = opt.isCheckbox ? (opt.checked ? "[X]" : "[ ]") : (opt.checked ? "(•)" : "( )");
                 var cursor = isHovered ? "▶ " : "  ";
-                ctx.fillText(cursor + bullet + " " + opt.text, boxX + 20, optY + 18);
+                ctx.fillText(cursor + bullet + " " + opt.text, boxX + 20 * scale, optY + 18 * scale);
             });
 
-            // Submit button
-            var submitY = optionsStartY + rawOptions.length * (optionHeight + optionSpacing) + 12;
-            var subW = 180;
-            var subH = 34;
+            var subW = 180 * scale;
+            var subH = 34 * scale;
             var subX = boxX + (boxW - subW) / 2;
 
             optionBoxes.push({
                 type: 'submit',
                 x: subX,
-                y: submitY,
+                y: startY,
                 w: subW,
                 h: subH
             });
 
             var isHoveredSubmit = window.dungeonHoveredOptionIndex === rawOptions.length;
             ctx.fillStyle = isHoveredSubmit ? '#134e4a' : '#020617';
-            ctx.fillRect(subX, submitY, subW, subH);
+            ctx.fillRect(subX, startY, subW, subH);
             ctx.strokeStyle = '#2dd4bf';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(subX, submitY, subW, subH);
+            ctx.lineWidth = 1 * scale;
+            ctx.strokeRect(subX, startY, subW, subH);
 
             ctx.fillStyle = '#2dd4bf';
-            ctx.font = 'bold 12px "Courier New", Courier, monospace';
+            ctx.font = 'bold ' + Math.floor(12 * scale) + 'px "Courier New", Courier, monospace';
             ctx.textAlign = 'center';
-            ctx.fillText((isHoveredSubmit ? "▶ " : "") + "ABSENDEN [ENTER]", subX + subW / 2, submitY + 21);
+            ctx.fillText((isHoveredSubmit ? "▶ " : "") + "ABSENDEN [ENTER]", subX + subW / 2, startY + 21 * scale);
             ctx.textAlign = 'left';
         }
 
