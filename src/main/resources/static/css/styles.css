@@ -2517,14 +2517,34 @@ textarea.sh-input {
 }
 
 @media (min-width: 769px) {
+    .sh-study-mode-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .sh-study-mode-grid.sh-grid-4 {
         grid-template-columns: repeat(2, minmax(200px, 22rem));
     }
 }
 
+.sh-study-mode-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 2rem;
+    padding-bottom: 4rem;
+    position: relative;
+    perspective: 1000px;
+}
 
 @media (max-width: 768px) {
     .sh-study-mode-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 22rem));
+        gap: 1.5rem;
+        padding-bottom: 2rem;
+    }
+
+    .sh-study-mode-grid-compact {
         grid-template-columns: repeat(auto-fit, minmax(200px, 22rem));
         gap: 1.5rem;
         padding-bottom: 2rem;
@@ -2533,6 +2553,11 @@ textarea.sh-input {
 
 @media (max-width: 480px) {
     .sh-study-mode-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .sh-study-mode-grid-compact {
         grid-template-columns: 1fr;
         gap: 1rem;
     }

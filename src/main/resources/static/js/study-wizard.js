@@ -10,6 +10,7 @@
         FLASHCARDS: ["Mode", "Type", "Decks", "Order"],
         QUIZ:       ["Mode", "Format", "Settings", "Sources"],
         EXAM:       ["Mode", "Depth", "Settings", "Sources", "Layout"],
+        DUNGEON:    ["Mode", "Type", "Size", "Decks"],
     };
 
     function maxSteps() {
@@ -20,11 +21,14 @@
         if (currentMode === 'EXAM') {
             return 5;
         }
+        if (currentMode === 'DUNGEON') {
+            return 4;
+        }
         return 4;
     }
 
     function sourceStep() {
-        if (currentMode === 'QUIZ' || currentMode === 'EXAM') return 4;
+        if (currentMode === 'QUIZ' || currentMode === 'EXAM' || currentMode === 'DUNGEON') return 4;
         return 3;
     }
 
@@ -113,6 +117,8 @@
 
         updateStepIndicator();
         updateNavButtons();
+        updateDungeonAiSettings();
+        updateDungeonSizeAvailability();
         if (typeof initLucide === 'function') initLucide();
     }
 
@@ -176,6 +182,9 @@
             } else if (currentMode === 'EXAM') {
                 if (icon) icon.setAttribute('icon', 'lucide:pencil-line');
                 if (text) text.textContent = t('study.wizard.start-exam');
+            } else if (currentMode === 'DUNGEON') {
+                if (icon) icon.setAttribute('icon', 'lucide:swords');
+                if (text) text.textContent = t('study.wizard.start-dungeon');
             } else {
                 if (icon) icon.setAttribute('icon', 'lucide:play');
                 if (text) text.textContent = t('study.wizard.start-session');
@@ -216,6 +225,13 @@
                     return false;
                 }
             }
+            if (currentMode === 'DUNGEON') {
+                const selected = document.querySelector('input[name="dungeonMode"]:checked');
+                if (!selected) {
+                    shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.select-dungeon-type') });
+                    return false;
+                }
+            }
         }
         if (step === 3) {
             if (currentMode === 'QUIZ') {
@@ -242,12 +258,31 @@
                     }
                 }
             }
+            if (currentMode === 'DUNGEON') {
+                const selected = document.querySelector('input[name="dungeonSize"]:checked');
+                if (!selected) {
+                    shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.select-dungeon-size') });
+                    return false;
+                }
+            }
         }
         if (step === sourceStep()) {
             const checked = document.querySelectorAll('.sh-source-checkbox:checked');
             if (checked.length === 0) {
                 shAlert({ title: t('study.wizard.alert.missing-source'), message: t('study.wizard.alert.select-source') });
                 return false;
+            }
+            if (currentMode === 'DUNGEON') {
+                const count = selectedDungeonCardCount();
+                const sizeEl = document.querySelector('input[name="dungeonSize"]:checked');
+                if (sizeEl) {
+                    const thresholds = { SMALL: 10, MEDIUM: 20, LARGE: 40 };
+                    const min = thresholds[sizeEl.value] || 10;
+                    if (count < min) {
+                        shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.dungeon-not-enough-cards').replace('{0}', min).replace('{1}', count) });
+                        return false;
+                    }
+                }
             }
         }
         if (step === 5) {
@@ -539,7 +574,7 @@
     window.initCustomSteppers = initCustomSteppers;
 
     function initInstantStepTwoChoices(root = document) {
-        root.querySelectorAll('input[name="sessionMode"], input[name="quizQuestionMode"], input[name="questionSize"]').forEach(input => {
+        root.querySelectorAll('input[name="sessionMode"], input[name="quizQuestionMode"], input[name="questionSize"], input[name="dungeonMode"], input[name="dungeonSize"]').forEach(input => {
             const choice = input.closest('.sh-wizard-panel[data-step="2"] .sh-study-choice');
             if (!choice || input.dataset.instantStepTwoInitialized === 'true') return;
             input.dataset.instantStepTwoInitialized = 'true';
@@ -549,6 +584,46 @@
             });
         });
     }
+
+    function updateDungeonAiSettings() {
+        const aiSettings = document.getElementById('dungeon-ai-settings');
+        if (!aiSettings) return;
+        const selected = document.querySelector('input[name="dungeonMode"]:checked')?.value;
+        aiSettings.style.display = selected === 'AI_QUIZ' ? '' : 'none';
+    }
+
+    function selectedDungeonCardCount() {
+        let total = 0;
+        document.querySelectorAll('input[name="selectedDeckIds"]:checked').forEach(cb => {
+            const badge = cb.closest('.vb-deck')?.querySelector('.sh-badge');
+            if (badge) {
+                const match = badge.textContent.match(/(\d+)/);
+                if (match) total += parseInt(match[1]);
+            }
+        });
+        return total;
+    }
+
+    function updateDungeonSizeAvailability() {
+        if (currentMode !== 'DUNGEON') return;
+        const count = selectedDungeonCardCount();
+        const thresholds = { SMALL: 8, MEDIUM: 12, LARGE: 20 };
+        document.querySelectorAll('input[name="dungeonSize"]').forEach(input => {
+            const min = thresholds[input.value] || 8;
+            const label = input.closest('.sh-study-choice');
+            const disabled = count > 0 && count < min;
+            if (label) {
+                label.classList.toggle('is-disabled', disabled);
+                input.disabled = disabled;
+            }
+        });
+    }
+
+    document.body.addEventListener('change', function (e) {
+        if (e.target.matches('input[name="dungeonMode"]')) {
+            updateDungeonAiSettings();
+        }
+    });
 
     // Core init — called on DOMContentLoaded AND after HTMX swaps
     window.initStudyWizard = function () {
@@ -678,6 +753,14 @@
     // Initialize on first page load
     document.addEventListener('DOMContentLoaded', window.initStudyWizard);
 
+    document.body.addEventListener('htmx:configRequest', function (e) {
+        if (e.detail.elt.matches?.('form.sh-study-setup-card') && currentMode === 'DUNGEON') {
+            e.detail.path = '/dungeon/start';
+            const ta = document.querySelector('textarea[name="additionalInstructions"]');
+            if (ta) e.detail.parameters.additionalInstructions = ta.value;
+        }
+    });
+
     document.body.addEventListener('htmx:beforeSwap', function (e) {
         if (e.detail.target?.id !== 'setup-picker') return;
         const scroll = e.detail.target.querySelector('.vb-source-scroll');
@@ -698,6 +781,8 @@
         const picker = document.getElementById('setup-picker');
         const scroll = picker?.querySelector('.vb-source-scroll');
         if (scroll) scroll.scrollTop = sourceTreeScrollTop;
+        updateDungeonAiSettings();
+        updateDungeonSizeAvailability();
     });
 
     // Re-initialize after HTMX injects the wizard via navigation

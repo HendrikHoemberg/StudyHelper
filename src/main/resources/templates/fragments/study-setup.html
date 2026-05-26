@@ -85,6 +85,20 @@
                             Long-form written answers, AI-graded.
                         </div>
                     </label>
+                    <label class="sh-study-choice sh-study-choice-dungeon" onclick="selectStudyMode(this, 'DUNGEON')">
+                            <span class="sh-mode-info" role="button" tabindex="0" th:aria-label="#{study.setup.how-dungeon}" aria-label="How Dungeon works"
+                              onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('DUNGEON');">
+                            <iconify-icon icon="lucide:map"></iconify-icon>
+                        </span>
+                        <input type="radio" name="mode_picker" value="DUNGEON" th:checked="${mode == T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).DUNGEON}">
+                        <div class="sh-study-choice-icon">
+                            <iconify-icon icon="lucide:swords"></iconify-icon>
+                        </div>
+                        <div class="sh-study-choice-title" th:text="#{study.setup.mode.dungeon}">Dungeon</div>
+                        <div class="sh-study-choice-subtitle" th:text="#{study.setup.mode.dungeon-desc}">
+                            Explore a pixel dungeon powered by cards or AI quiz prompts.
+                        </div>
+                    </label>
                 </div>
             </div>
 
@@ -95,6 +109,7 @@
             <div th:replace="~{fragments/wizard-flashcards :: panels}"></div>
             <div th:replace="~{fragments/wizard-quiz :: panels}"></div>
             <div th:replace="~{fragments/wizard-exam :: panels}"></div>
+            <div th:replace="~{fragments/wizard-dungeon :: panels}"></div>
 
             <!-- Panel 3: Sources (Shared) -->
             <div th:replace="~{fragments/wizard-source-picker :: picker}"></div>

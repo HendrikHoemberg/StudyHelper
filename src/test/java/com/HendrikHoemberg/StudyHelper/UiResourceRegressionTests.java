@@ -1019,6 +1019,28 @@ class UiResourceRegressionTests {
     }
 
     @Test
+    void studyWizardIncludesDungeonModeAndTwoByTwoClass() throws IOException {
+        String template = resource("templates/fragments/study-setup.html");
+        String dungeonTemplate = resource("templates/fragments/wizard-dungeon.html");
+        String wizardJs = resource("static/js/study-wizard.js");
+        String styles = resource("static/css/styles.css");
+
+        assertThat(template)
+            .contains("DUNGEON")
+            .contains("wizard-dungeon :: panels");
+        assertThat(dungeonTemplate)
+            .contains("name=\"quizQuestionMode\"")
+            .contains("name=\"difficulty\"")
+            .contains("name=\"additionalInstructions\"");
+        assertThat(wizardJs)
+            .contains("DUNGEON")
+            .contains("updateDungeonAiSettings");
+        assertThat(styles)
+            .contains(".sh-study-mode-grid")
+            .contains("grid-template-columns: repeat(2");
+    }
+
+    @Test
     void flashcardGeneratorDesktopHidesSidebarAndCentersConstrainedSetupPanels() throws IOException {
         String styles = resource("static/css/styles.css");
         String page = file("src/main/resources/templates/flashcard-generator-page.html");

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="panels">
+    <div class="sh-wizard-panel" data-step="2" data-mode="DUNGEON">
+        <div class="sh-section-title" th:text="#{wizard.dungeon.type}">Dungeon Type</div>
+        <div class="sh-study-mode-grid sh-study-mode-grid-compact">
+            <label class="sh-study-choice sh-study-choice-dungeon">
+                <input type="radio" name="dungeonMode" value="FLASHCARDS" th:checked="${dungeonMode != null and dungeonMode.name() == 'FLASHCARDS'}">
+                <div class="sh-study-choice-icon">
+                    <iconify-icon icon="lucide:book-open"></iconify-icon>
+                </div>
+                <div class="sh-study-choice-title" th:text="#{wizard.dungeon.type.flashcards}">Flashcards</div>
+                <div class="sh-study-choice-subtitle" th:text="#{wizard.dungeon.type.flashcards-desc}">
+                    Explore using your flashcards.
+                </div>
+            </label>
+            <label class="sh-study-choice sh-study-choice-dungeon">
+                <input type="radio" name="dungeonMode" value="AI_QUIZ" th:checked="${dungeonMode != null and dungeonMode.name() == 'AI_QUIZ'}">
+                <div class="sh-study-choice-icon">
+                    <iconify-icon icon="lucide:sparkles"></iconify-icon>
+                </div>
+                <div class="sh-study-choice-title" th:text="#{wizard.dungeon.type.ai-quiz}">AI Quiz</div>
+                <div class="sh-study-choice-subtitle" th:text="#{wizard.dungeon.type.ai-quiz-desc}">
+                    AI-generated quiz prompts.
+                </div>
+            </label>
+        </div>
+    </div>
+
+    <div class="sh-wizard-panel" data-step="3" data-mode="DUNGEON">
+        <div class="sh-section-title" th:text="#{wizard.dungeon.size}">Dungeon Size</div>
+        <div class="sh-study-mode-grid sh-study-mode-grid-compact">
+            <label class="sh-study-choice sh-study-choice-dungeon">
+                <input type="radio" name="dungeonSize" value="SMALL" th:checked="${dungeonSize != null and dungeonSize.name() == 'SMALL'}">
+                <div class="sh-study-choice-icon">
+                    <iconify-icon icon="lucide:backpack"></iconify-icon>
+                </div>
+                <div class="sh-study-choice-title" th:text="#{wizard.dungeon.size.small}">Small</div>
+                <div class="sh-study-choice-subtitle" th:text="#{wizard.dungeon.size.small-desc}">Quick run. ~10 rooms.</div>
+            </label>
+            <label class="sh-study-choice sh-study-choice-dungeon">
+                <input type="radio" name="dungeonSize" value="MEDIUM" th:checked="${dungeonSize != null and dungeonSize.name() == 'MEDIUM'}">
+                <div class="sh-study-choice-icon">
+                    <iconify-icon icon="lucide:backpack"></iconify-icon>
+                </div>
+                <div class="sh-study-choice-title" th:text="#{wizard.dungeon.size.medium}">Medium</div>
+                <div class="sh-study-choice-subtitle" th:text="#{wizard.dungeon.size.medium-desc}">Balanced. ~20 rooms.</div>
+            </label>
+            <label class="sh-study-choice sh-study-choice-dungeon">
+                <input type="radio" name="dungeonSize" value="LARGE" th:checked="${dungeonSize != null and dungeonSize.name() == 'LARGE'}">
+                <div class="sh-study-choice-icon">
+                    <iconify-icon icon="lucide:backpack"></iconify-icon>
+                </div>
+                <div class="sh-study-choice-title" th:text="#{wizard.dungeon.size.large}">Large</div>
+                <div class="sh-study-choice-subtitle" th:text="#{wizard.dungeon.size.large-desc}">Epic adventure. ~40 rooms.</div>
+            </label>
+        </div>
+
+        <div id="dungeon-ai-settings" class="sh-settings-grid" style="margin-top: 1.5rem;">
+            <div class="sh-setting-row">
+                <div>
+                    <div class="sh-setting-label" th:text="#{wizard.quiz.question-mode}">Question Format</div>
+                </div>
+                <div class="sh-segmented-control">
+                    <label class="sh-segmented-option">
+                        <input type="radio" name="quizQuestionMode" value="MCQ_ONLY" th:checked="${quizQuestionMode == null or quizQuestionMode.name() == 'MCQ_ONLY'}">
+                        <span th:text="#{wizard.quiz.format.mcq}">Multiple Choice</span>
+                    </label>
+                    <label class="sh-segmented-option">
+                        <input type="radio" name="quizQuestionMode" value="TF_ONLY" th:checked="${quizQuestionMode != null and quizQuestionMode.name() == 'TF_ONLY'}">
+                        <span th:text="#{wizard.quiz.format.tf}">True / False</span>
+                    </label>
+                    <label class="sh-segmented-option">
+                        <input type="radio" name="quizQuestionMode" value="MIXED" th:checked="${quizQuestionMode != null and quizQuestionMode.name() == 'MIXED'}">
+                        <span th:text="#{wizard.quiz.format.mixed}">Mixed</span>
+                    </label>
+                </div>
+            </div>
+            <div class="sh-setting-row">
+                <div>
+                    <div class="sh-setting-label" th:text="#{wizard.quiz.difficulty}">Difficulty</div>
+                </div>
+                <div class="sh-segmented-control">
+                    <label th:each="diff : ${difficulties}" class="sh-segmented-option">
+                        <input type="radio" name="difficulty" th:value="${diff}" th:checked="${diff.name() == 'MEDIUM'}">
+                        <span th:text="${#strings.capitalize(#strings.toLowerCase(diff))}">Medium</span>
+                    </label>
+                </div>
+            </div>
+            <div class="sh-setting-row">
+                <div>
+                    <div class="sh-setting-label" th:text="#{wizard.dungeon.additional-instructions}">Additional Instructions</div>
+                    <div class="sh-setting-hint" th:text="#{wizard.dungeon.additional-instructions-hint}">Optional prompt for AI quiz.</div>
+                </div>
+                <textarea name="additionalInstructions" class="sh-textarea" rows="2" th:text="${additionalInstructions}" placeholder="e.g. Focus on chapter 3"></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

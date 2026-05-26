@@ -394,6 +394,27 @@ class StudyControllerTests {
     }
 
     @Test
+    void start_DungeonModeRendersSetupWithDungeonMode() {
+        ExtendedModelMap model = new ExtendedModelMap();
+
+        String view = controller.start(
+            StudyMode.DUNGEON,
+            null,
+            null,
+            null,
+            model,
+            () -> "alice",
+            new MockHttpSession(),
+            null,
+            null,
+            "true"
+        );
+
+        assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
+        assertThat(model.get("mode")).isEqualTo(StudyMode.DUNGEON);
+    }
+
+    @Test
     void prepareWizardModel_addsDueTodaySessionCountToModel() {
         ExtendedModelMap model = new ExtendedModelMap();
 
