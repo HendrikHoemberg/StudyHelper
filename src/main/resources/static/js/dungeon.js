@@ -564,6 +564,11 @@
                     window.currentPlayerX = targetX;
                     window.currentPlayerY = targetY;
                     renderAll(canvas, mapWidth, mapHeight, window.currentPlayerX, window.currentPlayerY);
+                    // Self-healing: if the DOM state is not yet ready/parsed during a synchronous tick,
+                    // reschedule via requestAnimationFrame to retry once it settles.
+                    if (!readMapTiles()) {
+                        window.dungeonAnimFrame = requestAnimationFrame(animate);
+                    }
                 } else {
                     renderAll(canvas, mapWidth, mapHeight, window.currentPlayerX, window.currentPlayerY);
                     window.dungeonAnimFrame = requestAnimationFrame(animate);
@@ -758,15 +763,35 @@
         ctx.fillText("Bereite dich auf den Kampf vor...", canvas.width / 2, canvas.height - 40);
     }
 
+    var drawQueued = false;
+    function triggerDraw() {
+        if (drawQueued) return;
+        drawQueued = true;
+        requestAnimationFrame(function () {
+            drawQueued = false;
+            drawDungeon();
+        });
+    }
+
     // Direct listener on DOMContentLoaded
-    document.addEventListener('DOMContentLoaded', drawDungeon);
+    document.addEventListener('DOMContentLoaded', triggerDraw);
 
     // HTMX Lifecycle events
     function registerLifecycleHooks(element) {
         if (!element) return;
         element.addEventListener('htmx:afterSwap', function (e) {
             if (document.getElementById('dungeon-map-canvas')) {
-                drawDungeon();
+                triggerDraw();
+            }
+        });
+        element.addEventListener('htmx:afterSettle', function (e) {
+            if (document.getElementById('dungeon-map-canvas')) {
+                triggerDraw();
+            }
+        });
+        element.addEventListener('htmx:load', function (e) {
+            if (document.getElementById('dungeon-map-canvas')) {
+                triggerDraw();
             }
         });
     }
