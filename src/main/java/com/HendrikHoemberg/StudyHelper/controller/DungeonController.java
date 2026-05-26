@@ -4,6 +4,7 @@ import com.HendrikHoemberg.StudyHelper.dto.*;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.service.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,15 +26,21 @@ public class DungeonController {
     private final SavedSessionService savedSessionService;
     private final StudyLogService studyLogService;
     private final UserService userService;
+    private final FolderService folderService;
+    private final DashboardService dashboardService;
 
     public DungeonController(DungeonSessionService dungeonSessionService,
                              SavedSessionService savedSessionService,
                              StudyLogService studyLogService,
-                             UserService userService) {
+                             UserService userService,
+                             FolderService folderService,
+                             DashboardService dashboardService) {
         this.dungeonSessionService = dungeonSessionService;
         this.savedSessionService = savedSessionService;
         this.studyLogService = studyLogService;
         this.userService = userService;
+        this.folderService = folderService;
+        this.dashboardService = dashboardService;
     }
 
     @PostMapping("/dungeon/start")
@@ -43,12 +50,28 @@ public class DungeonController {
                         @RequestParam(defaultValue = "MCQ_ONLY") QuizQuestionMode quizQuestionMode,
                         @RequestParam(defaultValue = "MEDIUM") Difficulty difficulty,
                         @RequestParam(required = false) String additionalInstructions,
+                        @RequestParam(name = "confirmDiscard", defaultValue = "false") boolean confirmDiscard,
                         HttpServletRequest request,
+                        HttpServletResponse response,
                         Model model,
                         Principal principal,
                         HttpSession session,
                         @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
+
+        if (!confirmDiscard) {
+            var existing = savedSessionService.findForUser(user);
+            if (existing.isPresent()) {
+                model.addAttribute("savedSession", existing.get());
+                model.addAttribute("startNewMode", StudyMode.DUNGEON);
+                model.addAttribute("studyWizardCancelUrl", "/dashboard");
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.setHeader("HX-Retarget", "#modal-placeholder");
+                response.setHeader("HX-Reswap", "innerHTML");
+                return "fragments/saved-session :: conflict";
+            }
+        }
+
         try {
             DungeonSessionState state;
             if (dungeonMode == DungeonMode.FLASHCARDS) {
@@ -58,15 +81,16 @@ public class DungeonController {
                     selectedDeckIds, dungeonSize, quizQuestionMode, difficulty,
                     additionalInstructions, request, user);
             }
+            savedSessionService.discard(user);
             session.setAttribute(DUNGEON_SESSION_KEY, state);
             savedSessionService.saveDungeon(user, state);
             return prepareGame(model, state, hxRequest);
         } catch (IllegalArgumentException ex) {
-            return handleStartError(model, dungeonMode, dungeonSize, selectedDeckIds,
-                quizQuestionMode, difficulty, additionalInstructions, ex, hxRequest);
+            return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
+                quizQuestionMode, difficulty, additionalInstructions, ex, session, response, hxRequest);
         } catch (Exception ex) {
-            return handleStartError(model, dungeonMode, dungeonSize, selectedDeckIds,
-                quizQuestionMode, difficulty, additionalInstructions, ex, hxRequest);
+            return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
+                quizQuestionMode, difficulty, additionalInstructions, ex, session, response, hxRequest);
         }
     }
 
@@ -110,6 +134,9 @@ public class DungeonController {
                        @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = getState(session, user);
+        if (state == null) {
+            return "redirect:/study/start?mode=DUNGEON";
+        }
         state = dungeonSessionService.move(state, direction);
         return stashAndRender(model, user, session, state, hxRequest);
     }
@@ -122,6 +149,9 @@ public class DungeonController {
                                   @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = getState(session, user);
+        if (state == null) {
+            return "redirect:/study/start?mode=DUNGEON";
+        }
         state = dungeonSessionService.answerFlashcard(state, gotIt);
         return stashAndRender(model, user, session, state, hxRequest);
     }
@@ -134,6 +164,9 @@ public class DungeonController {
                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = getState(session, user);
+        if (state == null) {
+            return "redirect:/study/start?mode=DUNGEON";
+        }
         state = dungeonSessionService.answerQuiz(state, selectedOptions);
         return stashAndRender(model, user, session, state, hxRequest);
     }
@@ -165,10 +198,14 @@ public class DungeonController {
         return state;
     }
 
-    private String handleStartError(Model model, DungeonMode dungeonMode, DungeonSize dungeonSize,
+    private String handleStartError(Model model, User user, DungeonMode dungeonMode, DungeonSize dungeonSize,
                                      List<Long> selectedDeckIds, QuizQuestionMode quizQuestionMode,
                                      Difficulty difficulty, String additionalInstructions,
-                                     Exception ex, String hxRequest) {
+                                     Exception ex, HttpSession session, HttpServletResponse response, String hxRequest) {
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        if (ex instanceof AiGenerationException || ex.getCause() instanceof AiGenerationException) {
+            response.addHeader("HX-Trigger", "refresh-quota");
+        }
         model.addAttribute("mode", StudyMode.DUNGEON);
         model.addAttribute("dungeonMode", dungeonMode);
         model.addAttribute("dungeonSize", dungeonSize);
@@ -176,12 +213,44 @@ public class DungeonController {
         model.addAttribute("quizQuestionMode", quizQuestionMode);
         model.addAttribute("difficulty", difficulty);
         model.addAttribute("additionalInstructions", additionalInstructions == null ? "" : additionalInstructions);
+
+        prepareWizardModel(model, user, selectedDeckIds, ex.getMessage(), session);
         model.addAttribute("errorMessage", ex.getMessage());
+        model.addAttribute("aiErrorDetails", generationDetails(ex));
+
         if (hxRequest != null) {
             return "fragments/study-setup :: studySetup";
         }
         model.addAttribute("studyStateView", "setup");
         return "study-page";
+    }
+
+    private void prepareWizardModel(Model model, User user, List<Long> deckIds, String error, HttpSession session) {
+        List<Long> normalizedDecks = StudySourceSupport.normalizeIds(deckIds);
+
+        model.addAttribute("deckGroups", folderService.getStudyFolderTree(user, normalizedDecks));
+        model.addAttribute("preselectedDeckIds", normalizedDecks);
+        model.addAttribute("preselectedFileIds", List.of());
+        model.addAttribute("pdfMode", Map.of());
+        model.addAttribute("studyError", error);
+        model.addAttribute("sessionModes", SessionMode.values());
+        model.addAttribute("deckOrderModes", DeckOrderMode.values());
+        model.addAttribute("quizQuestionModes", QuizQuestionMode.values());
+        model.addAttribute("difficulties", Difficulty.values());
+
+        long dueTodaySessionCount = dashboardService.buildFor(user).dueTodaySessionCount();
+        model.addAttribute("dueTodaySessionCount", dueTodaySessionCount);
+
+        model.addAttribute("selectionTotalChars", 0L);
+        model.addAttribute("selectionWarn", false);
+        model.addAttribute("selectionExceedsCap", false);
+    }
+
+    private String generationDetails(Exception ex) {
+        if (ex instanceof AiGenerationException aiEx && aiEx.diagnostics() != null) {
+            return aiEx.diagnostics().toDisplayString();
+        }
+        return AiGenerationDiagnostics.fromException("DUNGEON", "REQUEST_VALIDATION", ex).toDisplayString();
     }
 
     private String prepareGame(Model model, DungeonSessionState state, String hxRequest) {

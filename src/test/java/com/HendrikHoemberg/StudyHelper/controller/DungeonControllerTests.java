@@ -6,6 +6,7 @@ import com.HendrikHoemberg.StudyHelper.service.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -24,6 +25,8 @@ class DungeonControllerTests {
     private SavedSessionService savedSessionService;
     private StudyLogService studyLogService;
     private UserService userService;
+    private FolderService folderService;
+    private DashboardService dashboardService;
     private User user;
 
     @BeforeEach
@@ -32,14 +35,21 @@ class DungeonControllerTests {
         savedSessionService = mock(SavedSessionService.class);
         studyLogService = mock(StudyLogService.class);
         userService = mock(UserService.class);
+        folderService = mock(FolderService.class);
+        dashboardService = mock(DashboardService.class);
         controller = new DungeonController(
-            dungeonSessionService, savedSessionService, studyLogService, userService
+            dungeonSessionService, savedSessionService, studyLogService, userService, folderService, dashboardService
         );
 
         user = new User();
         user.setId(1L);
         user.setUsername("alice");
         when(userService.getByUsername("alice")).thenReturn(user);
+
+        DashboardViewModel dvm = mock(DashboardViewModel.class);
+        when(dashboardService.buildFor(any())).thenReturn(dvm);
+        when(dvm.dueTodaySessionCount()).thenReturn(0L);
+        when(folderService.getStudyFolderTree(any(), any())).thenReturn(List.of());
     }
 
     private DungeonSessionState sampleState(boolean won, boolean defeated) {
@@ -94,11 +104,56 @@ class DungeonControllerTests {
         String view = controller.start(
             DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
             QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, null,
-            new MockHttpServletRequest(), model, () -> "alice", session, "true");
+            false, new MockHttpServletRequest(), new MockHttpServletResponse(), model, () -> "alice", session, "true");
 
         assertThat(view).isEqualTo("fragments/dungeon-game :: dungeonGame");
         assertThat(session.getAttribute("dungeonSessionState")).isSameAs(state);
         verify(savedSessionService).saveDungeon(eq(user), eq(state));
+    }
+
+    @Test
+    void startDungeon_withSavedSession_returnsConflictModal() {
+        SavedSessionSummary summary = mock(SavedSessionSummary.class);
+        when(savedSessionService.findForUser(user)).thenReturn(Optional.of(summary));
+
+        MockHttpSession session = new MockHttpSession();
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.start(
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
+            QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, null,
+            false, new MockHttpServletRequest(), response, model, () -> "alice", session, "true");
+
+        assertThat(view).isEqualTo("fragments/saved-session :: conflict");
+        assertThat(model.get("savedSession")).isSameAs(summary);
+        assertThat(model.get("startNewMode")).isEqualTo(StudyMode.DUNGEON);
+        assertThat(response.getHeader("HX-Retarget")).isEqualTo("#modal-placeholder");
+        assertThat(response.getHeader("HX-Reswap")).isEqualTo("innerHTML");
+        verify(dungeonSessionService, never()).createFlashcardDungeon(any(), any(), any());
+    }
+
+    @Test
+    void startDungeon_withSavedSessionAndConfirmDiscard_discardsAndStarts() {
+        DungeonSessionState state = sampleState(false, false);
+        when(dungeonSessionService.createFlashcardDungeon(List.of(1L), DungeonSize.SMALL, user))
+            .thenReturn(state);
+        DungeonRunStats stats = new DungeonRunStats(
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false);
+        when(dungeonSessionService.buildStats(state)).thenReturn(stats);
+
+        MockHttpSession session = new MockHttpSession();
+        ExtendedModelMap model = new ExtendedModelMap();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        String view = controller.start(
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
+            QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, null,
+            true, new MockHttpServletRequest(), response, model, () -> "alice", session, "true");
+
+        assertThat(view).isEqualTo("fragments/dungeon-game :: dungeonGame");
+        verify(savedSessionService).discard(user);
+        verify(savedSessionService).saveDungeon(user, state);
     }
 
     @Test
@@ -113,7 +168,7 @@ class DungeonControllerTests {
         String view = controller.start(
             DungeonMode.FLASHCARDS, DungeonSize.MEDIUM, emptyDecks,
             QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, null,
-            new MockHttpServletRequest(), model, () -> "alice", session, "true");
+            false, new MockHttpServletRequest(), new MockHttpServletResponse(), model, () -> "alice", session, "true");
 
         assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
         assertThat(model.get("mode")).isEqualTo(StudyMode.DUNGEON);
@@ -136,7 +191,7 @@ class DungeonControllerTests {
         String view = controller.start(
             DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
             QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, null,
-            new MockHttpServletRequest(), model, () -> "alice", session, "true");
+            false, new MockHttpServletRequest(), new MockHttpServletResponse(), model, () -> "alice", session, "true");
 
         assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
         assertThat(model.get("errorMessage")).isEqualTo(errorMsg);
@@ -144,7 +199,7 @@ class DungeonControllerTests {
     }
 
     @Test
-    void startAiQuizDungeon_generationOrQuotaFailureReturnsSetupErrorWithOptionsPreserved() {
+    void startAiQuizDungeon_generationOrQuotaFailureReturnsSetupErrorWithOptionsPreserved() throws Exception {
         when(dungeonSessionService.createAiQuizDungeon(
             eq(List.of(1L)), eq(DungeonSize.SMALL), eq(QuizQuestionMode.MCQ_ONLY),
             eq(Difficulty.MEDIUM), eq(null), any(), eq(user)))
@@ -156,7 +211,7 @@ class DungeonControllerTests {
         String view = controller.start(
             DungeonMode.AI_QUIZ, DungeonSize.SMALL, List.of(1L),
             QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, null,
-            new MockHttpServletRequest(), model, () -> "alice", session, "true");
+            false, new MockHttpServletRequest(), new MockHttpServletResponse(), model, () -> "alice", session, "true");
 
         assertThat(view).isEqualTo("fragments/study-setup :: studySetup");
         assertThat(model.get("dungeonMode")).isEqualTo(DungeonMode.AI_QUIZ);

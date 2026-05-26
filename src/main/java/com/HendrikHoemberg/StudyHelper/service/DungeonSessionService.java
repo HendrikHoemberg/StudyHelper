@@ -80,21 +80,16 @@ public class DungeonSessionService {
                                                    Difficulty difficulty,
                                                    String additionalInstructions,
                                                    HttpServletRequest request,
-                                                   User user) {
+                                                   User user) throws Exception {
         List<Long> normalizedIds = StudySourceSupport.normalizeIds(selectedDeckIds);
         List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(normalizedIds, user);
         List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
         validateSize(size, flashcards.size(), "flashcards");
 
         int questionCount = size.totalPrompts();
-        QuizSessionState quizState;
-        try {
-            quizState = quizSessionService.createSession(
-                normalizedIds, List.of(), request, questionCount,
-                questionMode, difficulty, additionalInstructions, user);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create quiz session", e);
-        }
+        QuizSessionState quizState = quizSessionService.createSession(
+            normalizedIds, List.of(), request, questionCount,
+            questionMode, difficulty, additionalInstructions, user);
 
         List<QuizQuestion> questions = quizState.questions();
 
@@ -286,9 +281,21 @@ public class DungeonSessionService {
             }
         }
 
+        Map<DungeonPosition, DungeonTile> tiles = new LinkedHashMap<>(state.map().tiles());
+        DungeonPosition playerPos = state.playerPosition();
+        DungeonTile currentTile = tiles.get(playerPos);
+        DungeonMap nextMap = state.map();
+        if (currentTile != null && (currentTile.type() == DungeonTileType.ENCOUNTER || currentTile.type() == DungeonTileType.BOSS)) {
+            if (!encounter.boss() || won) {
+                tiles.put(playerPos, currentTile.withType(DungeonTileType.FLOOR, null));
+                nextMap = new DungeonMap(state.map().width(), state.map().height(),
+                    state.map().entrance(), state.map().boss(), Map.copyOf(tiles));
+            }
+        }
+
         return new DungeonSessionState(
             state.config(),
-            state.map(),
+            nextMap,
             state.playerPosition(),
             Map.copyOf(encounters),
             state.bossEncounterIds(),
