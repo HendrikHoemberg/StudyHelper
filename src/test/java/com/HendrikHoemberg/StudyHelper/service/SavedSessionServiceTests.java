@@ -35,6 +35,7 @@ class SavedSessionServiceTests {
     private FlashcardRepository flashcardRepository;
     private ObjectMapper objectMapper;
     private StudyLogService studyLogService;
+    private DungeonSessionService dungeonSessionService;
     private SavedSessionService service;
     private User user;
 
@@ -44,7 +45,8 @@ class SavedSessionServiceTests {
         flashcardRepository = mock(FlashcardRepository.class);
         objectMapper = new ObjectMapper();
         studyLogService = mock(StudyLogService.class);
-        service = new SavedSessionService(repository, flashcardRepository, objectMapper, studyLogService);
+        dungeonSessionService = mock(DungeonSessionService.class);
+        service = new SavedSessionService(repository, flashcardRepository, objectMapper, studyLogService, dungeonSessionService);
 
         user = new User();
         user.setId(7L);
@@ -316,6 +318,27 @@ class SavedSessionServiceTests {
 
         assertThat(result.removedCount()).isEqualTo(0);
         assertThat(result.canContinue()).isTrue();
+    }
+
+    @Test
+    void discard_dungeonSession_logsAbandoned() {
+        DungeonSessionState state = sampleDungeonState();
+        SavedSession row = new SavedSession();
+        row.setUser(user);
+        row.setType(SavedSessionType.DUNGEON);
+        row.setPayload(asJson(state));
+        row.setTitle("t");
+        row.setProgressLabel("p");
+        row.setUpdatedAt(java.time.Instant.now());
+
+        when(repository.findByUser(user)).thenReturn(Optional.of(row));
+        DungeonRunStats stats = new DungeonRunStats(DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 10, false);
+        when(dungeonSessionService.buildStats(any())).thenReturn(stats);
+
+        service.discard(user);
+
+        verify(studyLogService).recordDungeonAbandoned(eq(user), eq(stats), eq(List.of(10L)));
+        verify(repository).deleteByUser(user);
     }
 
     private String asJson(Object value) {

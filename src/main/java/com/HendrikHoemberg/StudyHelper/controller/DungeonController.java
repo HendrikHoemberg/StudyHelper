@@ -83,6 +83,7 @@ public class DungeonController {
                 state = dungeonSessionService.createAiQuizDungeon(
                     selectedDeckIds, dungeonSize, quizQuestionMode, difficulty,
                     additionalInstructions, request, user);
+                response.addHeader("HX-Trigger", "refresh-quota");
             }
             savedSessionService.discard(user);
             session.setAttribute(DUNGEON_SESSION_KEY, state);
@@ -116,7 +117,7 @@ public class DungeonController {
             if (!result.canContinue()) {
                 DungeonRunStats stats = dungeonSessionService.buildStats(result.state());
                 studyLogService.recordDungeonAbandoned(user, stats, state.config().selectedDeckIds());
-                savedSessionService.discard(user);
+                savedSessionService.discard(user, false);
                 redirectAttributes.addFlashAttribute("errorMessage",
                     dungeonResumeDiscardMessage(result.removedCount()));
                 return "redirect:/study/start?mode=DUNGEON";
@@ -178,7 +179,7 @@ public class DungeonController {
                                    DungeonSessionState state, String hxRequest) {
         session.setAttribute(DUNGEON_SESSION_KEY, state);
         if (state.isComplete()) {
-            savedSessionService.discard(user);
+            savedSessionService.discard(user, false);
             DungeonRunStats stats = dungeonSessionService.buildStats(state);
             studyLogService.recordDungeon(user, stats, state.config().selectedDeckIds());
             model.addAttribute("mode", StudyMode.DUNGEON);
@@ -206,7 +207,8 @@ public class DungeonController {
                                      Difficulty difficulty, String additionalInstructions,
                                      Exception ex, HttpSession session, HttpServletResponse response, String hxRequest) {
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        if (ex instanceof AiGenerationException || ex.getCause() instanceof AiGenerationException) {
+        if (ex instanceof AiGenerationException || ex.getCause() instanceof AiGenerationException
+            || ex instanceof AiQuotaExceededException || ex.getCause() instanceof AiQuotaExceededException) {
             response.addHeader("HX-Trigger", "refresh-quota");
         }
         model.addAttribute("mode", StudyMode.DUNGEON);

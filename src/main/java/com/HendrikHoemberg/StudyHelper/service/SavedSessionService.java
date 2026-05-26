@@ -22,17 +22,20 @@ public class SavedSessionService {
     private final FlashcardRepository flashcardRepository;
     private final ObjectMapper objectMapper;
     private final StudyLogService studyLogService;
+    private final DungeonSessionService dungeonSessionService;
 
     public SavedSessionService(SavedSessionRepository repository,
                                FlashcardRepository flashcardRepository,
                                ObjectMapper objectMapper,
-                               StudyLogService studyLogService) {
+                               StudyLogService studyLogService,
+                               DungeonSessionService dungeonSessionService) {
         this.repository = repository;
         this.flashcardRepository = flashcardRepository;
         this.studyLogService = studyLogService;
         this.objectMapper = objectMapper.rebuild()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .build();
+        this.dungeonSessionService = dungeonSessionService;
     }
 
     @Transactional(readOnly = true)
@@ -71,6 +74,10 @@ public class SavedSessionService {
     }
 
     public void discard(User user) {
+        discard(user, true);
+    }
+
+    public void discard(User user, boolean logDungeonAbandonment) {
         repository.findByUser(user).ifPresent(row -> {
             try {
                 java.time.LocalDateTime completedAt = java.time.LocalDateTime.ofInstant(row.getUpdatedAt(), java.time.ZoneId.systemDefault());
@@ -83,6 +90,14 @@ public class SavedSessionService {
                     QuizSessionState state = read(row.getPayload(), QuizSessionState.class);
                     if (state != null && state.answers() != null && !state.answers().isEmpty()) {
                         studyLogService.recordQuizPartial(user, state, completedAt);
+                    }
+                } else if (row.getType() == SavedSessionType.DUNGEON) {
+                    if (logDungeonAbandonment) {
+                        DungeonSessionState state = read(row.getPayload(), DungeonSessionState.class);
+                        if (state != null && !state.isComplete()) {
+                            DungeonRunStats stats = dungeonSessionService.buildStats(state);
+                            studyLogService.recordDungeonAbandoned(user, stats, state.config().selectedDeckIds());
+                        }
                     }
                 }
             } catch (Exception e) {

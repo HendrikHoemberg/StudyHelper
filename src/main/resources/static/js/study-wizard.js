@@ -615,8 +615,32 @@
             if (label) {
                 label.classList.toggle('is-disabled', disabled);
                 input.disabled = disabled;
+
+                let hintEl = label.querySelector('.dungeon-size-requirement-hint');
+                if (disabled) {
+                    if (!hintEl) {
+                        hintEl = document.createElement('div');
+                        hintEl.className = 'dungeon-size-requirement-hint';
+                        hintEl.style.fontSize = '0.75rem';
+                        hintEl.style.color = 'var(--text-danger, #ef4444)';
+                        hintEl.style.marginTop = '4px';
+                        label.appendChild(hintEl);
+                    }
+                    hintEl.textContent = `Requires ${min} cards (you have ${count})`;
+                } else if (hintEl) {
+                    hintEl.remove();
+                }
             }
         });
+
+        const checkedInput = document.querySelector('input[name="dungeonSize"]:checked');
+        if (checkedInput && checkedInput.disabled) {
+            checkedInput.checked = false;
+            const enabledInputs = [...document.querySelectorAll('input[name="dungeonSize"]')].filter(i => !i.disabled);
+            if (enabledInputs.length > 0) {
+                enabledInputs[0].checked = true;
+            }
+        }
     }
 
     document.body.addEventListener('change', function (e) {

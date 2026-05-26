@@ -301,7 +301,7 @@ class DungeonControllerTests {
             true, model, () -> "alice", session, "true");
 
         assertThat(view).isEqualTo("fragments/dungeon-complete :: dungeonComplete");
-        verify(savedSessionService).discard(user);
+        verify(savedSessionService).discard(user, false);
         verify(studyLogService).recordDungeon(eq(user), eq(stats), eq(List.of(1L)));
     }
 
@@ -324,7 +324,7 @@ class DungeonControllerTests {
         assertThat(view).isEqualTo("study-page");
         assertThat(model.get("studyStateView")).isEqualTo("dungeonComplete");
         assertThat(model.get("stats")).isEqualTo(stats);
-        verify(savedSessionService).discard(user);
+        verify(savedSessionService).discard(user, false);
         verify(studyLogService).recordDungeon(eq(user), eq(stats), eq(List.of(1L)));
     }
 
@@ -371,7 +371,7 @@ class DungeonControllerTests {
 
         assertThat(view).isEqualTo("redirect:/study/start?mode=DUNGEON");
         verify(studyLogService).recordDungeonAbandoned(eq(user), eq(stats), eq(List.of(1L)));
-        verify(savedSessionService).discard(user);
+        verify(savedSessionService).discard(user, false);
         verify(redirectAttributes).addFlashAttribute(
             eq("errorMessage"),
             eq("Your saved Dungeon run could not continue because 2 flashcard(s) are no longer available."));

@@ -137,13 +137,21 @@ public class DungeonSessionService {
 
         revealAround(tiles, newPos);
 
+        DungeonTile destinationTile = tiles.get(newPos);
+        if (destinationTile != null) {
+            destinationTile = destinationTile.explore();
+            tiles.put(newPos, destinationTile);
+        }
+
         int health = state.health();
         int score = state.score();
         String activeEncounterId = null;
 
-        switch (newTile.type()) {
+        DungeonTile activeTile = destinationTile != null ? destinationTile : newTile;
+
+        switch (activeTile.type()) {
             case ENCOUNTER -> {
-                String eid = newTile.encounterId();
+                String eid = activeTile.encounterId();
                 if (eid != null) {
                     DungeonEncounter enc = encounters.get(eid);
                     if (enc != null && enc.status() == DungeonEncounterStatus.PENDING) {
@@ -164,11 +172,11 @@ public class DungeonSessionService {
             }
             case HEAL -> {
                 health = Math.min(STARTING_HEALTH, health + HEAL_AMOUNT);
-                tiles.put(newPos, newTile.withType(DungeonTileType.FLOOR, null));
+                tiles.put(newPos, activeTile.withType(DungeonTileType.FLOOR, null));
             }
             case TREASURE -> {
                 score += TREASURE_SCORE;
-                tiles.put(newPos, newTile.withType(DungeonTileType.FLOOR, null));
+                tiles.put(newPos, activeTile.withType(DungeonTileType.FLOOR, null));
             }
         }
 
@@ -224,10 +232,18 @@ public class DungeonSessionService {
     private DungeonSessionState initialState(DungeonConfig config, DungeonMap map,
                                               Map<String, DungeonEncounter> encounters,
                                               List<String> bossEncounterIds) {
+        Map<DungeonPosition, DungeonTile> tiles = new LinkedHashMap<>(map.tiles());
+        DungeonPosition entrance = map.entrance();
+        DungeonTile entranceTile = tiles.get(entrance);
+        if (entranceTile != null) {
+            tiles.put(entrance, entranceTile.explore());
+        }
+        DungeonMap exploredMap = new DungeonMap(map.width(), map.height(), entrance, map.boss(), Map.copyOf(tiles));
+
         return new DungeonSessionState(
             config,
-            map,
-            map.entrance(),
+            exploredMap,
+            entrance,
             Map.copyOf(encounters),
             List.copyOf(bossEncounterIds),
             0,
@@ -236,7 +252,7 @@ public class DungeonSessionService {
             0,
             0,
             0,
-            visibleFrom(map.tiles()),
+            visibleFrom(tiles),
             false,
             false
         );
