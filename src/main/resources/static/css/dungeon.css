@@ -311,3 +311,54 @@
         font-size: 1rem;
     }
 }
+
+/* Screen-shake and Flash Animations for dynamic feedbacks */
+.sh-dungeon-shake-active {
+    animation: sh-dungeon-shake 0.35s cubic-bezier(.36,.07,.19,.97) both;
+    transform: translate3d(0, 0, 0);
+}
+
+.sh-dungeon-flash-danger {
+    animation: sh-dungeon-red-glow 0.4s ease-out;
+}
+
+.sh-dungeon-flash-success {
+    animation: sh-dungeon-green-glow 0.4s ease-out;
+}
+
+@keyframes sh-dungeon-shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+    40%, 60% { transform: translate3d(3px, 0, 0); }
+}
+
+@keyframes sh-dungeon-red-glow {
+    0% {
+        box-shadow: 0 0 0px var(--danger);
+        border-color: var(--danger);
+    }
+    50% {
+        box-shadow: 0 0 20px var(--danger);
+        border-color: var(--danger);
+    }
+    100% {
+        box-shadow: var(--shadow-md);
+        border-color: var(--border);
+    }
+}
+
+@keyframes sh-dungeon-green-glow {
+    0% {
+        box-shadow: 0 0 0px var(--success);
+        border-color: var(--success);
+    }
+    50% {
+        box-shadow: 0 0 20px var(--success);
+        border-color: var(--success);
+    }
+    100% {
+        box-shadow: var(--shadow-md);
+        border-color: var(--border);
+    }
+}

@@ -10,7 +10,7 @@ public record DungeonTile(
     String encounterId
 ) implements Serializable {
     public boolean walkable() {
-        return type != DungeonTileType.WALL;
+        return type != DungeonTileType.WALL && type != DungeonTileType.SECRET_WALL;
     }
 
     public DungeonTile reveal() {

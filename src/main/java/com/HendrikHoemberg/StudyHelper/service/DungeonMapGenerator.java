@@ -70,8 +70,77 @@ public class DungeonMapGenerator {
             tiles.put(treasure, new DungeonTile(treasure, DungeonTileType.TREASURE, false, false, null));
         }
 
+        // --- Procedurally Place Traps ---
+        int trapCount = switch (size) {
+            case SMALL -> 1;
+            case MEDIUM -> 2;
+            case LARGE -> 3;
+        };
+        int trapPlaced = 0;
+        int trapOffset = offset + 1;
+        while (trapPlaced < trapCount && trapOffset < candidates.size()) {
+            DungeonPosition trapPos = candidates.get(trapOffset);
+            tiles.put(trapPos, new DungeonTile(trapPos, DungeonTileType.TRAP, false, false, null));
+            trapPlaced++;
+            trapOffset++;
+        }
+
+        // --- Procedurally Place Secret Walls and Chambers ---
+        generateSecretCompartments(tiles, path, width, height, size);
+
         revealAround(tiles, entrance);
         return new DungeonMap(width, height, entrance, boss, Map.copyOf(tiles));
+    }
+
+    private void generateSecretCompartments(Map<DungeonPosition, DungeonTile> tiles,
+                                            List<DungeonPosition> path,
+                                            int width, int height,
+                                            DungeonSize size) {
+        int targetSecretCount = switch (size) {
+            case SMALL -> 1;
+            case MEDIUM -> 2;
+            case LARGE -> 3;
+        };
+        int placedSecrets = 0;
+
+        for (DungeonPosition p : path) {
+            if (placedSecrets >= targetSecretCount) break;
+
+            for (DungeonDirection dir : DungeonDirection.values()) {
+                DungeonPosition n1 = p.move(dir);
+                DungeonPosition n2 = n1.move(dir);
+
+                if (isInside(n1, width, height) && isInside(n2, width, height)) {
+                    DungeonTile t1 = tiles.get(n1);
+                    DungeonTile t2 = tiles.get(n2);
+
+                    if (t1 != null && t1.type() == DungeonTileType.WALL &&
+                        t2 != null && t2.type() == DungeonTileType.WALL &&
+                        !isAdjacentToPathOtherThan(n2, n1, path)) {
+
+                        tiles.put(n1, new DungeonTile(n1, DungeonTileType.SECRET_WALL, false, false, null));
+                        DungeonTileType secretType = (placedSecrets % 2 == 0) ? DungeonTileType.TREASURE : DungeonTileType.HEAL;
+                        tiles.put(n2, new DungeonTile(n2, secretType, false, false, null));
+                        placedSecrets++;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isInside(DungeonPosition p, int width, int height) {
+        return p.x() >= 0 && p.x() < width && p.y() >= 0 && p.y() < height;
+    }
+
+    private boolean isAdjacentToPathOtherThan(DungeonPosition pos, DungeonPosition exclude, List<DungeonPosition> path) {
+        for (DungeonDirection dir : DungeonDirection.values()) {
+            DungeonPosition neighbor = pos.move(dir);
+            if (!neighbor.equals(exclude) && path.contains(neighbor)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private List<DungeonPosition> carveMainAndBranchingPaths(DungeonSize size, int width, int height) {

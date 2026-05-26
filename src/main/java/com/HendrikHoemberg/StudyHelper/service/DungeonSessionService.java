@@ -130,10 +130,20 @@ public class DungeonSessionService {
         if (!state.map().isInside(newPos)) return state;
 
         DungeonTile newTile = state.map().tileAt(newPos);
-        if (newTile == null || !newTile.walkable()) return state;
+        if (newTile == null) return state;
 
         Map<DungeonPosition, DungeonTile> tiles = new LinkedHashMap<>(state.map().tiles());
         Map<String, DungeonEncounter> encounters = new LinkedHashMap<>(state.encounters());
+        int health = state.health();
+        int score = state.score();
+
+        if (newTile.type() == DungeonTileType.SECRET_WALL) {
+            newTile = newTile.withType(DungeonTileType.FLOOR, null).reveal().explore();
+            tiles.put(newPos, newTile);
+            score += 25;
+        } else if (!newTile.walkable()) {
+            return state;
+        }
 
         revealAround(tiles, newPos);
 
@@ -143,10 +153,7 @@ public class DungeonSessionService {
             tiles.put(newPos, destinationTile);
         }
 
-        int health = state.health();
-        int score = state.score();
         String activeEncounterId = null;
-
         DungeonTile activeTile = destinationTile != null ? destinationTile : newTile;
 
         switch (activeTile.type()) {
@@ -178,6 +185,10 @@ public class DungeonSessionService {
                 score += TREASURE_SCORE;
                 tiles.put(newPos, activeTile.withType(DungeonTileType.FLOOR, null));
             }
+            case TRAP -> {
+                health = Math.max(0, health - 1);
+                tiles.put(newPos, activeTile.withType(DungeonTileType.FLOOR, null));
+            }
         }
 
         return new DungeonSessionState(
@@ -195,7 +206,7 @@ public class DungeonSessionService {
             state.correctCount(),
             visibleFrom(tiles),
             state.won(),
-            state.defeated()
+            state.defeated() || health <= 0
         );
     }
 
