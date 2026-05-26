@@ -161,6 +161,79 @@
             } catch (e) {
                 console.warn("Audio play failed:", e);
             }
+        },
+        playSelect: function () {
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var now = this.ctx.currentTime;
+                var osc = this.ctx.createOscillator();
+                var gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(900, now + 0.05);
+
+                gain.gain.setValueAtTime(0.02, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+                osc.start();
+                osc.stop(now + 0.05);
+            } catch (e) {
+                console.warn("Audio play select failed:", e);
+            }
+        },
+        playReveal: function () {
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var now = this.ctx.currentTime;
+                [0, 0.05].forEach(function (delay) {
+                    var osc = DungeonAudio.ctx.createOscillator();
+                    var gain = DungeonAudio.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(DungeonAudio.ctx.destination);
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now + delay);
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, now + delay + 0.2);
+
+                    gain.gain.setValueAtTime(0, now + delay);
+                    gain.gain.linearRampToValueAtTime(0.03, now + delay + 0.04);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.2);
+
+                    osc.start(now + delay);
+                    osc.stop(now + delay + 0.2);
+                });
+            } catch (e) {
+                console.warn("Audio play reveal failed:", e);
+            }
+        },
+        playSubmit: function () {
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var now = this.ctx.currentTime;
+                [523.25, 783.99].forEach(function (freq) {
+                    var osc = DungeonAudio.ctx.createOscillator();
+                    var gain = DungeonAudio.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(DungeonAudio.ctx.destination);
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+
+                    gain.gain.setValueAtTime(0.04, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+                    osc.start();
+                    osc.stop(now + 0.3);
+                });
+            } catch (e) {
+                console.warn("Audio play submit failed:", e);
+            }
         }
     };
 
@@ -468,6 +541,11 @@
             var canvas = document.getElementById('dungeon-map-canvas');
             if (!canvas) return;
 
+            if (!canvas.dungeonListenersBound) {
+                canvas.dungeonListenersBound = true;
+                bindCanvasInteractiveListeners(canvas);
+            }
+
             var mapWidth = parseInt(canvas.dataset.mapWidth, 10);
             var mapHeight = parseInt(canvas.dataset.mapHeight, 10);
             var targetX = parseInt(canvas.dataset.playerX, 10);
@@ -594,6 +672,12 @@
         // Splash screen overrides map rendering
         if (window.dungeonSplashActive) {
             renderSplash(canvas, ctx);
+            return;
+        }
+
+        var activeEncId = canvas.dataset.activeEncounterId;
+        if (activeEncId) {
+            renderJRPGCombat(canvas, ctx, activeEncId);
             return;
         }
 
@@ -763,6 +847,446 @@
         ctx.fillText("Bereite dich auf den Kampf vor...", canvas.width / 2, canvas.height - 40);
     }
 
+    // ============================================================
+    // Standard Monospace Text Wrapper Utility
+    // ============================================================
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight, draw) {
+        if (!text) return [];
+        var words = text.split(' ');
+        var lines = [];
+        var currentLine = '';
+
+        for (var i = 0; i < words.length; i++) {
+            var word = words[i];
+            if (word.indexOf('\n') !== -1) {
+                var subwords = word.split('\n');
+                for (var j = 0; j < subwords.length; j++) {
+                    var testLine = currentLine + (currentLine ? ' ' : '') + subwords[j];
+                    var metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxWidth && currentLine) {
+                        lines.push(currentLine);
+                        currentLine = subwords[j];
+                    } else {
+                        currentLine = testLine;
+                    }
+                    if (j < subwords.length - 1) {
+                        lines.push(currentLine);
+                        currentLine = '';
+                    }
+                }
+            } else {
+                var testLine = currentLine + (currentLine ? ' ' : '') + word;
+                var metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth && currentLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine = testLine;
+                }
+            }
+        }
+        if (currentLine) {
+            lines.push(currentLine);
+        }
+
+        if (draw) {
+            for (var k = 0; k < lines.length; k++) {
+                ctx.fillText(lines[k], x, y + k * lineHeight);
+            }
+        }
+        return lines;
+    }
+
+    // ============================================================
+    // Permanent Interactive JRPG Battle Renderer
+    // ============================================================
+    function renderJRPGCombat(canvas, ctx, activeEncId) {
+        // Clear canvas with deep dark blue background
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw pixelated scanlines in background
+        ctx.fillStyle = 'rgba(51, 65, 85, 0.05)';
+        for (var y = 0; y < canvas.height; y += 4) {
+            ctx.fillRect(0, y, canvas.width, 2);
+        }
+
+        // Fetch values from DOM
+        var health = parseInt(document.querySelector('.sh-dungeon-hud-health')?.textContent || '5', 10);
+        var score = parseInt(document.querySelector('.sh-dungeon-hud-score')?.textContent || '0', 10);
+        var progress = document.querySelector('.sh-dungeon-hud-progress')?.textContent || '0/0';
+        var activeEncBoss = canvas.dataset.activeEncounterBoss === 'true';
+        var enemyName = (window.dungeonSplashMonster || (activeEncBoss ? "DRAGON" : "SLIME")).toUpperCase();
+
+        // Draw Player HUD Panel (Left)
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(20, 20, 220, 65);
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+        ctx.fillRect(20, 20, 220, 65);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px "Courier New", Courier, monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText("HELD (SCORE: " + score + ")", 30, 40);
+
+        // HP progress bar
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(30, 48, 120, 12);
+        var healthPercent = Math.max(0, Math.min(1, health / 5.0));
+        ctx.fillStyle = healthPercent > 0.5 ? '#10b981' : (healthPercent > 0.2 ? '#f59e0b' : '#ef4444');
+        ctx.fillRect(30, 48, 120 * healthPercent, 12);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(30, 48, 120, 12);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px "Courier New", Courier, monospace';
+        ctx.fillText("HP: " + health + "/5", 160, 58);
+
+        // Draw Enemy HUD Panel (Right)
+        ctx.strokeStyle = activeEncBoss ? '#ef4444' : '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(canvas.width - 240, 20, 220, 65);
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+        ctx.fillRect(canvas.width - 240, 20, 220, 65);
+
+        ctx.fillStyle = activeEncBoss ? '#ef4444' : '#ffffff';
+        ctx.font = 'bold 12px "Courier New", Courier, monospace';
+        ctx.fillText(enemyName, canvas.width - 230, 40);
+
+        // Enemy progress/health bar
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(canvas.width - 230, 48, 120, 12);
+        
+        var progParts = progress.split('/');
+        var progressPercent = 0.5;
+        if (progParts.length === 2) {
+            var solved = parseInt(progParts[0], 10);
+            var total = Math.max(1, parseInt(progParts[1], 10));
+            progressPercent = Math.max(0, Math.min(1, solved / total));
+        }
+        ctx.fillStyle = activeEncBoss ? '#ef4444' : '#2dd4bf';
+        ctx.fillRect(canvas.width - 230, 48, 120 * (1 - progressPercent + 0.1), 12);
+        ctx.strokeStyle = activeEncBoss ? '#ef4444' : '#ffffff';
+        ctx.strokeRect(canvas.width - 230, 48, 120, 12);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px "Courier New", Courier, monospace';
+        ctx.fillText("HP: " + Math.round((1 - progressPercent) * 100) + "%", canvas.width - 100, 58);
+
+        // Enemy Sprite (Bobbing)
+        var bob = Math.sin(Date.now() / 180) * 10;
+        var monsterSprite = window.dungeonSplashMonster || (activeEncBoss ? 'DRAGON' : 'SLIME');
+        var spriteSize = activeEncBoss ? 128 : 96;
+        var sx = (canvas.width - spriteSize) / 2;
+        var sy = 100 + bob;
+        drawPixelSprite(ctx, monsterSprite, sx, sy, spriteSize);
+
+        // Dialog Message Box
+        var boxX = 20;
+        var boxY = 230;
+        var boxW = canvas.width - 40;
+        var boxH = canvas.height - boxY - 20;
+
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+
+        // Thick Double-Line retro borders
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
+        ctx.strokeStyle = '#020617';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(boxX + 3, boxY + 3, boxW - 6, boxH - 6);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(boxX + 5, boxY + 5, boxW - 10, boxH - 10);
+
+        var isFlashcard = !!document.querySelector('.sh-dungeon-flashcard');
+        var isQuiz = !!document.querySelector('.sh-dungeon-quiz-form');
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+
+        var optionBoxes = [];
+
+        if (isFlashcard) {
+            var frontText = document.querySelector('.sh-dungeon-flashcard-front .sh-dungeon-flashcard-text')?.textContent || "";
+            var backText = document.querySelector('.sh-dungeon-flashcard-back .sh-dungeon-flashcard-text')?.textContent || "";
+            var isRevealed = document.querySelector('.sh-dungeon-flashcard-details')?.open === true;
+
+            ctx.fillStyle = '#f59e0b';
+            ctx.font = 'bold 12px "Courier New", Courier, monospace';
+            ctx.fillText("⚔️ ENCOUNTER: KARTE GEZOGEN ⚔️", boxX + 20, boxY + 28);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '13px "Courier New", Courier, monospace';
+            var lines = wrapText(ctx, "FRAGE: " + frontText, boxX + 20, boxY + 55, boxW - 40, 18, true);
+            var questionHeight = lines.length * 18;
+
+            if (!isRevealed) {
+                var btnY = boxY + 55 + questionHeight + 35;
+                var btnW = 180;
+                var btnH = 32;
+                var btnX = boxX + (boxW - btnW) / 2;
+
+                optionBoxes.push({
+                    type: 'reveal',
+                    x: btnX,
+                    y: btnY,
+                    w: btnW,
+                    h: btnH
+                });
+
+                var isHovered = window.dungeonHoveredOptionIndex === 0;
+
+                ctx.fillStyle = isHovered ? '#1e293b' : '#020617';
+                ctx.fillRect(btnX, btnY, btnW, btnH);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(btnX, btnY, btnW, btnH);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px "Courier New", Courier, monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText((isHovered ? "▶ " : "") + "ZEIGE ANTWORT", btnX + btnW / 2, btnY + 20);
+                ctx.textAlign = 'left';
+            } else {
+                ctx.fillStyle = '#2dd4bf';
+                ctx.font = 'bold 11px "Courier New", Courier, monospace';
+                ctx.fillText("ANTWORT:", boxX + 20, boxY + 55 + questionHeight + 15);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '13px "Courier New", Courier, monospace';
+                var backLines = wrapText(ctx, backText, boxX + 20, boxY + 55 + questionHeight + 32, boxW - 40, 18, true);
+                var answerHeight = backLines.length * 18;
+
+                var btnW = 100;
+                var btnH = 32;
+                var startY = boxY + 55 + questionHeight + 32 + answerHeight + 25;
+
+                // Falsch
+                var xMissed = boxX + 80;
+                optionBoxes.push({
+                    type: 'answer',
+                    value: false,
+                    x: xMissed,
+                    y: startY,
+                    w: btnW,
+                    h: btnH
+                });
+
+                var isHoveredMissed = window.dungeonHoveredOptionIndex === 0;
+                ctx.fillStyle = isHoveredMissed ? '#7f1d1d' : '#0f172a';
+                ctx.fillRect(xMissed, startY, btnW, btnH);
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(xMissed, startY, btnW, btnH);
+
+                ctx.fillStyle = '#ef4444';
+                ctx.font = 'bold 12px "Courier New", Courier, monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText((isHoveredMissed ? "▶ " : "") + "FALSCH [M]", xMissed + btnW / 2, startY + 20);
+
+                // Richtig
+                var xGot = boxX + boxW - 180;
+                optionBoxes.push({
+                    type: 'answer',
+                    value: true,
+                    x: xGot,
+                    y: startY,
+                    w: btnW,
+                    h: btnH
+                });
+
+                var isHoveredGot = window.dungeonHoveredOptionIndex === 1;
+                ctx.fillStyle = isHoveredGot ? '#064e3b' : '#0f172a';
+                ctx.fillRect(xGot, startY, btnW, btnH);
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(xGot, startY, btnW, btnH);
+
+                ctx.fillStyle = '#10b981';
+                ctx.font = 'bold 12px "Courier New", Courier, monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText((isHoveredGot ? "▶ " : "") + "RICHTIG [G]", xGot + btnW / 2, startY + 20);
+
+                ctx.textAlign = 'left';
+            }
+
+        } else if (isQuiz) {
+            var quizQuestion = document.querySelector('.sh-dungeon-quiz-question')?.textContent || "";
+            var rawOptions = Array.from(document.querySelectorAll('.sh-dungeon-quiz-option')).map(function(opt) {
+                var input = opt.querySelector('input');
+                return {
+                    text: opt.querySelector('span')?.textContent || "",
+                    checked: input ? input.checked : false,
+                    isCheckbox: input ? input.type === 'checkbox' : false
+                };
+            });
+
+            ctx.fillStyle = '#2dd4bf';
+            ctx.font = 'bold 12px "Courier New", Courier, monospace';
+            ctx.fillText("⚔️ BATTLE MODE: QUIZ FRAGE ⚔️", boxX + 20, boxY + 28);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '13px "Courier New", Courier, monospace';
+            var lines = wrapText(ctx, quizQuestion, boxX + 20, boxY + 52, boxW - 40, 18, true);
+            var questionHeight = lines.length * 18;
+
+            var optionsStartY = Math.max(320, boxY + 52 + questionHeight + 15);
+            var optionHeight = 24;
+            var optionSpacing = 6;
+
+            rawOptions.forEach(function(opt, idx) {
+                var optY = optionsStartY + idx * (optionHeight + optionSpacing);
+                var isHovered = window.dungeonHoveredOptionIndex === idx;
+
+                optionBoxes.push({
+                    type: 'quiz_option',
+                    index: idx,
+                    x: boxX + 20,
+                    y: optY,
+                    w: boxW - 40,
+                    h: optionHeight
+                });
+
+                if (isHovered) {
+                    ctx.fillStyle = 'rgba(51, 65, 85, 0.35)';
+                    ctx.fillRect(boxX + 15, optY - 2, boxW - 30, optionHeight + 4);
+                }
+
+                ctx.fillStyle = isHovered ? '#2dd4bf' : '#ffffff';
+                ctx.font = 'bold 13px "Courier New", Courier, monospace';
+
+                var bullet = opt.isCheckbox ? (opt.checked ? "[X]" : "[ ]") : (opt.checked ? "(•)" : "( )");
+                var cursor = isHovered ? "▶ " : "  ";
+                ctx.fillText(cursor + bullet + " " + opt.text, boxX + 20, optY + 16);
+            });
+
+            // Submit button
+            var submitY = optionsStartY + rawOptions.length * (optionHeight + optionSpacing) + 12;
+            var subW = 150;
+            var subH = 30;
+            var subX = boxX + (boxW - subW) / 2;
+
+            optionBoxes.push({
+                type: 'submit',
+                x: subX,
+                y: submitY,
+                w: subW,
+                h: subH
+            });
+
+            var isHoveredSubmit = window.dungeonHoveredOptionIndex === rawOptions.length;
+            ctx.fillStyle = isHoveredSubmit ? '#134e4a' : '#020617';
+            ctx.fillRect(subX, submitY, subW, subH);
+            ctx.strokeStyle = '#2dd4bf';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(subX, submitY, subW, subH);
+
+            ctx.fillStyle = '#2dd4bf';
+            ctx.font = 'bold 11px "Courier New", Courier, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText((isHoveredSubmit ? "▶ " : "") + "ABSENDEN [ENTER]", subX + subW / 2, submitY + 18);
+            ctx.textAlign = 'left';
+        }
+
+        window.dungeonOptionBoxes = optionBoxes;
+    }
+
+    // ============================================================
+    // Canvas Interactive Click and Hover Event Listeners Binding
+    // ============================================================
+    function bindCanvasInteractiveListeners(canvas) {
+        canvas.addEventListener('mousemove', function (e) {
+            var activeEncId = canvas.dataset.activeEncounterId;
+            if (!activeEncId || window.dungeonSplashActive) return;
+
+            var rect = canvas.getBoundingClientRect();
+            var mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            var mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+            var hoveredIdx = -1;
+            var boxes = window.dungeonOptionBoxes || [];
+            for (var i = 0; i < boxes.length; i++) {
+                var box = boxes[i];
+                if (mouseX >= box.x && mouseX <= box.x + box.w &&
+                    mouseY >= box.y && mouseY <= box.y + box.h) {
+                    if (box.type === 'quiz_option') {
+                        hoveredIdx = box.index;
+                    } else if (box.type === 'reveal') {
+                        hoveredIdx = 0;
+                    } else if (box.type === 'answer') {
+                        hoveredIdx = box.value ? 1 : 0;
+                    } else if (box.type === 'submit') {
+                        hoveredIdx = boxes.length - 1;
+                    }
+                    break;
+                }
+            }
+
+            if (hoveredIdx !== window.dungeonHoveredOptionIndex) {
+                window.dungeonHoveredOptionIndex = hoveredIdx;
+                if (hoveredIdx !== -1) {
+                    DungeonAudio.playSelect();
+                }
+                triggerDraw();
+            }
+        });
+
+        canvas.addEventListener('click', function (e) {
+            var activeEncId = canvas.dataset.activeEncounterId;
+            if (!activeEncId || window.dungeonSplashActive) return;
+
+            var rect = canvas.getBoundingClientRect();
+            var mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            var mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+            var boxes = window.dungeonOptionBoxes || [];
+            for (var i = 0; i < boxes.length; i++) {
+                var box = boxes[i];
+                if (mouseX >= box.x && mouseX <= box.x + box.w &&
+                    mouseY >= box.y && mouseY <= box.y + box.h) {
+                    
+                    if (box.type === 'quiz_option') {
+                        var form = document.querySelector('.sh-dungeon-quiz-form');
+                        if (form) {
+                            var inputs = form.querySelectorAll('input');
+                            if (inputs[box.index]) {
+                                inputs[box.index].checked = !inputs[box.index].checked;
+                                DungeonAudio.playSelect();
+                                triggerDraw();
+                            }
+                        }
+                    } else if (box.type === 'submit') {
+                        var form = document.querySelector('.sh-dungeon-quiz-form');
+                        if (form) {
+                            DungeonAudio.playSubmit();
+                            htmx.trigger(form, 'submit');
+                        }
+                    } else if (box.type === 'reveal') {
+                        var details = document.querySelector('.sh-dungeon-flashcard-details');
+                        if (details) {
+                            details.open = true;
+                            DungeonAudio.playReveal();
+                            triggerDraw();
+                        }
+                    } else if (box.type === 'answer') {
+                        var valStr = box.value ? 'true' : 'false';
+                        var button = document.querySelector('.sh-dungeon-answer-row button[value="' + valStr + '"]');
+                        if (button) {
+                            DungeonAudio.playSubmit();
+                            button.click();
+                        }
+                    }
+                    break;
+                }
+            }
+        });
+    }
+
     var drawQueued = false;
     function triggerDraw() {
         if (drawQueued) return;
@@ -811,7 +1335,75 @@
         if (!canvas) return;
 
         // Block movement key inputs during active battle encounters or transition splash
-        if (document.querySelector('.sh-dungeon-encounter-active') || window.dungeonSplashActive) return;
+        var activeEncId = canvas.dataset.activeEncounterId;
+        if (activeEncId && !window.dungeonSplashActive) {
+            var isFlashcard = !!document.querySelector('.sh-dungeon-flashcard');
+            var isQuiz = !!document.querySelector('.sh-dungeon-quiz-form');
+
+            if (isQuiz) {
+                if (['1', '2', '3', '4'].indexOf(e.key) !== -1) {
+                    e.preventDefault();
+                    var idx = parseInt(e.key, 10) - 1;
+                    var form = document.querySelector('.sh-dungeon-quiz-form');
+                    if (form) {
+                        var inputs = form.querySelectorAll('input');
+                        if (inputs[idx]) {
+                            inputs[idx].checked = !inputs[idx].checked;
+                            DungeonAudio.playSelect();
+                            triggerDraw();
+                        }
+                    }
+                    return;
+                }
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    var form = document.querySelector('.sh-dungeon-quiz-form');
+                    if (form) {
+                        DungeonAudio.playSubmit();
+                        htmx.trigger(form, 'submit');
+                    }
+                    return;
+                }
+            }
+
+            if (isFlashcard) {
+                var details = document.querySelector('.sh-dungeon-flashcard-details');
+                var isRevealed = details ? details.open : false;
+
+                if (e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault();
+                    if (details && !isRevealed) {
+                        details.open = true;
+                        DungeonAudio.playReveal();
+                        triggerDraw();
+                    }
+                    return;
+                }
+                if (isRevealed) {
+                    if (e.key === 'g' || e.key === 'G') {
+                        e.preventDefault();
+                        var button = document.querySelector('.sh-dungeon-answer-row button[value="true"]');
+                        if (button) {
+                            DungeonAudio.playSubmit();
+                            button.click();
+                        }
+                        return;
+                    }
+                    if (e.key === 'm' || e.key === 'M') {
+                        e.preventDefault();
+                        var button = document.querySelector('.sh-dungeon-answer-row button[value="false"]');
+                        if (button) {
+                            DungeonAudio.playSubmit();
+                            button.click();
+                        }
+                        return;
+                    }
+                }
+            }
+            return;
+        }
+
+        if (window.dungeonSplashActive) return;
 
         var dir = null;
         switch (e.key) {
