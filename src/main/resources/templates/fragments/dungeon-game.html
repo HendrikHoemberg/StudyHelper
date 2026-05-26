@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="dungeonGame" id="dungeon-session-content" class="sh-fade-in sh-study-session-active">
+
+    <div class="sh-dungeon-root">
+
+        <!-- HUD -->
+        <div class="sh-dungeon-hud">
+            <div class="sh-dungeon-hud-item">
+                <span class="sh-dungeon-hud-label" th:text="#{dungeon.health}">Health</span>
+                <span class="sh-dungeon-hud-value sh-dungeon-hud-health" th:text="${state.health}">10</span>
+            </div>
+            <div class="sh-dungeon-hud-item">
+                <span class="sh-dungeon-hud-label" th:text="#{dungeon.score}">Score</span>
+                <span class="sh-dungeon-hud-value sh-dungeon-hud-score" th:text="${state.score}">0</span>
+            </div>
+            <div class="sh-dungeon-hud-item">
+                <span class="sh-dungeon-hud-label" th:text="#{dungeon.progress}">Progress</span>
+                <span class="sh-dungeon-hud-value sh-dungeon-hud-progress" th:text="${state.correctCount + '/' + state.answeredCount}">0/0</span>
+            </div>
+        </div>
+
+        <!-- Map + Encounter Layout -->
+        <div class="sh-dungeon-layout">
+            <!-- Map Panel -->
+            <div class="sh-dungeon-map-panel">
+                <canvas id="dungeon-map-canvas"
+                        class="sh-dungeon-canvas"
+                        width="416" height="416"
+                        th:data-player-x="${state.playerPosition.x()}"
+                        th:data-player-y="${state.playerPosition.y()}"
+                        th:data-map-width="${state.map.width}"
+                        th:data-map-height="${state.map.height}">
+                </canvas>
+
+                <script id="dungeon-map-state" type="application/json" th:inline="javascript">
+                    /*<![CDATA[*/
+                    [[${mapTiles}]]
+                    /*]]>*/
+                </script>
+
+                <!-- Direction Controls -->
+                <div class="sh-dungeon-controls" th:classappend="${activeEncounter != null} ? 'is-disabled'">
+                    <div class="sh-dungeon-controls-row">
+                        <button class="sh-btn sh-btn-ghost sh-dungeon-dir"
+                                hx-post="/dungeon/move"
+                                hx-target="#dungeon-session-content"
+                                hx-swap="outerHTML"
+                                name="direction" value="UP"
+                                th:disabled="${activeEncounter != null}"
+                                aria-label="Move up">
+                            <iconify-icon icon="lucide:arrow-up"></iconify-icon>
+                        </button>
+                    </div>
+                    <div class="sh-dungeon-controls-row">
+                        <button class="sh-btn sh-btn-ghost sh-dungeon-dir"
+                                hx-post="/dungeon/move"
+                                hx-target="#dungeon-session-content"
+                                hx-swap="outerHTML"
+                                name="direction" value="LEFT"
+                                th:disabled="${activeEncounter != null}"
+                                aria-label="Move left">
+                            <iconify-icon icon="lucide:arrow-left"></iconify-icon>
+                        </button>
+                        <button class="sh-btn sh-btn-ghost sh-dungeon-dir"
+                                hx-post="/dungeon/move"
+                                hx-target="#dungeon-session-content"
+                                hx-swap="outerHTML"
+                                name="direction" value="DOWN"
+                                th:disabled="${activeEncounter != null}"
+                                aria-label="Move down">
+                            <iconify-icon icon="lucide:arrow-down"></iconify-icon>
+                        </button>
+                        <button class="sh-btn sh-btn-ghost sh-dungeon-dir"
+                                hx-post="/dungeon/move"
+                                hx-target="#dungeon-session-content"
+                                hx-swap="outerHTML"
+                                name="direction" value="RIGHT"
+                                th:disabled="${activeEncounter != null}"
+                                aria-label="Move right">
+                            <iconify-icon icon="lucide:arrow-right"></iconify-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Encounter Panel -->
+            <div class="sh-dungeon-encounter-panel">
+                <!-- No active encounter: objective -->
+                <div th:if="${activeEncounter == null}" class="sh-dungeon-encounter-empty">
+                    <div class="sh-dungeon-encounter-header" th:text="#{dungeon.objective}">Objective</div>
+                    <div class="sh-dungeon-encounter-text" th:text="#{dungeon.objective-text}">Explore the dungeon, clear encounters, and defeat the boss.</div>
+                </div>
+
+                <!-- Flashcard encounter -->
+                <div th:if="${activeEncounter != null and activeEncounter.flashcardId != null}" class="sh-dungeon-encounter-active">
+                    <div class="sh-dungeon-encounter-header">
+                        <span th:if="${activeEncounter.boss}" class="sh-dungeon-boss-progress" th:text="#{dungeon.boss-progress(${state.bossIndex + 1}, ${#lists.size(state.bossEncounterIds)})}">Boss 1/5</span>
+                        <span th:if="${!activeEncounter.boss}" th:text="#{dungeon.encounter}">Encounter</span>
+                    </div>
+
+                    <div class="sh-dungeon-flashcard">
+                        <div class="sh-dungeon-flashcard-side sh-dungeon-flashcard-front">
+                            <div class="sh-dungeon-flashcard-label" th:text="#{study.question-label}">Question</div>
+                            <p class="sh-dungeon-flashcard-text" th:text="${activeEncounter.frontText}">Front text</p>
+                        </div>
+
+                        <details class="sh-dungeon-flashcard-details">
+                            <summary class="sh-btn sh-btn-ghost" th:text="#{study.answer-label}">Answer</summary>
+                            <div class="sh-dungeon-flashcard-side sh-dungeon-flashcard-back">
+                                <p class="sh-dungeon-flashcard-text" th:text="${activeEncounter.backText}">Back text</p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <div class="sh-dungeon-answer-row">
+                        <button class="sh-btn sh-btn-danger"
+                                hx-post="/dungeon/answer/flashcard"
+                                hx-target="#dungeon-session-content"
+                                hx-swap="outerHTML"
+                                name="gotIt" value="false">
+                            <span th:text="#{dungeon.missed}">I missed it</span>
+                        </button>
+                        <button class="sh-btn sh-btn-primary"
+                                hx-post="/dungeon/answer/flashcard"
+                                hx-target="#dungeon-session-content"
+                                hx-swap="outerHTML"
+                                name="gotIt" value="true">
+                            <span th:text="#{dungeon.got-it}">I got it</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quiz encounter -->
+                <div th:if="${activeEncounter != null and activeEncounter.quizQuestion != null}" class="sh-dungeon-encounter-active">
+                    <div class="sh-dungeon-encounter-header">
+                        <span th:if="${activeEncounter.boss}" class="sh-dungeon-boss-progress" th:text="#{dungeon.boss-progress(${state.bossIndex + 1}, ${#lists.size(state.bossEncounterIds)})}">Boss 1/5</span>
+                        <span th:if="${!activeEncounter.boss}" th:text="#{dungeon.encounter}">Encounter</span>
+                    </div>
+
+                    <form method="post"
+                          hx-post="/dungeon/answer/quiz"
+                          hx-target="#dungeon-session-content"
+                          hx-swap="outerHTML"
+                          class="sh-dungeon-quiz-form">
+
+                        <p class="sh-dungeon-quiz-question" th:text="${activeEncounter.quizQuestion.questionText}">Question text</p>
+
+                        <div th:each="option, iter : ${activeEncounter.quizQuestion.options}" class="sh-dungeon-quiz-option">
+                            <label>
+                                <input th:if="${activeEncounter.quizQuestion.type.name() == 'MULTIPLE_SELECT'}"
+                                       type="checkbox"
+                                       name="selectedOptions"
+                                       th:value="${iter.index}" />
+                                <input th:unless="${activeEncounter.quizQuestion.type.name() == 'MULTIPLE_SELECT'}"
+                                       type="radio"
+                                       name="selectedOptions"
+                                       th:value="${iter.index}" />
+                                <span th:text="${option}">Option</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="sh-btn sh-btn-primary">
+                            <span th:text="#{quiz.submit-answer}">Submit Answer</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

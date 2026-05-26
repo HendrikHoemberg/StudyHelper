@@ -1058,6 +1058,28 @@ class UiResourceRegressionTests {
             .contains("margin-inline: auto");
     }
 
+    @Test
+    void dungeonResourcesAndFragmentsAreWired() throws Exception {
+        String studyPage = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/templates/study-page.html"));
+        String layout = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/templates/fragments/layout.html"));
+        String game = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/templates/fragments/dungeon-game.html"));
+        String js = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon.js"));
+        String css = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/css/dungeon.css"));
+
+        assertThat(studyPage).contains("fragments/dungeon-game :: dungeonGame");
+        assertThat(studyPage).contains("fragments/dungeon-complete :: dungeonComplete");
+        assertThat(layout).contains("/css/dungeon.css");
+        assertThat(layout).contains("/js/dungeon.js");
+        assertThat(game).contains("dungeon-map-canvas");
+        assertThat(game).contains("dungeon-map-state");
+        assertThat(game).contains("Boss");
+        assertThat(game).contains("/dungeon/move");
+        assertThat(js).contains("getContext('2d')");
+        assertThat(js).contains("JSON.parse");
+        assertThat(js).contains("BOSS");
+        assertThat(css).contains("image-rendering: pixelated");
+    }
+
     private String file(String path) throws IOException {
         return Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }

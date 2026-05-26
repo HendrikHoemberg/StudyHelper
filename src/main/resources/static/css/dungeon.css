@@ -1,0 +1,274 @@
+.sh-dungeon-root {
+    width: 100%;
+}
+
+.sh-dungeon-hud {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.sh-dungeon-hud-item {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    text-align: center;
+}
+
+.sh-dungeon-hud-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted, #64748b);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.sh-dungeon-hud-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-family: 'Space Grotesk', monospace;
+}
+
+.sh-dungeon-hud-health {
+    color: #ef4444;
+}
+
+.sh-dungeon-hud-score {
+    color: #f59e0b;
+}
+
+.sh-dungeon-hud-progress {
+    color: var(--accent, #0f766e);
+}
+
+.sh-dungeon-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+.sh-dungeon-map-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sh-dungeon-canvas {
+    width: 100%;
+    max-width: 520px;
+    aspect-ratio: 1;
+    image-rendering: pixelated;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 0.5rem;
+    background: #1e293b;
+}
+
+.sh-dungeon-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.75rem;
+}
+
+.sh-dungeon-controls.is-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.sh-dungeon-controls-row {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.sh-dungeon-dir {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sh-dungeon-encounter-panel {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    min-height: 200px;
+}
+
+.sh-dungeon-encounter-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.sh-dungeon-encounter-header {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted, #64748b);
+    margin-bottom: 0.75rem;
+}
+
+.sh-dungeon-encounter-text {
+    color: var(--text, #1e293b);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+}
+
+.sh-dungeon-flashcard {
+    margin-bottom: 1rem;
+}
+
+.sh-dungeon-flashcard-side {
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.sh-dungeon-flashcard-label {
+    font-size: 0.75rem;
+    color: var(--text-muted, #64748b);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.sh-dungeon-flashcard-text {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.sh-dungeon-flashcard-details {
+    margin-bottom: 0.5rem;
+}
+
+.sh-dungeon-flashcard-details > summary {
+    cursor: pointer;
+    padding: 0.5rem;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+}
+
+.sh-dungeon-flashcard-details > summary::-webkit-details-marker {
+    display: none;
+}
+
+.sh-dungeon-flashcard-details[open] > summary {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+}
+
+.sh-dungeon-answer-row {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.sh-dungeon-boss-progress {
+    font-weight: 700;
+    color: #dc2626;
+}
+
+.sh-dungeon-quiz-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sh-dungeon-quiz-question {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.sh-dungeon-quiz-option {
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.sh-dungeon-quiz-option label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.sh-dungeon-size-warning {
+    color: #dc2626;
+}
+
+.sh-dungeon-complete {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.sh-dungeon-complete-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+    margin-bottom: 1.5rem;
+}
+
+.sh-dungeon-complete-victory {
+    color: var(--accent, #0f766e);
+}
+
+.sh-dungeon-complete-defeat {
+    color: #dc2626;
+}
+
+.sh-dungeon-complete-score {
+    margin-bottom: 2rem;
+}
+
+.sh-dungeon-complete-count {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: 'Space Grotesk', monospace;
+    color: var(--text, #1e293b);
+}
+
+.sh-dungeon-complete-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-muted, #64748b);
+    margin-top: 0.25rem;
+}
+
+.sh-dungeon-complete-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+    .sh-dungeon-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .sh-dungeon-hud {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+
+    .sh-dungeon-hud-item {
+        padding: 0.5rem;
+    }
+
+    .sh-dungeon-hud-value {
+        font-size: 1rem;
+    }
+}

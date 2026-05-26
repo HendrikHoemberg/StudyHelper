@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="dungeonComplete" id="dungeon-session-content" class="sh-fade-in sh-study-session-active">
+
+    <div class="sh-dungeon-root">
+        <div class="sh-dungeon-complete">
+            <div th:if="${stats.won}" class="sh-dungeon-complete-title sh-dungeon-complete-victory" th:text="#{dungeon.victory}">Dungeon Cleared</div>
+            <div th:unless="${stats.won}" class="sh-dungeon-complete-title sh-dungeon-complete-defeat" th:text="#{dungeon.defeat}">Dungeon Defeated</div>
+
+            <div class="sh-dungeon-complete-score">
+                <span class="sh-dungeon-complete-count" th:text="${stats.correctPrompts + ' / ' + stats.answeredPrompts}">5/10</span>
+                <span class="sh-dungeon-complete-label" th:text="#{dungeon.result-label}">Prompts correct</span>
+            </div>
+
+            <div class="sh-dungeon-complete-actions">
+                <a href="/study/start?mode=DUNGEON"
+                   class="sh-btn sh-btn-primary"
+                   hx-get="/study/start?mode=DUNGEON"
+                   hx-target="#explorer-detail"
+                   hx-push-url="true">
+                    <span th:text="#{dungeon.new-run}">New Dungeon</span>
+                </a>
+                <a href="/dashboard"
+                   class="sh-btn sh-btn-ghost"
+                   hx-get="/dashboard"
+                   hx-target="#explorer-detail"
+                   hx-push-url="true">
+                    <span th:text="#{study.complete.back-to-dashboard}">Back to Dashboard</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

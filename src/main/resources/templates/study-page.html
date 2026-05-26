@@ -29,7 +29,13 @@
                                 <div th:replace="~{fragments/study-complete :: studyComplete}"></div>
                             </th:block>
                         </th:block>
-                        <th:block th:if="${studyStateView != 'card' and studyStateView != 'question' and studyStateView != 'complete'}">
+                        <th:block th:if="${studyStateView == 'dungeon'}">
+                            <div th:replace="~{fragments/dungeon-game :: dungeonGame}"></div>
+                        </th:block>
+                        <th:block th:if="${studyStateView == 'dungeonComplete'}">
+                            <div th:replace="~{fragments/dungeon-complete :: dungeonComplete}"></div>
+                        </th:block>
+                        <th:block th:if="${studyStateView != 'card' and studyStateView != 'question' and studyStateView != 'complete' and studyStateView != 'dungeon' and studyStateView != 'dungeonComplete'}">
                             <div th:replace="~{fragments/study-setup :: studySetup}"></div>
                         </th:block>
                     </div>
