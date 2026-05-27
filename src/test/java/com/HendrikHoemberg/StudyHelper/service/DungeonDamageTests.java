@@ -8,6 +8,8 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.HendrikHoemberg.StudyHelper.dto.RelicId;
+
 class DungeonDamageTests {
 
     @Test
@@ -47,6 +49,47 @@ class DungeonDamageTests {
         DungeonSessionState s = state(5, 7, 0, 2);
         DungeonSessionState after = DungeonDamage.heal(s, 99);
         assertThat(after.health()).isEqualTo(7);
+    }
+
+    @Test
+    void takeDamage_luckyCoinAbsorbsFirstHitFreeOfShieldOrHp() {
+        DungeonSessionState s = stateWithRelics(state(5, 5, 0, 2), List.of(RelicId.LUCKY_COIN));
+        DungeonSessionState after = DungeonDamage.takeDamage(s, 1);
+        assertThat(after.health()).isEqualTo(5);
+        assertThat(after.shields()).isEqualTo(0);
+        assertThat(after.luckyCoinsConsumed()).isEqualTo(1);
+    }
+
+    @Test
+    void takeDamage_secondLuckyCoinAbsorbsSecondHitWhenStacked() {
+        DungeonSessionState s = stateWithRelics(state(5, 5, 0, 2),
+            List.of(RelicId.LUCKY_COIN, RelicId.LUCKY_COIN));
+        DungeonSessionState afterFirst = DungeonDamage.takeDamage(s, 1);
+        DungeonSessionState afterSecond = DungeonDamage.takeDamage(afterFirst, 1);
+        assertThat(afterSecond.health()).isEqualTo(5);
+        assertThat(afterSecond.luckyCoinsConsumed()).isEqualTo(2);
+    }
+
+    @Test
+    void takeDamage_phoenixFeatherResurrectsAtOneHpOnLethal() {
+        DungeonSessionState s = stateWithRelics(state(1, 5, 0, 2), List.of(RelicId.PHOENIX_FEATHER));
+        DungeonSessionState after = DungeonDamage.takeDamage(s, 5);
+        assertThat(after.health()).isEqualTo(1);
+        assertThat(after.defeated()).isFalse();
+        assertThat(after.ownedRelics()).doesNotContain(RelicId.PHOENIX_FEATHER);
+    }
+
+    private DungeonSessionState stateWithRelics(DungeonSessionState base, List<RelicId> relics) {
+        return new DungeonSessionState(
+            base.config(), base.map(), base.currentRoomId(),
+            base.encounters(), base.bossEncounterIds(), base.bossIndex(),
+            base.activeEncounterId(),
+            base.health(), base.healthCap(), base.shields(), base.shieldCap(),
+            base.score(), base.answeredCount(), base.correctCount(),
+            base.won(), base.defeated(),
+            base.streak(), base.gauntletQueue(),
+            base.longestStreak(), base.elitesCleared(), base.shieldsUsed(),
+            base.luckyCoinsConsumed(), relics, base.pendingRelicPick());
     }
 
     private DungeonSessionState state(int hp, int hpCap, int shields, int shieldCap) {
