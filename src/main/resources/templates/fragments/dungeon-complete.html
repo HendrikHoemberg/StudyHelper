@@ -27,6 +27,17 @@
                     <span class="sh-dungeon-complete-extra-label" th:text="#{dungeon.complete.shields-used}">Shields used</span>
                     <span class="sh-dungeon-complete-extra-value" th:text="${stats.shieldsUsed}">0</span>
                 </div>
+                <div class="sh-dungeon-complete-stat">
+                    <span th:text="#{dungeon.complete.relics-found}">Relics acquired</span>
+                    <span th:text="${stats.relicsAcquired}">0</span>
+                </div>
+            </div>
+
+            <div class="sh-dungeon-complete-relics" th:if="${state != null and !state.ownedRelics.isEmpty()}">
+                <iconify-icon th:each="rid : ${state.ownedRelics}"
+                              th:icon="${T(com.HendrikHoemberg.StudyHelper.controller.RelicIcons).iconFor(rid)}"
+                              th:title="#{__${'dungeon.relic.' + #strings.toLowerCase(rid.name().replace('_','-')) + '.name'}__}">
+                </iconify-icon>
             </div>
 
             <div class="sh-dungeon-complete-actions">
