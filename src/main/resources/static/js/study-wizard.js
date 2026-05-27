@@ -10,7 +10,7 @@
         FLASHCARDS: ["Mode", "Type", "Decks", "Order"],
         QUIZ:       ["Mode", "Format", "Settings", "Sources"],
         EXAM:       ["Mode", "Depth", "Settings", "Sources", "Layout"],
-        DUNGEON:    ["Mode", "Type", "Size", "Decks"],
+        DUNGEON:    ["Mode", "Type", "Decks", "Size"],
     };
 
     function maxSteps() {
@@ -28,7 +28,7 @@
     }
 
     function sourceStep() {
-        if (currentMode === 'QUIZ' || currentMode === 'EXAM' || currentMode === 'DUNGEON') return 4;
+        if (currentMode === 'QUIZ' || currentMode === 'EXAM') return 4;
         return 3;
     }
 
@@ -595,6 +595,11 @@
     function selectedDungeonCardCount() {
         let total = 0;
         document.querySelectorAll('input[name="selectedDeckIds"]:checked').forEach(cb => {
+            const fromData = parseInt(cb.dataset.cardCount || '', 10);
+            if (!isNaN(fromData)) {
+                total += fromData;
+                return;
+            }
             const badge = cb.closest('.vb-deck')?.querySelector('.sh-badge');
             if (badge) {
                 const match = badge.textContent.match(/(\d+)/);
@@ -607,29 +612,21 @@
     function updateDungeonSizeAvailability() {
         if (currentMode !== 'DUNGEON') return;
         const count = selectedDungeonCardCount();
-        const thresholds = { SMALL: 8, MEDIUM: 12, LARGE: 20 };
         document.querySelectorAll('input[name="dungeonSize"]').forEach(input => {
-            const min = thresholds[input.value] || 8;
             const label = input.closest('.sh-study-choice');
-            const disabled = count > 0 && count < min;
-            if (label) {
-                label.classList.toggle('is-disabled', disabled);
-                input.disabled = disabled;
+            if (!label) return;
+            const min = parseInt(label.dataset.minCards || '0', 10);
+            const disabled = count < min;
+            label.classList.toggle('is-disabled', disabled);
+            input.disabled = disabled;
 
-                let hintEl = label.querySelector('.dungeon-size-requirement-hint');
-                if (disabled) {
-                    if (!hintEl) {
-                        hintEl = document.createElement('div');
-                        hintEl.className = 'dungeon-size-requirement-hint';
-                        hintEl.style.fontSize = '0.75rem';
-                        hintEl.style.color = 'var(--text-danger, #ef4444)';
-                        hintEl.style.marginTop = '4px';
-                        label.appendChild(hintEl);
-                    }
-                    hintEl.textContent = `Requires ${min} cards (you have ${count})`;
-                } else if (hintEl) {
-                    hintEl.remove();
-                }
+            const unavailable = label.querySelector('.sh-study-choice-unavailable');
+            const reasonEl = label.querySelector('.sh-study-choice-unavailable-text');
+            if (disabled) {
+                if (unavailable) unavailable.hidden = false;
+                if (reasonEl) reasonEl.textContent = `Needs ${min} cards, your selection has ${count}.`;
+            } else {
+                if (unavailable) unavailable.hidden = true;
             }
         });
 
@@ -646,6 +643,9 @@
     document.body.addEventListener('change', function (e) {
         if (e.target.matches('input[name="dungeonMode"]')) {
             updateDungeonAiSettings();
+        }
+        if (e.target && e.target.name === 'selectedDeckIds') {
+            updateDungeonSizeAvailability();
         }
     });
 

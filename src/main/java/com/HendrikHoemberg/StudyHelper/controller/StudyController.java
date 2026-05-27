@@ -375,6 +375,9 @@ public class StudyController {
         model.addAttribute("deckOrderModes", DeckOrderMode.values());
         model.addAttribute("quizQuestionModes", QuizQuestionMode.values());
         model.addAttribute("difficulties", Difficulty.values());
+        model.addAttribute("dungeonSmallMinCards", DungeonSize.SMALL.totalPrompts());
+        model.addAttribute("dungeonMediumMinCards", DungeonSize.MEDIUM.totalPrompts());
+        model.addAttribute("dungeonLargeMinCards", DungeonSize.LARGE.totalPrompts());
 
         long dueTodaySessionCount = dashboardService.buildFor(user).dueTodaySessionCount();
         model.addAttribute("dueTodaySessionCount", dueTodaySessionCount);
