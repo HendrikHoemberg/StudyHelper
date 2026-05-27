@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<div th:fragment="modal" class="sh-dungeon-modal-overlay">
+    <div class="sh-dungeon-modal sh-dungeon-shrine-modal" id="shrine-modal-content">
+        <div th:replace="~{:: shrineMain}"></div>
+    </div>
+</div>
+
+<!-- MAIN SCREEN -->
+<div th:fragment="shrineMain" class="sh-shrine-container">
+    <h2 class="sh-dungeon-modal-title" th:text="#{dungeon.shrine.title}">The Shrine of Destiny</h2>
+    <p class="sh-dungeon-modal-prompt" th:text="#{dungeon.shrine.prompt}">You stand before a glowing stone shrine. The atmosphere is thick with ancient magic.</p>
+    
+    <div class="sh-dungeon-shrine-choices">
+        <!-- Choice 1: Roll the Die of Destiny -->
+        <button class="sh-dungeon-shrine-choice sh-shrine-btn-gamble"
+                hx-post="/dungeon/shrine/confirm"
+                hx-target="#shrine-modal-content"
+                hx-swap="innerHTML">
+            <div class="sh-shrine-choice-icon"><iconify-icon icon="mdi:dice-6-outline"></iconify-icon></div>
+            <div class="sh-shrine-choice-details">
+                <div class="sh-shrine-choice-name" th:text="#{dungeon.shrine.roll-name}">Roll the Die of Destiny</div>
+                <div class="sh-shrine-choice-desc" th:text="#{dungeon.shrine.roll-desc}">1/6 chance at a random Relic, 5/6 chance to lose 1 HP. (Requires Confirmation)</div>
+            </div>
+        </button>
+
+        <!-- Choice 2: Drink Holy Water safely -->
+        <button class="sh-dungeon-shrine-choice sh-shrine-btn-heal"
+                hx-post="/dungeon/shrine/drink"
+                hx-target="#dungeon-session-content"
+                hx-swap="outerHTML"
+                th:disabled="${state.health >= state.healthCap}">
+            <div class="sh-shrine-choice-icon"><iconify-icon icon="mdi:water-holy"></iconify-icon></div>
+            <div class="sh-shrine-choice-details">
+                <div class="sh-shrine-choice-name" th:text="#{dungeon.shrine.heal-name}">Drink Holy Water</div>
+                <div class="sh-shrine-choice-desc" th:text="#{dungeon.shrine.heal-desc}">Safely heal 1 HP.</div>
+            </div>
+        </button>
+
+        <!-- Choice 3: Leave -->
+        <button class="sh-dungeon-shrine-choice sh-shrine-btn-leave"
+                hx-post="/dungeon/shrine/leave"
+                hx-target="#dungeon-session-content"
+                hx-swap="outerHTML">
+            <div class="sh-shrine-choice-icon"><iconify-icon icon="lucide:arrow-right"></iconify-icon></div>
+            <div class="sh-shrine-choice-details">
+                <div class="sh-shrine-choice-name" th:text="#{dungeon.shrine.leave-name}">Walk Away</div>
+                <div class="sh-shrine-choice-desc" th:text="#{dungeon.shrine.leave-desc}">Leave the shrine safely.</div>
+            </div>
+        </button>
+    </div>
+</div>
+
+<!-- CONFIRM SCREEN -->
+<div th:fragment="shrineConfirm" class="sh-shrine-container">
+    <h2 class="sh-dungeon-modal-title sh-text-warning" th:text="#{dungeon.shrine.confirm-title}">Are you sure?</h2>
+    <p class="sh-dungeon-modal-prompt" th:text="#{dungeon.shrine.confirm-prompt}">You are about to roll the Die of Destiny. If you roll 1 to 5, you will lose 1 HP! If you drop to 0 HP, your run will end.</p>
+    
+    <div class="sh-shrine-confirm-buttons">
+        <button class="sh-btn sh-btn-danger"
+                hx-post="/dungeon/shrine/roll"
+                hx-target="#shrine-modal-content"
+                hx-swap="innerHTML"
+                th:text="#{dungeon.shrine.confirm-btn}">Roll Now!</button>
+                
+        <button class="sh-btn sh-btn-ghost"
+                hx-post="/dungeon/shrine/reset"
+                hx-target="#shrine-modal-content"
+                hx-swap="innerHTML"
+                th:text="#{dungeon.shrine.cancel-btn}">Cancel</button>
+    </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div th:fragment="shrineResult" class="sh-shrine-container">
+    <h2 class="sh-dungeon-modal-title" 
+        th:classappend="${rollResult == 6} ? 'sh-text-success' : 'sh-text-danger'"
+        th:text="${rollResult == 6} ? #{dungeon.shrine.result-win-title} : #{dungeon.shrine.result-lose-title}">
+        Outcome
+    </h2>
+    
+    <div class="sh-shrine-die-display">
+        <div class="sh-shrine-die" th:classappend="${rollResult == 6} ? 'is-winner' : 'is-loser'">
+            <span class="sh-die-number" th:text="${rollResult}">6</span>
+        </div>
+    </div>
+    
+    <p class="sh-dungeon-modal-prompt" 
+       th:text="${rollResult == 6} ? #{dungeon.shrine.result-win-desc} : #{dungeon.shrine.result-lose-desc}">
+       Result description
+    </p>
+
+    <!-- Relic reveal if win -->
+    <div class="sh-shrine-relic-reward" th:if="${grantedRelic != null}">
+        <div class="sh-dungeon-relic-choice is-reward-display">
+            <iconify-icon th:icon="${T(com.HendrikHoemberg.StudyHelper.controller.RelicIcons).iconFor(grantedRelic)}"></iconify-icon>
+            <div class="sh-dungeon-relic-choice-name"
+                 th:text="#{__${'dungeon.relic.' + #strings.toLowerCase(grantedRelic.name().replace('_','-')) + '.name'}__}">Name</div>
+            <div class="sh-dungeon-relic-choice-desc"
+                 th:text="#{__${'dungeon.relic.' + #strings.toLowerCase(grantedRelic.name().replace('_','-')) + '.desc'}__}">Description</div>
+        </div>
+    </div>
+
+    <div class="sh-shrine-confirm-buttons">
+        <button class="sh-btn"
+                hx-post="/dungeon/shrine/leave"
+                hx-target="#dungeon-session-content"
+                hx-swap="outerHTML"
+                th:text="#{dungeon.shrine.continue-btn}">Continue</button>
+    </div>
+</div>
+
+</body>
+</html>

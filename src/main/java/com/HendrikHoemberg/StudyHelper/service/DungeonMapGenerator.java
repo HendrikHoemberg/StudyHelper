@@ -134,7 +134,7 @@ public class DungeonMapGenerator {
     }
 
     private int totalRoomCount(DungeonSize size) {
-        return switch (size) { case SMALL -> 12; case MEDIUM -> 16; case LARGE -> 24; };
+        return switch (size) { case SMALL -> 13; case MEDIUM -> 17; case LARGE -> 25; };
     }
 
     private int loopDoorCount(DungeonSize size) {
@@ -229,6 +229,11 @@ public class DungeonMapGenerator {
         String heal = pickMidpoint(nonCritical, dist, types);
         if (heal == null) throw new LayoutFailure();
         types.put(heal, RoomType.HEAL);
+
+        // SHRINE — non-critical mid-distance room
+        String shrine = pickMidpoint(nonCritical, dist, types);
+        if (shrine == null) throw new LayoutFailure();
+        types.put(shrine, RoomType.SHRINE);
 
         // ELITEs — additional leaves
         int eliteCount = size.eliteGauntletCount();
@@ -413,7 +418,7 @@ public class DungeonMapGenerator {
                     secretReward = new SecretReward.Bundle(5, 1, 50);
                 }
             }
-            case ENTRANCE, HEAL, BOSS -> { }
+            case ENTRANCE, HEAL, BOSS, SHRINE -> { }
         }
 
         return new DungeonRoom(id, type, roomDoors, gridPos,

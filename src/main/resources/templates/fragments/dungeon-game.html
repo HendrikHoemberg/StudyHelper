@@ -156,6 +156,9 @@
             <th:block th:if="${pendingPick.type.name() == 'SECRET'}">
                 <div th:replace="~{fragments/dungeon-secret-modal :: modal}"></div>
             </th:block>
+            <th:block th:if="${pendingPick.type.name() == 'SHRINE'}">
+                <div th:replace="~{fragments/dungeon-shrine-modal :: modal}"></div>
+            </th:block>
         </div>
 
         <!-- Hidden Encounter Panel for JS Engine -->

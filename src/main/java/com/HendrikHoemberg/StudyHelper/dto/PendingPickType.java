@@ -4,5 +4,6 @@ public enum PendingPickType {
     TREASURE,
     ELITE,
     SHOP,
-    SECRET
+    SECRET,
+    SHRINE
 }

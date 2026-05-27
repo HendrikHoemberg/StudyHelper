@@ -8,5 +8,6 @@ public enum RoomType {
     HEAL,
     SHOP,
     BOSS,
-    SECRET
+    SECRET,
+    SHRINE
 }

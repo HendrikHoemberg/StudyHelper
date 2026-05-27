@@ -572,3 +572,129 @@
     width: 100%;
 }
 
+/* Shrine Modal & Die Styles */
+.sh-dungeon-shrine-modal {
+    border-color: #5c3b1e; /* Terracotta trim */
+    background: #1f140a; /* Dark terracotta background */
+}
+
+.sh-dungeon-shrine-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sh-dungeon-shrine-choice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #362211;
+    border: 1px solid #5c3b1e;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    color: #eee;
+    font-size: 14px;
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.sh-dungeon-shrine-choice:hover:not(:disabled) {
+    background: #4a2f18;
+    border-color: #a76936;
+}
+
+.sh-dungeon-shrine-choice:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.sh-shrine-choice-icon {
+    font-size: 24px;
+    color: #f59e0b;
+}
+
+.sh-shrine-choice-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.sh-shrine-choice-name {
+    font-weight: 600;
+}
+
+.sh-shrine-choice-desc {
+    font-size: 12px;
+    color: #bbb;
+}
+
+.sh-shrine-confirm-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.sh-shrine-die-display {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.sh-shrine-die {
+    width: 64px;
+    height: 64px;
+    border: 3px solid #eee;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: monospace;
+    font-size: 32px;
+    font-weight: 800;
+    box-shadow: 0 0 15px rgba(255,255,255,0.1);
+    transform: rotate(0deg);
+}
+
+.sh-shrine-die.is-winner {
+    border-color: #10b981;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    animation: sh-die-spin-win 0.8s ease-out;
+}
+
+.sh-shrine-die.is-loser {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+    animation: sh-die-spin-lose 0.8s ease-out;
+}
+
+@keyframes sh-die-spin-win {
+    0% { transform: rotate(0deg) scale(0.5); }
+    70% { transform: rotate(720deg) scale(1.2); }
+    100% { transform: rotate(720deg) scale(1); }
+}
+
+@keyframes sh-die-spin-lose {
+    0% { transform: rotate(0deg) scale(0.5); }
+    70% { transform: rotate(720deg) scale(1.2); }
+    100% { transform: rotate(720deg) scale(1); }
+}
+
+.sh-shrine-relic-reward {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.sh-shrine-relic-reward .is-reward-display {
+    width: 100%;
+    max-width: 320px;
+    background: rgba(16, 185, 129, 0.05);
+    border-color: #10b981;
+    cursor: default;
+}
+

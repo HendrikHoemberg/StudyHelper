@@ -129,6 +129,82 @@ public class DungeonSessionService {
         return relicService.skipShop(state);
     }
 
+    public DungeonSessionState shrineLeave(DungeonSessionState state) {
+        DungeonRoom room = state.map().room(state.currentRoomId());
+        if (room == null) return state;
+        
+        Map<String, DungeonRoom> rooms = new LinkedHashMap<>(state.map().rooms());
+        rooms.put(room.id(), room.withCleared(true));
+        DungeonMap nextMap = new DungeonMap(
+            rooms, state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
+            
+        return new DungeonSessionState(
+            state.config(), nextMap, state.currentRoomId(),
+            state.encounters(), state.bossEncounterIds(), state.bossIndex(),
+            state.activeEncounterId(),
+            state.health(), state.healthCap(), state.shields(), state.shieldCap(),
+            state.score(), state.answeredCount(), state.correctCount(),
+            state.won(), state.defeated(),
+            state.streak(), state.gauntletQueue(),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
+            state.luckyCoinsConsumed(), state.ownedRelics(), null);
+    }
+
+    public DungeonSessionState shrineDrink(DungeonSessionState state) {
+        int nextHealth = Math.min(state.healthCap(), state.health() + 1);
+        DungeonSessionState clearedState = shrineLeave(state);
+        
+        return new DungeonSessionState(
+            clearedState.config(), clearedState.map(), clearedState.currentRoomId(),
+            clearedState.encounters(), clearedState.bossEncounterIds(), clearedState.bossIndex(),
+            clearedState.activeEncounterId(),
+            nextHealth, clearedState.healthCap(), clearedState.shields(), clearedState.shieldCap(),
+            clearedState.score(), clearedState.answeredCount(), clearedState.correctCount(),
+            clearedState.won(), clearedState.defeated(),
+            clearedState.streak(), clearedState.gauntletQueue(),
+            clearedState.longestStreak(), clearedState.elitesCleared(), clearedState.shieldsUsed(),
+            clearedState.luckyCoinsConsumed(), clearedState.ownedRelics(), null);
+    }
+
+    public DungeonSessionState shrineRoll(DungeonSessionState state, int rollResult, RelicId grantedRelic) {
+        int nextHealth = state.health();
+        boolean defeated = false;
+        List<RelicId> owned = new ArrayList<>(state.ownedRelics());
+        int healthCap = state.healthCap();
+        int shieldCap = state.shieldCap();
+        int shields = state.shields();
+
+        if (rollResult == 6) {
+            if (grantedRelic != null) {
+                owned.add(grantedRelic);
+                if (grantedRelic == RelicId.IRON_PLATE) {
+                    healthCap += 1;
+                    nextHealth = Math.min(healthCap, nextHealth + 1);
+                } else if (grantedRelic == RelicId.BUCKLER) {
+                    shieldCap += 1;
+                    shields = Math.min(shieldCap, shields + 1);
+                }
+            }
+        } else {
+            nextHealth = nextHealth - 1;
+            if (nextHealth <= 0) {
+                nextHealth = 0;
+                defeated = true;
+            }
+        }
+
+        return new DungeonSessionState(
+            state.config(), state.map(), state.currentRoomId(),
+            state.encounters(), state.bossEncounterIds(), state.bossIndex(),
+            state.activeEncounterId(),
+            nextHealth, healthCap, shields, shieldCap,
+            state.score(), state.answeredCount(), state.correctCount(),
+            state.won(), defeated,
+            state.streak(), state.gauntletQueue(),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
+            state.luckyCoinsConsumed(), owned, state.pendingRelicPick());
+    }
+
     public DungeonRunStats buildStats(DungeonSessionState state) {
         return new DungeonRunStats(
             state.config().mode(),
@@ -236,6 +312,7 @@ public class DungeonSessionService {
                 new PendingRelicPick(PendingPickType.TREASURE, room.id(), room.treasureOffer().relics(), null);
             case SHOP -> room.shopOffer() == null ? null :
                 new PendingRelicPick(PendingPickType.SHOP, room.id(), List.of(), room.shopOffer());
+            case SHRINE -> new PendingRelicPick(PendingPickType.SHRINE, room.id(), List.of(), null);
             case SECRET -> {
                 if (room.secretReward() instanceof SecretReward.RelicReward r) {
                     yield new PendingRelicPick(PendingPickType.SECRET, room.id(), List.of(r.relic()), null);

@@ -107,4 +107,67 @@ class DungeonSessionServiceTests {
             base.longestStreak(), base.elitesCleared(), base.shieldsUsed(),
             base.luckyCoinsConsumed(), relics, base.pendingRelicPick());
     }
+
+    @Test
+    void shrineLeave_clearsPendingPickAndMarksRoomCleared() {
+        DungeonSessionService svc = new DungeonSessionService(
+            null, null, null, null, null, null, null);
+        DungeonSessionState s = stateOnRoom("r0", RoomType.SHRINE);
+        // Set pending pick
+        s = new DungeonSessionState(
+            s.config(), s.map(), s.currentRoomId(),
+            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
+            s.activeEncounterId(),
+            s.health(), s.healthCap(), s.shields(), s.shieldCap(),
+            s.score(), s.answeredCount(), s.correctCount(),
+            s.won(), s.defeated(),
+            s.streak(), s.gauntletQueue(),
+            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
+            s.luckyCoinsConsumed(), s.ownedRelics(),
+            new PendingRelicPick(PendingPickType.SHRINE, "r0", List.of(), null));
+
+        DungeonSessionState after = svc.shrineLeave(s);
+        assertThat(after.pendingRelicPick()).isNull();
+        assertThat(after.map().room("r0").cleared()).isTrue();
+    }
+
+    @Test
+    void shrineDrink_healsAndClearsRoom() {
+        DungeonSessionService svc = new DungeonSessionService(
+            null, null, null, null, null, null, null);
+        DungeonSessionState s = stateOnRoom("r0", RoomType.SHRINE);
+        // set health below cap
+        s = new DungeonSessionState(
+            s.config(), s.map(), s.currentRoomId(),
+            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
+            s.activeEncounterId(),
+            3, 5, s.shields(), s.shieldCap(),
+            s.score(), s.answeredCount(), s.correctCount(),
+            s.won(), s.defeated(),
+            s.streak(), s.gauntletQueue(),
+            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
+            s.luckyCoinsConsumed(), s.ownedRelics(), s.pendingRelicPick());
+
+        DungeonSessionState after = svc.shrineDrink(s);
+        assertThat(after.health()).isEqualTo(4);
+        assertThat(after.map().room("r0").cleared()).isTrue();
+    }
+
+    @Test
+    void shrineRoll_onSixGrantsRelic_onOthersDealsDamage() {
+        DungeonSessionService svc = new DungeonSessionService(
+            null, null, null, null, null, null, null);
+        DungeonSessionState s = stateOnRoom("r0", RoomType.SHRINE);
+
+        // Test roll 6
+        DungeonSessionState afterSix = svc.shrineRoll(s, 6, RelicId.IRON_PLATE);
+        assertThat(afterSix.ownedRelics()).contains(RelicId.IRON_PLATE);
+        assertThat(afterSix.healthCap()).isEqualTo(6); // iron plate increases cap by 1
+        assertThat(afterSix.defeated()).isFalse();
+
+        // Test roll 1-5
+        DungeonSessionState afterFail = svc.shrineRoll(s, 3, null);
+        assertThat(afterFail.health()).isEqualTo(4); // 5 - 1 = 4
+        assertThat(afterFail.defeated()).isFalse();
+    }
 }

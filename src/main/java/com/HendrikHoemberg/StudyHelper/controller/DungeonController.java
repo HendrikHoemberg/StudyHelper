@@ -211,6 +211,125 @@ public class DungeonController {
         return stashAndRender(model, user, session, state, hxRequest);
     }
 
+    @PostMapping("/dungeon/shrine/confirm")
+    public String shrineConfirm(Model model, Principal principal, HttpSession session) {
+        User user = userService.getByUsername(principal.getName());
+        DungeonSessionState state = getState(session, user);
+        if (state == null) return "redirect:/study/start?mode=DUNGEON";
+        model.addAttribute("state", state);
+        return "fragments/dungeon-shrine-modal :: shrineConfirm";
+    }
+
+    @PostMapping("/dungeon/shrine/reset")
+    public String shrineReset(Model model, Principal principal, HttpSession session) {
+        User user = userService.getByUsername(principal.getName());
+        DungeonSessionState state = getState(session, user);
+        if (state == null) return "redirect:/study/start?mode=DUNGEON";
+        model.addAttribute("state", state);
+        return "fragments/dungeon-shrine-modal :: shrineMain";
+    }
+
+    @PostMapping("/dungeon/shrine/roll")
+    public String shrineRoll(Model model, Principal principal, HttpSession session,
+                             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        User user = userService.getByUsername(principal.getName());
+        DungeonSessionState state = getState(session, user);
+        if (state == null) return "redirect:/study/start?mode=DUNGEON";
+
+        int roll = new Random().nextInt(6) + 1;
+        RelicId grantedRelic = null;
+        if (roll == 6) {
+            List<RelicId> unowned = new ArrayList<>();
+            for (RelicId r : RelicId.values()) {
+                if (!state.ownedRelics().contains(r)) unowned.add(r);
+            }
+            if (!unowned.isEmpty()) {
+                grantedRelic = unowned.get(new Random().nextInt(unowned.size()));
+            } else {
+                grantedRelic = RelicId.IRON_PLATE;
+            }
+        }
+
+        DungeonSessionState nextState = dungeonSessionService.shrineRoll(state, roll, grantedRelic);
+        session.setAttribute(DUNGEON_SESSION_KEY, nextState);
+        savedSessionService.saveDungeon(user, nextState);
+
+        model.addAttribute("state", nextState);
+        model.addAttribute("rollResult", roll);
+        model.addAttribute("grantedRelic", grantedRelic);
+
+        return "fragments/dungeon-shrine-modal :: shrineResult";
+    }
+
+    @PostMapping("/dungeon/shrine/drink")
+    public String shrineDrink(Model model, Principal principal, HttpSession session,
+                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        User user = userService.getByUsername(principal.getName());
+        DungeonSessionState state = getState(session, user);
+        if (state == null) return "redirect:/study/start?mode=DUNGEON";
+
+        DungeonSessionState nextState = dungeonSessionService.shrineDrink(state);
+        return stashAndRender(model, user, session, nextState, hxRequest);
+    }
+
+    @PostMapping("/dungeon/shrine/leave")
+    public String shrineLeave(Model model, Principal principal, HttpSession session,
+                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        User user = userService.getByUsername(principal.getName());
+        DungeonSessionState state = getState(session, user);
+        if (state == null) return "redirect:/study/start?mode=DUNGEON";
+
+        DungeonSessionState nextState = dungeonSessionService.shrineLeave(state);
+        return stashAndRender(model, user, session, nextState, hxRequest);
+    }
+
+    @PostMapping("/dungeon/collect/coin")
+    @ResponseBody
+    public String collectCoin(HttpSession session, Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        DungeonSessionState state = getState(session, user);
+        if (state == null) return "";
+
+        DungeonSessionState nextState = new DungeonSessionState(
+            state.config(), state.map(), state.currentRoomId(),
+            state.encounters(), state.bossEncounterIds(), state.bossIndex(),
+            state.activeEncounterId(),
+            state.health(), state.healthCap(), state.shields(), state.shieldCap(),
+            state.score() + 1, state.answeredCount(), state.correctCount(),
+            state.won(), state.defeated(),
+            state.streak(), state.gauntletQueue(),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
+            state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick());
+
+        session.setAttribute(DUNGEON_SESSION_KEY, nextState);
+        savedSessionService.saveDungeon(user, nextState);
+        return "success";
+    }
+
+    @PostMapping("/dungeon/collect/shield")
+    @ResponseBody
+    public String collectShield(HttpSession session, Principal principal) {
+        User user = userService.getByUsername(principal.getName());
+        DungeonSessionState state = getState(session, user);
+        if (state == null) return "";
+
+        int nextShields = Math.min(state.shieldCap(), state.shields() + 1);
+        DungeonSessionState nextState = new DungeonSessionState(
+            state.config(), state.map(), state.currentRoomId(),
+            state.encounters(), state.bossEncounterIds(), state.bossIndex(),
+            state.activeEncounterId(),
+            state.health(), state.healthCap(), nextShields, state.shieldCap(),
+            state.score(), state.answeredCount(), state.correctCount(),
+            state.won(), state.defeated(),
+            state.streak(), state.gauntletQueue(),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
+            state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick());
+
+        session.setAttribute(DUNGEON_SESSION_KEY, nextState);
+        savedSessionService.saveDungeon(user, nextState);
+        return "success";
+    }
+
     private String stashAndRender(Model model, User user, HttpSession session,
                                    DungeonSessionState state, String hxRequest) {
         session.setAttribute(DUNGEON_SESSION_KEY, state);

@@ -472,6 +472,132 @@
             "...kyyyyyyyyk...",
             "....kyyyy.yyk...",
             "....kk....kk...."
+        ],
+        POT: [
+            "......kkkk......",
+            ".....kooook.....",
+            "....kooooook....",
+            "...koooooooook..",
+            "..koooooooooook.",
+            "..koooooooooook.",
+            ".koooooooooooook",
+            ".kooookkooookoook",
+            ".koookkoooookoook",
+            ".koooooooooooook",
+            ".koooooooooooook",
+            "..koooooooooook.",
+            "..koooooooooook.",
+            "...koooooooook..",
+            "....kkkkkkkk....",
+            "................"
+        ],
+        SHRINE: [
+            "......kkkk......",
+            "....kksssskk....",
+            "...kssggggssk...",
+            "..ksggwwwwggsk..",
+            "..ksgwkkkkwgsk..",
+            ".ksgwwkkkkwwgsk.",
+            ".ksgwwkkkkwwgsk.",
+            ".ksggwkkkkwggsk.",
+            ".ksgssggggssgsk.",
+            "..ksgssssssgsk..",
+            "..ksgssssssgsk..",
+            "...kssssssssk...",
+            "....kddddddk....",
+            "....kddddddk....",
+            "...kkddddddkk...",
+            "kkkkkkkkkkkkkkkk"
+        ],
+        COIN: [
+            "......kkkk......",
+            "....kkyyyykk....",
+            "...kyyyyyyyyk...",
+            "..kyykkkkyyyyk..",
+            "..kyykkkkyyyyk..",
+            ".kyykkkkyyyyyyk",
+            ".kyykkkkkyyyyyk",
+            ".kyykkkkkyyyyyk",
+            ".kyykkkkyyyyyyk",
+            "..kyykkkkyyyyk..",
+            "..kyykkkkyyyyk..",
+            "...kyyyyyyyyk...",
+            "....kkyyyykk....",
+            "......kkkk......",
+            "................",
+            "................"
+        ],
+        SLIME_REMAINS: [
+            "................",
+            "................",
+            "......vvvv......",
+            "....vvvvvvvv....",
+            "...vvvvvvvvvv...",
+            "..vvvvvvvvvvvv..",
+            ".vvvvvvvvvvvvvv.",
+            ".vvvvvvvvvvvvvv.",
+            ".vvvvvvvvvvvvvv.",
+            "..vvvvvvvvvvvv..",
+            "...vvvvvvvvvv...",
+            "....vvvvvvvv....",
+            "......vvvv......",
+            "................",
+            "................",
+            "................"
+        ],
+        SKELETON_REMAINS: [
+            "................",
+            "................",
+            "......wwww......",
+            "....wwkwwkww....",
+            "...wwkkwwkkww...",
+            "..wwwwwwwwwwww..",
+            "..wwwwwwwwwwww..",
+            "...wwkkkkkkww...",
+            "....wwwwwwww....",
+            ".....kkkkkk.....",
+            "......wwww......",
+            ".....ww..ww.....",
+            "....kk....kk....",
+            "................",
+            "................",
+            "................"
+        ],
+        GOBLIN_REMAINS: [
+            "................",
+            "......rrrr......",
+            "....rrrrrrrr....",
+            "...rrrrrrrrrr...",
+            "..rrkkkkkkkkrr..",
+            "..rrkkkkkkkkrr..",
+            "...rrrrrrrrrr...",
+            "....rrrrrrrr....",
+            ".....bbbbbb.....",
+            "....bbbbbbbb....",
+            "...bbbbbbbbbb...",
+            "...kk.bb..bb.kk.",
+            ".....kk..kk.....",
+            "................",
+            "................",
+            "................"
+        ],
+        GHOST_REMAINS: [
+            "................",
+            ".....ffffff.....",
+            "....ffffffff....",
+            "...ffrffffrff...",
+            "..ffrwkffrwkff..",
+            "..fffffffffffff.",
+            "..fffffffffffff.",
+            "...fffffffffff..",
+            "....fffffffff...",
+            ".....fffffff....",
+            "......fffff.....",
+            ".......fff......",
+            "........f.......",
+            "................",
+            "................",
+            "................"
         ]
     };
 
@@ -710,6 +836,46 @@
     // ============================================================
     // 2D Interactive Top-Down Exploration Engine
     // ============================================================
+    // Exploration Room Item States
+    var currentRoomItems = {
+        roomId: null,
+        pots: [], // {x, y, broken: false, shatterTime: 0}
+        coins: [], // {x, y, vx, vy, collected: false, claimable: false, type: 'COIN' or 'SHIELD'}
+        remains: null // {type: 'SLIME'/'SKELETON'..., x, y}
+    };
+
+    function spawnPotsForRoom(roomId) {
+        var pots = [];
+        var hash = 0;
+        for (var i = 0; i < roomId.length; i++) {
+            hash = roomId.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        var rng = Math.abs(hash);
+        var numPots = (rng % 2) + 2; // 2 or 3 pots
+        
+        var corners = [
+            { minX: 160, maxX: 260, minY: 160, maxY: 240 },
+            { minX: 700, maxX: 800, minY: 160, maxY: 240 },
+            { minX: 160, maxX: 260, minY: 480, maxY: 560 },
+            { minX: 700, maxX: 800, minY: 480, maxY: 560 }
+        ];
+        
+        for (var i = corners.length - 1; i > 0; i--) {
+            var j = (rng + i) % (i + 1);
+            var temp = corners[i];
+            corners[i] = corners[j];
+            corners[j] = temp;
+        }
+        
+        for (var i = 0; i < numPots; i++) {
+            var zone = corners[i];
+            var px = zone.minX + ((rng + i * 17) % (zone.maxX - zone.minX));
+            var py = zone.minY + ((rng + i * 31) % (zone.maxY - zone.minY));
+            pots.push({ x: px, y: py, broken: false, shatterTime: 0 });
+        }
+        return pots;
+    }
+
     var playerX = 480;
     var playerY = 352;
     var playerSpeed = 4.5;
@@ -853,11 +1019,113 @@
         playerX = nextX;
         playerY = nextY;
 
+        // Pot collision & smashing
+        for (var i = 0; i < currentRoomItems.pots.length; i++) {
+            var pot = currentRoomItems.pots[i];
+            if (pot.broken) continue;
+            
+            var potCenterX = pot.x + 24;
+            var potCenterY = pot.y + 24;
+            var playerCenterX = playerX + 32;
+            var playerCenterY = playerY + 32;
+            var dist = Math.sqrt(Math.pow(playerCenterX - potCenterX, 2) + Math.pow(playerCenterY - potCenterY, 2));
+            
+            if (dist < 40) {
+                pot.broken = true;
+                pot.shatterTime = Date.now();
+                DungeonAudio.playSlash(); // Shatter sound
+                
+                var rand = Math.random();
+                if (rand < 0.60) {
+                    currentRoomItems.coins.push({
+                        x: potCenterX,
+                        y: potCenterY,
+                        vx: (Math.random() * 2 - 1) * 2,
+                        vy: (Math.random() * 2 - 1) * 2,
+                        collected: false,
+                        claimable: true,
+                        type: 'COIN'
+                    });
+                } else if (rand < 0.65) {
+                    currentRoomItems.coins.push({
+                        x: potCenterX,
+                        y: potCenterY,
+                        vx: (Math.random() * 2 - 1) * 2,
+                        vy: (Math.random() * 2 - 1) * 2,
+                        collected: false,
+                        claimable: true,
+                        type: 'SHIELD'
+                    });
+                }
+            }
+        }
+
+        // Update coins/shields physics and attraction
+        for (var i = 0; i < currentRoomItems.coins.length; i++) {
+            var item = currentRoomItems.coins[i];
+            if (item.collected) continue;
+            
+            item.x += item.vx;
+            item.y += item.vy;
+            item.vx *= 0.88;
+            item.vy *= 0.88;
+            
+            if (item.x < 110 || item.x > 910) {
+                item.vx = -item.vx;
+                item.x = Math.max(110, Math.min(910, item.x));
+            }
+            if (item.y < 110 || item.y > 650) {
+                item.vy = -item.vy;
+                item.y = Math.max(110, Math.min(650, item.y));
+            }
+            
+            var playerCenterX = playerX + 32;
+            var playerCenterY = playerY + 32;
+            var dx = playerCenterX - item.x;
+            var dy = playerCenterY - item.y;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < 160) {
+                var pull = (160 - dist) / 10;
+                item.vx += (dx / dist) * pull * 0.22;
+                item.vy += (dy / dist) * pull * 0.22;
+            }
+            
+            if (dist < 36) {
+                item.collected = true;
+                
+                if (item.type === 'COIN') {
+                    DungeonAudio.playSelect();
+                    var scoreEl = document.querySelector('.sh-dungeon-hud-score span:last-child');
+                    if (scoreEl) {
+                        var scoreVal = parseInt(scoreEl.textContent, 10);
+                        scoreEl.textContent = scoreVal + 1;
+                    }
+                    if (item.claimable) {
+                        fetch('/dungeon/collect/coin', { method: 'POST' });
+                    }
+                } else if (item.type === 'SHIELD') {
+                    DungeonAudio.playShieldGain();
+                    var shieldsContainer = document.querySelector('.sh-dungeon-hud-shields');
+                    var shieldsHudItem = document.querySelector('.sh-dungeon-hud-item-shields');
+                    if (shieldsContainer) {
+                        shieldsHudItem.classList.remove('is-hidden');
+                        var newIcon = document.createElement('iconify-icon');
+                        newIcon.setAttribute('icon', 'lucide:shield');
+                        shieldsContainer.appendChild(newIcon);
+                    }
+                    if (item.claimable) {
+                        fetch('/dungeon/collect/shield', { method: 'POST' });
+                    }
+                }
+            }
+        }
+
         // 2. Interactive Object Collision
         var roomType = canvas.dataset.currentRoomType;
         var cleared = canvas.dataset.currentRoomCleared === 'true';
 
-        var checkCenterpiece = ['TREASURE', 'SHOP', 'SECRET'].indexOf(roomType) !== -1 && !cleared;
+        var checkCenterpiece = ['TREASURE', 'SHOP', 'SECRET', 'SHRINE'].indexOf(roomType) !== -1 && !cleared;
         if (checkCenterpiece && !window.dungeonCenterpieceInteracted) {
             var centerX = 480;
             var centerY = 352;
@@ -923,6 +1191,57 @@
             }
         }
 
+        // Draw remains first
+        if (currentRoomItems.remains) {
+            var rem = currentRoomItems.remains;
+            var remainsSprite = rem.type + '_REMAINS';
+            drawPixelSprite(ctx, remainsSprite, rem.x, rem.y, 64);
+        }
+
+        // Draw shattered pot pieces
+        for (var i = 0; i < currentRoomItems.pots.length; i++) {
+            var pot = currentRoomItems.pots[i];
+            if (pot.broken) {
+                var age = Date.now() - pot.shatterTime;
+                if (age < 1500) {
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, 1 - age / 1500);
+                    ctx.fillStyle = '#b45309';
+                    ctx.fillRect(pot.x + 8, pot.y + 12, 10, 6);
+                    ctx.fillRect(pot.x + 28, pot.y + 18, 6, 8);
+                    ctx.fillRect(pot.x + 16, pot.y + 32, 8, 5);
+                    ctx.fillRect(pot.x + 36, pot.y + 8, 5, 5);
+                    ctx.restore();
+                }
+            } else {
+                drawPixelSprite(ctx, 'POT', pot.x, pot.y, 48);
+            }
+        }
+
+        // Draw coins/shields
+        for (var i = 0; i < currentRoomItems.coins.length; i++) {
+            var item = currentRoomItems.coins[i];
+            if (item.collected) continue;
+            
+            if (item.type === 'COIN') {
+                drawPixelSprite(ctx, 'COIN', item.x - 12, item.y - 12, 24);
+            } else if (item.type === 'SHIELD') {
+                ctx.fillStyle = '#2dd4bf';
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(item.x, item.y - 10);
+                ctx.lineTo(item.x + 8, item.y - 6);
+                ctx.lineTo(item.x + 8, item.y + 2);
+                ctx.lineTo(item.x, item.y + 10);
+                ctx.lineTo(item.x - 8, item.y + 2);
+                ctx.lineTo(item.x - 8, item.y - 6);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
         // Render room centerpiece (Portal, Chest, Potion, Merchant Stand)
         if (type === 'ENTRANCE') {
             drawPixelSprite(ctx, 'PORTAL', 480, 352, 64);
@@ -934,6 +1253,8 @@
             drawPixelSprite(ctx, 'CHEST', 480, 352, 64); // Shop pedestal
         } else if (type === 'SECRET' && !cleared) {
             drawPixelSprite(ctx, 'CHEST', 480, 352, 64);
+        } else if (type === 'SHRINE' && !cleared) {
+            drawPixelSprite(ctx, 'SHRINE', 480, 352, 64);
         }
 
         // Draw player avatar
@@ -1039,6 +1360,7 @@
         }
 
         // Transitioning back to exploration mode
+        var justFinishedCombat = combatLoopRunning;
         combatLoopRunning = false;
 
         var roomId = canvas.dataset.currentRoomId;
@@ -1046,6 +1368,35 @@
         window.dungeonLastRoomId = roomId;
 
         if (roomChanged) {
+            // Initialize room items
+            currentRoomItems.roomId = roomId;
+            currentRoomItems.coins = [];
+            currentRoomItems.remains = null;
+            
+            var roomType = canvas.dataset.currentRoomType;
+            var cleared = canvas.dataset.currentRoomCleared === 'true';
+            
+            if (!cleared && ['TREASURE', 'SHOP', 'SECRET', 'HEAL', 'ENTRANCE', 'SHRINE', 'BOSS'].indexOf(roomType) === -1) {
+                currentRoomItems.pots = spawnPotsForRoom(roomId);
+            } else if (cleared && ['COMBAT', 'ELITE', 'BOSS'].indexOf(roomType) !== -1) {
+                var monsterTypes = ['SLIME', 'SKELETON', 'GOBLIN', 'GHOST'];
+                var hash = 0;
+                for (var i = 0; i < roomId.length; i++) {
+                    hash = roomId.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                var idx = Math.abs(hash) % monsterTypes.length;
+                if (roomType === 'BOSS') {
+                    currentRoomItems.remains = { type: 'DRAGON', x: 480, y: 352 };
+                } else if (roomType === 'ELITE') {
+                    currentRoomItems.remains = { type: 'CHAMPION', x: 480, y: 352 };
+                } else {
+                    currentRoomItems.remains = { type: monsterTypes[idx], x: 480, y: 352 };
+                }
+                currentRoomItems.pots = [];
+            } else {
+                currentRoomItems.pots = spawnPotsForRoom(roomId);
+            }
+
             // Spawn player relative to entered door orientation
             if (window.dungeonLastMoveDirection) {
                 var dir = window.dungeonLastMoveDirection;
@@ -1067,6 +1418,33 @@
                 // Default center spawn for new run/resume
                 playerX = 480;
                 playerY = 352;
+            }
+        }
+
+        if (justFinishedCombat) {
+            DungeonAudio.playVictory();
+            
+            var numCoins = 3 + Math.floor(Math.random() * 3); // 3 to 5 coins
+            var monsterType = window.dungeonSplashMonster || 'SLIME';
+            
+            currentRoomItems.remains = {
+                type: monsterType,
+                x: 480,
+                y: 352
+            };
+            
+            for (var i = 0; i < numCoins; i++) {
+                var angle = Math.random() * Math.PI * 2;
+                var speed = 3 + Math.random() * 4;
+                currentRoomItems.coins.push({
+                    x: 480 + 16,
+                    y: 352 + 16,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    collected: false,
+                    claimable: false, // visual only to match server
+                    type: 'COIN'
+                });
             }
         }
 
