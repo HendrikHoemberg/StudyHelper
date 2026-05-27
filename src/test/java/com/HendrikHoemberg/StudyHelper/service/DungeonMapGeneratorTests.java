@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,6 +66,35 @@ class DungeonMapGeneratorTests {
 
         assertThat(revealed).isGreaterThanOrEqualTo(3);
         assertThat(revealed).isLessThan(12);
+    }
+
+    @Test
+    void generate_isDeterministicGivenSameSeed() {
+        DungeonMap a = generator.generate(DungeonSize.MEDIUM,
+            encounterIds(DungeonSize.MEDIUM.normalEncounterCount()),
+            List.of(), new Random(42L));
+        DungeonMap b = generator.generate(DungeonSize.MEDIUM,
+            encounterIds(DungeonSize.MEDIUM.normalEncounterCount()),
+            List.of(), new Random(42L));
+        assertThat(a.tiles().keySet()).isEqualTo(b.tiles().keySet());
+        for (DungeonPosition p : a.tiles().keySet()) {
+            assertThat(a.tiles().get(p).type()).isEqualTo(b.tiles().get(p).type());
+        }
+        assertThat(a.entrance()).isEqualTo(b.entrance());
+        assertThat(a.boss()).isEqualTo(b.boss());
+    }
+
+    @Test
+    void generate_placesElitesWhenProvided() {
+        List<List<String>> gauntlets = List.of(List.of("e1a", "e1b"));
+        DungeonMap map = generator.generate(DungeonSize.MEDIUM,
+            encounterIds(DungeonSize.MEDIUM.normalEncounterCount()),
+            gauntlets, new Random(7L));
+        long eliteTiles = map.tiles().values().stream()
+            .filter(t -> t.type() == DungeonTileType.ELITE).count();
+        assertThat(eliteTiles).isEqualTo(1);
+        assertThat(map.gauntletGroups()).hasSize(1);
+        assertThat(map.gauntletGroups().values().iterator().next()).containsExactly("e1a", "e1b");
     }
 
     private void assertCounts(DungeonSize size) {
