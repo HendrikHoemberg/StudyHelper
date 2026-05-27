@@ -10,6 +10,18 @@ public final class DungeonDamage {
     private DungeonDamage() {}
 
     public static DungeonSessionState takeDamage(DungeonSessionState state, int amount) {
+        if (state.shields() > 0) {
+            return new DungeonSessionState(
+                state.config(), state.map(), state.playerPosition(),
+                state.encounters(), state.bossEncounterIds(), state.bossIndex(),
+                state.activeEncounterId(),
+                state.health(), state.score(),
+                state.answeredCount(), state.correctCount(),
+                state.visibleTiles(),
+                state.won(), state.defeated(),
+                state.streak(), state.shields() - 1, state.gauntletQueue(),
+                state.longestStreak(), state.elitesCleared(), state.shieldsUsed() + 1);
+        }
         int newHealth = Math.max(0, state.health() - amount);
         boolean defeated = state.defeated() || newHealth <= 0;
         return new DungeonSessionState(

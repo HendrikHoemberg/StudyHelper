@@ -60,4 +60,19 @@ class DungeonDamageTests {
         DungeonSessionState after = DungeonDamage.heal(before, 2);
         assertThat(after.health()).isEqualTo(5);
     }
+
+    @Test
+    void takeDamage_consumesShieldBeforeHealth() {
+        DungeonSessionState before = new DungeonSessionState(
+            new DungeonConfig(DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
+                QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, ""),
+            new DungeonMap(1, 1, new DungeonPosition(0,0), new DungeonPosition(0,0), Map.of()),
+            new DungeonPosition(0,0), Map.of(), List.of(), 0, null,
+            5, 0, 0, 0, Set.of(), false, false,
+            0, 1, List.of(), 0, 0, 0);
+        DungeonSessionState after = DungeonDamage.takeDamage(before, 1);
+        assertThat(after.health()).isEqualTo(5);
+        assertThat(after.shields()).isZero();
+        assertThat(after.shieldsUsed()).isEqualTo(1);
+    }
 }

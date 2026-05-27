@@ -8,6 +8,10 @@ import java.util.*;
 @Service
 public class DungeonEncounterService {
 
+    private static final int STREAK_FOR_SHIELD = 3;
+    private static final int MAX_SHIELDS = 2;
+    private static final int WRONG_ANSWER_DAMAGE = 1;
+
     public DungeonSessionState activate(DungeonSessionState state, String encounterId, boolean boss) {
         if (encounterId == null) return state;
         Map<String, DungeonEncounter> encounters = new LinkedHashMap<>(state.encounters());
@@ -57,6 +61,13 @@ public class DungeonEncounterService {
         int answeredCount = state.answeredCount() + 1;
         int correctCount = state.correctCount() + (correct ? 1 : 0);
 
+        int newStreak = correct ? state.streak() + 1 : 0;
+        int newShields = state.shields();
+        if (correct && newStreak % STREAK_FOR_SHIELD == 0 && newShields < MAX_SHIELDS) {
+            newShields++;
+        }
+        int newLongest = Math.max(state.longestStreak(), newStreak);
+
         DungeonSessionState working = new DungeonSessionState(
             state.config(), state.map(), state.playerPosition(),
             Map.copyOf(encounters), state.bossEncounterIds(), state.bossIndex(),
@@ -65,11 +76,11 @@ public class DungeonEncounterService {
             answeredCount, correctCount,
             state.visibleTiles(),
             state.won(), state.defeated(),
-            state.streak(), state.shields(), state.gauntletQueue(),
-            state.longestStreak(), state.elitesCleared(), state.shieldsUsed());
+            newStreak, newShields, state.gauntletQueue(),
+            newLongest, state.elitesCleared(), state.shieldsUsed());
 
         if (!correct) {
-            working = DungeonDamage.takeDamage(working, 1);
+            working = DungeonDamage.takeDamage(working, WRONG_ANSWER_DAMAGE);
         }
 
         String nextActiveId = null;
