@@ -4,9 +4,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum DungeonSize {
-    SMALL(8, 6, 2),
-    MEDIUM(12, 9, 3),
-    LARGE(20, 15, 5);
+    SMALL(10, 6, 2),
+    MEDIUM(16, 9, 3),
+    LARGE(29, 15, 5);
 
     private final int totalPrompts;
     private final int normalEncounterCount;

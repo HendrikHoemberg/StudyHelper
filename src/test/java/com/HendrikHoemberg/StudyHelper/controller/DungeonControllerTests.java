@@ -182,7 +182,7 @@ class DungeonControllerTests {
 
     @Test
     void startFlashcardDungeon_insufficientCardsReturnsSetupErrorWithOptionsPreserved() {
-        String errorMsg = "Not enough flashcards available for Small dungeon. Need 8, have 3.";
+        String errorMsg = "Not enough flashcards available for Small dungeon. Need 10, have 3.";
         when(dungeonSessionService.createFlashcardDungeon(List.of(1L), DungeonSize.SMALL, user))
             .thenThrow(new IllegalArgumentException(errorMsg));
 
