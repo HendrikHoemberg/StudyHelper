@@ -234,6 +234,36 @@
             } catch (e) {
                 console.warn("Audio play submit failed:", e);
             }
+        },
+        playShieldBreak: function () {
+            if (!this.ctx) return;
+            var ctx = this.ctx;
+            [800, 400, 200].forEach(function (freq, i) {
+                var osc = ctx.createOscillator();
+                var gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.04);
+                gain.gain.setValueAtTime(0.18, ctx.currentTime + i * 0.04);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.04 + 0.15);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(ctx.currentTime + i * 0.04);
+                osc.stop(ctx.currentTime + i * 0.04 + 0.16);
+            });
+        },
+        playShieldGain: function () {
+            if (!this.ctx) return;
+            var ctx = this.ctx;
+            [523.25, 659.25, 783.99].forEach(function (freq, i) {
+                var osc = ctx.createOscillator();
+                var gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.07);
+                gain.gain.setValueAtTime(0.12, ctx.currentTime + i * 0.07);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.07 + 0.25);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(ctx.currentTime + i * 0.07);
+                osc.stop(ctx.currentTime + i * 0.07 + 0.26);
+            });
         }
     };
 
@@ -424,10 +454,55 @@
             ".ksssskkkssssk..",
             "kkkkkkkkkkkkkkk.",
             "................"
+        ],
+        CHAMPION: [
+            "......kkkk......",
+            "....kkyyyyk.....",
+            "...kyyyyyyyk....",
+            "..kyyyyyyyykk...",
+            "..kyyyyyyyyyyk..",
+            ".kyywwwwyyyyykk.",
+            ".kyywwwwyyyyyyk.",
+            "kyyyywwyyyyyyyk.",
+            "kyyyywwyyyyyyyk.",
+            "kyyyyyyyyyyyyyyk",
+            "kyyyyyyyyyyyyyyk",
+            ".kyyyyyyyyyyyyk.",
+            "..kyyyyyyyyyyk..",
+            "...kyyyyyyyyk...",
+            "....kyyyy.yyk...",
+            "....kk....kk...."
         ]
     };
 
     function drawPixelSprite(ctx, spriteName, px, py, size) {
+        if (spriteName === 'ELITE') {
+            ctx.fillStyle = '#7f1d1d';
+            ctx.fillRect(px, py, size, size);
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = Math.max(2, size * 0.08);
+            var pad = size * 0.22;
+            ctx.beginPath();
+            ctx.moveTo(px + pad, py + pad);
+            ctx.lineTo(px + size - pad, py + size - pad);
+            ctx.moveTo(px + size - pad, py + pad);
+            ctx.lineTo(px + pad, py + size - pad);
+            ctx.stroke();
+            return;
+        }
+        if (spriteName === 'TRAP_TELEGRAPHED') {
+            drawFloorTile(ctx, px, py, size, false);
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = Math.max(1, size * 0.05);
+            ctx.beginPath();
+            var midY = py + size * 0.5;
+            ctx.moveTo(px + size * 0.15, midY - size * 0.2);
+            ctx.lineTo(px + size * 0.4, midY + size * 0.1);
+            ctx.lineTo(px + size * 0.6, midY - size * 0.1);
+            ctx.lineTo(px + size * 0.85, midY + size * 0.2);
+            ctx.stroke();
+            return;
+        }
         var sprite = SPRITES[spriteName];
         if (!sprite) return;
         var pixelSize = size / 16;
@@ -736,8 +811,15 @@
                         case 'BOSS':
                             drawPixelSprite(ctx, 'DRAGON', px, py, tileSize);
                             break;
+                        case 'ELITE':
+                            drawPixelSprite(ctx, 'ELITE', px, py, tileSize);
+                            break;
                         case 'TRAP':
-                            drawPixelSprite(ctx, 'TRAP', px, py, tileSize);
+                            if (tile.revealed && !tile.explored) {
+                                drawPixelSprite(ctx, 'TRAP_TELEGRAPHED', px, py, tileSize);
+                            } else {
+                                drawPixelSprite(ctx, 'TRAP', px, py, tileSize);
+                            }
                             break;
                         case 'ENCOUNTER':
                             // Determine monster type
