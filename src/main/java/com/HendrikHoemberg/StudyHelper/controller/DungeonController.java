@@ -179,6 +179,38 @@ public class DungeonController {
         return stashAndRender(model, user, session, state, hxRequest);
     }
 
+    @PostMapping("/dungeon/relic/pick")
+    public String pickRelic(@RequestParam RelicId relicId,
+                              Model model, Principal principal, HttpSession session,
+                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        User user = userService.getByUsername(principal.getName());
+        DungeonSessionState state = getState(session, user);
+        if (state == null) return "redirect:/study/start?mode=DUNGEON";
+        state = dungeonSessionService.pickRelic(state, relicId);
+        return stashAndRender(model, user, session, state, hxRequest);
+    }
+
+    @PostMapping("/dungeon/relic/buy")
+    public String buyRelic(@RequestParam RelicId relicId,
+                             Model model, Principal principal, HttpSession session,
+                             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        User user = userService.getByUsername(principal.getName());
+        DungeonSessionState state = getState(session, user);
+        if (state == null) return "redirect:/study/start?mode=DUNGEON";
+        state = dungeonSessionService.buyRelic(state, relicId);
+        return stashAndRender(model, user, session, state, hxRequest);
+    }
+
+    @PostMapping("/dungeon/relic/skip-shop")
+    public String skipShop(Model model, Principal principal, HttpSession session,
+                             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        User user = userService.getByUsername(principal.getName());
+        DungeonSessionState state = getState(session, user);
+        if (state == null) return "redirect:/study/start?mode=DUNGEON";
+        state = dungeonSessionService.skipShop(state);
+        return stashAndRender(model, user, session, state, hxRequest);
+    }
+
     private String stashAndRender(Model model, User user, HttpSession session,
                                    DungeonSessionState state, String hxRequest) {
         session.setAttribute(DUNGEON_SESSION_KEY, state);
@@ -188,6 +220,7 @@ public class DungeonController {
             studyLogService.recordDungeon(user, stats, state.config().selectedDeckIds());
             model.addAttribute("mode", StudyMode.DUNGEON);
             model.addAttribute("stats", stats);
+            model.addAttribute("state", state);
             if (hxRequest != null) {
                 return "fragments/dungeon-complete :: dungeonComplete";
             }
@@ -270,52 +303,119 @@ public class DungeonController {
         model.addAttribute("studyStateView", "dungeon");
         model.addAttribute("state", state);
         model.addAttribute("activeEncounter", state.activeEncounter());
+        model.addAttribute("currentRoom", state.currentRoom());
         model.addAttribute("stats", dungeonSessionService.buildStats(state));
-        model.addAttribute("mapTiles", mapTiles(state));
+        model.addAttribute("ownedRelics", state.ownedRelics());
+        model.addAttribute("pendingPick", state.pendingRelicPick());
+        model.addAttribute("hintMaskIndex",
+            spectaclesHintMaskIndex(state, state.activeEncounter()));
+
+        List<Map<String, Object>> minimap = minimapRooms(state);
+        model.addAttribute("minimapRooms", minimap);
+        try {
+            model.addAttribute("minimapRoomsJson", objectMapper.writeValueAsString(minimap));
+        } catch (Exception e) {
+            log.error("Failed to serialize minimap rooms", e);
+            model.addAttribute("minimapRoomsJson", "[]");
+        }
 
         int gauntletPos = 0;
         int gauntletTotal = 0;
         if (state.activeEncounterId() != null) {
-            for (DungeonRoom room : state.map().rooms().values()) {
-                if (room.gauntletGroup().contains(state.activeEncounterId())) {
-                    gauntletTotal = room.gauntletGroup().size();
-                    gauntletPos = room.gauntletGroup().indexOf(state.activeEncounterId()) + 1;
+            for (DungeonRoom r : state.map().rooms().values()) {
+                if (r.gauntletGroup().contains(state.activeEncounterId())) {
+                    gauntletTotal = r.gauntletGroup().size();
+                    gauntletPos = r.gauntletGroup().indexOf(state.activeEncounterId()) + 1;
                     break;
                 }
             }
         }
         model.addAttribute("gauntletPosition", gauntletPos);
         model.addAttribute("gauntletTotal", gauntletTotal);
-        try {
-            model.addAttribute("mapTilesJson", objectMapper.writeValueAsString(mapTiles(state)));
-        } catch (Exception e) {
-            log.error("Failed to serialize map tiles to JSON", e);
-            model.addAttribute("mapTilesJson", "[]");
-        }
-        if (hxRequest != null) {
-            return "fragments/dungeon-game :: dungeonGame";
-        }
+
+        if (hxRequest != null) return "fragments/dungeon-game :: dungeonGame";
         model.addAttribute("studyStateView", "dungeon");
         return "study-page";
     }
 
-    private List<Map<String, Object>> mapTiles(DungeonSessionState state) {
-        return state.map().rooms().values().stream()
-            .map(room -> {
-                Map<String, Object> m = new LinkedHashMap<>();
-                m.put("id", room.id());
-                m.put("x", room.gridPos().x());
-                m.put("y", room.gridPos().y());
-                m.put("type", room.type());
-                m.put("visited", room.visited());
-                m.put("cleared", room.cleared());
-                List<String> doorDirections = room.doors().keySet().stream()
-                    .map(Enum::name)
-                    .toList();
-                m.put("doors", doorDirections);
-                return m;
-            })
-            .toList();
+    /**
+     * Per-room display data for the minimap:
+     *   { id, type, gridX, gridY, visible (bool), revealedType (bool), cleared (bool), isCurrent (bool),
+     *     doors: { "UP": neighborId | null, ... } }
+     *
+     * Visibility rules:
+     *   - Visited rooms: visible = true, revealedType = true.
+     *   - Neighbors of visited (via door): visible = true, revealedType only if COMPASS owned.
+     *   - SECRET room: visible only if MAP_SENSE owned OR both host rooms visited.
+     *   - Everything else: visible = false (excluded from the response).
+     */
+    List<Map<String, Object>> minimapRooms(DungeonSessionState state) {
+        boolean hasCompass = state.ownedRelics().contains(RelicId.COMPASS);
+        boolean hasMapSense = state.ownedRelics().contains(RelicId.MAP_SENSE);
+
+        Set<String> visitedIds = new HashSet<>();
+        for (DungeonRoom r : state.map().rooms().values()) {
+            if (r.visited()) visitedIds.add(r.id());
+        }
+        Set<String> adjacentToVisited = new HashSet<>();
+        for (String id : visitedIds) {
+            DungeonRoom r = state.map().room(id);
+            for (String neighbor : r.doors().values()) {
+                if (!visitedIds.contains(neighbor)) adjacentToVisited.add(neighbor);
+            }
+        }
+
+        // Secret room reveal
+        Set<String> secretRevealed = new HashSet<>();
+        for (DungeonRoom r : state.map().rooms().values()) {
+            if (r.type() != RoomType.SECRET) continue;
+            if (hasMapSense) {
+                secretRevealed.add(r.id());
+                continue;
+            }
+            // Reveal when both lattice-neighbor hosts have been visited
+            int hostsVisited = 0;
+            int hostsTotal = 0;
+            for (DungeonRoom maybeHost : state.map().rooms().values()) {
+                if (maybeHost.id().equals(r.id())) continue;
+                GridPos a = r.gridPos();
+                GridPos b = maybeHost.gridPos();
+                if (Math.abs(a.x() - b.x()) + Math.abs(a.y() - b.y()) == 1) {
+                    hostsTotal++;
+                    if (visitedIds.contains(maybeHost.id())) hostsVisited++;
+                }
+            }
+            if (hostsTotal > 0 && hostsVisited == hostsTotal) secretRevealed.add(r.id());
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (DungeonRoom r : state.map().rooms().values()) {
+            boolean isVisited = visitedIds.contains(r.id());
+            boolean isAdjacent = adjacentToVisited.contains(r.id());
+            boolean isSecret = r.type() == RoomType.SECRET;
+            boolean visible = isVisited || isAdjacent || (isSecret && secretRevealed.contains(r.id()));
+            if (!visible) continue;
+
+            boolean revealedType = isVisited
+                || (isAdjacent && hasCompass)
+                || (isSecret && secretRevealed.contains(r.id()));
+
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", r.id());
+            m.put("type", revealedType ? r.type().name() : "UNKNOWN");
+            m.put("gridX", r.gridPos().x());
+            m.put("gridY", r.gridPos().y());
+            m.put("visited", isVisited);
+            m.put("cleared", r.cleared());
+            m.put("isCurrent", r.id().equals(state.currentRoomId()));
+            Map<String, String> doors = new LinkedHashMap<>();
+            for (Map.Entry<DungeonDirection, String> e : r.doors().entrySet()) {
+                doors.put(e.getKey().name(), e.getValue());
+            }
+            m.put("doors", doors);
+            result.add(m);
+        }
+        return result;
     }
 
     static Integer spectaclesHintMaskIndex(DungeonSessionState state, DungeonEncounter encounter) {
