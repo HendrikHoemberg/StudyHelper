@@ -69,7 +69,8 @@ public class DungeonNavigationService {
 
         DungeonMap nextMap = new DungeonMap(
             state.map().width(), state.map().height(),
-            state.map().entrance(), state.map().boss(), Map.copyOf(tiles));
+            state.map().entrance(), state.map().boss(), Map.copyOf(tiles),
+            state.map().gauntletGroups());
 
         DungeonSessionState moved = new DungeonSessionState(
             working.config(), nextMap, newPos,

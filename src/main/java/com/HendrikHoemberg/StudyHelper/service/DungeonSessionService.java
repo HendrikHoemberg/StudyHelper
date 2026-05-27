@@ -191,7 +191,7 @@ public class DungeonSessionService {
         Map<DungeonPosition, DungeonTile> tiles = new LinkedHashMap<>(map.tiles());
         Set<DungeonPosition> visible = navigationService.revealAroundEntrance(tiles, map.entrance());
         DungeonMap exploredMap = new DungeonMap(map.width(), map.height(),
-            map.entrance(), map.boss(), Map.copyOf(tiles));
+            map.entrance(), map.boss(), Map.copyOf(tiles), map.gauntletGroups());
 
         return new DungeonSessionState(
             config, exploredMap, map.entrance(),

@@ -120,7 +120,7 @@ class DungeonEncounterServiceTests {
     }
 
     @Test
-    void wrongElite_abortsGauntletAndDamages() {
+    void wrongElite_abortsGauntletAndDamagesAndResetsEncountersToPending() {
         DungeonEncounter e1 = DungeonEncounter.flashcard("e1", false, 1L, "Q1", "A1", null, null).activate();
         DungeonEncounter e2 = DungeonEncounter.flashcard("e2", false, 2L, "Q2", "A2", null, null);
         Map<String, DungeonEncounter> encs = new LinkedHashMap<>();
@@ -138,6 +138,11 @@ class DungeonEncounterServiceTests {
         assertThat(after.activeEncounterId()).isNull();
         assertThat(after.gauntletQueue()).isEmpty();
         assertThat(after.health()).isEqualTo(4);
+        
+        // Assert that the encounters have been reset to PENDING
+        assertThat(after.encounters().get("e1").status()).isEqualTo(DungeonEncounterStatus.PENDING);
+        assertThat(after.encounters().get("e2").status()).isEqualTo(DungeonEncounterStatus.PENDING);
+        assertThat(after.encounters().get("e1").correct()).isNull();
     }
 
     @Test

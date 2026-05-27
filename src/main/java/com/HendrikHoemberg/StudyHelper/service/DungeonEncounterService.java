@@ -106,9 +106,27 @@ public class DungeonEncounterService {
         // Elite gauntlet handling
         if (!state.gauntletQueue().isEmpty() || isPartOfActiveGauntlet(state, encounter)) {
             if (!correct) {
+                List<String> group = working.map().gauntletGroups().values().stream()
+                    .filter(g -> g.contains(encounter.id()))
+                    .findFirst()
+                    .orElse(List.of());
+
+                Map<String, DungeonEncounter> resetEncounters = new LinkedHashMap<>(working.encounters());
+                for (String encId : group) {
+                    DungeonEncounter e = resetEncounters.get(encId);
+                    if (e != null) {
+                        resetEncounters.put(encId, new DungeonEncounter(
+                            e.id(), e.type(), DungeonEncounterStatus.PENDING, e.boss(),
+                            e.flashcardId(), e.frontText(), e.backText(),
+                            e.frontImageUrl(), e.backImageUrl(), e.quizQuestion(),
+                            List.of(), null
+                        ));
+                    }
+                }
+
                 return new DungeonSessionState(
                     working.config(), working.map(), working.playerPosition(),
-                    working.encounters(), working.bossEncounterIds(), working.bossIndex(),
+                    Map.copyOf(resetEncounters), working.bossEncounterIds(), working.bossIndex(),
                     null,
                     working.health(), working.score(),
                     working.answeredCount(), working.correctCount(),
@@ -199,7 +217,8 @@ public class DungeonEncounterService {
             && (!encounter.boss() || won)) {
             tiles2.put(playerPos, currentTile.withType(DungeonTileType.FLOOR, null));
             nextMap = new DungeonMap(working.map().width(), working.map().height(),
-                working.map().entrance(), working.map().boss(), Map.copyOf(tiles2));
+                working.map().entrance(), working.map().boss(), Map.copyOf(tiles2),
+                working.map().gauntletGroups());
         }
 
         return new DungeonSessionState(

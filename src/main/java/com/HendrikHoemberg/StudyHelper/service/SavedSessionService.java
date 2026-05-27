@@ -293,7 +293,7 @@ public class SavedSessionService {
 
         DungeonSessionState newState = new DungeonSessionState(
             state.config(),
-            new DungeonMap(state.map().width(), state.map().height(), state.map().entrance(), state.map().boss(), updatedTiles),
+            new DungeonMap(state.map().width(), state.map().height(), state.map().entrance(), state.map().boss(), updatedTiles, state.map().gauntletGroups()),
             state.playerPosition(),
             remainingEncounters,
             remainingBossIds,
