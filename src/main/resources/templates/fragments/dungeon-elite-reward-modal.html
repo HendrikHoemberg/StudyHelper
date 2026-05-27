@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<div th:fragment="modal" class="sh-dungeon-modal-overlay">
+    <div class="sh-dungeon-modal sh-dungeon-elite-reward-modal">
+        <h2 class="sh-dungeon-modal-title" th:text="#{dungeon.elite-reward-title}">Elite Reward</h2>
+        <p class="sh-dungeon-modal-prompt" th:text="#{dungeon.relic.pick}">Pick a relic</p>
+        <div class="sh-dungeon-relic-choices">
+            <button th:each="rid : ${pendingPick.offer}"
+                    class="sh-dungeon-relic-choice"
+                    hx-post="/dungeon/relic/pick"
+                    hx-target="#dungeon-session-content"
+                    hx-swap="outerHTML"
+                    name="relicId" th:value="${rid.name()}">
+                <iconify-icon th:icon="${T(com.HendrikHoemberg.StudyHelper.controller.RelicIcons).iconFor(rid)}"></iconify-icon>
+                <div class="sh-dungeon-relic-choice-name"
+                     th:text="#{__${'dungeon.relic.' + #strings.toLowerCase(rid.name().replace('_','-')) + '.name'}__}">Name</div>
+                <div class="sh-dungeon-relic-choice-desc"
+                     th:text="#{__${'dungeon.relic.' + #strings.toLowerCase(rid.name().replace('_','-')) + '.desc'}__}">Description</div>
+            </button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

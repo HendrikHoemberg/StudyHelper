@@ -592,17 +592,6 @@
     // ============================================================
     // Core Rendering & States
     // ============================================================
-    function readMapTiles() {
-        var script = document.getElementById('dungeon-map-state');
-        if (!script) return null;
-        try {
-            return JSON.parse(script.textContent);
-        } catch (e) {
-            console.error("readMapTiles: parse failed", e);
-            return null;
-        }
-    }
-
     function submitMove(direction) {
         htmx.ajax('POST', '/dungeon/move', {
             target: '#dungeon-session-content',
@@ -611,343 +600,139 @@
         });
     }
 
-    function drawDungeon() {
-        try {
-            var canvas = document.getElementById('dungeon-map-canvas');
-            if (!canvas) return;
+    // ============================================================
+    // Minimap + Room Canvas Rendering
+    // ============================================================
+    function renderMinimap() {
+        var canvas = document.getElementById('dungeon-minimap-canvas');
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var lattice = parseInt(canvas.dataset.lattice, 10);
+        var stateNode = document.getElementById('dungeon-minimap-state');
+        if (!stateNode) return;
+        var rooms = JSON.parse(stateNode.textContent || '[]');
 
-            if (!canvas.dungeonListenersBound) {
-                canvas.dungeonListenersBound = true;
-                bindCanvasInteractiveListeners(canvas);
-            }
+        ctx.fillStyle = '#0a0a14';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            var mapWidth = parseInt(canvas.dataset.mapWidth, 10);
-            var mapHeight = parseInt(canvas.dataset.mapHeight, 10);
-            var targetX = parseInt(canvas.dataset.playerX, 10);
-            var targetY = parseInt(canvas.dataset.playerY, 10);
+        var cellSize = Math.floor(Math.min(canvas.width, canvas.height) / lattice);
 
-            var activeEncId = canvas.dataset.activeEncounterId;
-            var activeEncBoss = canvas.dataset.activeEncounterBoss === 'true';
-
-            // 1. Detect Battle Start & Trigger Splash Transition
-            if (activeEncId && activeEncId !== window.lastActiveEncounterId) {
-                window.dungeonSplashActive = true;
-                window.dungeonSplashStart = Date.now();
-                window.dungeonSplashBoss = activeEncBoss;
-                
-                // Determine monster type deterministically
-                var monsterTypes = ['SLIME', 'SKELETON', 'GOBLIN', 'GHOST'];
-                var idx = (targetX * 7 + targetY * 13) % monsterTypes.length;
-                var gauntletTotal = parseInt(canvas.dataset.gauntletTotal || '0', 10);
-                if (gauntletTotal > 0 && !activeEncBoss) {
-                    window.dungeonSplashMonster = 'CHAMPION';
-                } else if (activeEncBoss) {
-                    window.dungeonSplashMonster = 'DRAGON';
-                } else {
-                    window.dungeonSplashMonster = monsterTypes[idx];
+        for (var rIdx = 0; rIdx < rooms.length; rIdx++) {
+            var r = rooms[rIdx];
+            for (var dir in r.doors) {
+                if (!r.doors.hasOwnProperty(dir)) continue;
+                var neighborId = r.doors[dir];
+                var neighbor = null;
+                for (var nIdx = 0; nIdx < rooms.length; nIdx++) {
+                    if (rooms[nIdx].id === neighborId) { neighbor = rooms[nIdx]; break; }
                 }
-
-                // Play Audio Riser
-                DungeonAudio.playBattleStart();
-
-                // Trigger automatic splash clear after 1200ms
-                setTimeout(function () {
-                    window.dungeonSplashActive = false;
-                    drawDungeon();
-                }, 1200);
+                if (!neighbor) continue;
+                drawDoorConnector(ctx, r, neighbor, cellSize);
             }
-            window.lastActiveEncounterId = activeEncId;
+        }
 
-            // 2. Play Footstep on Movement
-            if (window.currentPlayerX !== undefined && (window.currentPlayerX !== targetX || window.currentPlayerY !== targetY)) {
-                if (!window.dungeonSplashActive) {
-                    DungeonAudio.playMove();
-                }
-            }
-
-            // 3. Shake & Flash & Audio on HUD changes (Heal, Damage, Score)
-            var health = parseInt(document.querySelector('.sh-dungeon-hud-health')?.textContent || '5', 10);
-            var score = parseInt(document.querySelector('.sh-dungeon-hud-score')?.textContent || '0', 10);
-
-            if (window.lastHealth !== undefined && health < window.lastHealth) {
-                DungeonAudio.playDamage();
-                var container = document.getElementById('dungeon-session-content');
-                if (container) {
-                    container.classList.add('sh-dungeon-shake-active', 'sh-dungeon-flash-danger');
-                    setTimeout(function() {
-                        container.classList.remove('sh-dungeon-shake-active', 'sh-dungeon-flash-danger');
-                    }, 400);
-                }
-            } else if (window.lastHealth !== undefined && health > window.lastHealth) {
-                DungeonAudio.playVictory();
-            }
-
-            if (window.lastScore !== undefined && score > window.lastScore) {
-                DungeonAudio.playSlash();
-                // Spawn a quick sword slash visual effect
-                window.slashParticleActive = true;
-                window.slashParticleStart = Date.now();
-                setTimeout(function() {
-                    window.slashParticleActive = false;
-                }, 300);
-
-                var container = document.getElementById('dungeon-session-content');
-                if (container) {
-                    container.classList.add('sh-dungeon-flash-success');
-                    setTimeout(function() {
-                        container.classList.remove('sh-dungeon-flash-success');
-                    }, 400);
-                }
-            }
-
-            window.lastHealth = health;
-            window.lastScore = score;
-
-            // Smooth Interpolation
-            if (window.currentPlayerX === undefined) {
-                window.currentPlayerX = targetX;
-                window.currentPlayerY = targetY;
-            }
-
-            if (window.dungeonAnimFrame) {
-                cancelAnimationFrame(window.dungeonAnimFrame);
-            }
-
-            function animate() {
-                var dx = targetX - window.currentPlayerX;
-                var dy = targetY - window.currentPlayerY;
-                var speed = 0.22;
-                window.currentPlayerX += dx * speed;
-                window.currentPlayerY += dy * speed;
-
-                if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) {
-                    window.currentPlayerX = targetX;
-                    window.currentPlayerY = targetY;
-                    renderAll(canvas, mapWidth, mapHeight, window.currentPlayerX, window.currentPlayerY);
-                    // Self-healing: if the DOM state is not yet ready/parsed during a synchronous tick,
-                    // reschedule via requestAnimationFrame to retry once it settles.
-                    if (!readMapTiles()) {
-                        window.dungeonAnimFrame = requestAnimationFrame(animate);
-                    }
-                } else {
-                    renderAll(canvas, mapWidth, mapHeight, window.currentPlayerX, window.currentPlayerY);
-                    window.dungeonAnimFrame = requestAnimationFrame(animate);
-                }
-            }
-
-            // If splash is running, render immediately
-            if (window.dungeonSplashActive) {
-                renderAll(canvas, mapWidth, mapHeight, targetX, targetY);
-            } else {
-                animate();
-            }
-
-        } catch (err) {
-            console.error("drawDungeon error:", err);
+        for (var rIdx2 = 0; rIdx2 < rooms.length; rIdx2++) {
+            drawRoomCell(ctx, rooms[rIdx2], cellSize);
         }
     }
 
-    function renderAll(canvas, mapWidth, mapHeight, pX, pY) {
-        var ctx = canvas.getContext('2d');
-        var themeColors = document.documentElement.dataset.theme === 'dark';
-
-        // Splash screen overrides map rendering
-        if (window.dungeonSplashActive) {
-            renderSplash(canvas, ctx);
-            return;
+    function drawRoomCell(ctx, room, cellSize) {
+        var x = room.gridX * cellSize;
+        var y = room.gridY * cellSize;
+        var pad = 2;
+        ctx.fillStyle = colorForRoom(room);
+        ctx.fillRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2);
+        if (room.isCurrent) {
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2);
         }
-
-        var activeEncId = canvas.dataset.activeEncounterId;
-        if (activeEncId) {
-            renderJRPGCombat(canvas, ctx, activeEncId);
-            return;
-        }
-
-        var mapTiles = readMapTiles();
-        if (!mapTiles) return;
-
-        var tileSize = Math.floor(canvas.width / mapWidth);
-        var tileMap = {};
-        for (var i = 0; i < mapTiles.length; i++) {
-            var t = mapTiles[i];
-            tileMap[t.x + ',' + t.y] = t;
-        }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // 1. Draw procedural walls and floors
-        for (var y = 0; y < mapHeight; y++) {
-            for (var x = 0; x < mapWidth; x++) {
-                var tile = tileMap[x + ',' + y];
-                if (!tile) continue;
-
-                var px = x * tileSize;
-                var py = y * tileSize;
-
-                if (!tile.revealed) {
-                    ctx.fillStyle = themeColors ? '#020617' : '#cbd5e1';
-                    ctx.fillRect(px, py, tileSize, tileSize);
-                    continue;
-                }
-
-                // Render Tile Texture
-                if (tile.type === 'WALL' || tile.type === 'SECRET_WALL') {
-                    drawWallTile(ctx, px, py, tileSize, themeColors);
-                } else {
-                    drawFloorTile(ctx, px, py, tileSize, themeColors);
-                }
-
-                // Exploration dim overlay
-                if (tile.revealed && !tile.explored) {
-                    ctx.fillStyle = themeColors ? 'rgba(2, 6, 23, 0.4)' : 'rgba(255, 255, 255, 0.35)';
-                    ctx.fillRect(px, py, tileSize, tileSize);
-                }
-
-                // Render Sprite Entities
-                if (tile.revealed) {
-                    switch (tile.type) {
-                        case 'ENTRANCE':
-                            drawPixelSprite(ctx, 'PORTAL', px, py, tileSize);
-                            break;
-                        case 'TREASURE':
-                            drawPixelSprite(ctx, 'CHEST', px, py, tileSize);
-                            break;
-                        case 'HEAL':
-                            drawPixelSprite(ctx, 'POTION', px, py, tileSize);
-                            break;
-                        case 'BOSS':
-                            drawPixelSprite(ctx, 'DRAGON', px, py, tileSize);
-                            break;
-                        case 'ELITE':
-                            drawPixelSprite(ctx, 'ELITE', px, py, tileSize);
-                            break;
-                        case 'TRAP':
-                            if (tile.revealed && !tile.explored) {
-                                drawPixelSprite(ctx, 'TRAP_TELEGRAPHED', px, py, tileSize);
-                            } else {
-                                drawPixelSprite(ctx, 'TRAP', px, py, tileSize);
-                            }
-                            break;
-                        case 'ENCOUNTER':
-                            // Determine monster type
-                            var monsterTypes = ['SLIME', 'SKELETON', 'GOBLIN', 'GHOST'];
-                            var idx = (tile.x * 7 + tile.y * 13) % monsterTypes.length;
-                            drawPixelSprite(ctx, monsterTypes[idx], px, py, tileSize);
-                            break;
-                    }
-                }
-            }
-        }
-
-        // 2. Flickering Torchlight Cone
-        var pCenterX = pX * tileSize + tileSize / 2;
-        var pCenterY = pY * tileSize + tileSize / 2;
-
-        var flicker = Math.sin(Date.now() / 110) * 6;
-        var lightGrad = ctx.createRadialGradient(
-            pCenterX, pCenterY, tileSize * 0.5,
-            pCenterX, pCenterY, tileSize * (3.4 + flicker * 0.03)
-        );
-
-        if (themeColors) {
-            lightGrad.addColorStop(0, 'rgba(2, 6, 23, 0)');
-            lightGrad.addColorStop(0.4, 'rgba(2, 6, 23, 0.2)');
-            lightGrad.addColorStop(0.75, 'rgba(2, 6, 23, 0.68)');
-            lightGrad.addColorStop(1, 'rgba(2, 6, 23, 0.98)');
+        ctx.fillStyle = '#000';
+        ctx.font = '10px monospace';
+        if (room.type === 'UNKNOWN') {
+            ctx.fillStyle = '#aaa';
+            ctx.fillText('?', x + cellSize / 2 - 4, y + cellSize / 2 + 4);
         } else {
-            lightGrad.addColorStop(0, 'rgba(241, 245, 249, 0)');
-            lightGrad.addColorStop(0.4, 'rgba(241, 245, 249, 0.15)');
-            lightGrad.addColorStop(0.75, 'rgba(241, 245, 249, 0.55)');
-            lightGrad.addColorStop(1, 'rgba(241, 245, 249, 0.88)');
+            var glyphMap = {
+                ENTRANCE: '\u2B21', COMBAT: '\u2694', ELITE: '\u2726',
+                TREASURE: '\u25C6', HEAL: '\u2665', SHOP: '$',
+                BOSS: '\u2620', SECRET: '?'
+            };
+            var glyph = glyphMap[room.type] || '';
+            ctx.fillText(glyph, x + cellSize / 2 - 4, y + cellSize / 2 + 4);
         }
+    }
 
-        ctx.fillStyle = lightGrad;
+    function colorForRoom(r) {
+        if (r.type === 'UNKNOWN') return '#3a3a48';
+        if (r.cleared) return '#4a4a55';
+        switch (r.type) {
+            case 'ENTRANCE': return '#2c5a8a';
+            case 'COMBAT':   return '#a32d2d';
+            case 'ELITE':    return '#7a2da3';
+            case 'TREASURE': return '#c79b2a';
+            case 'HEAL':     return '#2da366';
+            case 'SHOP':     return '#2d8aa3';
+            case 'BOSS':     return '#d63a3a';
+            case 'SECRET':   return '#888';
+            default:         return '#3a3a48';
+        }
+    }
+
+    function drawDoorConnector(ctx, a, b, cellSize) {
+        var ax = a.gridX * cellSize + cellSize / 2;
+        var ay = a.gridY * cellSize + cellSize / 2;
+        var bx = b.gridX * cellSize + cellSize / 2;
+        var by = b.gridY * cellSize + cellSize / 2;
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+    }
+
+    function renderRoomCanvas() {
+        var canvas = document.getElementById('dungeon-room-canvas');
+        if (!canvas) return;
+        var activeEncounterId = canvas.dataset.activeEncounterId;
+        if (activeEncounterId && activeEncounterId.length > 0) {
+            if (typeof renderJRPGCombat === 'function') {
+                renderJRPGCombat(canvas, canvas.getContext('2d'), activeEncounterId);
+            }
+            return;
+        }
+        renderRoomScenery(canvas);
+    }
+
+    function renderRoomScenery(canvas) {
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = backgroundFor(canvas.dataset.currentRoomType);
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawRoomCenterGlyph(ctx, canvas);
+    }
 
-        // 3. Draw Player Knight
-        var pPixelX = pX * tileSize;
-        var pPixelY = pY * tileSize;
-        drawPixelSprite(ctx, 'PLAYER', pPixelX, pPixelY, tileSize);
-
-        // 4. Draw sword slash combat particle
-        if (window.slashParticleActive) {
-            var elapsed = Date.now() - window.slashParticleStart;
-            ctx.save();
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 5;
-            ctx.shadowColor = '#f59e0b';
-            ctx.shadowBlur = 12;
-            ctx.beginPath();
-            
-            // Draw an electric arc slash centered on player
-            var factor = elapsed / 300;
-            var arcX1 = pCenterX - tileSize + factor * tileSize * 2;
-            var arcY1 = pCenterY + tileSize - factor * tileSize * 2;
-            var arcX2 = arcX1 + tileSize * 0.4;
-            var arcY2 = arcY1 - tileSize * 0.4;
-
-            ctx.moveTo(arcX1, arcY1);
-            ctx.lineTo(arcX2, arcY2);
-            ctx.stroke();
-            ctx.restore();
+    function backgroundFor(type) {
+        switch (type) {
+            case 'TREASURE': return '#3a2e10';
+            case 'HEAL':     return '#0f2418';
+            case 'SHOP':     return '#0d2630';
+            case 'SECRET':   return '#1a1a22';
+            case 'BOSS':     return '#2a0a0a';
+            default:         return '#10101a';
         }
+    }
 
-        // 5. Shield-break particles
-        if (window.shieldBreakActive) {
-            var elapsed = Date.now() - window.shieldBreakStart;
-            if (elapsed < 600) {
-                ctx.save();
-                var factor = elapsed / 600;
-                ctx.globalAlpha = 1 - factor;
-                for (var i = 0; i < 8; i++) {
-                    var angle = (i / 8) * Math.PI * 2;
-                    var dist = factor * tileSize * 1.5;
-                    var px2 = pCenterX + Math.cos(angle) * dist;
-                    var py2 = pCenterY + Math.sin(angle) * dist;
-                    ctx.fillStyle = '#94a3b8';
-                    ctx.beginPath();
-                    ctx.arc(px2, py2, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-                ctx.restore();
-            } else {
-                window.shieldBreakActive = false;
-            }
-        }
-
-        // 6. Streak milestone flash overlay
-        if (window.streakFlashActive) {
-            var elapsed = Date.now() - window.streakFlashStart;
-            if (elapsed < 500) {
-                ctx.save();
-                var factor = elapsed / 500;
-                ctx.fillStyle = 'rgba(251, 191, 36, ' + (0.15 * (1 - factor)) + ')';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.restore();
-            } else {
-                window.streakFlashActive = false;
-            }
-        }
-
-        // 7. Shield and streak DOM detection
-        var shieldsEl = document.querySelector('.sh-dungeon-hud-shields');
-        var currentShields = shieldsEl ? shieldsEl.querySelectorAll('iconify-icon').length : 0;
-        if (window.lastShields !== undefined && currentShields < window.lastShields) {
-            window.shieldBreakActive = true;
-            window.shieldBreakStart = Date.now();
-            DungeonAudio.playShieldBreak();
-        }
-        window.lastShields = currentShields;
-
-        var streakEl = document.querySelector('.sh-dungeon-hud-streak');
-        var currentStreak = streakEl ? parseInt((streakEl.textContent || '×0').replace('×', ''), 10) || 0 : 0;
-        if (window.lastStreak !== undefined && currentStreak > window.lastStreak
-            && currentStreak % 3 === 0 && currentStreak > 0) {
-            window.streakFlashActive = true;
-            window.streakFlashStart = Date.now();
-            DungeonAudio.playShieldGain();
-        }
-        window.lastStreak = currentStreak;
+    function drawRoomCenterGlyph(ctx, canvas) {
+        ctx.fillStyle = '#fff';
+        ctx.font = '64px monospace';
+        ctx.textAlign = 'center';
+        var glyphMap = {
+            TREASURE: '\u25C6', HEAL: '\u2665', SHOP: '$',
+            SECRET: '?', ENTRANCE: '\u2B21', BOSS: '\u2620'
+        };
+        var glyph = glyphMap[canvas.dataset.currentRoomType] || '';
+        ctx.fillText(glyph, canvas.width / 2, canvas.height / 2);
     }
 
     // ============================================================
@@ -1503,45 +1288,32 @@
         drawQueued = true;
         requestAnimationFrame(function () {
             drawQueued = false;
-            drawDungeon();
+            dungeonInit();
         });
     }
 
-    // Direct listener on DOMContentLoaded
-    document.addEventListener('DOMContentLoaded', triggerDraw);
-
-    // HTMX Lifecycle events
-    function registerLifecycleHooks(element) {
-        if (!element) return;
-        element.addEventListener('htmx:afterSwap', function (e) {
-            if (document.getElementById('dungeon-map-canvas')) {
-                triggerDraw();
-            }
-        });
-        element.addEventListener('htmx:afterSettle', function (e) {
-            if (document.getElementById('dungeon-map-canvas')) {
-                triggerDraw();
-            }
-        });
-        element.addEventListener('htmx:load', function (e) {
-            if (document.getElementById('dungeon-map-canvas')) {
-                triggerDraw();
-            }
-        });
+    // ============================================================
+    // Entry Point
+    // ============================================================
+    function dungeonInit() {
+        renderMinimap();
+        renderRoomCanvas();
+        var canvas = document.getElementById('dungeon-room-canvas');
+        if (canvas && !canvas.dungeonListenersBound) {
+            canvas.dungeonListenersBound = true;
+            bindCanvasInteractiveListeners(canvas);
+        }
     }
 
-    registerLifecycleHooks(document);
-    if (document.body) {
-        registerLifecycleHooks(document.body);
+    if (typeof htmx !== 'undefined' && htmx) {
+        htmx.onLoad(dungeonInit);
     } else {
-        document.addEventListener('DOMContentLoaded', function () {
-            registerLifecycleHooks(document.body);
-        });
+        document.addEventListener('DOMContentLoaded', dungeonInit);
     }
 
     // Keyboard support
     document.addEventListener('keydown', function (e) {
-        var canvas = document.getElementById('dungeon-map-canvas');
+        var canvas = document.getElementById('dungeon-room-canvas');
         if (!canvas) return;
 
         // Block movement key inputs during active battle encounters or transition splash

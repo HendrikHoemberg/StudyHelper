@@ -10,17 +10,22 @@
         <div class="sh-dungeon-hud">
             <div class="sh-dungeon-hud-item">
                 <span class="sh-dungeon-hud-label" th:text="#{dungeon.health}">Health</span>
-                <span class="sh-dungeon-hud-value sh-dungeon-hud-health" th:text="${state.health}">10</span>
+                <span class="sh-dungeon-hud-value sh-dungeon-hud-health"
+                      th:text="${state.health + '/' + state.healthCap}">5/5</span>
             </div>
             <div class="sh-dungeon-hud-item">
                 <span class="sh-dungeon-hud-label" th:text="#{dungeon.score}">Score</span>
-                <span class="sh-dungeon-hud-value sh-dungeon-hud-score" th:text="${state.score}">0</span>
+                <span class="sh-dungeon-hud-value sh-dungeon-hud-score">
+                    <iconify-icon icon="lucide:coins"></iconify-icon>
+                    <span th:text="${state.score}">0</span>
+                </span>
             </div>
             <div class="sh-dungeon-hud-item sh-dungeon-hud-item-shields"
                  th:classappend="${state.shields == 0} ? 'is-hidden'">
                 <span class="sh-dungeon-hud-label" th:text="#{dungeon.shields}">Shields</span>
                 <span class="sh-dungeon-hud-value sh-dungeon-hud-shields">
-                    <iconify-icon icon="lucide:shield" th:each="i : ${#numbers.sequence(1, state.shields > 0 ? state.shields : 1)}"
+                    <iconify-icon icon="lucide:shield"
+                                  th:each="i : ${#numbers.sequence(1, state.shields > 0 ? state.shields : 1)}"
                                   th:if="${state.shields > 0}"></iconify-icon>
                 </span>
             </div>
@@ -33,32 +38,28 @@
             </div>
             <div class="sh-dungeon-hud-item">
                 <span class="sh-dungeon-hud-label" th:text="#{dungeon.progress}">Progress</span>
-                <span class="sh-dungeon-hud-value sh-dungeon-hud-progress" th:text="${state.correctCount + '/' + state.answeredCount}">0/0</span>
+                <span class="sh-dungeon-hud-value"
+                      th:text="${state.correctCount + '/' + state.answeredCount}">0/0</span>
             </div>
         </div>
 
-        <!-- Map + Encounter Layout -->
-        <div class="sh-dungeon-layout" th:classappend="${activeEncounter != null} ? 'is-encounter-active'">
-            <!-- Map Panel -->
-            <div class="sh-dungeon-map-panel">
-                <canvas id="dungeon-map-canvas"
-                        class="sh-dungeon-canvas"
-                        width="1024" height="1024"
-                        th:data-player-x="${state.playerPosition.x()}"
-                        th:data-player-y="${state.playerPosition.y()}"
-                        th:data-map-width="${state.map.width}"
-                        th:data-map-height="${state.map.height}"
+        <!-- Main layout: room view + side panel -->
+        <div class="sh-dungeon-layout">
+
+            <!-- Room view -->
+            <div class="sh-dungeon-room-panel">
+                <canvas id="dungeon-room-canvas"
+                        class="sh-dungeon-canvas sh-dungeon-room-canvas"
+                        width="1024" height="768"
+                        th:data-current-room-id="${state.currentRoomId}"
+                        th:data-current-room-type="${currentRoom != null ? currentRoom.type : 'ENTRANCE'}"
+                        th:data-current-room-cleared="${currentRoom != null and currentRoom.cleared}"
                         th:data-active-encounter-id="${activeEncounter != null ? activeEncounter.id : ''}"
                         th:data-active-encounter-boss="${activeEncounter != null ? activeEncounter.boss : 'false'}"
                         th:data-gauntlet-position="${gauntletPosition}"
                         th:data-gauntlet-total="${gauntletTotal}">
                 </canvas>
 
-                <script id="dungeon-map-state" type="application/json">
-                    [(${mapTilesJson})]
-                </script>
-
-                <!-- Direction Controls -->
                 <div class="sh-dungeon-controls" th:classappend="${activeEncounter != null} ? 'is-disabled'">
                     <div class="sh-dungeon-controls-row">
                         <button class="sh-btn sh-btn-ghost sh-dungeon-dir"
@@ -66,7 +67,9 @@
                                 hx-target="#dungeon-session-content"
                                 hx-swap="outerHTML"
                                 name="direction" value="UP"
-                                th:disabled="${activeEncounter != null}"
+                                th:disabled="${activeEncounter != null
+                                                or currentRoom == null
+                                                or !currentRoom.doors.containsKey(T(com.HendrikHoemberg.StudyHelper.dto.DungeonDirection).UP)}"
                                 aria-label="Move up">
                             <iconify-icon icon="lucide:arrow-up"></iconify-icon>
                         </button>
@@ -77,7 +80,9 @@
                                 hx-target="#dungeon-session-content"
                                 hx-swap="outerHTML"
                                 name="direction" value="LEFT"
-                                th:disabled="${activeEncounter != null}"
+                                th:disabled="${activeEncounter != null
+                                                or currentRoom == null
+                                                or !currentRoom.doors.containsKey(T(com.HendrikHoemberg.StudyHelper.dto.DungeonDirection).LEFT)}"
                                 aria-label="Move left">
                             <iconify-icon icon="lucide:arrow-left"></iconify-icon>
                         </button>
@@ -86,7 +91,9 @@
                                 hx-target="#dungeon-session-content"
                                 hx-swap="outerHTML"
                                 name="direction" value="DOWN"
-                                th:disabled="${activeEncounter != null}"
+                                th:disabled="${activeEncounter != null
+                                                or currentRoom == null
+                                                or !currentRoom.doors.containsKey(T(com.HendrikHoemberg.StudyHelper.dto.DungeonDirection).DOWN)}"
                                 aria-label="Move down">
                             <iconify-icon icon="lucide:arrow-down"></iconify-icon>
                         </button>
@@ -95,7 +102,9 @@
                                 hx-target="#dungeon-session-content"
                                 hx-swap="outerHTML"
                                 name="direction" value="RIGHT"
-                                th:disabled="${activeEncounter != null}"
+                                th:disabled="${activeEncounter != null
+                                                or currentRoom == null
+                                                or !currentRoom.doors.containsKey(T(com.HendrikHoemberg.StudyHelper.dto.DungeonDirection).RIGHT)}"
                                 aria-label="Move right">
                             <iconify-icon icon="lucide:arrow-right"></iconify-icon>
                         </button>
@@ -103,90 +112,48 @@
                 </div>
             </div>
 
-            <!-- Encounter Panel -->
-            <div class="sh-dungeon-encounter-panel">
-                <!-- No active encounter: objective -->
-                <div th:if="${activeEncounter == null}" class="sh-dungeon-encounter-empty">
-                    <div class="sh-dungeon-encounter-header" th:text="#{dungeon.objective}">Objective</div>
-                    <div class="sh-dungeon-encounter-text" th:text="#{dungeon.objective-text}">Explore the dungeon, clear encounters, and defeat the boss.</div>
+            <!-- Side panel: minimap + relic shelf -->
+            <div class="sh-dungeon-side-panel">
+                <div class="sh-dungeon-minimap-container">
+                    <canvas id="dungeon-minimap-canvas"
+                            class="sh-dungeon-minimap"
+                            width="320" height="320"
+                            th:data-lattice="${state.map.lattice}">
+                    </canvas>
+                    <script id="dungeon-minimap-state" type="application/json">
+                        [(${minimapRoomsJson})]
+                    </script>
                 </div>
 
-                <!-- Flashcard encounter -->
-                <div th:if="${activeEncounter != null and activeEncounter.flashcardId != null}" class="sh-dungeon-encounter-active">
-                    <div class="sh-dungeon-encounter-header">
-                        <span th:if="${activeEncounter.boss}" class="sh-dungeon-boss-progress" th:text="#{dungeon.boss-progress(${state.bossIndex + 1}, ${#lists.size(state.bossEncounterIds)})}">Boss 1/5</span>
-                        <span th:if="${!activeEncounter.boss}" th:text="#{dungeon.encounter}">Encounter</span>
+                <div class="sh-dungeon-relic-shelf"
+                     th:classappend="${ownedRelics.isEmpty()} ? 'is-empty'">
+                    <span class="sh-dungeon-relic-shelf-label"
+                          th:text="#{dungeon.relics}"
+                          th:if="${!ownedRelics.isEmpty()}">Relics</span>
+                    <div class="sh-dungeon-relic-shelf-items">
+                        <span th:each="rid : ${ownedRelics}"
+                              class="sh-dungeon-relic-icon"
+                              th:title="#{__${'dungeon.relic.' + #strings.toLowerCase(rid.name().replace('_','-')) + '.desc'}__}">
+                            <iconify-icon th:icon="${T(com.HendrikHoemberg.StudyHelper.controller.RelicIcons).iconFor(rid)}"></iconify-icon>
+                        </span>
                     </div>
-
-                    <div class="sh-dungeon-flashcard">
-                        <div class="sh-dungeon-flashcard-side sh-dungeon-flashcard-front">
-                            <div class="sh-dungeon-flashcard-label" th:text="#{study.question-label}">Question</div>
-                            <p class="sh-dungeon-flashcard-text" th:text="${activeEncounter.frontText}">Front text</p>
-                        </div>
-
-                        <details class="sh-dungeon-flashcard-details">
-                            <summary class="sh-btn sh-btn-ghost" th:text="#{study.answer-label}">Answer</summary>
-                            <div class="sh-dungeon-flashcard-side sh-dungeon-flashcard-back">
-                                <p class="sh-dungeon-flashcard-text" th:text="${activeEncounter.backText}">Back text</p>
-                            </div>
-                        </details>
-                    </div>
-
-                    <div class="sh-dungeon-answer-row">
-                        <button class="sh-btn sh-btn-danger"
-                                hx-post="/dungeon/answer/flashcard"
-                                hx-target="#dungeon-session-content"
-                                hx-swap="outerHTML"
-                                name="gotIt" value="false">
-                            <span th:text="#{dungeon.missed}">I missed it</span>
-                        </button>
-                        <button class="sh-btn sh-btn-primary"
-                                hx-post="/dungeon/answer/flashcard"
-                                hx-target="#dungeon-session-content"
-                                hx-swap="outerHTML"
-                                name="gotIt" value="true">
-                            <span th:text="#{dungeon.got-it}">I got it</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Quiz encounter -->
-                <div th:if="${activeEncounter != null and activeEncounter.quizQuestion != null}" class="sh-dungeon-encounter-active">
-                    <div class="sh-dungeon-encounter-header">
-                        <span th:if="${activeEncounter.boss}" class="sh-dungeon-boss-progress" th:text="#{dungeon.boss-progress(${state.bossIndex + 1}, ${#lists.size(state.bossEncounterIds)})}">Boss 1/5</span>
-                        <span th:if="${!activeEncounter.boss}" th:text="#{dungeon.encounter}">Encounter</span>
-                    </div>
-
-                    <form method="post"
-                          hx-post="/dungeon/answer/quiz"
-                          hx-target="#dungeon-session-content"
-                          hx-swap="outerHTML"
-                          class="sh-dungeon-quiz-form">
-
-                        <p class="sh-dungeon-quiz-question" th:text="${activeEncounter.quizQuestion.questionText}">Question text</p>
-
-                        <div th:each="option, iter : ${activeEncounter.quizQuestion.options}" class="sh-dungeon-quiz-option">
-                            <label>
-                                <input th:if="${activeEncounter.quizQuestion.type.name() == 'MULTIPLE_SELECT'}"
-                                       type="checkbox"
-                                       name="selectedOptions"
-                                       th:value="${iter.index}" />
-                                <input th:unless="${activeEncounter.quizQuestion.type.name() == 'MULTIPLE_SELECT'}"
-                                       type="radio"
-                                       name="selectedOptions"
-                                       th:value="${iter.index}" />
-                                <span th:text="${option}">Option</span>
-                            </label>
-                        </div>
-
-                        <button type="submit" class="sh-btn sh-btn-primary">
-                            <span th:text="#{quiz.submit-answer}">Submit Answer</span>
-                        </button>
-                    </form>
                 </div>
             </div>
 
         </div>
+
+        <!-- Modal mount -->
+        <div id="dungeon-modal-mount" th:if="${pendingPick != null}">
+            <div th:if="${pendingPick.type.name() == 'TREASURE'}"
+                 th:replace="~{fragments/dungeon-treasure-modal :: modal}"></div>
+            <div th:if="${pendingPick.type.name() == 'ELITE'}"
+                 th:replace="~{fragments/dungeon-elite-reward-modal :: modal}"></div>
+            <div th:if="${pendingPick.type.name() == 'SHOP'}"
+                 th:replace="~{fragments/dungeon-shop-modal :: modal}"></div>
+            <div th:if="${pendingPick.type.name() == 'SECRET'}"
+                 th:replace="~{fragments/dungeon-secret-modal :: modal}"></div>
+        </div>
+
     </div>
 </div>
 

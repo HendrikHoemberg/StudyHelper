@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<div th:fragment="modal" class="sh-dungeon-modal-overlay">
+    <div class="sh-dungeon-modal sh-dungeon-shop-modal">
+        <h2 class="sh-dungeon-modal-title" th:text="#{dungeon.shop-title}">Shop</h2>
+        <p class="sh-dungeon-modal-prompt">
+            <iconify-icon icon="lucide:coins"></iconify-icon>
+            <span th:text="${state.score}">0</span>
+        </p>
+        <div class="sh-dungeon-relic-choices">
+            <button th:each="entry : ${pendingPick.shopOffer.entries}"
+                    class="sh-dungeon-relic-choice"
+                    th:disabled="${state.score < entry.price or ownedRelics.contains(entry.relic)}"
+                    hx-post="/dungeon/relic/buy"
+                    hx-target="#dungeon-session-content"
+                    hx-swap="outerHTML"
+                    name="relicId" th:value="${entry.relic.name()}">
+                <iconify-icon th:icon="${T(com.HendrikHoemberg.StudyHelper.controller.RelicIcons).iconFor(entry.relic)}"></iconify-icon>
+                <div class="sh-dungeon-relic-choice-name"
+                     th:text="#{__${'dungeon.relic.' + #strings.toLowerCase(entry.relic.name().replace('_','-')) + '.name'}__}">Name</div>
+                <div class="sh-dungeon-relic-choice-desc"
+                     th:text="#{__${'dungeon.relic.' + #strings.toLowerCase(entry.relic.name().replace('_','-')) + '.desc'}__}">Description</div>
+                <div class="sh-dungeon-relic-choice-price">
+                    <iconify-icon icon="lucide:coins"></iconify-icon>
+                    <span th:text="${entry.price}">75</span>
+                </div>
+            </button>
+        </div>
+        <button class="sh-btn sh-btn-ghost sh-dungeon-shop-skip"
+                hx-post="/dungeon/relic/skip-shop"
+                hx-target="#dungeon-session-content"
+                hx-swap="outerHTML"
+                th:text="#{dungeon.shop.skip}">Leave shop</button>
+    </div>
+</div>
+</body>
+</html>

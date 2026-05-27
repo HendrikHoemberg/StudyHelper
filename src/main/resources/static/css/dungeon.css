@@ -64,30 +64,43 @@
 }
 
 .sh-dungeon-layout {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-    align-items: start;
-    justify-items: center;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: flex-start;
 }
 
-.sh-dungeon-map-panel {
+.sh-dungeon-room-panel {
+    flex: 1;
+    min-width: 0;
+}
+
+.sh-dungeon-side-panel {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 720px;
+    gap: 8px;
+    width: 340px;
+    flex-shrink: 0;
 }
 
-.sh-dungeon-canvas {
+.sh-dungeon-room-canvas {
     width: 100%;
-    max-width: 720px;
-    aspect-ratio: 1;
-    border: 2px solid var(--border);
-    border-radius: var(--radius-lg);
-    background: var(--bg);
-    box-shadow: var(--shadow-md);
-    transition: border-color var(--transition);
+    height: auto;
+    aspect-ratio: 4 / 3;
+    border: 1px solid #333;
+    border-radius: 4px;
+}
+
+.sh-dungeon-minimap {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border: 1px solid #333;
+    border-radius: 4px;
+}
+
+.sh-dungeon-minimap-container {
+    position: relative;
 }
 
 .sh-dungeon-controls {
@@ -374,24 +387,25 @@
    JRPG Combat Mode Layout - Centered & Enlarged
    ============================================================ */
 .sh-dungeon-layout.is-encounter-active {
-    grid-template-columns: 1fr;
-    justify-items: center;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: flex-start;
 }
 
 .sh-dungeon-layout.is-encounter-active .sh-dungeon-controls {
     display: none !important;
 }
 
-.sh-dungeon-layout.is-encounter-active .sh-dungeon-map-panel {
-    width: 100%;
-    max-width: 720px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.sh-dungeon-layout.is-encounter-active .sh-dungeon-room-panel {
+    flex: 1;
+    min-width: 0;
 }
 
-.sh-dungeon-layout.is-encounter-active .sh-dungeon-canvas {
-    max-width: 720px;
+.sh-dungeon-layout.is-encounter-active .sh-dungeon-room-canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
@@ -435,5 +449,126 @@
 /* Fallback class to satisfy UI Regression Tests string check */
 .sh-pixel-render-fallback {
     image-rendering: pixelated;
+}
+
+/* ============================================================
+   Relic Shelf & Modal Styles
+   ============================================================ */
+.sh-dungeon-relic-shelf {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    background: #14141c;
+    border: 1px solid #333;
+    border-radius: 4px;
+    min-height: 32px;
+}
+
+.sh-dungeon-relic-shelf.is-empty {
+    display: none;
+}
+
+.sh-dungeon-relic-shelf-label {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sh-dungeon-relic-shelf-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.sh-dungeon-relic-icon {
+    font-size: 20px;
+    cursor: help;
+}
+
+.sh-dungeon-controls.is-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.sh-dungeon-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.sh-dungeon-modal {
+    background: #1a1a24;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 480px;
+    width: 90%;
+}
+
+.sh-dungeon-modal-title {
+    margin: 0 0 8px;
+    font-size: 18px;
+}
+
+.sh-dungeon-modal-prompt {
+    margin: 0 0 16px;
+    color: #aaa;
+    font-size: 14px;
+}
+
+.sh-dungeon-relic-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sh-dungeon-relic-choice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #222230;
+    border: 1px solid #444;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    color: #eee;
+    font-size: 14px;
+}
+
+.sh-dungeon-relic-choice:hover {
+    background: #2a2a3a;
+    border-color: #666;
+}
+
+.sh-dungeon-relic-choice:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.sh-dungeon-relic-choice-name {
+    font-weight: 600;
+}
+
+.sh-dungeon-relic-choice-desc {
+    font-size: 12px;
+    color: #999;
+}
+
+.sh-dungeon-relic-choice-price {
+    margin-left: auto;
+    font-size: 13px;
+    color: #c79b2a;
+}
+
+.sh-dungeon-shop-skip {
+    margin-top: 12px;
+    width: 100%;
 }
 
