@@ -12,6 +12,26 @@ public class DungeonEncounterService {
     private static final int MAX_SHIELDS = 2;
     private static final int WRONG_ANSWER_DAMAGE = 1;
 
+    public DungeonSessionState activateElite(DungeonSessionState state, String firstEncounterId) {
+        List<String> group = state.map().gauntletGroups().get(firstEncounterId);
+        if (group == null || group.isEmpty()) return state;
+        Map<String, DungeonEncounter> encs = new LinkedHashMap<>(state.encounters());
+        DungeonEncounter first = encs.get(firstEncounterId);
+        if (first == null || first.status() != DungeonEncounterStatus.PENDING) return state;
+        encs.put(firstEncounterId, first.activate());
+        List<String> remaining = new ArrayList<>(group.subList(1, group.size()));
+        return new DungeonSessionState(
+            state.config(), state.map(), state.playerPosition(),
+            Map.copyOf(encs), state.bossEncounterIds(), state.bossIndex(),
+            firstEncounterId,
+            state.health(), state.score(),
+            state.answeredCount(), state.correctCount(),
+            state.visibleTiles(),
+            state.won(), state.defeated(),
+            state.streak(), state.shields(), List.copyOf(remaining),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed());
+    }
+
     public DungeonSessionState activate(DungeonSessionState state, String encounterId, boolean boss) {
         if (encounterId == null) return state;
         Map<String, DungeonEncounter> encounters = new LinkedHashMap<>(state.encounters());
@@ -83,6 +103,64 @@ public class DungeonEncounterService {
             working = DungeonDamage.takeDamage(working, WRONG_ANSWER_DAMAGE);
         }
 
+        // Elite gauntlet handling
+        if (!state.gauntletQueue().isEmpty() || isPartOfActiveGauntlet(state, encounter)) {
+            if (!correct) {
+                return new DungeonSessionState(
+                    working.config(), working.map(), working.playerPosition(),
+                    working.encounters(), working.bossEncounterIds(), working.bossIndex(),
+                    null,
+                    working.health(), working.score(),
+                    working.answeredCount(), working.correctCount(),
+                    working.visibleTiles(),
+                    working.won(), working.defeated(),
+                    working.streak(), working.shields(), List.of(),
+                    working.longestStreak(), working.elitesCleared(), working.shieldsUsed());
+            }
+            if (!working.gauntletQueue().isEmpty()) {
+                String nextId = working.gauntletQueue().get(0);
+                List<String> remaining = working.gauntletQueue().subList(1, working.gauntletQueue().size());
+                Map<String, DungeonEncounter> encs2 = new LinkedHashMap<>(working.encounters());
+                DungeonEncounter next = encs2.get(nextId);
+                if (next != null && next.status() == DungeonEncounterStatus.PENDING) {
+                    encs2.put(nextId, next.activate());
+                }
+                return new DungeonSessionState(
+                    working.config(), working.map(), working.playerPosition(),
+                    Map.copyOf(encs2), working.bossEncounterIds(), working.bossIndex(),
+                    nextId,
+                    working.health(), working.score(),
+                    working.answeredCount(), working.correctCount(),
+                    working.visibleTiles(),
+                    working.won(), working.defeated(),
+                    working.streak(), working.shields(), List.copyOf(remaining),
+                    working.longestStreak(), working.elitesCleared(), working.shieldsUsed());
+            }
+            DungeonSessionState rewarded = DungeonDamage.heal(working, DungeonDamage.STARTING_HEALTH_CAP);
+            int grantedShields = Math.min(MAX_SHIELDS, rewarded.shields() + 1);
+            int newElites = rewarded.elitesCleared() + 1;
+            Map<DungeonPosition, DungeonTile> tiles = new LinkedHashMap<>(rewarded.map().tiles());
+            DungeonPosition pos = rewarded.playerPosition();
+            DungeonTile cur = tiles.get(pos);
+            if (cur != null && cur.type() == DungeonTileType.ELITE) {
+                tiles.put(pos, cur.withType(DungeonTileType.FLOOR, null));
+            }
+            DungeonMap nextMap = new DungeonMap(rewarded.map().width(), rewarded.map().height(),
+                rewarded.map().entrance(), rewarded.map().boss(),
+                Map.copyOf(tiles), rewarded.map().gauntletGroups());
+            return new DungeonSessionState(
+                rewarded.config(), nextMap, rewarded.playerPosition(),
+                rewarded.encounters(), rewarded.bossEncounterIds(), rewarded.bossIndex(),
+                null,
+                rewarded.health(), rewarded.score(),
+                rewarded.answeredCount(), rewarded.correctCount(),
+                rewarded.visibleTiles(),
+                rewarded.won(), rewarded.defeated(),
+                rewarded.streak(), grantedShields, List.of(),
+                rewarded.longestStreak(), newElites, rewarded.shieldsUsed());
+        }
+
+        // Original boss/normal handling
         String nextActiveId = null;
         int bossIndex = working.bossIndex();
         boolean won = working.won();
@@ -112,16 +190,16 @@ public class DungeonEncounterService {
             }
         }
 
-        Map<DungeonPosition, DungeonTile> tiles = new LinkedHashMap<>(working.map().tiles());
+        Map<DungeonPosition, DungeonTile> tiles2 = new LinkedHashMap<>(working.map().tiles());
         DungeonPosition playerPos = working.playerPosition();
-        DungeonTile currentTile = tiles.get(playerPos);
+        DungeonTile currentTile = tiles2.get(playerPos);
         DungeonMap nextMap = working.map();
         if (currentTile != null
             && (currentTile.type() == DungeonTileType.ENCOUNTER || currentTile.type() == DungeonTileType.BOSS)
             && (!encounter.boss() || won)) {
-            tiles.put(playerPos, currentTile.withType(DungeonTileType.FLOOR, null));
+            tiles2.put(playerPos, currentTile.withType(DungeonTileType.FLOOR, null));
             nextMap = new DungeonMap(working.map().width(), working.map().height(),
-                working.map().entrance(), working.map().boss(), Map.copyOf(tiles));
+                working.map().entrance(), working.map().boss(), Map.copyOf(tiles2));
         }
 
         return new DungeonSessionState(
@@ -134,5 +212,10 @@ public class DungeonEncounterService {
             won, working.defeated(),
             working.streak(), working.shields(), working.gauntletQueue(),
             working.longestStreak(), working.elitesCleared(), working.shieldsUsed());
+    }
+
+    private boolean isPartOfActiveGauntlet(DungeonSessionState state, DungeonEncounter encounter) {
+        return state.map().gauntletGroups().values().stream()
+            .anyMatch(group -> group.contains(encounter.id()));
     }
 }

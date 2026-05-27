@@ -121,8 +121,12 @@ public class DungeonSessionService {
         DungeonNavigationService.MoveResult result = navigationService.move(state, direction);
         DungeonSessionState moved = result.state();
         if (result.encounterId() != null) {
-            boolean isBoss = result.landedTileType() == DungeonTileType.BOSS;
-            moved = encounterService.activate(moved, result.encounterId(), isBoss);
+            if (result.landedTileType() == DungeonTileType.ELITE) {
+                moved = encounterService.activateElite(moved, result.encounterId());
+            } else {
+                boolean isBoss = result.landedTileType() == DungeonTileType.BOSS;
+                moved = encounterService.activate(moved, result.encounterId(), isBoss);
+            }
         }
         return moved;
     }

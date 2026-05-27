@@ -51,7 +51,7 @@ public class DungeonNavigationService {
         String encounterIdHit = null;
 
         switch (activeTile.type()) {
-            case ENCOUNTER, BOSS -> encounterIdHit = activeTile.encounterId();
+            case ENCOUNTER, BOSS, ELITE -> encounterIdHit = activeTile.encounterId();
             case HEAL -> {
                 working = DungeonDamage.heal(working, HEAL_AMOUNT);
                 tiles.put(newPos, activeTile.withType(DungeonTileType.FLOOR, null));
