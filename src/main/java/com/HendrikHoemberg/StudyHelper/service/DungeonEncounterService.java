@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
+import com.HendrikHoemberg.StudyHelper.dto.RelicId;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -83,15 +84,18 @@ public class DungeonEncounterService {
 
         int answeredCount = state.answeredCount() + 1;
         int correctCount = state.correctCount() + (correct ? 1 : 0);
+        int effectiveStreakThreshold = state.ownedRelics().contains(RelicId.SHARP_FOCUS) ? 2 : STREAK_FOR_SHIELD;
         int newStreak = correct ? state.streak() + 1 : 0;
         int newShields = state.shields();
-        if (correct && newStreak % STREAK_FOR_SHIELD == 0 && newShields < state.shieldCap()) {
+        if (correct && newStreak % effectiveStreakThreshold == 0 && newShields < state.shieldCap()) {
             newShields++;
         }
         int newLongest = Math.max(state.longestStreak(), newStreak);
         int newScore = state.score();
         if (correct) {
-            newScore += encounter.boss() ? BOSS_PROMPT_SCORE : COMBAT_CLEAR_SCORE;
+            int base = encounter.boss() ? BOSS_PROMPT_SCORE : COMBAT_CLEAR_SCORE;
+            int bonus = state.ownedRelics().contains(RelicId.LUCKY_CHARM) ? 5 : 0;
+            newScore += base + bonus;
         }
 
         DungeonSessionState working = new DungeonSessionState(
@@ -235,11 +239,15 @@ public class DungeonEncounterService {
         rooms.put(room.id(), room.withCleared(true));
         DungeonMap nextMap = new DungeonMap(
             rooms, state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
+        int shieldsAfter = state.shields();
+        if (state.ownedRelics().contains(RelicId.WAR_BANNER) && shieldsAfter < state.shieldCap()) {
+            shieldsAfter++;
+        }
         return new DungeonSessionState(
             state.config(), nextMap, state.currentRoomId(),
             state.encounters(), state.bossEncounterIds(), state.bossIndex(),
             null,
-            state.health(), state.healthCap(), state.shields(), state.shieldCap(),
+            state.health(), state.healthCap(), shieldsAfter, state.shieldCap(),
             state.score(), state.answeredCount(), state.correctCount(),
             state.won(), state.defeated(),
             state.streak(), state.gauntletQueue(),

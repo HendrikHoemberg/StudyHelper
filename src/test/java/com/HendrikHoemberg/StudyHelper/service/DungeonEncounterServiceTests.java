@@ -89,6 +89,44 @@ class DungeonEncounterServiceTests {
         assertThat(result.activeEncounterId()).isNull();
     }
 
+    @Test
+    void answerCorrect_luckyCharmAdds5ToScore() {
+        DungeonSessionState state = activeFlashcardState();
+        state = withRelics(state, List.of(RelicId.LUCKY_CHARM));
+        DungeonSessionState result = svc.answerFlashcard(state, true);
+        assertThat(result.score()).isEqualTo(DungeonEncounterService.COMBAT_CLEAR_SCORE + 5);
+    }
+
+    @Test
+    void answerCorrect_sharpFocusBanksShieldEveryTwoCorrect() {
+        DungeonSessionState state = activeFlashcardStateWithStreak(1);
+        state = withRelics(state, List.of(RelicId.SHARP_FOCUS));
+        DungeonSessionState result = svc.answerFlashcard(state, true);
+        assertThat(result.streak()).isEqualTo(2);
+        assertThat(result.shields()).isEqualTo(state.shields() + 1);
+    }
+
+    @Test
+    void answerCorrect_warBannerGrantsShieldOnCombatClear() {
+        DungeonSessionState state = activeFlashcardState();
+        state = withRelics(state, List.of(RelicId.WAR_BANNER));
+        DungeonSessionState result = svc.answerFlashcard(state, true);
+        assertThat(result.shields()).isEqualTo(Math.min(state.shieldCap(), state.shields() + 1));
+    }
+
+    private DungeonSessionState withRelics(DungeonSessionState s, List<RelicId> relics) {
+        return new DungeonSessionState(
+            s.config(), s.map(), s.currentRoomId(),
+            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
+            s.activeEncounterId(),
+            s.health(), s.healthCap(), s.shields(), s.shieldCap(),
+            s.score(), s.answeredCount(), s.correctCount(),
+            s.won(), s.defeated(),
+            s.streak(), s.gauntletQueue(),
+            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
+            s.luckyCoinsConsumed(), relics, s.pendingRelicPick());
+    }
+
     // ===== fixtures =====
 
     private DungeonSessionState singleCombatRoomState() {
