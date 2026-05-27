@@ -849,7 +849,7 @@
         var roomType = canvas.dataset.currentRoomType;
         var cleared = canvas.dataset.currentRoomCleared === 'true';
 
-        var checkCenterpiece = ['TREASURE', 'HEAL', 'SHOP', 'SECRET'].indexOf(roomType) !== -1 && !cleared;
+        var checkCenterpiece = ['TREASURE', 'SHOP', 'SECRET'].indexOf(roomType) !== -1 && !cleared;
         if (checkCenterpiece && !window.dungeonCenterpieceInteracted) {
             var centerX = 480;
             var centerY = 352;

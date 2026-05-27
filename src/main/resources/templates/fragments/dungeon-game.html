@@ -144,14 +144,18 @@
 
         <!-- Modal mount -->
         <div id="dungeon-modal-mount" th:if="${pendingPick != null}">
-            <div th:if="${pendingPick.type.name() == 'TREASURE'}"
-                 th:replace="~{fragments/dungeon-treasure-modal :: modal}"></div>
-            <div th:if="${pendingPick.type.name() == 'ELITE'}"
-                 th:replace="~{fragments/dungeon-elite-reward-modal :: modal}"></div>
-            <div th:if="${pendingPick.type.name() == 'SHOP'}"
-                 th:replace="~{fragments/dungeon-shop-modal :: modal}"></div>
-            <div th:if="${pendingPick.type.name() == 'SECRET'}"
-                 th:replace="~{fragments/dungeon-secret-modal :: modal}"></div>
+            <th:block th:if="${pendingPick.type.name() == 'TREASURE'}">
+                <div th:replace="~{fragments/dungeon-treasure-modal :: modal}"></div>
+            </th:block>
+            <th:block th:if="${pendingPick.type.name() == 'ELITE'}">
+                <div th:replace="~{fragments/dungeon-elite-reward-modal :: modal}"></div>
+            </th:block>
+            <th:block th:if="${pendingPick.type.name() == 'SHOP'}">
+                <div th:replace="~{fragments/dungeon-shop-modal :: modal}"></div>
+            </th:block>
+            <th:block th:if="${pendingPick.type.name() == 'SECRET'}">
+                <div th:replace="~{fragments/dungeon-secret-modal :: modal}"></div>
+            </th:block>
         </div>
 
         <!-- Hidden Encounter Panel for JS Engine -->
