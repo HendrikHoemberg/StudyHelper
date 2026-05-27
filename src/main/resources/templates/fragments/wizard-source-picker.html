@@ -3,7 +3,7 @@
 <body>
 
 <div th:fragment="picker">
-    <div class="sh-wizard-panel" data-step="3" data-source-step="true" id="wizard-panel-3">
+    <div class="sh-wizard-panel" data-step="1" data-source-step="true" id="wizard-panel-1">
         <div class="vb-picker-head">
             <div class="sh-section-title" style="margin:0" th:text="#{wizard.source.title}">Which sources?</div>
             <button type="button" id="vb-select-all-btn" class="vb-select-all">
@@ -72,15 +72,15 @@
                          </div>
                          <div class="vb-group-body vb-folder-content">
                              <label th:each="deck : ${group.decks}" class="vb-deck" th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
-                                 <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.cardCount == 0}"
-                                        hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
-                             <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
-                                 <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
-                             </span>
-                             <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
-                             <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
-                         </label>
-                         <!-- Subfolders -->
+                                  <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:data-card-count="${deck.cardCount}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.cardCount == 0}"
+                                         hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
+                              <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
+                                  <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
+                              </span>
+                              <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
+                              <span class="sh-badge sh-badge-primary" th:text="${deck.cardCount} + ' cards'"></span>
+                          </label>
+                          <!-- Subfolders -->
                          <div th:each="sub : ${group.subGroups}"
                               th:with="hasSelectionInGroup=${sub.isSelected or sub.isIndeterminate}"
                               class="vb-subgroup"
@@ -102,9 +102,9 @@
                          </div>
                          <div class="vb-subgroup-body vb-folder-content">
                              <label th:each="deck : ${sub.decks}" class="vb-deck" th:classappend="${deck.cardCount == 0 ? ' is-empty' : (#lists.contains(preselectedDeckIds, deck.deckId) ? ' is-selected' : '')}">
-                                 <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.cardCount == 0}"
-                                        hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
-                                        <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
+                                  <input class="sh-checkbox sh-source-checkbox" type="checkbox" name="selectedDeckIds" th:value="${deck.deckId}" th:data-card-count="${deck.cardCount}" th:checked="${#lists.contains(preselectedDeckIds, deck.deckId)}" th:disabled="${deck.cardCount == 0}"
+                                         hx-post="/study/setup/update" hx-target="#setup-picker" th:hx-vals="${'{&quot;mode&quot;: &quot;' + mode + '&quot;}'}" hx-include="[name='selectedDeckIds']" hx-swap="outerHTML">
+                                         <span class="vb-deck-icon" th:style="'color:' + ${deck.deckColorHex != null ? deck.deckColorHex : deck.folderColorHex}">
                                     <iconify-icon th:attr="icon=${(deck.deckIconName ?: 'layers').contains(':') ? (deck.deckIconName ?: 'layers') : 'lucide:' + (deck.deckIconName ?: 'layers')}"></iconify-icon>
                                 </span>
                                         <span class="vb-deck-name" th:text="${deck.deckName}">Deck</span>
