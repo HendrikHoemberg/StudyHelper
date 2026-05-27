@@ -107,6 +107,10 @@ public class DungeonController {
         User user = userService.getByUsername(principal.getName());
         Optional<DungeonSessionState> loaded = savedSessionService.loadDungeon(user);
         if (loaded.isEmpty()) {
+            if (savedSessionService.consumeIncompatibleDiscardFlag(user)) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                    "Your saved Dungeon was from an older version and could not be resumed.");
+            }
             return "redirect:/study/start?mode=DUNGEON";
         }
 

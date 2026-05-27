@@ -208,9 +208,25 @@ public class SavedSessionService {
 
     public record ReconcileDungeonResult(DungeonSessionState state, int removedCount, boolean canContinue) {}
 
+    private final java.util.Set<Long> incompatibleDiscardUserIds = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
     @Transactional(readOnly = true)
     public Optional<DungeonSessionState> loadDungeon(User user) {
-        return loadTyped(user, SavedSessionType.DUNGEON, DungeonSessionState.class);
+        return repository.findByUser(user)
+            .filter(s -> s.getType() == SavedSessionType.DUNGEON)
+            .flatMap(s -> {
+                try {
+                    return Optional.ofNullable(objectMapper.readValue(s.getPayload(), DungeonSessionState.class));
+                } catch (Exception e) {
+                    incompatibleDiscardUserIds.add(user.getId());
+                    discard(user, false);
+                    return Optional.empty();
+                }
+            });
+    }
+
+    public boolean consumeIncompatibleDiscardFlag(User user) {
+        return incompatibleDiscardUserIds.remove(user.getId());
     }
 
     public void saveDungeon(User user, DungeonSessionState state) {
