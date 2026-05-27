@@ -8,6 +8,7 @@ public enum DungeonTileType {
     TREASURE,
     HEAL,
     BOSS,
+    ELITE,
     SECRET_WALL,
     TRAP
 }
