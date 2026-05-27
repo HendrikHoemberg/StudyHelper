@@ -563,30 +563,45 @@
     }
 
     function drawFloorTile(ctx, px, py, size, isDark) {
-        var base = isDark ? '#1a1f2c' : '#f8fafc';
-        var detail = isDark ? '#232938' : '#f1f5f9';
-        var crack = isDark ? '#0b0f19' : '#cbd5e1';
+        // High-end retro brown wood plank palette
+        var woodBase = isDark ? '#3a1e05' : '#653a15';
+        var woodDetail = isDark ? '#4d2807' : '#7f4b1e';
+        var woodLine = isDark ? '#1e0c01' : '#3a1c04';
+        var woodGrain = isDark ? '#2a1402' : '#522d0b';
 
-        ctx.fillStyle = base;
+        // 1. Draw base block
+        ctx.fillStyle = woodBase;
         ctx.fillRect(px, py, size, size);
 
-        // Grid overlay helper
-        ctx.fillStyle = detail;
-        ctx.fillRect(px, py, 2, 2);
-        ctx.fillRect(px + size - 2, py + size - 2, 2, 2);
+        // 2. Render horizontal planks
+        var numPlanks = 4;
+        var plankH = size / numPlanks;
+        for (var i = 0; i < numPlanks; i++) {
+            var plankY = py + i * plankH;
 
-        // Deterministic procedural cracks
-        var seed = Math.sin(px * 12.9898 + py * 78.233) * 43758.5453;
-        var rand = seed - Math.floor(seed);
-        if (rand < 0.15) {
-            ctx.fillStyle = crack;
-            ctx.fillRect(px + Math.floor(size / 3), py + Math.floor(size / 2), 1, 1);
-            ctx.fillRect(px + Math.floor(2 * size / 3), py + Math.floor(size / 4), 1, 1);
-        } else if (rand < 0.25) {
-            ctx.fillStyle = crack;
-            ctx.fillRect(px + Math.floor(size / 4), py + Math.floor(size / 4), 2, 1);
-            ctx.fillRect(px + Math.floor(size / 4) + 1, py + Math.floor(size / 4) + 1, 1, 2);
+            // Plank divider seam
+            ctx.fillStyle = woodLine;
+            ctx.fillRect(px, plankY, size, 1);
+
+            // Wood grain lines
+            ctx.fillStyle = woodGrain;
+            ctx.fillRect(px + 4, plankY + Math.floor(plankH * 0.3), size - 8, 1);
+            ctx.fillRect(px + 8, plankY + Math.floor(plankH * 0.7), size - 16, 1);
+
+            // Staggered plank ends for natural layout
+            var seed = Math.sin(px * 12.9898 + (py + i * 37) * 78.233) * 43758.5453;
+            var rand = seed - Math.floor(seed);
+            if (rand < 0.5) {
+                var endX = px + Math.floor(size * 0.3 + rand * size * 0.4);
+                ctx.fillStyle = woodLine;
+                ctx.fillRect(endX, plankY, 1, plankH);
+            }
         }
+
+        // Highlight top-left bevel bounds for gorgeous depth
+        ctx.fillStyle = woodDetail;
+        ctx.fillRect(px, py, size, 1);
+        ctx.fillRect(px, py, 1, size);
     }
 
     // ============================================================
@@ -692,47 +707,281 @@
         ctx.stroke();
     }
 
+    // ============================================================
+    // 2D Interactive Top-Down Exploration Engine
+    // ============================================================
+    var playerX = 480;
+    var playerY = 352;
+    var playerSpeed = 4.5;
+    var activeKeys = {};
+    var loopRunning = false;
+    var animationFrameId = null;
+    window.dungeonCenterpieceInteracted = false;
+
+    // Global listeners to track key presses smoothly
+    document.addEventListener('keydown', function (e) {
+        var key = e.key.toLowerCase();
+        if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].indexOf(key) !== -1) {
+            activeKeys[e.key] = true;
+            activeKeys[key] = true;
+            var canvas = document.getElementById('dungeon-room-canvas');
+            if (canvas && !canvas.dataset.activeEncounterId && !window.dungeonSplashActive) {
+                e.preventDefault(); // Prevent browser scrolling
+            }
+        }
+    });
+
+    document.addEventListener('keyup', function (e) {
+        var key = e.key.toLowerCase();
+        activeKeys[e.key] = false;
+        activeKeys[key] = false;
+    });
+
+    function triggerRoomTransition(dir) {
+        loopRunning = false;
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+        window.dungeonLastMoveDirection = dir;
+        DungeonAudio.playMove();
+        submitMove(dir);
+    }
+
+    function startExplorationLoop() {
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+        }
+        animationFrameId = requestAnimationFrame(updateAndRenderExploration);
+    }
+
+    function updateAndRenderExploration() {
+        if (!loopRunning) return;
+
+        var canvas = document.getElementById('dungeon-room-canvas');
+        if (!canvas) {
+            loopRunning = false;
+            return;
+        }
+
+        var activeEncounterId = canvas.dataset.activeEncounterId;
+        if (activeEncounterId && activeEncounterId.length > 0) {
+            loopRunning = false;
+            renderRoomCanvas();
+            return;
+        }
+
+        // 1. Calculate next position based on active keys
+        var dx = 0;
+        var dy = 0;
+        if (activeKeys['ArrowUp'] || activeKeys['w']) dy -= 1;
+        if (activeKeys['ArrowDown'] || activeKeys['s']) dy += 1;
+        if (activeKeys['ArrowLeft'] || activeKeys['a']) dx -= 1;
+        if (activeKeys['ArrowRight'] || activeKeys['d']) dx += 1;
+
+        if (dx !== 0 && dy !== 0) {
+            // Normalize diagonal speed
+            dx *= 0.7071;
+            dy *= 0.7071;
+        }
+
+        var nextX = playerX + dx * playerSpeed;
+        var nextY = playerY + dy * playerSpeed;
+
+        // Door layout configurations mapped from interactive nav buttons
+        var hasUpDoor = !document.querySelector('.sh-dungeon-dir[value="UP"]')?.disabled;
+        var hasDownDoor = !document.querySelector('.sh-dungeon-dir[value="DOWN"]')?.disabled;
+        var hasLeftDoor = !document.querySelector('.sh-dungeon-dir[value="LEFT"]')?.disabled;
+        var hasRightDoor = !document.querySelector('.sh-dungeon-dir[value="RIGHT"]')?.disabled;
+
+        var minX = 96;
+        var maxX = 864; // 1024 - 96 - 64 (player width)
+        var minY = 96;
+        var maxY = 608; // 768 - 96 - 64 (player height)
+
+        // Wall collisions & door transitions
+        if (nextX < minX) {
+            if (hasLeftDoor && nextY >= 280 && nextY <= 420) {
+                if (nextX < 32) {
+                    triggerRoomTransition('LEFT');
+                    return;
+                }
+            } else {
+                nextX = minX;
+            }
+        }
+        if (nextX > maxX) {
+            if (hasRightDoor && nextY >= 280 && nextY <= 420) {
+                if (nextX > 928) {
+                    triggerRoomTransition('RIGHT');
+                    return;
+                }
+            } else {
+                nextX = maxX;
+            }
+        }
+        if (nextY < minY) {
+            if (hasUpDoor && nextX >= 410 && nextX <= 550) {
+                if (nextY < 32) {
+                    triggerRoomTransition('UP');
+                    return;
+                }
+            } else {
+                nextY = minY;
+            }
+        }
+        if (nextY > maxY) {
+            if (hasDownDoor && nextX >= 410 && nextX <= 550) {
+                if (nextY > 672) {
+                    triggerRoomTransition('DOWN');
+                    return;
+                }
+            } else {
+                nextY = maxY;
+            }
+        }
+
+        playerX = nextX;
+        playerY = nextY;
+
+        // 2. Interactive Object Collision
+        var roomType = canvas.dataset.currentRoomType;
+        var cleared = canvas.dataset.currentRoomCleared === 'true';
+
+        var checkCenterpiece = ['TREASURE', 'HEAL', 'SHOP', 'SECRET'].indexOf(roomType) !== -1 && !cleared;
+        if (checkCenterpiece && !window.dungeonCenterpieceInteracted) {
+            var centerX = 480;
+            var centerY = 352;
+            var dist = Math.sqrt(Math.pow(playerX - centerX, 2) + Math.pow(playerY - centerY, 2));
+            if (dist < 48) {
+                window.dungeonCenterpieceInteracted = true;
+                DungeonAudio.playReveal();
+                
+                // Stop loop and show HTMX-loaded modal mount
+                loopRunning = false;
+                var mount = document.getElementById('dungeon-modal-mount');
+                if (mount) {
+                    mount.style.display = 'block';
+                }
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                return;
+            }
+        }
+
+        // 3. Redraw Scenery
+        var ctx = canvas.getContext('2d');
+        drawExplorationScene(canvas, ctx, roomType, cleared, hasUpDoor, hasDownDoor, hasLeftDoor, hasRightDoor);
+
+        animationFrameId = requestAnimationFrame(updateAndRenderExploration);
+    }
+
+    function drawExplorationScene(canvas, ctx, type, cleared, hasUp, hasDown, hasLeft, hasRight) {
+        // Enclosing deep slate/dark blue void
+        ctx.fillStyle = '#0b0f19';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        var isDark = ['BOSS', 'SECRET', 'TREASURE'].indexOf(type) !== -1;
+
+        // Render floor grid (96px limits)
+        for (var fy = 96; fy <= 608; fy += 64) {
+            for (var fx = 96; fx <= 864; fx += 64) {
+                drawFloorTile(ctx, fx, fy, 64, isDark);
+            }
+        }
+
+        var brickSize = 32;
+
+        // Doorway coordinate maps
+        function isDoorway(x, y) {
+            if (hasUp && y < 96 && x >= 448 && x < 576) return true;
+            if (hasDown && y >= 672 && x >= 448 && x < 576) return true;
+            if (hasLeft && x < 96 && y >= 320 && y < 448) return true;
+            if (hasRight && x >= 928 && y >= 320 && y < 448) return true;
+            return false;
+        }
+
+        // Draw boundary brick walls
+        for (var wy = 0; wy < canvas.height; wy += brickSize) {
+            for (var wx = 0; wx < canvas.width; wx += brickSize) {
+                var isBoundary = (wx < 96 || wx >= 928 || wy < 96 || wy >= 672);
+                if (isBoundary) {
+                    if (isDoorway(wx, wy)) {
+                        drawFloorTile(ctx, wx, wy, brickSize, isDark);
+                    } else {
+                        drawWallTile(ctx, wx, wy, brickSize, isDark);
+                    }
+                }
+            }
+        }
+
+        // Render room centerpiece (Portal, Chest, Potion, Merchant Stand)
+        if (type === 'ENTRANCE') {
+            drawPixelSprite(ctx, 'PORTAL', 480, 352, 64);
+        } else if (type === 'TREASURE' && !cleared) {
+            drawPixelSprite(ctx, 'CHEST', 480, 352, 64);
+        } else if (type === 'HEAL' && !cleared) {
+            drawPixelSprite(ctx, 'POTION', 480, 352, 64);
+        } else if (type === 'SHOP') {
+            drawPixelSprite(ctx, 'CHEST', 480, 352, 64); // Shop pedestal
+        } else if (type === 'SECRET' && !cleared) {
+            drawPixelSprite(ctx, 'CHEST', 480, 352, 64);
+        }
+
+        // Draw player avatar
+        drawPixelSprite(ctx, 'PLAYER', playerX, playerY, 64);
+    }
+
     function renderRoomCanvas() {
         var canvas = document.getElementById('dungeon-room-canvas');
         if (!canvas) return;
         var activeEncounterId = canvas.dataset.activeEncounterId;
         if (activeEncounterId && activeEncounterId.length > 0) {
+            loopRunning = false;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
             if (typeof renderJRPGCombat === 'function') {
                 renderJRPGCombat(canvas, canvas.getContext('2d'), activeEncounterId);
             }
             return;
         }
-        renderRoomScenery(canvas);
-    }
 
-    function renderRoomScenery(canvas) {
-        var ctx = canvas.getContext('2d');
-        ctx.fillStyle = backgroundFor(canvas.dataset.currentRoomType);
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        drawRoomCenterGlyph(ctx, canvas);
-    }
-
-    function backgroundFor(type) {
-        switch (type) {
-            case 'TREASURE': return '#3a2e10';
-            case 'HEAL':     return '#0f2418';
-            case 'SHOP':     return '#0d2630';
-            case 'SECRET':   return '#1a1a22';
-            case 'BOSS':     return '#2a0a0a';
-            default:         return '#10101a';
+        // Spawn player relative to entered door orientation
+        if (window.dungeonLastMoveDirection) {
+            var dir = window.dungeonLastMoveDirection;
+            window.dungeonLastMoveDirection = null; // Reset spawn reference
+            if (dir === 'UP') {
+                playerX = 480;
+                playerY = 590;
+            } else if (dir === 'DOWN') {
+                playerX = 480;
+                playerY = 110;
+            } else if (dir === 'LEFT') {
+                playerX = 840;
+                playerY = 352;
+            } else if (dir === 'RIGHT') {
+                playerX = 120;
+                playerY = 352;
+            }
+        } else {
+            // Default center spawn for new run/resume
+            playerX = 480;
+            playerY = 352;
         }
-    }
 
-    function drawRoomCenterGlyph(ctx, canvas) {
-        ctx.fillStyle = '#fff';
-        ctx.font = '64px monospace';
-        ctx.textAlign = 'center';
-        var glyphMap = {
-            TREASURE: '\u25C6', HEAL: '\u2665', SHOP: '$',
-            SECRET: '?', ENTRANCE: '\u2B21', BOSS: '\u2620'
-        };
-        var glyph = glyphMap[canvas.dataset.currentRoomType] || '';
-        ctx.fillText(glyph, canvas.width / 2, canvas.height / 2);
+        // Safe resetting of local movement state
+        activeKeys = {};
+        window.dungeonCenterpieceInteracted = false;
+
+        // Hide overlay modal initially
+        var mount = document.getElementById('dungeon-modal-mount');
+        if (mount) {
+            mount.style.display = 'none';
+        }
+
+        loopRunning = true;
+        startExplorationLoop();
     }
 
     // ============================================================
@@ -1386,33 +1635,6 @@
         }
 
         if (window.dungeonSplashActive) return;
-
-        var dir = null;
-        switch (e.key) {
-            case 'ArrowUp':
-            case 'w':
-            case 'W':
-                dir = 'UP';
-                break;
-            case 'ArrowDown':
-            case 's':
-            case 'S':
-                dir = 'DOWN';
-                break;
-            case 'ArrowLeft':
-            case 'a':
-            case 'A':
-                dir = 'LEFT';
-                break;
-            case 'ArrowRight':
-            case 'd':
-            case 'D':
-                dir = 'RIGHT';
-                break;
-        }
-        if (dir) {
-            e.preventDefault();
-            submitMove(dir);
-        }
+        // Direct step room traversal removed in favor of interactive 2D top-down movement.
     });
 })();
