@@ -318,6 +318,23 @@ public class DungeonController {
             .toList();
     }
 
+    static Integer spectaclesHintMaskIndex(DungeonSessionState state, DungeonEncounter encounter) {
+        if (!state.ownedRelics().contains(RelicId.SPECTACLES)) return null;
+        if (encounter == null) return null;
+        if (encounter.type() != DungeonEncounterType.QUIZ
+            && encounter.type() != DungeonEncounterType.BOSS_QUIZ) return null;
+        QuizQuestion q = encounter.quizQuestion();
+        if (q == null) return null;
+        Set<Integer> correctSet = new HashSet<>(q.correctOptionIndices());
+        List<Integer> wrongIndices = new ArrayList<>();
+        for (int i = 0; i < q.options().size(); i++) {
+            if (!correctSet.contains(i)) wrongIndices.add(i);
+        }
+        if (wrongIndices.isEmpty()) return null;
+        int seed = Math.abs(Objects.hash(encounter.id()));
+        return wrongIndices.get(seed % wrongIndices.size());
+    }
+
     private String dungeonResumeDiscardMessage(int removedCount) {
         return "Your saved Dungeon run could not continue because "
             + removedCount + " flashcard(s) are no longer available.";
