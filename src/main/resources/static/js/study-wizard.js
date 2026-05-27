@@ -77,7 +77,7 @@
                 const panelMode = panel.dataset.mode;
                 if (panelMode && panelMode !== currentMode) return;
                 panel.querySelectorAll('input[type="radio"]').forEach(radio => {
-                    if (['sessionMode', 'quizQuestionMode', 'questionSize', 'mode_picker'].includes(radio.name)) {
+                    if (['sessionMode', 'quizQuestionMode', 'questionSize', 'mode_picker', 'dungeonMode'].includes(radio.name)) {
                         radio.checked = false;
                     }
                 });
@@ -258,13 +258,6 @@
                     }
                 }
             }
-            if (currentMode === 'DUNGEON') {
-                const selected = document.querySelector('input[name="dungeonSize"]:checked');
-                if (!selected) {
-                    shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.select-dungeon-size') });
-                    return false;
-                }
-            }
         }
         if (step === sourceStep()) {
             const checked = document.querySelectorAll('.sh-source-checkbox:checked');
@@ -274,14 +267,25 @@
             }
             if (currentMode === 'DUNGEON') {
                 const count = selectedDungeonCardCount();
-                const sizeEl = document.querySelector('input[name="dungeonSize"]:checked');
-                if (sizeEl) {
-                    const thresholds = { SMALL: 8, MEDIUM: 12, LARGE: 20 };
-                    const min = thresholds[sizeEl.value] || 8;
-                    if (count < min) {
-                        shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.dungeon-not-enough-cards').replace('{0}', min).replace('{1}', count) });
-                        return false;
-                    }
+                if (count < 8) {
+                    shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.dungeon-not-enough-cards').replace('{0}', 8).replace('{1}', count) });
+                    return false;
+                }
+            }
+        }
+        if (step === 4) {
+            if (currentMode === 'DUNGEON') {
+                const selected = document.querySelector('input[name="dungeonSize"]:checked');
+                if (!selected) {
+                    shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.select-dungeon-size') });
+                    return false;
+                }
+                const count = selectedDungeonCardCount();
+                const thresholds = { SMALL: 8, MEDIUM: 12, LARGE: 20 };
+                const min = thresholds[selected.value] || 8;
+                if (count < min) {
+                    shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.dungeon-not-enough-cards').replace('{0}', min).replace('{1}', count) });
+                    return false;
                 }
             }
         }

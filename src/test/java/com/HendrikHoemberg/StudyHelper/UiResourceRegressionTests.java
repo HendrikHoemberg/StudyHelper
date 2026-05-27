@@ -1034,7 +1034,10 @@ class UiResourceRegressionTests {
             .contains("name=\"additionalInstructions\"");
         assertThat(wizardJs)
             .contains("DUNGEON")
-            .contains("updateDungeonAiSettings");
+            .contains("updateDungeonAiSettings")
+            .contains("['sessionMode', 'quizQuestionMode', 'questionSize', 'mode_picker', 'dungeonMode'].includes")
+            .contains("if (step === 4)")
+            .contains("thresholds = { SMALL: 8, MEDIUM: 12, LARGE: 20 }");
         assertThat(styles)
             .contains(".sh-study-mode-grid")
             .contains("grid-template-columns: repeat(2");

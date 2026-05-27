@@ -118,6 +118,127 @@
     border: 1px solid var(--border) !important;
 }
 
+.sh-dungeon-encounter-panel {
+    display: none !important;
+}
+
+.sh-dungeon-encounter-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.sh-dungeon-encounter-header {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.sh-dungeon-encounter-text {
+    color: var(--text);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+}
+
+.sh-dungeon-flashcard {
+    margin-bottom: 1rem;
+}
+
+.sh-dungeon-flashcard-side {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.sh-dungeon-flashcard-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.sh-dungeon-flashcard-text {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    margin: 0;
+    color: var(--text);
+}
+
+.sh-dungeon-flashcard-details {
+    margin-bottom: 0.5rem;
+}
+
+.sh-dungeon-flashcard-details > summary {
+    cursor: pointer;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.sh-dungeon-flashcard-details > summary::-webkit-details-marker {
+    display: none;
+}
+
+.sh-dungeon-flashcard-details[open] > summary {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+}
+
+.sh-dungeon-answer-row {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.sh-dungeon-boss-progress {
+    font-weight: 800;
+    color: var(--danger);
+}
+
+.sh-dungeon-quiz-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sh-dungeon-quiz-question {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    margin: 0;
+    color: var(--text);
+}
+
+.sh-dungeon-quiz-option {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.625rem 0.875rem;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.sh-dungeon-quiz-option:hover {
+    background: var(--surface-hover);
+    border-color: var(--accent);
+}
+
+.sh-dungeon-quiz-option label {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 0.875rem;
+}
+
 .sh-dungeon-size-warning {
     color: var(--danger);
 }
