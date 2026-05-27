@@ -34,8 +34,11 @@ class DungeonSessionServiceTests {
         flashcardService = mock(FlashcardService.class);
         quizSessionService = mock(QuizSessionService.class);
         dungeonMapGenerator = mock(DungeonMapGenerator.class);
+        DungeonNavigationService navigationService = new DungeonNavigationService();
+        DungeonEncounterService encounterService = new DungeonEncounterService();
         dungeonSessionService = new DungeonSessionService(
-            deckService, flashcardService, quizSessionService, dungeonMapGenerator);
+            deckService, flashcardService, quizSessionService, dungeonMapGenerator,
+            navigationService, encounterService);
 
         user = new User();
         user.setId(1L);
