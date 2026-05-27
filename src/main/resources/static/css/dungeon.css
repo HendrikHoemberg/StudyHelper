@@ -21,7 +21,7 @@
 
 .sh-dungeon-hud {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0.75rem;
     margin-bottom: 1rem;
 }
@@ -403,6 +403,22 @@
 .sh-dungeon-layout.is-encounter-active .sh-dungeon-canvas {
     max-width: 720px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.sh-dungeon-hud-item.is-hidden { display: none; }
+.sh-dungeon-hud-shields { display: inline-flex; gap: 2px; }
+.sh-dungeon-hud-shields iconify-icon { font-size: 1.1em; color: var(--accent, #2dd4bf); }
+.sh-dungeon-hud-streak { font-weight: 700; }
+.sh-dungeon-hud-streak.is-pulsing {
+    animation: sh-dungeon-streak-pulse 0.9s ease-in-out 2;
+    color: #fbbf24;
+}
+@keyframes sh-dungeon-streak-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.18); text-shadow: 0 0 12px #fbbf24; }
+}
+@media (max-width: 540px) {
+    .sh-dungeon-hud { flex-wrap: wrap; }
 }
 
 /* Fallback class to satisfy UI Regression Tests string check */

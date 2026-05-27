@@ -16,6 +16,21 @@
                 <span class="sh-dungeon-hud-label" th:text="#{dungeon.score}">Score</span>
                 <span class="sh-dungeon-hud-value sh-dungeon-hud-score" th:text="${state.score}">0</span>
             </div>
+            <div class="sh-dungeon-hud-item sh-dungeon-hud-item-shields"
+                 th:classappend="${state.shields == 0} ? 'is-hidden'">
+                <span class="sh-dungeon-hud-label" th:text="#{dungeon.shields}">Shields</span>
+                <span class="sh-dungeon-hud-value sh-dungeon-hud-shields">
+                    <iconify-icon icon="lucide:shield" th:each="i : ${#numbers.sequence(1, state.shields > 0 ? state.shields : 1)}"
+                                  th:if="${state.shields > 0}"></iconify-icon>
+                </span>
+            </div>
+            <div class="sh-dungeon-hud-item sh-dungeon-hud-item-streak"
+                 th:classappend="${state.streak == 0} ? 'is-hidden'">
+                <span class="sh-dungeon-hud-label" th:text="#{dungeon.streak}">Streak</span>
+                <span class="sh-dungeon-hud-value sh-dungeon-hud-streak"
+                      th:classappend="${state.streak > 0 and state.streak % 3 == 0} ? 'is-pulsing'"
+                      th:text="'×' + ${state.streak}">×0</span>
+            </div>
             <div class="sh-dungeon-hud-item">
                 <span class="sh-dungeon-hud-label" th:text="#{dungeon.progress}">Progress</span>
                 <span class="sh-dungeon-hud-value sh-dungeon-hud-progress" th:text="${state.correctCount + '/' + state.answeredCount}">0/0</span>
