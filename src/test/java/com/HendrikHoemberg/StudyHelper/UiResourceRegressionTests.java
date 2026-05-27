@@ -1072,7 +1072,7 @@ class UiResourceRegressionTests {
         assertThat(layout).contains("/js/dungeon.js");
         assertThat(game).contains("dungeon-map-canvas");
         assertThat(game).contains("dungeon-map-state");
-        assertThat(game).contains("Boss");
+        assertThat(game).contains("activeEncounter");
         assertThat(game).contains("/dungeon/move");
         assertThat(js).contains("getContext('2d')");
         assertThat(js).contains("JSON.parse");
