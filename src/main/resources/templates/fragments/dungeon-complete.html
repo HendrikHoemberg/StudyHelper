@@ -14,6 +14,21 @@
                 <span class="sh-dungeon-complete-label" th:text="#{dungeon.result-label}">Prompts correct</span>
             </div>
 
+            <div class="sh-dungeon-complete-extras">
+                <div class="sh-dungeon-complete-extra">
+                    <span class="sh-dungeon-complete-extra-label" th:text="#{dungeon.complete.longest-streak}">Longest streak</span>
+                    <span class="sh-dungeon-complete-extra-value" th:text="${stats.longestStreak}">0</span>
+                </div>
+                <div class="sh-dungeon-complete-extra">
+                    <span class="sh-dungeon-complete-extra-label" th:text="#{dungeon.complete.elites-cleared}">Elites cleared</span>
+                    <span class="sh-dungeon-complete-extra-value" th:text="${stats.elitesCleared}">0</span>
+                </div>
+                <div class="sh-dungeon-complete-extra">
+                    <span class="sh-dungeon-complete-extra-label" th:text="#{dungeon.complete.shields-used}">Shields used</span>
+                    <span class="sh-dungeon-complete-extra-value" th:text="${stats.shieldsUsed}">0</span>
+                </div>
+            </div>
+
             <div class="sh-dungeon-complete-actions">
                 <a href="/study/start?mode=DUNGEON"
                    class="sh-btn sh-btn-primary"
