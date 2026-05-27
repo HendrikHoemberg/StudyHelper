@@ -64,7 +64,24 @@ public class DungeonSessionService {
             bossEncounterIds.add(id);
         }
 
-        DungeonMap map = dungeonMapGenerator.generate(size, normalEncounterIds);
+        int eliteStart = bossStart + size.bossPromptCount();
+        List<List<String>> eliteGauntlets = new ArrayList<>();
+        int eliteCardsPerGroup = size.cardsPerEliteGauntlet();
+        for (int g = 0; g < size.eliteGauntletCount(); g++) {
+            List<String> group = new ArrayList<>();
+            for (int c = 0; c < eliteCardsPerGroup; c++) {
+                int cardIdx = eliteStart + (g * eliteCardsPerGroup) + c;
+                Flashcard card = flashcards.get(cardIdx);
+                String id = "fc_elite_" + g + "_" + c;
+                encounters.put(id, DungeonEncounter.flashcard(id, false, card.getId(),
+                    card.getFrontText(), card.getBackText(),
+                    card.getFrontImageFilename(), card.getBackImageFilename()));
+                group.add(id);
+            }
+            eliteGauntlets.add(group);
+        }
+
+        DungeonMap map = dungeonMapGenerator.generate(size, normalEncounterIds, eliteGauntlets);
         return initialState(
             new DungeonConfig(DungeonMode.FLASHCARDS, size, normalizedIds,
                 QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, ""),
@@ -110,7 +127,22 @@ public class DungeonSessionService {
             bossEncounterIds.add(id);
         }
 
-        DungeonMap map = dungeonMapGenerator.generate(size, normalEncounterIds);
+        int eliteStart = bossStart + size.bossPromptCount();
+        List<List<String>> eliteGauntlets = new ArrayList<>();
+        int eliteCardsPerGroup = size.cardsPerEliteGauntlet();
+        for (int g = 0; g < size.eliteGauntletCount(); g++) {
+            List<String> group = new ArrayList<>();
+            for (int c = 0; c < eliteCardsPerGroup; c++) {
+                int idx = eliteStart + (g * eliteCardsPerGroup) + c;
+                QuizQuestion q = questions.get(idx);
+                String id = "qz_elite_" + g + "_" + c;
+                encounters.put(id, DungeonEncounter.quiz(id, false, q));
+                group.add(id);
+            }
+            eliteGauntlets.add(group);
+        }
+
+        DungeonMap map = dungeonMapGenerator.generate(size, normalEncounterIds, eliteGauntlets);
         return initialState(
             new DungeonConfig(DungeonMode.AI_QUIZ, size, normalizedIds,
                 questionMode, difficulty, additionalInstructions),

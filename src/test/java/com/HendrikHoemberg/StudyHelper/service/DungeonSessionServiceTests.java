@@ -115,7 +115,7 @@ class DungeonSessionServiceTests {
     @Test
     void createFlashcardDungeon_buildsPracticeOnlySessionWithoutQuizGeneration() throws Exception {
         mockFlashcards(29);
-        when(dungeonMapGenerator.generate(eq(DungeonSize.LARGE), anyList()))
+        when(dungeonMapGenerator.generate(eq(DungeonSize.LARGE), anyList(), anyList()))
             .thenReturn(simpleMap(DungeonSize.LARGE));
 
         DungeonSessionState state = dungeonSessionService.createFlashcardDungeon(
@@ -124,7 +124,7 @@ class DungeonSessionServiceTests {
         assertThat(state.config().mode()).isEqualTo(DungeonMode.FLASHCARDS);
         assertThat(state.config().size()).isEqualTo(DungeonSize.LARGE);
         assertThat(state.health()).isEqualTo(5);
-        assertThat(state.encounters()).hasSize(DungeonSize.LARGE.normalEncounterCount() + DungeonSize.LARGE.bossPromptCount());
+        assertThat(state.encounters()).hasSize(DungeonSize.LARGE.normalEncounterCount() + DungeonSize.LARGE.bossPromptCount() + (DungeonSize.LARGE.eliteGauntletCount() * DungeonSize.LARGE.cardsPerEliteGauntlet()));
         assertThat(state.bossEncounterIds()).hasSize(DungeonSize.LARGE.bossPromptCount());
         verify(quizSessionService, never()).createSession(any(), any(), any(), anyInt(), any(), any(), any(), any());
     }
@@ -159,7 +159,7 @@ class DungeonSessionServiceTests {
         when(quizSessionService.createSession(anyList(), anyList(), any(), anyInt(), any(), any(), any(), any()))
             .thenReturn(quizState);
 
-        when(dungeonMapGenerator.generate(any(), anyList()))
+        when(dungeonMapGenerator.generate(any(), anyList(), anyList()))
             .thenReturn(simpleMap(DungeonSize.SMALL));
 
         HttpServletRequest request = mock(HttpServletRequest.class);

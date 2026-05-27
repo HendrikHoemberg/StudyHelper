@@ -30,6 +30,14 @@ public enum DungeonSize {
         return bossPromptCount;
     }
 
+    public int eliteGauntletCount() {
+        return switch (this) { case SMALL -> 1; case MEDIUM -> 2; case LARGE -> 3; };
+    }
+
+    public int cardsPerEliteGauntlet() {
+        return switch (this) { case SMALL -> 2; case MEDIUM -> 2; case LARGE -> 3; };
+    }
+
     public boolean isAvailableFor(int usableItems) {
         return usableItems >= totalPrompts;
     }
