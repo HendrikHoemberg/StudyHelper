@@ -638,7 +638,14 @@
                 // Determine monster type deterministically
                 var monsterTypes = ['SLIME', 'SKELETON', 'GOBLIN', 'GHOST'];
                 var idx = (targetX * 7 + targetY * 13) % monsterTypes.length;
-                window.dungeonSplashMonster = activeEncBoss ? 'DRAGON' : monsterTypes[idx];
+                var gauntletTotal = parseInt(canvas.dataset.gauntletTotal || '0', 10);
+                if (gauntletTotal > 0 && !activeEncBoss) {
+                    window.dungeonSplashMonster = 'CHAMPION';
+                } else if (activeEncBoss) {
+                    window.dungeonSplashMonster = 'DRAGON';
+                } else {
+                    window.dungeonSplashMonster = monsterTypes[idx];
+                }
 
                 // Play Audio Riser
                 DungeonAudio.playBattleStart();
@@ -915,7 +922,10 @@
         ctx.font = 'bold 20px "Courier New", Courier, monospace';
         ctx.textAlign = 'center';
         
-        var title = window.dungeonSplashBoss ? "!!! BOSS-KAMPF !!!" : "⚔️ GEGNER GEFUNDEN ⚔️";
+        var gauntletTotal = parseInt(canvas.dataset.gauntletTotal || '0', 10);
+        var title = window.dungeonSplashBoss
+            ? "!!! BOSS-KAMPF !!!"
+            : (gauntletTotal > 0 ? "ELITE CHALLENGE!" : "⚔️ GEGNER GEFUNDEN ⚔️");
         ctx.fillText(title, canvas.width / 2, canvas.height - 90);
 
         // Subtitle
@@ -1000,6 +1010,8 @@
         var score = parseInt(document.querySelector('.sh-dungeon-hud-score')?.textContent || '0', 10);
         var progress = document.querySelector('.sh-dungeon-hud-progress')?.textContent || '0/0';
         var activeEncBoss = canvas.dataset.activeEncounterBoss === 'true';
+        var gauntletPos = parseInt(canvas.dataset.gauntletPosition || '0', 10);
+        var gauntletTotal = parseInt(canvas.dataset.gauntletTotal || '0', 10);
         var enemyName = (window.dungeonSplashMonster || (activeEncBoss ? "DRAGON" : "SLIME")).toUpperCase();
 
         // Draw Player HUD Panel (Left)
@@ -1060,9 +1072,25 @@
         ctx.font = 'bold ' + Math.floor(12 * scale) + 'px "Courier New", Courier, monospace';
         ctx.fillText("HP: " + Math.round((1 - progressPercent) * 100) + "%", canvas.width - 100 * scale, 58 * scale);
 
+        // Elite progress badge
+        if (gauntletTotal > 0 && !activeEncBoss) {
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = 'bold ' + Math.floor(10 * scale) + 'px "Courier New", Courier, monospace';
+            ctx.textAlign = 'right';
+            ctx.fillText("ELITE " + gauntletPos + "/" + gauntletTotal, canvas.width - 30 * scale, 40 * scale);
+            ctx.textAlign = 'left';
+        }
+
         // Enemy Sprite (Bobbing)
         var bob = Math.sin(Date.now() / 180) * 10;
-        var monsterSprite = window.dungeonSplashMonster || (activeEncBoss ? 'DRAGON' : 'SLIME');
+        var monsterSprite;
+        if (gauntletTotal > 0 && !activeEncBoss) {
+            monsterSprite = 'CHAMPION';
+        } else if (activeEncBoss) {
+            monsterSprite = 'DRAGON';
+        } else {
+            monsterSprite = window.dungeonSplashMonster || 'SLIME';
+        }
         var spriteSize = activeEncBoss ? 128 * scale : 96 * scale;
         var sx = (canvas.width - spriteSize) / 2;
         var sy = 100 * scale + bob * scale;

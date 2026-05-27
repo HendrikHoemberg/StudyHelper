@@ -269,6 +269,21 @@ public class DungeonController {
         model.addAttribute("activeEncounter", state.activeEncounter());
         model.addAttribute("stats", dungeonSessionService.buildStats(state));
         model.addAttribute("mapTiles", mapTiles(state));
+
+        int gauntletPos = 0;
+        int gauntletTotal = 0;
+        if (state.activeEncounterId() != null) {
+            for (var entry : state.map().gauntletGroups().entrySet()) {
+                List<String> group = entry.getValue();
+                if (group.contains(state.activeEncounterId())) {
+                    gauntletTotal = group.size();
+                    gauntletPos = group.indexOf(state.activeEncounterId()) + 1;
+                    break;
+                }
+            }
+        }
+        model.addAttribute("gauntletPosition", gauntletPos);
+        model.addAttribute("gauntletTotal", gauntletTotal);
         try {
             model.addAttribute("mapTilesJson", objectMapper.writeValueAsString(mapTiles(state)));
         } catch (Exception e) {

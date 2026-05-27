@@ -49,7 +49,9 @@
                         th:data-map-width="${state.map.width}"
                         th:data-map-height="${state.map.height}"
                         th:data-active-encounter-id="${activeEncounter != null ? activeEncounter.id : ''}"
-                        th:data-active-encounter-boss="${activeEncounter != null ? activeEncounter.boss : 'false'}">
+                        th:data-active-encounter-boss="${activeEncounter != null ? activeEncounter.boss : 'false'}"
+                        th:data-gauntlet-position="${gauntletPosition}"
+                        th:data-gauntlet-total="${gauntletTotal}">
                 </canvas>
 
                 <script id="dungeon-map-state" type="application/json">
