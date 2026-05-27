@@ -214,7 +214,7 @@ class SavedSessionServiceTests {
         assertThat(saved.getUser()).isSameAs(user);
         assertThat(saved.getType()).isEqualTo(SavedSessionType.DUNGEON);
         assertThat(saved.getTitle()).isEqualTo("Dungeon · Flashcards · Small");
-        assertThat(saved.getProgressLabel()).isEqualTo("0 / 10 cleared");
+        assertThat(saved.getProgressLabel()).isEqualTo("0 / 8 cleared");
     }
 
     @Test

@@ -39,12 +39,11 @@
 
         <div class="sh-card-body sh-wizard-body">
 
-            <!-- Panel 2: Mode Picker -->
-            <div class="sh-wizard-panel" data-step="2" id="wizard-panel-2">
+            <!-- Panel 1: Mode Picker -->
+            <div class="sh-wizard-panel" data-step="1" id="wizard-panel-1">
                 <div class="sh-section-title" th:text="#{study.setup.whats-the-plan}">What's the plan?</div>
                 <div class="sh-study-mode-grid">
-                    <label class="sh-study-choice sh-study-choice-study" onclick="selectStudyMode(this, 'FLASHCARDS')"
-                           th:data-min-cards="${T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).FLASHCARDS.minimumCardsRequired()}">
+                    <label class="sh-study-choice sh-study-choice-study" onclick="selectStudyMode(this, 'FLASHCARDS')">
                             <span class="sh-mode-info" role="button" tabindex="0" th:aria-label="#{study.setup.how-flashcards}" aria-label="How Flashcards works"
                               onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('FLASHCARDS');">
                             <iconify-icon icon="lucide:info"></iconify-icon>
@@ -57,12 +56,8 @@
                         <div class="sh-study-choice-subtitle" th:text="#{study.setup.mode.flashcards-desc}">
                             Flip through cards. Track right/wrong.
                         </div>
-                        <div class="sh-study-choice-unavailable" hidden>
-                            <span class="sh-study-choice-unavailable-text"></span>
-                        </div>
                     </label>
-                    <label class="sh-study-choice sh-study-choice-generate" onclick="selectStudyMode(this, 'QUIZ')"
-                           th:data-min-cards="${T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).QUIZ.minimumCardsRequired()}">
+                    <label class="sh-study-choice sh-study-choice-generate" onclick="selectStudyMode(this, 'QUIZ')">
                             <span class="sh-mode-info" role="button" tabindex="0" th:aria-label="#{study.setup.how-quiz}" aria-label="How AI Quiz works"
                               onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('QUIZ');">
                             <iconify-icon icon="lucide:info"></iconify-icon>
@@ -75,12 +70,8 @@
                         <div class="sh-study-choice-subtitle" th:text="#{study.setup.mode.quiz-desc}">
                             Auto-generated multiple choice & true/false questions.
                         </div>
-                        <div class="sh-study-choice-unavailable" hidden>
-                            <span class="sh-study-choice-unavailable-text"></span>
-                        </div>
                     </label>
-                    <label class="sh-study-choice sh-study-choice-exam" onclick="selectStudyMode(this, 'EXAM')"
-                           th:data-min-cards="${T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).EXAM.minimumCardsRequired()}">
+                    <label class="sh-study-choice sh-study-choice-exam" onclick="selectStudyMode(this, 'EXAM')">
                             <span class="sh-mode-info" role="button" tabindex="0" th:aria-label="#{study.setup.how-exam}" aria-label="How Exam works"
                               onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('EXAM');">
                             <iconify-icon icon="lucide:info"></iconify-icon>
@@ -93,12 +84,8 @@
                         <div class="sh-study-choice-subtitle" th:text="#{study.setup.mode.exam-desc}">
                             Long-form written answers, AI-graded.
                         </div>
-                        <div class="sh-study-choice-unavailable" hidden>
-                            <span class="sh-study-choice-unavailable-text"></span>
-                        </div>
                     </label>
-                    <label class="sh-study-choice sh-study-choice-dungeon" onclick="selectStudyMode(this, 'DUNGEON')"
-                           th:data-min-cards="${T(com.HendrikHoemberg.StudyHelper.dto.StudyMode).DUNGEON.minimumCardsRequired()}">
+                    <label class="sh-study-choice sh-study-choice-dungeon" onclick="selectStudyMode(this, 'DUNGEON')">
                             <span class="sh-mode-info" role="button" tabindex="0" th:aria-label="#{study.setup.how-dungeon}" aria-label="How Dungeon works"
                               onclick="event.preventDefault(); event.stopPropagation(); window.shOpenTutorial('DUNGEON');">
                             <iconify-icon icon="lucide:map"></iconify-icon>
@@ -110,9 +97,6 @@
                         <div class="sh-study-choice-title" th:text="#{study.setup.mode.dungeon}">Dungeon</div>
                         <div class="sh-study-choice-subtitle" th:text="#{study.setup.mode.dungeon-desc}">
                             Explore a pixel dungeon powered by cards or AI quiz prompts.
-                        </div>
-                        <div class="sh-study-choice-unavailable" hidden>
-                            <span class="sh-study-choice-unavailable-text"></span>
                         </div>
                     </label>
                 </div>

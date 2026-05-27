@@ -7,19 +7,19 @@
     let previousStep = null;
 
     const STEP_LABELS = {
-        FLASHCARDS: ["Decks", "Mode", "Type", "Order"],
-        QUIZ:       ["Sources", "Mode", "Format", "Settings"],
-        EXAM:       ["Sources", "Mode", "Depth", "Settings", "Layout"],
-        DUNGEON:    ["Decks", "Mode", "Type", "Size"],
+        FLASHCARDS: ["Mode", "Type", "Decks", "Order"],
+        QUIZ:       ["Mode", "Format", "Settings", "Sources"],
+        EXAM:       ["Mode", "Depth", "Settings", "Sources", "Layout"],
+        DUNGEON:    ["Mode", "Type", "Size", "Decks"],
     };
 
     function maxSteps() {
         if (currentMode === 'FLASHCARDS') {
             const type = document.querySelector('input[name="sessionMode"]:checked')?.value;
-            return type === 'SHUFFLED' ? 4 : 5;
+            return type === 'SHUFFLED' ? 3 : 4;
         }
         if (currentMode === 'EXAM') {
-            return 6;
+            return 5;
         }
         if (currentMode === 'DUNGEON') {
             return 4;
@@ -28,7 +28,8 @@
     }
 
     function sourceStep() {
-        return 1;
+        if (currentMode === 'QUIZ' || currentMode === 'EXAM' || currentMode === 'DUNGEON') return 4;
+        return 3;
     }
 
     window.selectStudyMode = function(element, mode) {
@@ -55,7 +56,7 @@
             swap: 'outerHTML'
         });
 
-        goToStep(3);
+        goToStep(2);
     };
 
     function goToStep(step) {
@@ -71,12 +72,12 @@
         // When navigating back to a gateway step (1 or 2), clear its radio selection
         // so the card no longer appears selected and clicking it re-fires `change`
         // to advance the wizard.
-        if (direction === 'backward' && (step >= 2 && step <= 3)) {
+        if (direction === 'backward' && (step === 1 || step === 2)) {
             document.querySelectorAll(`.sh-wizard-panel[data-step="${step}"]`).forEach(panel => {
                 const panelMode = panel.dataset.mode;
                 if (panelMode && panelMode !== currentMode) return;
                 panel.querySelectorAll('input[type="radio"]').forEach(radio => {
-                    if (['sessionMode', 'quizQuestionMode', 'questionSize', 'dungeonMode', 'dungeonSize', 'mode_picker'].includes(radio.name)) {
+                    if (['sessionMode', 'quizQuestionMode', 'questionSize', 'mode_picker'].includes(radio.name)) {
                         radio.checked = false;
                     }
                 });
@@ -163,13 +164,13 @@
         const footer = document.querySelector('.sh-wizard-footer');
 
         if (backBtn) backBtn.style.display = currentStep > 1 ? '' : 'none';
-        if (nextBtn) nextBtn.style.display = (isLast || currentStep === 2) ? 'none' : '';
+        if (nextBtn) nextBtn.style.display = (isLast || currentStep === 1 || currentStep === 2) ? 'none' : '';
         if (submitBtn) submitBtn.style.display = isLast ? '' : 'none';
         if (submitWithInstructionsBtn) {
             const visible = isLast && (currentMode === 'QUIZ' || currentMode === 'EXAM');
             submitWithInstructionsBtn.style.display = visible ? '' : 'none';
         }
-        if (footer) footer.style.display = currentStep === 2 ? 'none' : '';
+        if (footer) footer.style.display = currentStep === 1 ? 'none' : '';
         
         if (submitBtn) {
             const icon = submitBtn.querySelector('iconify-icon');
@@ -203,13 +204,6 @@
 
     function validateStep(step) {
         if (step === 2) {
-            const selected = document.querySelector('input[name="mode_picker"]:checked');
-            if (!selected) {
-                shAlert({ title: 'Mode required', message: 'Please select a study mode.' });
-                return false;
-            }
-        }
-        if (step === 3) {
             if (currentMode === 'FLASHCARDS') {
                 const selected = document.querySelector('input[name="sessionMode"]:checked');
                 if (!selected) {
@@ -239,7 +233,7 @@
                 }
             }
         }
-        if (step === 4) {
+        if (step === 3) {
             if (currentMode === 'QUIZ') {
                 const countInput = document.querySelector('input[name="questionCount"]');
                 if (countInput && (parseInt(countInput.value) < 1 || parseInt(countInput.value) > 100)) {
@@ -278,8 +272,20 @@
                 shAlert({ title: t('study.wizard.alert.missing-source'), message: t('study.wizard.alert.select-source') });
                 return false;
             }
+            if (currentMode === 'DUNGEON') {
+                const count = selectedDungeonCardCount();
+                const sizeEl = document.querySelector('input[name="dungeonSize"]:checked');
+                if (sizeEl) {
+                    const thresholds = { SMALL: 8, MEDIUM: 12, LARGE: 20 };
+                    const min = thresholds[sizeEl.value] || 8;
+                    if (count < min) {
+                        shAlert({ title: t('study.wizard.alert.missing-selection'), message: t('study.wizard.alert.dungeon-not-enough-cards').replace('{0}', min).replace('{1}', count) });
+                        return false;
+                    }
+                }
+            }
         }
-        if (step === 6) {
+        if (step === 5) {
             if (currentMode === 'EXAM') {
                 const selected = document.querySelector('input[name="layout"]:checked');
                 if (!selected) {
@@ -294,26 +300,19 @@
     function wizardNext() {
         if (!validateStep(currentStep)) return;
         
-        if (currentStep === 1) {
-            goToStep(2);
-            return;
-        }
-        
-        if (currentStep === 3) {
+        if (currentStep === sourceStep()) {
             const form = document.querySelector('.sh-study-setup-card');
-            if (currentMode === 'FLASHCARDS') {
-                const sessionMode = document.querySelector('input[name="sessionMode"]:checked')?.value;
-                if (sessionMode === 'SHUFFLED') {
-                    form.requestSubmit();
-                    return;
-                }
-                // Deck-by-deck: populate order list and skip to step 5
-                populateOrderList();
-                goToStep(5);
+            if (currentMode === 'FLASHCARDS' && document.querySelector('input[name="sessionMode"]:checked').value === 'SHUFFLED') {
+                form.requestSubmit();
                 return;
             }
+            if (currentMode === 'QUIZ') {
+                form.requestSubmit();
+                return;
+            }
+            // If Flashcards + Deck-by-deck, we go to step 4 (Order)
+            populateOrderList();
         }
-        
         goToStep(currentStep + 1);
     }
 
@@ -576,11 +575,11 @@
 
     function initInstantStepTwoChoices(root = document) {
         root.querySelectorAll('input[name="sessionMode"], input[name="quizQuestionMode"], input[name="questionSize"], input[name="dungeonMode"], input[name="dungeonSize"]').forEach(input => {
-            const choice = input.closest('.sh-wizard-panel[data-step="3"] .sh-study-choice');
+            const choice = input.closest('.sh-wizard-panel[data-step="2"] .sh-study-choice');
             if (!choice || input.dataset.instantStepTwoInitialized === 'true') return;
             input.dataset.instantStepTwoInitialized = 'true';
             input.addEventListener('change', () => {
-                if (input.disabled || !input.checked || currentStep !== 3) return;
+                if (input.disabled || !input.checked || currentStep !== 2) return;
                 wizardNext();
             });
         });
@@ -644,68 +643,9 @@
         }
     }
 
-    function recomputeAvailableModes() {
-        var selectedDeckCheckboxes = document.querySelectorAll('input[name="selectedDeckIds"]:checked');
-        var totalCards = 0;
-        selectedDeckCheckboxes.forEach(function (cb) {
-            totalCards += parseInt(cb.dataset.cardCount || '0', 10);
-        });
-
-        document.querySelectorAll('.sh-study-choice').forEach(function (choice) {
-            var min = parseInt(choice.dataset.minCards || '0', 10);
-            var unavailable = choice.querySelector('.sh-study-choice-unavailable');
-            var reasonEl = choice.querySelector('.sh-study-choice-unavailable-text');
-            if (totalCards < min) {
-                choice.classList.add('is-unavailable');
-                if (unavailable) unavailable.hidden = false;
-                if (reasonEl) {
-                    reasonEl.textContent = 'Needs at least ' + min + ' cards — your selection has ' + totalCards + '.';
-                }
-                var input = choice.querySelector('input[type="radio"]');
-                if (input) input.disabled = true;
-            } else {
-                choice.classList.remove('is-unavailable');
-                if (unavailable) unavailable.hidden = true;
-                var input2 = choice.querySelector('input[type="radio"]');
-                if (input2) input2.disabled = false;
-            }
-        });
-    }
-
-    function recomputeAvailableSizes() {
-        var selected = document.querySelectorAll('input[name="selectedDeckIds"]:checked');
-        var totalCards = 0;
-        selected.forEach(function (cb) { totalCards += parseInt(cb.dataset.cardCount || '0', 10); });
-
-        document.querySelectorAll('input[name="dungeonSize"]').forEach(function (radio) {
-            var label = radio.closest('.sh-study-choice');
-            if (!label) return;
-            var min = parseInt(label.dataset.minCards || '0', 10);
-            var unavailable = label.querySelector('.sh-study-choice-unavailable');
-            var reasonEl = label.querySelector('.sh-study-choice-unavailable-text');
-            if (totalCards < min) {
-                label.classList.add('is-unavailable');
-                if (unavailable) unavailable.hidden = false;
-                if (reasonEl) {
-                    reasonEl.textContent = 'Needs ' + min + ' cards, your selection has ' + totalCards + '.';
-                }
-                radio.disabled = true;
-                if (radio.checked) radio.checked = false;
-            } else {
-                label.classList.remove('is-unavailable');
-                if (unavailable) unavailable.hidden = true;
-                radio.disabled = false;
-            }
-        });
-    }
-
     document.body.addEventListener('change', function (e) {
         if (e.target.matches('input[name="dungeonMode"]')) {
             updateDungeonAiSettings();
-        }
-        if (e.target && e.target.name === 'selectedDeckIds') {
-            recomputeAvailableModes();
-            recomputeAvailableSizes();
         }
     });
 
@@ -822,20 +762,16 @@
             input.addEventListener('change', updateExamEstimate);
         });
 
-        // Handle preselected mode from server (Skip steps 1 and 2)
+        // Handle preselected mode from server (Skip step 1)
         const modeInput = document.getElementById('study-mode-input');
         if (modeInput && modeInput.value) {
             currentMode = modeInput.value;
-            currentStep = 3;
+            currentStep = 2;
             if (currentMode === 'EXAM') updateExamEstimate();
-            switchContent(3);
+            switchContent(2);
         } else {
             switchContent(1);
         }
-    };
-
-        recomputeAvailableModes();
-        recomputeAvailableSizes();
     };
 
     // Initialize on first page load
@@ -871,8 +807,6 @@
         if (scroll) scroll.scrollTop = sourceTreeScrollTop;
         updateDungeonAiSettings();
         updateDungeonSizeAvailability();
-        recomputeAvailableModes();
-        recomputeAvailableSizes();
     });
 
     // Re-initialize after HTMX injects the wizard via navigation

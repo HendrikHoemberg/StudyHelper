@@ -2753,18 +2753,6 @@ textarea.sh-input {
     }
 }
 
-.sh-study-choice.is-unavailable {
-    opacity: 0.4;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-.sh-study-choice-unavailable {
-    font-size: 0.8em;
-    color: var(--text-secondary);
-    margin-top: 0.5rem;
-}
-
 .sh-study-choice-subtitle {
     font-size: 0.875rem;
     color: var(--text-secondary);

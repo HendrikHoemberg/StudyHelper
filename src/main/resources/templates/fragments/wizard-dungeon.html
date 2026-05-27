@@ -3,7 +3,7 @@
 <body>
 
 <div th:fragment="panels">
-    <div class="sh-wizard-panel" data-step="3" data-mode="DUNGEON">
+    <div class="sh-wizard-panel" data-step="2" data-mode="DUNGEON">
         <div class="sh-section-title" th:text="#{wizard.dungeon.type}">Dungeon Type</div>
         <div class="sh-study-mode-grid sh-study-mode-grid-compact">
             <label class="sh-study-choice sh-study-choice-dungeon">
@@ -29,44 +29,32 @@
         </div>
     </div>
 
-    <div class="sh-wizard-panel" data-step="4" data-mode="DUNGEON">
+    <div class="sh-wizard-panel" data-step="3" data-mode="DUNGEON">
         <div class="sh-section-title" th:text="#{wizard.dungeon.size}">Dungeon Size</div>
         <div class="sh-study-mode-grid sh-study-mode-grid-compact">
-            <label class="sh-study-choice sh-study-choice-dungeon"
-                   th:data-min-cards="${T(com.HendrikHoemberg.StudyHelper.dto.DungeonSize).SMALL.totalPrompts()}">
+            <label class="sh-study-choice sh-study-choice-dungeon">
                 <input type="radio" name="dungeonSize" value="SMALL" th:checked="${dungeonSize != null and dungeonSize.name() == 'SMALL'}">
                 <div class="sh-study-choice-icon">
                     <iconify-icon icon="lucide:backpack"></iconify-icon>
                 </div>
                 <div class="sh-study-choice-title" th:text="#{wizard.dungeon.size.small}">Small</div>
                 <div class="sh-study-choice-subtitle" th:text="#{wizard.dungeon.size.small-desc}">Quick run. ~10 rooms.</div>
-                <div class="sh-study-choice-unavailable" hidden>
-                    <span class="sh-study-choice-unavailable-text"></span>
-                </div>
             </label>
-            <label class="sh-study-choice sh-study-choice-dungeon"
-                   th:data-min-cards="${T(com.HendrikHoemberg.StudyHelper.dto.DungeonSize).MEDIUM.totalPrompts()}">
+            <label class="sh-study-choice sh-study-choice-dungeon">
                 <input type="radio" name="dungeonSize" value="MEDIUM" th:checked="${dungeonSize != null and dungeonSize.name() == 'MEDIUM'}">
                 <div class="sh-study-choice-icon">
                     <iconify-icon icon="lucide:backpack"></iconify-icon>
                 </div>
                 <div class="sh-study-choice-title" th:text="#{wizard.dungeon.size.medium}">Medium</div>
                 <div class="sh-study-choice-subtitle" th:text="#{wizard.dungeon.size.medium-desc}">Balanced. ~20 rooms.</div>
-                <div class="sh-study-choice-unavailable" hidden>
-                    <span class="sh-study-choice-unavailable-text"></span>
-                </div>
             </label>
-            <label class="sh-study-choice sh-study-choice-dungeon"
-                   th:data-min-cards="${T(com.HendrikHoemberg.StudyHelper.dto.DungeonSize).LARGE.totalPrompts()}">
+            <label class="sh-study-choice sh-study-choice-dungeon">
                 <input type="radio" name="dungeonSize" value="LARGE" th:checked="${dungeonSize != null and dungeonSize.name() == 'LARGE'}">
                 <div class="sh-study-choice-icon">
                     <iconify-icon icon="lucide:backpack"></iconify-icon>
                 </div>
                 <div class="sh-study-choice-title" th:text="#{wizard.dungeon.size.large}">Large</div>
                 <div class="sh-study-choice-subtitle" th:text="#{wizard.dungeon.size.large-desc}">Epic adventure. ~40 rooms.</div>
-                <div class="sh-study-choice-unavailable" hidden>
-                    <span class="sh-study-choice-unavailable-text"></span>
-                </div>
             </label>
         </div>
 

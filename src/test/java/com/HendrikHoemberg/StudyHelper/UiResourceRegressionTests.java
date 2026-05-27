@@ -272,8 +272,8 @@ class UiResourceRegressionTests {
         String wizardJs = resource("static/js/study-wizard.js");
 
         assertThat(wizardJs)
-            .contains("QUIZ:       [\"Sources\", \"Mode\", \"Format\", \"Settings\"]")
-            .contains("EXAM:       [\"Sources\", \"Mode\", \"Depth\", \"Settings\", \"Layout\"]")
+            .contains("QUIZ:       [\"Mode\", \"Format\", \"Settings\", \"Sources\"]")
+            .contains("EXAM:       [\"Mode\", \"Depth\", \"Settings\", \"Sources\", \"Layout\"]")
             .contains("sourceStep()")
             .contains("initCustomSteppers")
             .contains("data-stepper-action");
@@ -323,7 +323,7 @@ class UiResourceRegressionTests {
             .contains("initInstantStepTwoChoices")
             .contains("input[name=\"sessionMode\"], input[name=\"quizQuestionMode\"], input[name=\"questionSize\"]")
             .contains("input.addEventListener('change'")
-            .contains("if (input.disabled || !input.checked || currentStep !== 3) return;")
+            .contains("if (input.disabled || !input.checked || currentStep !== 2) return;")
             .doesNotContain("setTimeout(() => wizardNext(), 0)");
     }
 
@@ -347,8 +347,8 @@ class UiResourceRegressionTests {
             .doesNotContain("name=\"questionSize\" value=\"LONG\" checked")
             .doesNotContain("name=\"questionSize\" value=\"MIXED\" checked");
         assertThat(wizardJs)
-            .contains("currentStep === 3")
-            .contains("if (nextBtn) nextBtn.style.display = (isLast || currentStep === 2) ? 'none' : '';");
+            .contains("currentStep === 2")
+            .contains("if (nextBtn) nextBtn.style.display = (isLast || currentStep === 1 || currentStep === 2) ? 'none' : '';");
     }
 
     @Test
