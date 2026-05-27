@@ -1073,8 +1073,8 @@ class UiResourceRegressionTests {
         assertThat(studyPage).contains("fragments/dungeon-complete :: dungeonComplete");
         assertThat(layout).contains("/css/dungeon.css");
         assertThat(layout).contains("/js/dungeon.js");
-        assertThat(game).contains("dungeon-map-canvas");
-        assertThat(game).contains("dungeon-map-state");
+        assertThat(game).contains("dungeon-room-canvas");
+        assertThat(game).contains("dungeon-minimap-state");
         assertThat(game).contains("activeEncounter");
         assertThat(game).contains("/dungeon/move");
         assertThat(js).contains("getContext('2d')");
