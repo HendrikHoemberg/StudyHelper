@@ -20,7 +20,13 @@ public record DungeonSessionState(
     int correctCount,
     Set<DungeonPosition> visibleTiles,
     boolean won,
-    boolean defeated
+    boolean defeated,
+    int streak,
+    int shields,
+    List<String> gauntletQueue,
+    int longestStreak,
+    int elitesCleared,
+    int shieldsUsed
 ) implements Serializable {
     @JsonIgnore
     public boolean isComplete() {

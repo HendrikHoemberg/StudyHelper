@@ -19,7 +19,8 @@ class DungeonDamageTests {
         DungeonMap map = new DungeonMap(1, 1, entrance, entrance, Map.of());
         return new DungeonSessionState(
             config, map, entrance, Map.of(), List.of(), 0, null,
-            health, 0, 0, 0, Set.of(), false, false);
+            health, 0, 0, 0, Set.of(), false, false,
+            0, 0, List.of(), 0, 0, 0);
     }
 
     @Test

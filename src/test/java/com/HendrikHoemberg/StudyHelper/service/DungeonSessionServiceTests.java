@@ -199,7 +199,8 @@ class DungeonSessionServiceTests {
             0,
             initialVisible,
             false,
-            false
+            false,
+            0, 0, List.of(), 0, 0, 0
         );
 
         DungeonSessionState afterLeft = dungeonSessionService.move(state, DungeonDirection.LEFT);
@@ -267,7 +268,8 @@ class DungeonSessionServiceTests {
         DungeonMap map = fiveByFiveWithWalls(pos, tiles -> {});
         Set<DungeonPosition> visible = Set.of(pos, p(1, 2), p(3, 2), p(2, 1), p(2, 3));
         DungeonSessionState state = new DungeonSessionState(
-            config(DungeonMode.FLASHCARDS), map, pos, Map.of(), List.of(), 0, null, 5, 0, 0, 0, visible, false, false);
+            config(DungeonMode.FLASHCARDS), map, pos, Map.of(), List.of(), 0, null, 5, 0, 0, 0, visible, false, false,
+            0, 0, List.of(), 0, 0, 0);
 
         DungeonSessionState result = dungeonSessionService.answerFlashcard(state, true);
 
@@ -300,7 +302,8 @@ class DungeonSessionServiceTests {
             List.of(id1, id2),
             0,
             id1,
-            5, 0, 0, 0, visible, false, false
+            5, 0, 0, 0, visible, false, false,
+            0, 0, List.of(), 0, 0, 0
         );
 
         DungeonSessionState result = dungeonSessionService.answerQuiz(state, List.of(0));
@@ -345,7 +348,8 @@ class DungeonSessionServiceTests {
         DungeonMap map = fiveByFiveWithWalls(pos, tiles -> {});
         Set<DungeonPosition> visible = Set.of(pos, p(1, 2), p(3, 2), p(2, 1), p(2, 3));
         DungeonSessionState state = new DungeonSessionState(
-            config(DungeonMode.AI_QUIZ), map, pos, Map.of(), List.of(), 0, null, 5, 0, 0, 0, visible, false, false);
+            config(DungeonMode.AI_QUIZ), map, pos, Map.of(), List.of(), 0, null, 5, 0, 0, 0, visible, false, false,
+            0, 0, List.of(), 0, 0, 0);
 
         DungeonSessionState result = dungeonSessionService.answerQuiz(state, List.of(0));
         assertThat(result).isSameAs(state);
@@ -362,7 +366,8 @@ class DungeonSessionServiceTests {
         Set<DungeonPosition> visible = Set.of(pos, p(1, 2), p(3, 2), p(2, 1), p(2, 3));
         return new DungeonSessionState(
             config(DungeonMode.FLASHCARDS), map, pos,
-            Map.of(), List.of(), 0, null, health, score, 0, 0, visible, false, false);
+            Map.of(), List.of(), 0, null, health, score, 0, 0, visible, false, false,
+            0, 0, List.of(), 0, 0, 0);
     }
 
     private DungeonSessionState stateWithActiveFlashcard(DungeonEncounter enc) {
@@ -373,7 +378,8 @@ class DungeonSessionServiceTests {
         return new DungeonSessionState(
             config(DungeonMode.FLASHCARDS), map, pos,
             Map.of(enc.id(), enc), List.of(), 0, enc.id(),
-            5, 0, 0, 0, visible, false, false);
+            5, 0, 0, 0, visible, false, false,
+            0, 0, List.of(), 0, 0, 0);
     }
 
     private DungeonSessionState stateWithActiveQuiz(QuizQuestion question) {
@@ -386,7 +392,8 @@ class DungeonSessionServiceTests {
         return new DungeonSessionState(
             config(DungeonMode.AI_QUIZ), map, pos,
             Map.of(id, enc), List.of(), 0, id,
-            5, 0, 0, 0, visible, false, false);
+            5, 0, 0, 0, visible, false, false,
+            0, 0, List.of(), 0, 0, 0);
     }
 
     private DungeonConfig config(DungeonMode mode) {

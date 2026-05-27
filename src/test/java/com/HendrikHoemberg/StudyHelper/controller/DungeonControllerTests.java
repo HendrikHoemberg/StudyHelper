@@ -85,7 +85,8 @@ class DungeonControllerTests {
             won ? 1 : 0,
             Set.of(entrance, pos1),
             won,
-            defeated
+            defeated,
+            0, 0, List.of(), 0, 0, 0
         );
     }
 
@@ -95,7 +96,7 @@ class DungeonControllerTests {
         when(dungeonSessionService.createFlashcardDungeon(List.of(1L), DungeonSize.SMALL, user))
             .thenReturn(state);
         DungeonRunStats stats = new DungeonRunStats(
-            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false);
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false, 0, 0, 0);
         when(dungeonSessionService.buildStats(state)).thenReturn(stats);
 
         MockHttpSession session = new MockHttpSession();
@@ -139,7 +140,7 @@ class DungeonControllerTests {
         when(dungeonSessionService.createFlashcardDungeon(List.of(1L), DungeonSize.SMALL, user))
             .thenReturn(state);
         DungeonRunStats stats = new DungeonRunStats(
-            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false);
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false, 0, 0, 0);
         when(dungeonSessionService.buildStats(state)).thenReturn(stats);
 
         MockHttpSession session = new MockHttpSession();
@@ -229,7 +230,7 @@ class DungeonControllerTests {
         DungeonSessionState after = sampleState(false, false);
         when(dungeonSessionService.move(before, DungeonDirection.RIGHT)).thenReturn(after);
         DungeonRunStats stats = new DungeonRunStats(
-            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false);
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false, 0, 0, 0);
         when(dungeonSessionService.buildStats(after)).thenReturn(stats);
 
         MockHttpSession session = new MockHttpSession();
@@ -249,7 +250,7 @@ class DungeonControllerTests {
         DungeonSessionState state = sampleState(false, false);
         when(dungeonSessionService.move(state, DungeonDirection.UP)).thenReturn(state);
         DungeonRunStats stats = new DungeonRunStats(
-            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false);
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false, 0, 0, 0);
         when(dungeonSessionService.buildStats(state)).thenReturn(stats);
 
         MockHttpSession session = new MockHttpSession();
@@ -269,7 +270,7 @@ class DungeonControllerTests {
         DungeonSessionState state = sampleState(false, false);
         when(dungeonSessionService.answerFlashcard(state, true)).thenReturn(state);
         DungeonRunStats stats = new DungeonRunStats(
-            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false);
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false, 0, 0, 0);
         when(dungeonSessionService.buildStats(state)).thenReturn(stats);
 
         MockHttpSession session = new MockHttpSession();
@@ -290,7 +291,7 @@ class DungeonControllerTests {
         DungeonSessionState won = sampleState(true, false);
         when(dungeonSessionService.answerFlashcard(before, true)).thenReturn(won);
         DungeonRunStats stats = new DungeonRunStats(
-            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 1, 1, 5, true);
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 1, 1, 5, true, 0, 0, 0);
         when(dungeonSessionService.buildStats(won)).thenReturn(stats);
 
         MockHttpSession session = new MockHttpSession();
@@ -311,7 +312,7 @@ class DungeonControllerTests {
         DungeonSessionState won = sampleState(true, false);
         when(dungeonSessionService.answerFlashcard(before, true)).thenReturn(won);
         DungeonRunStats stats = new DungeonRunStats(
-            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 1, 1, 5, true);
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 1, 1, 5, true, 0, 0, 0);
         when(dungeonSessionService.buildStats(won)).thenReturn(stats);
 
         MockHttpSession session = new MockHttpSession();
@@ -336,7 +337,7 @@ class DungeonControllerTests {
             new SavedSessionService.ReconcileDungeonResult(saved, 0, true);
         when(savedSessionService.reconcileDungeonFlashcards(saved, user)).thenReturn(result);
         DungeonRunStats stats = new DungeonRunStats(
-            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false);
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false, 0, 0, 0);
         when(dungeonSessionService.buildStats(saved)).thenReturn(stats);
 
         MockHttpSession session = new MockHttpSession();
@@ -359,7 +360,7 @@ class DungeonControllerTests {
             new SavedSessionService.ReconcileDungeonResult(saved, 2, false);
         when(savedSessionService.reconcileDungeonFlashcards(saved, user)).thenReturn(result);
         DungeonRunStats stats = new DungeonRunStats(
-            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false);
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 5, false, 0, 0, 0);
         when(dungeonSessionService.buildStats(saved)).thenReturn(stats);
 
         MockHttpSession session = new MockHttpSession();

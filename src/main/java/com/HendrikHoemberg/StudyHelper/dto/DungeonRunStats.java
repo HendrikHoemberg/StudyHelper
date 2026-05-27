@@ -7,5 +7,8 @@ public record DungeonRunStats(
     int answeredPrompts,
     int correctPrompts,
     int healthRemaining,
-    boolean won
+    boolean won,
+    int longestStreak,
+    int elitesCleared,
+    int shieldsUsed
 ) {}

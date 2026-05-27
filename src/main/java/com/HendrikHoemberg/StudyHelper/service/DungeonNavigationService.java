@@ -78,7 +78,9 @@ public class DungeonNavigationService {
             working.health(), score,
             working.answeredCount(), working.correctCount(),
             visibleFrom(tiles),
-            working.won(), working.defeated());
+            working.won(), working.defeated(),
+            working.streak(), working.shields(), working.gauntletQueue(),
+            working.longestStreak(), working.elitesCleared(), working.shieldsUsed());
 
         return new MoveResult(moved, activeTile.type(), encounterIdHit);
     }

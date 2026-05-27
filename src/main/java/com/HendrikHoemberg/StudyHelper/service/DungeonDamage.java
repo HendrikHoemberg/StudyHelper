@@ -19,7 +19,9 @@ public final class DungeonDamage {
             newHealth, state.score(),
             state.answeredCount(), state.correctCount(),
             state.visibleTiles(),
-            state.won(), defeated);
+            state.won(), defeated,
+            state.streak(), state.shields(), state.gauntletQueue(),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed());
     }
 
     public static DungeonSessionState heal(DungeonSessionState state, int amount) {
@@ -31,6 +33,8 @@ public final class DungeonDamage {
             newHealth, state.score(),
             state.answeredCount(), state.correctCount(),
             state.visibleTiles(),
-            state.won(), state.defeated());
+            state.won(), state.defeated(),
+            state.streak(), state.shields(), state.gauntletQueue(),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed());
     }
 }

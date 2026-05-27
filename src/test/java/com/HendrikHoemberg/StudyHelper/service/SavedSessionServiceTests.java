@@ -308,7 +308,9 @@ class SavedSessionServiceTests {
             state.config(), state.map(), state.playerPosition(), clearedEncounters,
             state.bossEncounterIds(), state.bossIndex(), state.activeEncounterId(),
             state.health(), state.score(), state.answeredCount(), state.correctCount(),
-            state.visibleTiles(), state.won(), state.defeated()
+            state.visibleTiles(), state.won(), state.defeated(),
+            state.streak(), state.shields(), state.gauntletQueue(),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed()
         );
 
         when(flashcardRepository.findExistingIdsByIdIn(anyCollection()))
@@ -332,7 +334,7 @@ class SavedSessionServiceTests {
         row.setUpdatedAt(java.time.Instant.now());
 
         when(repository.findByUser(user)).thenReturn(Optional.of(row));
-        DungeonRunStats stats = new DungeonRunStats(DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 10, false);
+        DungeonRunStats stats = new DungeonRunStats(DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 0, 0, 10, false, 0, 0, 0);
         when(dungeonSessionService.buildStats(any())).thenReturn(stats);
 
         service.discard(user);
@@ -378,7 +380,8 @@ class SavedSessionServiceTests {
         tiles.put(entrance, new DungeonTile(entrance, DungeonTileType.ENTRANCE, true, true, null));
         DungeonMap map = new DungeonMap(5, 5, entrance, new DungeonPosition(4, 4), tiles);
         return new DungeonSessionState(
-            config, map, entrance, new LinkedHashMap<>(), List.of(), 0, null, 10, 0, 0, 0, Set.of(), false, false
+            config, map, entrance, new LinkedHashMap<>(), List.of(), 0, null, 10, 0, 0, 0, Set.of(), false, false,
+            0, 0, List.of(), 0, 0, 0
         );
     }
 
@@ -402,7 +405,8 @@ class SavedSessionServiceTests {
         DungeonMap map = new DungeonMap(5, 5, entrance, new DungeonPosition(4, 4), tiles);
         return new DungeonSessionState(
             config, map, new DungeonPosition(0, 0), encounters,
-            List.of("boss-0", "boss-1"), 0, null, 10, 0, 0, 0, Set.of(), false, false
+            List.of("boss-0", "boss-1"), 0, null, 10, 0, 0, 0, Set.of(), false, false,
+            0, 0, List.of(), 0, 0, 0
         );
     }
 }

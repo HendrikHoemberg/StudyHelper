@@ -143,7 +143,10 @@ public class DungeonSessionService {
             state.answeredCount(),
             state.correctCount(),
             state.health(),
-            state.won());
+            state.won(),
+            state.longestStreak(),
+            state.elitesCleared(),
+            state.shieldsUsed());
     }
 
     private DungeonSessionState initialState(DungeonConfig config, DungeonMap map,
@@ -159,7 +162,8 @@ public class DungeonSessionService {
             Map.copyOf(encounters), List.copyOf(bossEncounterIds),
             0, null,
             DungeonDamage.STARTING_HEALTH, 0, 0, 0,
-            visible, false, false);
+            visible, false, false,
+            0, 0, List.of(), 0, 0, 0);
     }
 
     private void validateSize(DungeonSize size, int usableItems, String unit) {

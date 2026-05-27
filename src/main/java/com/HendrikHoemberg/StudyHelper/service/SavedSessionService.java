@@ -289,7 +289,9 @@ public class SavedSessionService {
             state.correctCount(),
             state.visibleTiles(),
             state.won(),
-            state.defeated()
+            state.defeated(),
+            state.streak(), state.shields(), state.gauntletQueue(),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed()
         );
 
         return new ReconcileDungeonResult(newState, removedEncounterIds.size(), canContinue);

@@ -68,7 +68,8 @@ class DungeonSessionStateTests {
             0,
             Set.of(start),
             won,
-            defeated
+            defeated,
+            0, 0, List.of(), 0, 0, 0
         );
     }
 }

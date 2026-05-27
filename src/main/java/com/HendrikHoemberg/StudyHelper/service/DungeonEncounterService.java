@@ -27,7 +27,9 @@ public class DungeonEncounterService {
             state.health(), state.score(),
             state.answeredCount(), state.correctCount(),
             state.visibleTiles(),
-            state.won(), state.defeated());
+            state.won(), state.defeated(),
+            state.streak(), state.shields(), state.gauntletQueue(),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed());
     }
 
     public DungeonSessionState answerFlashcard(DungeonSessionState state, boolean gotIt) {
@@ -62,7 +64,9 @@ public class DungeonEncounterService {
             state.health(), state.score(),
             answeredCount, correctCount,
             state.visibleTiles(),
-            state.won(), state.defeated());
+            state.won(), state.defeated(),
+            state.streak(), state.shields(), state.gauntletQueue(),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed());
 
         if (!correct) {
             working = DungeonDamage.takeDamage(working, 1);
@@ -87,7 +91,9 @@ public class DungeonEncounterService {
                         working.health(), working.score(),
                         working.answeredCount(), working.correctCount(),
                         working.visibleTiles(),
-                        working.won(), working.defeated());
+                        working.won(), working.defeated(),
+                        working.streak(), working.shields(), working.gauntletQueue(),
+                        working.longestStreak(), working.elitesCleared(), working.shieldsUsed());
                     nextActiveId = nextBossId;
                 }
             } else {
@@ -114,6 +120,8 @@ public class DungeonEncounterService {
             working.health(), working.score(),
             working.answeredCount(), working.correctCount(),
             working.visibleTiles(),
-            won, working.defeated());
+            won, working.defeated(),
+            working.streak(), working.shields(), working.gauntletQueue(),
+            working.longestStreak(), working.elitesCleared(), working.shieldsUsed());
     }
 }
