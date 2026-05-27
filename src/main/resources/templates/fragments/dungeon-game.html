@@ -154,6 +154,56 @@
                  th:replace="~{fragments/dungeon-secret-modal :: modal}"></div>
         </div>
 
+        <!-- Hidden Encounter Panel for JS Engine -->
+        <div class="sh-dungeon-encounter-panel" style="display: none;">
+            <!-- Flashcard encounter -->
+            <div th:if="${activeEncounter != null and activeEncounter.flashcardId != null}" class="sh-dungeon-flashcard">
+                <div class="sh-dungeon-flashcard-front">
+                    <p class="sh-dungeon-flashcard-text" th:text="${activeEncounter.frontText}">Front text</p>
+                </div>
+                <details class="sh-dungeon-flashcard-details">
+                    <div class="sh-dungeon-flashcard-back">
+                        <p class="sh-dungeon-flashcard-text" th:text="${activeEncounter.backText}">Back text</p>
+                    </div>
+                </details>
+                <div class="sh-dungeon-answer-row">
+                    <button class="sh-btn"
+                            hx-post="/dungeon/answer/flashcard"
+                            hx-target="#dungeon-session-content"
+                            hx-swap="outerHTML"
+                            name="gotIt" value="false"></button>
+                    <button class="sh-btn"
+                            hx-post="/dungeon/answer/flashcard"
+                            hx-target="#dungeon-session-content"
+                            hx-swap="outerHTML"
+                            name="gotIt" value="true"></button>
+                </div>
+            </div>
+
+            <!-- Quiz encounter -->
+            <form th:if="${activeEncounter != null and activeEncounter.quizQuestion != null}"
+                  method="post"
+                  hx-post="/dungeon/answer/quiz"
+                  hx-target="#dungeon-session-content"
+                  hx-swap="outerHTML"
+                  class="sh-dungeon-quiz-form">
+                <p class="sh-dungeon-quiz-question" th:text="${activeEncounter.quizQuestion.questionText}">Question text</p>
+                <div th:each="option, iter : ${activeEncounter.quizQuestion.options}" class="sh-dungeon-quiz-option">
+                    <label>
+                        <input th:if="${activeEncounter.quizQuestion.type.name() == 'MULTIPLE_SELECT'}"
+                               type="checkbox"
+                               name="selectedOptions"
+                               th:value="${iter.index}" />
+                        <input th:unless="${activeEncounter.quizQuestion.type.name() == 'MULTIPLE_SELECT'}"
+                               type="radio"
+                               name="selectedOptions"
+                               th:value="${iter.index}" />
+                        <span th:text="${option}">Option</span>
+                    </label>
+                </div>
+            </form>
+        </div>
+
     </div>
 </div>
 

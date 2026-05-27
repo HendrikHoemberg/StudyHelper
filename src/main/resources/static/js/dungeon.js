@@ -1189,7 +1189,7 @@
 
         // Dialog Message Box
         var boxX = 20 * scale;
-        var boxY = 230 * scale;
+        var boxY = 190 * scale;
         var boxW = canvas.width - 40 * scale;
         var boxH = canvas.height - boxY - 20 * scale;
 
@@ -1221,41 +1221,46 @@
             var backText = document.querySelector('.sh-dungeon-flashcard-back .sh-dungeon-flashcard-text')?.textContent || "";
             var isRevealed = document.querySelector('.sh-dungeon-flashcard-details')?.open === true;
 
-            // Loop to dynamically size fonts to fit available height!
             var fontSize = 15 * scale;
             var lineHeight = 20 * scale;
-            var maxTextHeight = startY - (boxY + 60 * scale);
-            var textHeight = 9999;
-            var questionLines, answerLines;
+            var maxTextHeight = startY - (boxY + 55 * scale);
+            var lines = [];
 
-            while (fontSize >= 9 * scale) {
+            while (fontSize >= 8 * scale) {
                 ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
-                questionLines = wrapText(ctx, "FRAGE: " + frontText, boxX + 20 * scale, boxY + 55 * scale, boxW - 40 * scale, lineHeight, false);
-                var qH = questionLines.length * lineHeight;
-                
-                if (isRevealed) {
-                    answerLines = wrapText(ctx, backText, boxX + 20 * scale, boxY + 55 * scale + qH + 20 * scale, boxW - 40 * scale, lineHeight, false);
-                    textHeight = qH + 20 * scale + answerLines.length * lineHeight;
+                if (!isRevealed) {
+                    lines = wrapText(ctx, "FRAGE: " + frontText, boxX + 20 * scale, boxY + 55 * scale, boxW - 40 * scale, lineHeight, false);
                 } else {
-                    textHeight = qH;
+                    lines = wrapText(ctx, backText, boxX + 20 * scale, boxY + 50 * scale, boxW - 40 * scale, lineHeight, false);
                 }
 
-                if (textHeight <= maxTextHeight) {
+                if (lines.length * lineHeight <= maxTextHeight) {
                     break;
                 }
                 fontSize -= 0.5 * scale;
-                lineHeight -= 0.8 * scale;
+                lineHeight -= 0.7 * scale;
             }
 
-            ctx.fillStyle = '#f59e0b';
-            ctx.font = 'bold ' + Math.floor(13 * scale) + 'px "Courier New", Courier, monospace';
-            ctx.fillText("⚔️ ENCOUNTER: KARTE GEZOGEN ⚔️", boxX + 20 * scale, boxY + 28 * scale);
+            // Draw header and content
+            if (!isRevealed) {
+                ctx.fillStyle = '#f59e0b';
+                ctx.font = 'bold ' + Math.floor(13 * scale) + 'px "Courier New", Courier, monospace';
+                ctx.fillText("⚔️ ENCOUNTER: KARTE GEZOGEN ⚔️", boxX + 20 * scale, boxY + 28 * scale);
 
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
-            var lines = wrapText(ctx, "FRAGE: " + frontText, boxX + 20 * scale, boxY + 55 * scale, boxW - 40 * scale, lineHeight, true);
-            var questionHeight = lines.length * lineHeight;
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
+                wrapText(ctx, "FRAGE: " + frontText, boxX + 20 * scale, boxY + 55 * scale, boxW - 40 * scale, lineHeight, true);
+            } else {
+                ctx.fillStyle = '#2dd4bf';
+                ctx.font = 'bold ' + Math.floor(13 * scale) + 'px "Courier New", Courier, monospace';
+                ctx.fillText("ANTWORT:", boxX + 20 * scale, boxY + 28 * scale);
 
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
+                wrapText(ctx, backText, boxX + 20 * scale, boxY + 50 * scale, boxW - 40 * scale, lineHeight, true);
+            }
+
+            // Draw buttons
             if (!isRevealed) {
                 var btnW = 180 * scale;
                 var btnH = 32 * scale;
@@ -1270,7 +1275,6 @@
                 });
 
                 var isHovered = window.dungeonHoveredOptionIndex === 0;
-
                 ctx.fillStyle = isHovered ? '#1e293b' : '#020617';
                 ctx.fillRect(btnX, startY, btnW, btnH);
                 ctx.strokeStyle = '#ffffff';
@@ -1283,14 +1287,6 @@
                 ctx.fillText((isHovered ? "▶ " : "") + "ZEIGE ANTWORT [SPACE]", btnX + btnW / 2, startY + 20 * scale);
                 ctx.textAlign = 'left';
             } else {
-                ctx.fillStyle = '#2dd4bf';
-                ctx.font = 'bold ' + Math.floor(12 * scale) + 'px "Courier New", Courier, monospace';
-                ctx.fillText("ANTWORT:", boxX + 20 * scale, boxY + 55 * scale + questionHeight + 15 * scale);
-
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
-                wrapText(ctx, backText, boxX + 20 * scale, boxY + 55 * scale + questionHeight + 32 * scale, boxW - 40 * scale, lineHeight, true);
-
                 var btnW = 110 * scale;
                 var btnH = 32 * scale;
 
