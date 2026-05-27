@@ -891,6 +891,63 @@
             ctx.stroke();
             ctx.restore();
         }
+
+        // 5. Shield-break particles
+        if (window.shieldBreakActive) {
+            var elapsed = Date.now() - window.shieldBreakStart;
+            if (elapsed < 600) {
+                ctx.save();
+                var factor = elapsed / 600;
+                ctx.globalAlpha = 1 - factor;
+                for (var i = 0; i < 8; i++) {
+                    var angle = (i / 8) * Math.PI * 2;
+                    var dist = factor * tileSize * 1.5;
+                    var px2 = pCenterX + Math.cos(angle) * dist;
+                    var py2 = pCenterY + Math.sin(angle) * dist;
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.beginPath();
+                    ctx.arc(px2, py2, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            } else {
+                window.shieldBreakActive = false;
+            }
+        }
+
+        // 6. Streak milestone flash overlay
+        if (window.streakFlashActive) {
+            var elapsed = Date.now() - window.streakFlashStart;
+            if (elapsed < 500) {
+                ctx.save();
+                var factor = elapsed / 500;
+                ctx.fillStyle = 'rgba(251, 191, 36, ' + (0.15 * (1 - factor)) + ')';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.restore();
+            } else {
+                window.streakFlashActive = false;
+            }
+        }
+
+        // 7. Shield and streak DOM detection
+        var shieldsEl = document.querySelector('.sh-dungeon-hud-shields');
+        var currentShields = shieldsEl ? shieldsEl.querySelectorAll('iconify-icon').length : 0;
+        if (window.lastShields !== undefined && currentShields < window.lastShields) {
+            window.shieldBreakActive = true;
+            window.shieldBreakStart = Date.now();
+            DungeonAudio.playShieldBreak();
+        }
+        window.lastShields = currentShields;
+
+        var streakEl = document.querySelector('.sh-dungeon-hud-streak');
+        var currentStreak = streakEl ? parseInt((streakEl.textContent || '×0').replace('×', ''), 10) || 0 : 0;
+        if (window.lastStreak !== undefined && currentStreak > window.lastStreak
+            && currentStreak % 3 === 0 && currentStreak > 0) {
+            window.streakFlashActive = true;
+            window.streakFlashStart = Date.now();
+            DungeonAudio.playShieldGain();
+        }
+        window.lastStreak = currentStreak;
     }
 
     // ============================================================
