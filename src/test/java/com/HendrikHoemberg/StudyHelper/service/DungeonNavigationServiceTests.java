@@ -35,12 +35,16 @@ class DungeonNavigationServiceTests {
     }
 
     @Test
-    void move_intoHealRoomAppliesFullHealAndShieldGrantAndMarksCleared() {
+    void move_intoHealRoomAppliesFullHealAndShieldGrantAndClearsOnExit() {
         DungeonSessionState state = healNeighborStateWithLowHpAndNoShields();
         DungeonNavigationService.MoveResult result = nav.move(state, DungeonDirection.RIGHT);
         assertThat(result.state().health()).isEqualTo(result.state().healthCap());
         assertThat(result.state().shields()).isEqualTo(1);
-        assertThat(result.state().map().room("r1").cleared()).isTrue();
+        assertThat(result.state().map().room("r1").cleared()).isFalse(); // Uncleared initially so centerpiece is visible
+
+        // Move out of HEAL room back to Entrance
+        DungeonNavigationService.MoveResult exitResult = nav.move(result.state(), DungeonDirection.LEFT);
+        assertThat(exitResult.state().map().room("r1").cleared()).isTrue(); // Marked cleared on exit
     }
 
     @Test

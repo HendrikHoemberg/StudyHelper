@@ -25,6 +25,13 @@ public class DungeonNavigationService {
         if (nextRoom == null) return new MoveResult(state, null);
 
         Map<String, DungeonRoom> rooms = new LinkedHashMap<>(state.map().rooms());
+
+        // If leaving an uncleared HEAL room, mark it cleared now so it's empty next time
+        if (current.type() == RoomType.HEAL && !current.cleared()) {
+            current = current.withCleared(true);
+            rooms.put(current.id(), current);
+        }
+
         boolean firstEntry = !nextRoom.visited();
         nextRoom = nextRoom.withVisited(true);
 
@@ -39,7 +46,7 @@ public class DungeonNavigationService {
             if (working.shields() < working.shieldCap()) {
                 working = withShields(working, working.shields() + 1);
             }
-            nextRoom = nextRoom.withCleared(true);
+            // Keep room cleared = false initially so the campfire/potion centerpiece is visible
         }
 
         rooms.put(nextRoomId, nextRoom);

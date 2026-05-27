@@ -715,6 +715,7 @@
     var playerSpeed = 4.5;
     var activeKeys = {};
     var loopRunning = false;
+    var combatLoopRunning = false;
     var animationFrameId = null;
     window.dungeonCenterpieceInteracted = false;
 
@@ -931,6 +932,51 @@
         drawPixelSprite(ctx, 'PLAYER', playerX, playerY, 64);
     }
 
+    function runSplashLoop() {
+        if (!window.dungeonSplashActive) return;
+        var canvas = document.getElementById('dungeon-room-canvas');
+        if (!canvas) {
+            window.dungeonSplashActive = false;
+            return;
+        }
+        var activeEncounterId = canvas.dataset.activeEncounterId;
+        if (!activeEncounterId || activeEncounterId.length === 0) {
+            window.dungeonSplashActive = false;
+            return;
+        }
+
+        var elapsed = Date.now() - window.dungeonSplashStartTime;
+        if (elapsed >= 1500) {
+            window.dungeonSplashActive = false;
+            renderRoomCanvas();
+            return;
+        }
+
+        renderSplash(canvas, canvas.getContext('2d'));
+        requestAnimationFrame(runSplashLoop);
+    }
+
+    function runCombatLoop() {
+        if (!combatLoopRunning) return;
+        var canvas = document.getElementById('dungeon-room-canvas');
+        if (!canvas) {
+            combatLoopRunning = false;
+            return;
+        }
+        var activeEncounterId = canvas.dataset.activeEncounterId;
+        if (!activeEncounterId || activeEncounterId.length === 0) {
+            combatLoopRunning = false;
+            renderRoomCanvas();
+            return;
+        }
+
+        if (typeof renderJRPGCombat === 'function') {
+            renderJRPGCombat(canvas, canvas.getContext('2d'), activeEncounterId);
+        }
+
+        requestAnimationFrame(runCombatLoop);
+    }
+
     function renderRoomCanvas() {
         var canvas = document.getElementById('dungeon-room-canvas');
         if (!canvas) return;
@@ -941,11 +987,51 @@
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
             }
+
+            // Splash entrance screen check
+            if (window.dungeonSplashPlayedForEncounter !== activeEncounterId) {
+                window.dungeonSplashActive = true;
+                window.dungeonSplashPlayedForEncounter = activeEncounterId;
+                window.dungeonSplashStartTime = Date.now();
+
+                var activeEncBoss = canvas.dataset.activeEncounterBoss === 'true';
+                var gauntletTotal = parseInt(canvas.dataset.gauntletTotal || '0', 10);
+                window.dungeonSplashBoss = activeEncBoss;
+
+                if (gauntletTotal > 0 && !activeEncBoss) {
+                    window.dungeonSplashMonster = 'CHAMPION';
+                } else if (activeEncBoss) {
+                    window.dungeonSplashMonster = 'DRAGON';
+                } else {
+                    var monsterTypes = ['SLIME', 'SKELETON', 'GOBLIN', 'GHOST'];
+                    var hash = 0;
+                    for (var i = 0; i < activeEncounterId.length; i++) {
+                        hash = activeEncounterId.charCodeAt(i) + ((hash << 5) - hash);
+                    }
+                    var idx = Math.abs(hash) % monsterTypes.length;
+                    window.dungeonSplashMonster = monsterTypes[idx];
+                }
+
+                DungeonAudio.playBattleStart();
+                runSplashLoop();
+                return;
+            }
+
+            if (window.dungeonSplashActive) {
+                return;
+            }
+
             if (typeof renderJRPGCombat === 'function') {
-                renderJRPGCombat(canvas, canvas.getContext('2d'), activeEncounterId);
+                if (!combatLoopRunning) {
+                    combatLoopRunning = true;
+                    runCombatLoop();
+                }
             }
             return;
         }
+
+        // Transitioning back to exploration mode
+        combatLoopRunning = false;
 
         // Spawn player relative to entered door orientation
         if (window.dungeonLastMoveDirection) {
