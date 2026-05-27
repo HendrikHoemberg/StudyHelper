@@ -10,5 +10,6 @@ public record DungeonRunStats(
     boolean won,
     int longestStreak,
     int elitesCleared,
-    int shieldsUsed
+    int shieldsUsed,
+    int relicsAcquired
 ) {}

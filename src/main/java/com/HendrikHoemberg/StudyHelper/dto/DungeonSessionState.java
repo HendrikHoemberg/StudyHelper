@@ -1,33 +1,45 @@
 package com.HendrikHoemberg.StudyHelper.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public record DungeonSessionState(
     DungeonConfig config,
     DungeonMap map,
-    DungeonPosition playerPosition,
+    String currentRoomId,
     Map<String, DungeonEncounter> encounters,
     List<String> bossEncounterIds,
     int bossIndex,
     String activeEncounterId,
     int health,
+    int healthCap,
+    int shields,
+    int shieldCap,
     int score,
     int answeredCount,
     int correctCount,
-    Set<DungeonPosition> visibleTiles,
     boolean won,
     boolean defeated,
     int streak,
-    int shields,
     List<String> gauntletQueue,
     int longestStreak,
     int elitesCleared,
-    int shieldsUsed
+    int shieldsUsed,
+    int luckyCoinsConsumed,
+    List<RelicId> ownedRelics,
+    PendingRelicPick pendingRelicPick
 ) implements Serializable {
+
+    public DungeonSessionState {
+        ownedRelics = ownedRelics == null ? List.of() : List.copyOf(ownedRelics);
+        gauntletQueue = gauntletQueue == null ? List.of() : List.copyOf(gauntletQueue);
+        encounters = Map.copyOf(encounters);
+        bossEncounterIds = List.copyOf(bossEncounterIds);
+    }
+
     @JsonIgnore
     public boolean isComplete() {
         return won || defeated;
@@ -35,5 +47,9 @@ public record DungeonSessionState(
 
     public DungeonEncounter activeEncounter() {
         return activeEncounterId == null ? null : encounters.get(activeEncounterId);
+    }
+
+    public DungeonRoom currentRoom() {
+        return map.room(currentRoomId);
     }
 }
