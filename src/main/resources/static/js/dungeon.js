@@ -718,6 +718,7 @@
     var combatLoopRunning = false;
     var animationFrameId = null;
     window.dungeonCenterpieceInteracted = false;
+    window.dungeonLastRoomId = null;
 
     // Global listeners to track key presses smoothly
     document.addEventListener('keydown', function (e) {
@@ -736,6 +737,13 @@
         var key = e.key.toLowerCase();
         activeKeys[e.key] = false;
         activeKeys[key] = false;
+    });
+
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.sh-dungeon-dir');
+        if (btn) {
+            window.dungeonLastMoveDirection = btn.value || btn.getAttribute('value');
+        }
     });
 
     function triggerRoomTransition(dir) {
@@ -1033,27 +1041,33 @@
         // Transitioning back to exploration mode
         combatLoopRunning = false;
 
-        // Spawn player relative to entered door orientation
-        if (window.dungeonLastMoveDirection) {
-            var dir = window.dungeonLastMoveDirection;
-            window.dungeonLastMoveDirection = null; // Reset spawn reference
-            if (dir === 'UP') {
+        var roomId = canvas.dataset.currentRoomId;
+        var roomChanged = (window.dungeonLastRoomId !== roomId);
+        window.dungeonLastRoomId = roomId;
+
+        if (roomChanged) {
+            // Spawn player relative to entered door orientation
+            if (window.dungeonLastMoveDirection) {
+                var dir = window.dungeonLastMoveDirection;
+                window.dungeonLastMoveDirection = null; // Reset spawn reference
+                if (dir === 'UP') {
+                    playerX = 480;
+                    playerY = 590;
+                } else if (dir === 'DOWN') {
+                    playerX = 480;
+                    playerY = 110;
+                } else if (dir === 'LEFT') {
+                    playerX = 840;
+                    playerY = 352;
+                } else if (dir === 'RIGHT') {
+                    playerX = 120;
+                    playerY = 352;
+                }
+            } else {
+                // Default center spawn for new run/resume
                 playerX = 480;
-                playerY = 590;
-            } else if (dir === 'DOWN') {
-                playerX = 480;
-                playerY = 110;
-            } else if (dir === 'LEFT') {
-                playerX = 840;
-                playerY = 352;
-            } else if (dir === 'RIGHT') {
-                playerX = 120;
                 playerY = 352;
             }
-        } else {
-            // Default center spawn for new run/resume
-            playerX = 480;
-            playerY = 352;
         }
 
         // Safe resetting of local movement state
