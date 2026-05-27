@@ -9,359 +9,447 @@ import java.util.*;
 public class DungeonMapGenerator {
 
     private static final int MAX_REGEN_ATTEMPTS = 10;
-    private static final int MAX_ROOM_ATTEMPTS = 50;
+    private static final DungeonDirection[] DIRS = DungeonDirection.values();
 
-    public DungeonMap generate(DungeonSize size, List<String> normalEncounterIds) {
-        return generate(size, normalEncounterIds, List.of(), new Random());
-    }
-
-    public DungeonMap generate(DungeonSize size, List<String> normalEncounterIds,
+    public DungeonMap generate(DungeonSize size,
+                                List<String> normalEncounterIds,
                                 List<List<String>> eliteGauntletGroups) {
         return generate(size, normalEncounterIds, eliteGauntletGroups, new Random());
     }
 
-    public DungeonMap generate(DungeonSize size, List<String> normalEncounterIds,
-                                List<List<String>> eliteGauntletGroups, Random rng) {
+    public DungeonMap generate(DungeonSize size,
+                                List<String> normalEncounterIds,
+                                List<List<String>> eliteGauntletGroups,
+                                Random rng) {
         if (normalEncounterIds.size() != size.normalEncounterCount()) {
             throw new IllegalArgumentException("Normal encounter count must match dungeon size.");
         }
-
-        int width = gridSize(size);
-        int height = gridSize(size);
-        int targetRoomCount = targetRooms(size);
-        int trapCount = trapCount(size);
-        int secretCount = secretCount(size);
+        if (eliteGauntletGroups.size() != size.eliteGauntletCount()) {
+            throw new IllegalArgumentException("Elite gauntlet group count must match dungeon size.");
+        }
 
         for (int attempt = 0; attempt < MAX_REGEN_ATTEMPTS; attempt++) {
             try {
-                return tryGenerate(width, height, targetRoomCount, trapCount, secretCount,
-                    normalEncounterIds, eliteGauntletGroups, rng);
+                return tryGenerate(size, normalEncounterIds, eliteGauntletGroups, rng);
             } catch (LayoutFailure ignored) {
             }
         }
-        throw new IllegalStateException("Could not generate a valid dungeon layout after "
-            + MAX_REGEN_ATTEMPTS + " attempts.");
+        throw new IllegalStateException(
+            "Could not generate a valid dungeon layout after " + MAX_REGEN_ATTEMPTS + " attempts.");
     }
 
-    private DungeonMap tryGenerate(int width, int height, int targetRoomCount,
-                                    int trapCount, int secretCount,
+    private DungeonMap tryGenerate(DungeonSize size,
                                     List<String> normalEncounterIds,
                                     List<List<String>> eliteGauntletGroups,
                                     Random rng) {
-        Map<DungeonPosition, DungeonTile> tiles = filledWithWalls(width, height);
-        List<Rect> rooms = placeRooms(width, height, targetRoomCount, rng);
-        if (rooms.size() < 3) throw new LayoutFailure();
-        carveRoomFloors(tiles, rooms);
-        List<Edge> mstEdges = minimumSpanningTree(rooms);
-        for (Edge e : mstEdges) carveLCorridor(tiles, rooms.get(e.a).center(), rooms.get(e.b).center(), rng);
-        addExtraLoops(tiles, rooms, mstEdges, rng);
+        int lattice = latticeSize(size);
+        int targetRooms = totalRoomCount(size);
 
-        DungeonPosition entrance = pickEntrance(rooms, tiles);
-        DungeonPosition boss = pickBossFarthest(rooms, tiles, entrance);
-        if (entrance.equals(boss)) throw new LayoutFailure();
+        // Step 1: random-walk room placement on the lattice
+        Map<GridPos, String> latticeToRoomId = new LinkedHashMap<>();
+        Map<String, GridPos> roomToLattice = new LinkedHashMap<>();
+        Map<String, Map<DungeonDirection, String>> doors = new LinkedHashMap<>();
 
-        Rect entranceRoom = roomContaining(rooms, entrance);
-        Rect bossRoom = roomContaining(rooms, boss);
+        GridPos center = new GridPos(lattice / 2, lattice / 2);
+        String entranceId = "r0";
+        latticeToRoomId.put(center, entranceId);
+        roomToLattice.put(entranceId, center);
+        doors.put(entranceId, new EnumMap<>(DungeonDirection.class));
 
-        Map<String, List<String>> gauntletGroups = new LinkedHashMap<>();
-        for (List<String> group : eliteGauntletGroups) {
-            if (group.isEmpty()) continue;
-            DungeonPosition elitePos = pickElitePosition(rooms, entranceRoom, bossRoom, tiles, rng);
-            if (elitePos == null) throw new LayoutFailure();
-            tiles.put(elitePos, new DungeonTile(elitePos, DungeonTileType.ELITE, false, false, group.get(0)));
-            gauntletGroups.put(group.get(0), List.copyOf(group));
+        int placed = 1;
+        int attempts = 0;
+        int maxAttempts = targetRooms * 30;
+        while (placed < targetRooms && attempts < maxAttempts) {
+            attempts++;
+            List<String> existing = new ArrayList<>(roomToLattice.keySet());
+            String fromId = existing.get(rng.nextInt(existing.size()));
+            GridPos from = roomToLattice.get(fromId);
+            DungeonDirection dir = DIRS[rng.nextInt(DIRS.length)];
+            GridPos to = move(from, dir);
+            if (!inLattice(to, lattice) || latticeToRoomId.containsKey(to)) continue;
+
+            String newId = "r" + placed;
+            latticeToRoomId.put(to, newId);
+            roomToLattice.put(newId, to);
+            doors.put(newId, new EnumMap<>(DungeonDirection.class));
+            connect(doors, fromId, newId, dir);
+            placed++;
+        }
+        if (placed < targetRooms) throw new LayoutFailure();
+
+        // Step 2: add 1-2 loop doors between adjacent-but-unconnected rooms
+        addLoopDoors(latticeToRoomId, roomToLattice, doors, loopDoorCount(size), rng);
+
+        // Step 3: assign room types
+        Map<String, RoomType> types = assignRoomTypes(
+            entranceId, roomToLattice, doors, size, rng);
+
+        // Step 4: embed secret room (no doors; revealed via hosts)
+        SecretRoomPlacement secret = embedSecretRoom(latticeToRoomId, roomToLattice, lattice, rng);
+        String secretRoomId = null;
+        if (secret != null) {
+            secretRoomId = secret.id;
+            latticeToRoomId.put(secret.pos, secret.id);
+            roomToLattice.put(secret.id, secret.pos);
+            doors.put(secret.id, new EnumMap<>(DungeonDirection.class));
+            types.put(secret.id, RoomType.SECRET);
         }
 
-        tiles.put(entrance, new DungeonTile(entrance, DungeonTileType.ENTRANCE, true, true, null));
-        tiles.put(boss, new DungeonTile(boss, DungeonTileType.BOSS, false, false, null));
+        // Step 5: build rooms with offers + gauntlet groups
+        Map<String, DungeonRoom> rooms = new LinkedHashMap<>();
+        Iterator<String> normalIter = new ArrayDeque<>(normalEncounterIds).iterator();
+        Iterator<List<String>> eliteIter = new ArrayDeque<>(eliteGauntletGroups).iterator();
 
-        placeEncounters(tiles, rooms, entrance, boss, normalEncounterIds, rng);
-        placeRestTiles(tiles, rooms, entranceRoom, bossRoom, trapCount, rng);
-        placeSecretCompartments(tiles, rooms, secretCount, width, height, rng);
+        String bossRoomId = pickBossRoom(entranceId, types, doors);
+        types.put(bossRoomId, RoomType.BOSS);
 
-        revealAround(tiles, entrance);
-        return new DungeonMap(width, height, entrance, boss, Map.copyOf(tiles), Map.copyOf(gauntletGroups));
+        for (Map.Entry<String, RoomType> e : types.entrySet()) {
+            String id = e.getKey();
+            RoomType type = e.getValue();
+            DungeonRoom room = buildRoom(id, type, doors.get(id), roomToLattice.get(id),
+                normalIter, eliteIter, secretRoomId, secret, rng);
+            rooms.put(id, room);
+        }
+
+        // Mark entrance visited+cleared
+        DungeonRoom entranceRoom = rooms.get(entranceId).withVisited(true).withCleared(true);
+        rooms.put(entranceId, entranceRoom);
+
+        // Step 6: validate
+        if (!bfsReachable(rooms, entranceId).contains(bossRoomId)) throw new LayoutFailure();
+        if (normalIter.hasNext()) throw new LayoutFailure();
+        if (eliteIter.hasNext()) throw new LayoutFailure();
+
+        return new DungeonMap(rooms, entranceId, bossRoomId, lattice);
     }
 
-    // ===== Geometry primitives =====
+    // ===== helpers =====
 
-    private record Rect(int x, int y, int w, int h) {
-        DungeonPosition center() { return new DungeonPosition(x + w / 2, y + h / 2); }
-        boolean contains(DungeonPosition p) {
-            return p.x() >= x && p.x() < x + w && p.y() >= y && p.y() < y + h;
-        }
-        boolean touches(Rect other) {
-            return !(x + w + 1 <= other.x || other.x + other.w + 1 <= x
-                  || y + h + 1 <= other.y || other.y + other.h + 1 <= y);
-        }
-    }
-    private record Edge(int a, int b, int distance) {}
     private static class LayoutFailure extends RuntimeException {}
 
-    private int gridSize(DungeonSize size) {
-        return switch (size) { case SMALL -> 9; case MEDIUM -> 11; case LARGE -> 13; };
-    }
-    private int targetRooms(DungeonSize size) {
-        return switch (size) { case SMALL -> 4; case MEDIUM -> 6; case LARGE -> 8; };
-    }
-    private int trapCount(DungeonSize size) {
-        return switch (size) { case SMALL -> 1; case MEDIUM -> 2; case LARGE -> 3; };
-    }
-    private int secretCount(DungeonSize size) {
-        return switch (size) { case SMALL -> 1; case MEDIUM -> 2; case LARGE -> 3; };
+    private record SecretRoomPlacement(String id, GridPos pos, List<String> hostRoomIds) {}
+
+    private int latticeSize(DungeonSize size) {
+        return switch (size) { case SMALL -> 7; case MEDIUM -> 9; case LARGE -> 11; };
     }
 
-    private Map<DungeonPosition, DungeonTile> filledWithWalls(int w, int h) {
-        Map<DungeonPosition, DungeonTile> tiles = new LinkedHashMap<>();
-        for (int y = 0; y < h; y++)
-            for (int x = 0; x < w; x++) {
-                DungeonPosition p = new DungeonPosition(x, y);
-                tiles.put(p, new DungeonTile(p, DungeonTileType.WALL, false, false, null));
-            }
-        return tiles;
+    private int totalRoomCount(DungeonSize size) {
+        return switch (size) { case SMALL -> 12; case MEDIUM -> 16; case LARGE -> 24; };
     }
 
-    private List<Rect> placeRooms(int width, int height, int target, Random rng) {
-        List<Rect> rooms = new ArrayList<>();
-        int placed = 0;
-        int attempts = 0;
-        while (placed < target && attempts < target * MAX_ROOM_ATTEMPTS) {
-            attempts++;
-            int w = 2 + rng.nextInt(3);
-            int h = 2 + rng.nextInt(2);
-            int x = 1 + rng.nextInt(width - w - 1);
-            int y = 1 + rng.nextInt(height - h - 1);
-            Rect candidate = new Rect(x, y, w, h);
-            boolean overlaps = rooms.stream().anyMatch(r -> r.touches(candidate));
-            if (!overlaps) { rooms.add(candidate); placed++; }
-        }
-        return rooms;
+    private int loopDoorCount(DungeonSize size) {
+        return switch (size) { case SMALL, MEDIUM -> 1; case LARGE -> 2; };
     }
 
-    private void carveRoomFloors(Map<DungeonPosition, DungeonTile> tiles, List<Rect> rooms) {
-        for (Rect r : rooms) {
-            for (int y = r.y; y < r.y + r.h; y++)
-                for (int x = r.x; x < r.x + r.w; x++) {
-                    DungeonPosition p = new DungeonPosition(x, y);
-                    tiles.put(p, new DungeonTile(p, DungeonTileType.FLOOR, false, false, null));
+    private boolean inLattice(GridPos p, int lattice) {
+        return p.x() >= 0 && p.y() >= 0 && p.x() < lattice && p.y() < lattice;
+    }
+
+    private GridPos move(GridPos p, DungeonDirection d) {
+        return switch (d) {
+            case UP -> new GridPos(p.x(), p.y() - 1);
+            case DOWN -> new GridPos(p.x(), p.y() + 1);
+            case LEFT -> new GridPos(p.x() - 1, p.y());
+            case RIGHT -> new GridPos(p.x() + 1, p.y());
+        };
+    }
+
+    private DungeonDirection opposite(DungeonDirection d) {
+        return switch (d) {
+            case UP -> DungeonDirection.DOWN;
+            case DOWN -> DungeonDirection.UP;
+            case LEFT -> DungeonDirection.RIGHT;
+            case RIGHT -> DungeonDirection.LEFT;
+        };
+    }
+
+    private void connect(Map<String, Map<DungeonDirection, String>> doors,
+                          String a, String b, DungeonDirection aToB) {
+        doors.get(a).put(aToB, b);
+        doors.get(b).put(opposite(aToB), a);
+    }
+
+    private void addLoopDoors(Map<GridPos, String> latticeToRoomId,
+                                Map<String, GridPos> roomToLattice,
+                                Map<String, Map<DungeonDirection, String>> doors,
+                                int loops, Random rng) {
+        List<String[]> candidates = new ArrayList<>();
+        for (Map.Entry<String, GridPos> e : roomToLattice.entrySet()) {
+            String id = e.getKey();
+            GridPos pos = e.getValue();
+            for (DungeonDirection d : DIRS) {
+                GridPos neighborPos = move(pos, d);
+                String neighborId = latticeToRoomId.get(neighborPos);
+                if (neighborId == null) continue;
+                if (doors.get(id).containsKey(d)) continue;
+                if (id.compareTo(neighborId) < 0) {
+                    candidates.add(new String[]{id, neighborId, d.name()});
                 }
-        }
-    }
-
-    private List<Edge> minimumSpanningTree(List<Rect> rooms) {
-        int n = rooms.size();
-        List<Edge> all = new ArrayList<>();
-        for (int i = 0; i < n; i++)
-            for (int j = i + 1; j < n; j++) {
-                DungeonPosition a = rooms.get(i).center(), b = rooms.get(j).center();
-                int d = Math.abs(a.x() - b.x()) + Math.abs(a.y() - b.y());
-                all.add(new Edge(i, j, d));
-            }
-        all.sort(Comparator.comparingInt(e -> e.distance));
-        int[] parent = new int[n];
-        for (int i = 0; i < n; i++) parent[i] = i;
-        List<Edge> mst = new ArrayList<>();
-        for (Edge e : all) {
-            int ra = find(parent, e.a), rb = find(parent, e.b);
-            if (ra != rb) { parent[ra] = rb; mst.add(e); }
-        }
-        return mst;
-    }
-
-    private int find(int[] parent, int x) {
-        while (parent[x] != x) { parent[x] = parent[parent[x]]; x = parent[x]; }
-        return x;
-    }
-
-    private void carveLCorridor(Map<DungeonPosition, DungeonTile> tiles,
-                                 DungeonPosition a, DungeonPosition b, Random rng) {
-        boolean horizFirst = rng.nextBoolean();
-        if (horizFirst) {
-            carveHoriz(tiles, a.x(), b.x(), a.y());
-            carveVert(tiles, a.y(), b.y(), b.x());
-        } else {
-            carveVert(tiles, a.y(), b.y(), a.x());
-            carveHoriz(tiles, a.x(), b.x(), b.y());
-        }
-    }
-
-    private void carveHoriz(Map<DungeonPosition, DungeonTile> tiles, int x1, int x2, int y) {
-        int lo = Math.min(x1, x2), hi = Math.max(x1, x2);
-        for (int x = lo; x <= hi; x++) {
-            DungeonPosition p = new DungeonPosition(x, y);
-            if (tiles.get(p).type() == DungeonTileType.WALL) {
-                tiles.put(p, new DungeonTile(p, DungeonTileType.FLOOR, false, false, null));
             }
         }
-    }
-
-    private void carveVert(Map<DungeonPosition, DungeonTile> tiles, int y1, int y2, int x) {
-        int lo = Math.min(y1, y2), hi = Math.max(y1, y2);
-        for (int y = lo; y <= hi; y++) {
-            DungeonPosition p = new DungeonPosition(x, y);
-            if (tiles.get(p).type() == DungeonTileType.WALL) {
-                tiles.put(p, new DungeonTile(p, DungeonTileType.FLOOR, false, false, null));
-            }
-        }
-    }
-
-    private void addExtraLoops(Map<DungeonPosition, DungeonTile> tiles, List<Rect> rooms,
-                                List<Edge> mst, Random rng) {
-        int loops = Math.min(2, Math.max(0, rooms.size() - 3));
-        Set<Long> mstSet = new HashSet<>();
-        for (Edge e : mst) mstSet.add(((long) Math.min(e.a, e.b) << 32) | Math.max(e.a, e.b));
-        List<Edge> candidates = new ArrayList<>();
-        for (int i = 0; i < rooms.size(); i++)
-            for (int j = i + 1; j < rooms.size(); j++) {
-                long key = ((long) i << 32) | j;
-                if (mstSet.contains(key)) continue;
-                DungeonPosition a = rooms.get(i).center(), b = rooms.get(j).center();
-                int d = Math.abs(a.x() - b.x()) + Math.abs(a.y() - b.y());
-                if (d <= 8) candidates.add(new Edge(i, j, d));
-            }
         Collections.shuffle(candidates, rng);
         for (int i = 0; i < Math.min(loops, candidates.size()); i++) {
-            Edge e = candidates.get(i);
-            carveLCorridor(tiles, rooms.get(e.a).center(), rooms.get(e.b).center(), rng);
+            String[] c = candidates.get(i);
+            connect(doors, c[0], c[1], DungeonDirection.valueOf(c[2]));
         }
     }
 
-    private DungeonPosition pickEntrance(List<Rect> rooms, Map<DungeonPosition, DungeonTile> tiles) {
-        return rooms.get(0).center();
+    private Map<String, RoomType> assignRoomTypes(String entranceId,
+                                                    Map<String, GridPos> roomToLattice,
+                                                    Map<String, Map<DungeonDirection, String>> doors,
+                                                    DungeonSize size, Random rng) {
+        Map<String, RoomType> types = new LinkedHashMap<>();
+        for (String id : roomToLattice.keySet()) types.put(id, RoomType.COMBAT);
+        types.put(entranceId, RoomType.ENTRANCE);
+
+        Map<String, Integer> dist = bfsDistances(doors, entranceId);
+        List<String> leavesAsc = sortedLeaves(doors, dist, true);
+        List<String> leavesDesc = sortedLeaves(doors, dist, false);
+        List<String> nonCritical = nonCriticalRooms(entranceId, pickBossCandidate(entranceId, dist),
+            doors, dist, types);
+
+        // SHOP — nearest leaf to entrance
+        String shop = pickFirstAvailable(leavesAsc, types, entranceId, Set.of(RoomType.ENTRANCE));
+        if (shop == null) throw new LayoutFailure();
+        types.put(shop, RoomType.SHOP);
+
+        // TREASURE — farther leaf
+        String treasure = pickFirstAvailable(leavesDesc, types, entranceId, Set.of(RoomType.ENTRANCE));
+        if (treasure == null) throw new LayoutFailure();
+        types.put(treasure, RoomType.TREASURE);
+
+        // LARGE has a second TREASURE
+        if (size == DungeonSize.LARGE) {
+            String treasure2 = pickFirstAvailable(leavesDesc, types, entranceId, Set.of());
+            if (treasure2 == null) throw new LayoutFailure();
+            types.put(treasure2, RoomType.TREASURE);
+        }
+
+        // HEAL — non-critical mid-distance room
+        String heal = pickMidpoint(nonCritical, dist, types);
+        if (heal == null) throw new LayoutFailure();
+        types.put(heal, RoomType.HEAL);
+
+        // ELITEs — additional leaves
+        int eliteCount = size.eliteGauntletCount();
+        List<String> remainingLeaves = new ArrayList<>(leavesDesc);
+        remainingLeaves.removeAll(types.keySet().stream()
+            .filter(id -> types.get(id) != RoomType.COMBAT && types.get(id) != RoomType.ENTRANCE)
+            .toList());
+        int assignedElites = 0;
+        for (String leaf : remainingLeaves) {
+            if (assignedElites >= eliteCount) break;
+            if (types.get(leaf) == RoomType.COMBAT) {
+                types.put(leaf, RoomType.ELITE);
+                assignedElites++;
+            }
+        }
+        if (assignedElites < eliteCount) {
+            for (String id : nonCritical) {
+                if (assignedElites >= eliteCount) break;
+                if (types.get(id) == RoomType.COMBAT) {
+                    types.put(id, RoomType.ELITE);
+                    assignedElites++;
+                }
+            }
+        }
+        if (assignedElites < eliteCount) throw new LayoutFailure();
+
+        return types;
     }
 
-    private DungeonPosition pickBossFarthest(List<Rect> rooms,
-                                              Map<DungeonPosition, DungeonTile> tiles,
-                                              DungeonPosition entrance) {
-        DungeonPosition best = entrance;
+    private String pickBossCandidate(String entranceId, Map<String, Integer> dist) {
+        String best = entranceId;
         int bestDist = -1;
-        for (Rect r : rooms) {
-            DungeonPosition c = r.center();
-            int d = bfsDistance(tiles, entrance, c);
-            if (d > bestDist) { bestDist = d; best = c; }
+        for (Map.Entry<String, Integer> e : dist.entrySet()) {
+            if (e.getValue() > bestDist) {
+                bestDist = e.getValue();
+                best = e.getKey();
+            }
         }
         return best;
     }
 
-    private int bfsDistance(Map<DungeonPosition, DungeonTile> tiles, DungeonPosition from, DungeonPosition to) {
-        Map<DungeonPosition, Integer> dist = new HashMap<>();
-        Deque<DungeonPosition> queue = new ArrayDeque<>();
-        dist.put(from, 0); queue.add(from);
-        while (!queue.isEmpty()) {
-            DungeonPosition p = queue.poll();
-            if (p.equals(to)) return dist.get(p);
-            for (DungeonDirection d : DungeonDirection.values()) {
-                DungeonPosition n = p.move(d);
-                DungeonTile t = tiles.get(n);
-                if (t == null || t.type() == DungeonTileType.WALL) continue;
-                if (dist.containsKey(n)) continue;
-                dist.put(n, dist.get(p) + 1);
-                queue.add(n);
+    private String pickBossRoom(String entranceId,
+                                  Map<String, RoomType> types,
+                                  Map<String, Map<DungeonDirection, String>> doors) {
+        Map<String, Integer> dist = bfsDistances(doors, entranceId);
+        String best = entranceId;
+        int bestDist = -1;
+        for (Map.Entry<String, Integer> e : dist.entrySet()) {
+            if (types.get(e.getKey()) != RoomType.COMBAT) continue;
+            if (e.getValue() > bestDist) {
+                bestDist = e.getValue();
+                best = e.getKey();
             }
         }
-        return -1;
+        return best;
     }
 
-    private Rect roomContaining(List<Rect> rooms, DungeonPosition p) {
-        for (Rect r : rooms) if (r.contains(p)) return r;
+    private List<String> sortedLeaves(Map<String, Map<DungeonDirection, String>> doors,
+                                        Map<String, Integer> dist, boolean ascending) {
+        List<String> leaves = new ArrayList<>();
+        for (Map.Entry<String, Map<DungeonDirection, String>> e : doors.entrySet()) {
+            if (e.getValue().size() == 1) leaves.add(e.getKey());
+        }
+        leaves.sort(Comparator.comparingInt(dist::get));
+        if (!ascending) Collections.reverse(leaves);
+        return leaves;
+    }
+
+    private List<String> nonCriticalRooms(String entranceId, String bossId,
+                                            Map<String, Map<DungeonDirection, String>> doors,
+                                            Map<String, Integer> dist,
+                                            Map<String, RoomType> types) {
+        List<String> result = new ArrayList<>();
+        for (String id : doors.keySet()) {
+            if (!id.equals(entranceId) && !id.equals(bossId)) result.add(id);
+        }
+        return result;
+    }
+
+    private String pickFirstAvailable(List<String> ordered,
+                                        Map<String, RoomType> types,
+                                        String entranceId,
+                                        Set<RoomType> blockedTypes) {
+        for (String id : ordered) {
+            if (id.equals(entranceId)) continue;
+            RoomType t = types.get(id);
+            if (t != RoomType.COMBAT) continue;
+            return id;
+        }
         return null;
     }
 
-    private DungeonPosition pickElitePosition(List<Rect> rooms, Rect entranceRoom, Rect bossRoom,
-                                               Map<DungeonPosition, DungeonTile> tiles, Random rng) {
-        List<Rect> candidates = new ArrayList<>();
-        for (Rect r : rooms) {
-            if (r.equals(entranceRoom) || r.equals(bossRoom)) continue;
-            candidates.add(r);
+    private String pickMidpoint(List<String> candidates,
+                                  Map<String, Integer> dist,
+                                  Map<String, RoomType> types) {
+        int max = candidates.stream().mapToInt(dist::get).max().orElse(0);
+        int targetDist = max / 2;
+        String best = null;
+        int bestDelta = Integer.MAX_VALUE;
+        for (String id : candidates) {
+            if (types.get(id) != RoomType.COMBAT) continue;
+            int delta = Math.abs(dist.get(id) - targetDist);
+            if (delta < bestDelta) {
+                bestDelta = delta;
+                best = id;
+            }
+        }
+        return best;
+    }
+
+    private SecretRoomPlacement embedSecretRoom(Map<GridPos, String> latticeToRoomId,
+                                                  Map<String, GridPos> roomToLattice,
+                                                  int lattice,
+                                                  Random rng) {
+        List<GridPos> candidates = new ArrayList<>();
+        for (int x = 0; x < lattice; x++) {
+            for (int y = 0; y < lattice; y++) {
+                GridPos pos = new GridPos(x, y);
+                if (latticeToRoomId.containsKey(pos)) continue;
+                List<String> hosts = new ArrayList<>();
+                for (DungeonDirection d : DIRS) {
+                    String neighborId = latticeToRoomId.get(move(pos, d));
+                    if (neighborId != null) hosts.add(neighborId);
+                }
+                if (hosts.size() >= 2) candidates.add(pos);
+            }
         }
         if (candidates.isEmpty()) return null;
         Collections.shuffle(candidates, rng);
-        Rect chosen = candidates.get(0);
-        return chosen.center();
+        GridPos chosen = candidates.get(0);
+        List<String> hosts = new ArrayList<>();
+        for (DungeonDirection d : DIRS) {
+            String neighborId = latticeToRoomId.get(move(chosen, d));
+            if (neighborId != null) hosts.add(neighborId);
+        }
+        return new SecretRoomPlacement("secret", chosen, hosts);
     }
 
-    private void placeEncounters(Map<DungeonPosition, DungeonTile> tiles, List<Rect> rooms,
-                                  DungeonPosition entrance, DungeonPosition boss,
-                                  List<String> ids, Random rng) {
-        List<DungeonPosition> slots = new ArrayList<>();
-        for (Rect r : rooms) {
-            for (int y = r.y; y < r.y + r.h; y++)
-                for (int x = r.x; x < r.x + r.w; x++) {
-                    DungeonPosition p = new DungeonPosition(x, y);
-                    if (p.equals(entrance) || p.equals(boss)) continue;
-                    DungeonTile t = tiles.get(p);
-                    if (t.type() == DungeonTileType.FLOOR) slots.add(p);
+    private DungeonRoom buildRoom(String id, RoomType type,
+                                    Map<DungeonDirection, String> roomDoors,
+                                    GridPos gridPos,
+                                    Iterator<String> normalIter,
+                                    Iterator<List<String>> eliteIter,
+                                    String secretRoomId,
+                                    SecretRoomPlacement secret,
+                                    Random rng) {
+        String encounterId = null;
+        List<String> gauntletGroup = List.of();
+        TreasureOffer treasureOffer = null;
+        TreasureOffer eliteOffer = null;
+        ShopOffer shopOffer = null;
+        SecretReward secretReward = null;
+
+        switch (type) {
+            case COMBAT -> encounterId = normalIter.next();
+            case ELITE -> {
+                gauntletGroup = eliteIter.next();
+                encounterId = gauntletGroup.get(0);
+                eliteOffer = new TreasureOffer(
+                    RelicCatalog.sample(RelicPool.ELITE, 2, rng));
+            }
+            case TREASURE -> treasureOffer = new TreasureOffer(
+                RelicCatalog.sample(RelicPool.COMMON, 3, rng));
+            case SHOP -> {
+                List<RelicId> picks = RelicCatalog.sampleFromUnion(
+                    List.of(RelicPool.COMMON, RelicPool.SHOP_EXCLUSIVE), 2, rng);
+                List<ShopOfferEntry> entries = new ArrayList<>();
+                for (RelicId rid : picks) {
+                    int price = (rid == RelicId.MAP_SENSE) ? 150 : 75;
+                    entries.add(new ShopOfferEntry(rid, price));
                 }
-        }
-        Collections.shuffle(slots, rng);
-        if (slots.size() < ids.size()) throw new LayoutFailure();
-        for (int i = 0; i < ids.size(); i++) {
-            DungeonPosition p = slots.get(i);
-            tiles.put(p, new DungeonTile(p, DungeonTileType.ENCOUNTER, false, false, ids.get(i)));
-        }
-    }
-
-    private void placeRestTiles(Map<DungeonPosition, DungeonTile> tiles, List<Rect> rooms,
-                                 Rect entranceRoom, Rect bossRoom, int trapCount, Random rng) {
-        List<DungeonPosition> free = new ArrayList<>();
-        for (Rect r : rooms) {
-            if (r.equals(entranceRoom) || r.equals(bossRoom)) continue;
-            for (int y = r.y; y < r.y + r.h; y++)
-                for (int x = r.x; x < r.x + r.w; x++) {
-                    DungeonPosition p = new DungeonPosition(x, y);
-                    if (tiles.get(p).type() == DungeonTileType.FLOOR) free.add(p);
-                }
-        }
-        Collections.shuffle(free, rng);
-        int idx = 0;
-        if (idx < free.size()) {
-            DungeonPosition heal = free.get(idx++);
-            tiles.put(heal, new DungeonTile(heal, DungeonTileType.HEAL, false, false, null));
-        }
-        if (idx < free.size()) {
-            DungeonPosition tre = free.get(idx++);
-            tiles.put(tre, new DungeonTile(tre, DungeonTileType.TREASURE, false, false, null));
-        }
-        for (int t = 0; t < trapCount && idx < free.size(); t++) {
-            DungeonPosition trap = free.get(idx++);
-            tiles.put(trap, new DungeonTile(trap, DungeonTileType.TRAP, false, false, null));
-        }
-    }
-
-    private void placeSecretCompartments(Map<DungeonPosition, DungeonTile> tiles, List<Rect> rooms,
-                                          int secretCount, int width, int height, Random rng) {
-        int placed = 0;
-        List<Rect> shuffled = new ArrayList<>(rooms);
-        Collections.shuffle(shuffled, rng);
-        for (Rect r : shuffled) {
-            if (placed >= secretCount) break;
-            for (DungeonDirection dir : DungeonDirection.values()) {
-                DungeonPosition n1 = r.center().move(dir);
-                DungeonPosition n2 = n1.move(dir);
-                if (!isInside(n1, width, height) || !isInside(n2, width, height)) continue;
-                DungeonTile t1 = tiles.get(n1), t2 = tiles.get(n2);
-                if (t1.type() == DungeonTileType.WALL && t2.type() == DungeonTileType.WALL) {
-                    tiles.put(n1, new DungeonTile(n1, DungeonTileType.SECRET_WALL, false, false, null));
-                    DungeonTileType inner = (placed % 2 == 0) ? DungeonTileType.TREASURE : DungeonTileType.HEAL;
-                    tiles.put(n2, new DungeonTile(n2, inner, false, false, null));
-                    placed++;
-                    break;
+                ShopConsumable consumable = new ShopConsumable(
+                    "dungeon.shop.consumable.heal", 30, 2);
+                shopOffer = new ShopOffer(entries, consumable);
+            }
+            case SECRET -> {
+                if (rng.nextBoolean()) {
+                    List<RelicId> picks = RelicCatalog.sampleFromUnion(
+                        List.of(RelicPool.COMMON, RelicPool.ELITE), 1, rng);
+                    secretReward = new SecretReward.RelicReward(picks.get(0));
+                } else {
+                    secretReward = new SecretReward.Bundle(5, 1, 50);
                 }
             }
+            case ENTRANCE, HEAL, BOSS -> { }
         }
+
+        return new DungeonRoom(id, type, roomDoors, gridPos,
+            false, false,
+            encounterId, gauntletGroup,
+            treasureOffer, eliteOffer, shopOffer, secretReward);
     }
 
-    private boolean isInside(DungeonPosition p, int width, int height) {
-        return p.x() >= 0 && p.x() < width && p.y() >= 0 && p.y() < height;
+    private Map<String, Integer> bfsDistances(Map<String, Map<DungeonDirection, String>> doors, String from) {
+        Map<String, Integer> dist = new LinkedHashMap<>();
+        Deque<String> queue = new ArrayDeque<>();
+        dist.put(from, 0);
+        queue.add(from);
+        while (!queue.isEmpty()) {
+            String node = queue.poll();
+            for (String neighbor : doors.get(node).values()) {
+                if (dist.containsKey(neighbor)) continue;
+                dist.put(neighbor, dist.get(node) + 1);
+                queue.add(neighbor);
+            }
+        }
+        return dist;
     }
 
-    private void revealAround(Map<DungeonPosition, DungeonTile> tiles, DungeonPosition center) {
-        reveal(tiles, center);
-        for (DungeonDirection direction : DungeonDirection.values()) reveal(tiles, center.move(direction));
-    }
-
-    private void reveal(Map<DungeonPosition, DungeonTile> tiles, DungeonPosition position) {
-        DungeonTile tile = tiles.get(position);
-        if (tile != null) tiles.put(position, tile.reveal());
+    private Set<String> bfsReachable(Map<String, DungeonRoom> rooms, String from) {
+        Set<String> seen = new LinkedHashSet<>();
+        Deque<String> queue = new ArrayDeque<>();
+        seen.add(from);
+        queue.add(from);
+        while (!queue.isEmpty()) {
+            String node = queue.poll();
+            DungeonRoom r = rooms.get(node);
+            for (String neighbor : r.doors().values()) {
+                if (seen.add(neighbor)) queue.add(neighbor);
+            }
+        }
+        return seen;
     }
 }

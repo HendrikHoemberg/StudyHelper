@@ -19,19 +19,22 @@ public class DungeonSessionService {
     private final DungeonMapGenerator dungeonMapGenerator;
     private final DungeonNavigationService navigationService;
     private final DungeonEncounterService encounterService;
+    private final DungeonRelicService relicService;
 
     public DungeonSessionService(DeckService deckService,
                                  FlashcardService flashcardService,
                                  QuizSessionService quizSessionService,
                                  DungeonMapGenerator dungeonMapGenerator,
                                  DungeonNavigationService navigationService,
-                                 DungeonEncounterService encounterService) {
+                                 DungeonEncounterService encounterService,
+                                 DungeonRelicService relicService) {
         this.deckService = deckService;
         this.flashcardService = flashcardService;
         this.quizSessionService = quizSessionService;
         this.dungeonMapGenerator = dungeonMapGenerator;
         this.navigationService = navigationService;
         this.encounterService = encounterService;
+        this.relicService = relicService;
     }
 
     @Transactional(readOnly = true)
@@ -44,42 +47,8 @@ public class DungeonSessionService {
         Map<String, DungeonEncounter> encounters = new LinkedHashMap<>();
         List<String> normalEncounterIds = new ArrayList<>();
         List<String> bossEncounterIds = new ArrayList<>();
-
-        for (int i = 0; i < size.normalEncounterCount(); i++) {
-            Flashcard card = flashcards.get(i);
-            String id = "fc_" + i;
-            encounters.put(id, DungeonEncounter.flashcard(id, false, card.getId(),
-                card.getFrontText(), card.getBackText(),
-                card.getFrontImageFilename(), card.getBackImageFilename()));
-            normalEncounterIds.add(id);
-        }
-
-        int bossStart = size.normalEncounterCount();
-        for (int i = 0; i < size.bossPromptCount(); i++) {
-            Flashcard card = flashcards.get(bossStart + i);
-            String id = "fc_boss_" + i;
-            encounters.put(id, DungeonEncounter.flashcard(id, true, card.getId(),
-                card.getFrontText(), card.getBackText(),
-                card.getFrontImageFilename(), card.getBackImageFilename()));
-            bossEncounterIds.add(id);
-        }
-
-        int eliteStart = bossStart + size.bossPromptCount();
-        List<List<String>> eliteGauntlets = new ArrayList<>();
-        int eliteCardsPerGroup = size.cardsPerEliteGauntlet();
-        for (int g = 0; g < size.eliteGauntletCount(); g++) {
-            List<String> group = new ArrayList<>();
-            for (int c = 0; c < eliteCardsPerGroup; c++) {
-                int cardIdx = eliteStart + (g * eliteCardsPerGroup) + c;
-                Flashcard card = flashcards.get(cardIdx);
-                String id = "fc_elite_" + g + "_" + c;
-                encounters.put(id, DungeonEncounter.flashcard(id, false, card.getId(),
-                    card.getFrontText(), card.getBackText(),
-                    card.getFrontImageFilename(), card.getBackImageFilename()));
-                group.add(id);
-            }
-            eliteGauntlets.add(group);
-        }
+        List<List<String>> eliteGauntlets = buildFlashcardEncounters(
+            flashcards, size, encounters, normalEncounterIds, bossEncounterIds);
 
         DungeonMap map = dungeonMapGenerator.generate(size, normalEncounterIds, eliteGauntlets);
         return initialState(
@@ -105,42 +74,13 @@ public class DungeonSessionService {
         QuizSessionState quizState = quizSessionService.createSession(
             normalizedIds, List.of(), request, questionCount,
             questionMode, difficulty, additionalInstructions, user);
-
         List<QuizQuestion> questions = quizState.questions();
 
         Map<String, DungeonEncounter> encounters = new LinkedHashMap<>();
         List<String> normalEncounterIds = new ArrayList<>();
         List<String> bossEncounterIds = new ArrayList<>();
-
-        for (int i = 0; i < size.normalEncounterCount(); i++) {
-            QuizQuestion q = questions.get(i);
-            String id = "qz_" + i;
-            encounters.put(id, DungeonEncounter.quiz(id, false, q));
-            normalEncounterIds.add(id);
-        }
-
-        int bossStart = size.normalEncounterCount();
-        for (int i = 0; i < size.bossPromptCount(); i++) {
-            QuizQuestion q = questions.get(bossStart + i);
-            String id = "qz_boss_" + i;
-            encounters.put(id, DungeonEncounter.quiz(id, true, q));
-            bossEncounterIds.add(id);
-        }
-
-        int eliteStart = bossStart + size.bossPromptCount();
-        List<List<String>> eliteGauntlets = new ArrayList<>();
-        int eliteCardsPerGroup = size.cardsPerEliteGauntlet();
-        for (int g = 0; g < size.eliteGauntletCount(); g++) {
-            List<String> group = new ArrayList<>();
-            for (int c = 0; c < eliteCardsPerGroup; c++) {
-                int idx = eliteStart + (g * eliteCardsPerGroup) + c;
-                QuizQuestion q = questions.get(idx);
-                String id = "qz_elite_" + g + "_" + c;
-                encounters.put(id, DungeonEncounter.quiz(id, false, q));
-                group.add(id);
-            }
-            eliteGauntlets.add(group);
-        }
+        List<List<String>> eliteGauntlets = buildQuizEncounters(
+            questions, size, encounters, normalEncounterIds, bossEncounterIds);
 
         DungeonMap map = dungeonMapGenerator.generate(size, normalEncounterIds, eliteGauntlets);
         return initialState(
@@ -152,13 +92,19 @@ public class DungeonSessionService {
     public DungeonSessionState move(DungeonSessionState state, DungeonDirection direction) {
         DungeonNavigationService.MoveResult result = navigationService.move(state, direction);
         DungeonSessionState moved = result.state();
-        if (result.encounterId() != null) {
-            if (result.landedTileType() == DungeonTileType.ELITE) {
-                moved = encounterService.activateElite(moved, result.encounterId());
-            } else {
-                boolean isBoss = result.landedTileType() == DungeonTileType.BOSS;
-                moved = encounterService.activate(moved, result.encounterId(), isBoss);
+
+        DungeonRoom destination = moved.currentRoom();
+
+        // Set pending picks for TREASURE / SHOP / SECRET on first entry
+        if (destination != null && !destination.cleared() && moved.pendingRelicPick() == null) {
+            PendingRelicPick newPick = pickForRoom(destination);
+            if (newPick != null) {
+                moved = withPendingPick(moved, newPick);
             }
+        }
+
+        if (result.activatedEncounterRoomId() != null) {
+            moved = encounterService.activateAt(moved, result.activatedEncounterRoomId());
         }
         return moved;
     }
@@ -169,6 +115,18 @@ public class DungeonSessionService {
 
     public DungeonSessionState answerQuiz(DungeonSessionState state, List<Integer> selectedOptions) {
         return encounterService.answerQuiz(state, selectedOptions);
+    }
+
+    public DungeonSessionState pickRelic(DungeonSessionState state, RelicId relicId) {
+        return relicService.pick(state, relicId);
+    }
+
+    public DungeonSessionState buyRelic(DungeonSessionState state, RelicId relicId) {
+        return relicService.buy(state, relicId);
+    }
+
+    public DungeonSessionState skipShop(DungeonSessionState state) {
+        return relicService.skipShop(state);
     }
 
     public DungeonRunStats buildStats(DungeonSessionState state) {
@@ -182,24 +140,123 @@ public class DungeonSessionService {
             state.won(),
             state.longestStreak(),
             state.elitesCleared(),
-            state.shieldsUsed());
+            state.shieldsUsed(),
+            state.ownedRelics().size());
+    }
+
+    // ===== helpers =====
+
+    private List<List<String>> buildFlashcardEncounters(List<Flashcard> flashcards, DungeonSize size,
+                                                           Map<String, DungeonEncounter> encs,
+                                                           List<String> normalIds, List<String> bossIds) {
+        for (int i = 0; i < size.normalEncounterCount(); i++) {
+            Flashcard card = flashcards.get(i);
+            String id = "fc_" + i;
+            encs.put(id, DungeonEncounter.flashcard(id, false, card.getId(),
+                card.getFrontText(), card.getBackText(),
+                card.getFrontImageFilename(), card.getBackImageFilename()));
+            normalIds.add(id);
+        }
+        int bossStart = size.normalEncounterCount();
+        for (int i = 0; i < size.bossPromptCount(); i++) {
+            Flashcard card = flashcards.get(bossStart + i);
+            String id = "fc_boss_" + i;
+            encs.put(id, DungeonEncounter.flashcard(id, true, card.getId(),
+                card.getFrontText(), card.getBackText(),
+                card.getFrontImageFilename(), card.getBackImageFilename()));
+            bossIds.add(id);
+        }
+        int eliteStart = bossStart + size.bossPromptCount();
+        List<List<String>> groups = new ArrayList<>();
+        int cardsPerGroup = size.cardsPerEliteGauntlet();
+        for (int g = 0; g < size.eliteGauntletCount(); g++) {
+            List<String> group = new ArrayList<>();
+            for (int c = 0; c < cardsPerGroup; c++) {
+                int cardIdx = eliteStart + (g * cardsPerGroup) + c;
+                Flashcard card = flashcards.get(cardIdx);
+                String id = "fc_elite_" + g + "_" + c;
+                encs.put(id, DungeonEncounter.flashcard(id, false, card.getId(),
+                    card.getFrontText(), card.getBackText(),
+                    card.getFrontImageFilename(), card.getBackImageFilename()));
+                group.add(id);
+            }
+            groups.add(group);
+        }
+        return groups;
+    }
+
+    private List<List<String>> buildQuizEncounters(List<QuizQuestion> questions, DungeonSize size,
+                                                      Map<String, DungeonEncounter> encs,
+                                                      List<String> normalIds, List<String> bossIds) {
+        for (int i = 0; i < size.normalEncounterCount(); i++) {
+            String id = "qz_" + i;
+            encs.put(id, DungeonEncounter.quiz(id, false, questions.get(i)));
+            normalIds.add(id);
+        }
+        int bossStart = size.normalEncounterCount();
+        for (int i = 0; i < size.bossPromptCount(); i++) {
+            String id = "qz_boss_" + i;
+            encs.put(id, DungeonEncounter.quiz(id, true, questions.get(bossStart + i)));
+            bossIds.add(id);
+        }
+        int eliteStart = bossStart + size.bossPromptCount();
+        List<List<String>> groups = new ArrayList<>();
+        int cardsPerGroup = size.cardsPerEliteGauntlet();
+        for (int g = 0; g < size.eliteGauntletCount(); g++) {
+            List<String> group = new ArrayList<>();
+            for (int c = 0; c < cardsPerGroup; c++) {
+                int idx = eliteStart + (g * cardsPerGroup) + c;
+                String id = "qz_elite_" + g + "_" + c;
+                encs.put(id, DungeonEncounter.quiz(id, false, questions.get(idx)));
+                group.add(id);
+            }
+            groups.add(group);
+        }
+        return groups;
     }
 
     private DungeonSessionState initialState(DungeonConfig config, DungeonMap map,
                                               Map<String, DungeonEncounter> encounters,
                                               List<String> bossEncounterIds) {
-        Map<DungeonPosition, DungeonTile> tiles = new LinkedHashMap<>(map.tiles());
-        Set<DungeonPosition> visible = navigationService.revealAroundEntrance(tiles, map.entrance());
-        DungeonMap exploredMap = new DungeonMap(map.width(), map.height(),
-            map.entrance(), map.boss(), Map.copyOf(tiles), map.gauntletGroups());
-
         return new DungeonSessionState(
-            config, exploredMap, map.entrance(),
+            config, map, map.entranceRoomId(),
             Map.copyOf(encounters), List.copyOf(bossEncounterIds),
             0, null,
-            DungeonDamage.STARTING_HEALTH, 0, 0, 0,
-            visible, false, false,
-            0, 0, List.of(), 0, 0, 0);
+            DungeonDamage.STARTING_HEALTH, DungeonDamage.STARTING_HEALTH_CAP, 0, DungeonDamage.STARTING_SHIELD_CAP,
+            0, 0, 0,
+            false, false,
+            0, List.of(),
+            0, 0, 0, 0,
+            List.of(), null);
+    }
+
+    private PendingRelicPick pickForRoom(DungeonRoom room) {
+        return switch (room.type()) {
+            case TREASURE -> room.treasureOffer() == null ? null :
+                new PendingRelicPick(PendingPickType.TREASURE, room.id(), room.treasureOffer().relics(), null);
+            case SHOP -> room.shopOffer() == null ? null :
+                new PendingRelicPick(PendingPickType.SHOP, room.id(), List.of(), room.shopOffer());
+            case SECRET -> {
+                if (room.secretReward() instanceof SecretReward.RelicReward r) {
+                    yield new PendingRelicPick(PendingPickType.SECRET, room.id(), List.of(r.relic()), null);
+                }
+                yield null;
+            }
+            default -> null;
+        };
+    }
+
+    private DungeonSessionState withPendingPick(DungeonSessionState s, PendingRelicPick pick) {
+        return new DungeonSessionState(
+            s.config(), s.map(), s.currentRoomId(),
+            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
+            s.activeEncounterId(),
+            s.health(), s.healthCap(), s.shields(), s.shieldCap(),
+            s.score(), s.answeredCount(), s.correctCount(),
+            s.won(), s.defeated(),
+            s.streak(), s.gauntletQueue(),
+            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
+            s.luckyCoinsConsumed(), s.ownedRelics(), pick);
     }
 
     private void validateSize(DungeonSize size, int usableItems, String unit) {

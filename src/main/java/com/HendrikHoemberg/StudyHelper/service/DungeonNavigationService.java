@@ -5,114 +5,84 @@ import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class DungeonNavigationService {
 
-    private static final int TREASURE_SCORE = 50;
-    private static final int SECRET_WALL_SCORE = 25;
-    private static final int HEAL_AMOUNT = 1;
-
-    public record MoveResult(DungeonSessionState state, DungeonTileType landedTileType, String encounterId) {}
+    public record MoveResult(DungeonSessionState state, String activatedEncounterRoomId) {}
 
     public MoveResult move(DungeonSessionState state, DungeonDirection direction) {
-        if (state.isComplete()) return new MoveResult(state, null, null);
-        if (state.activeEncounterId() != null) return new MoveResult(state, null, null);
+        if (state.isComplete()) return new MoveResult(state, null);
+        if (state.activeEncounterId() != null) return new MoveResult(state, null);
 
-        DungeonPosition newPos = state.playerPosition().move(direction);
-        if (!state.map().isInside(newPos)) return new MoveResult(state, null, null);
+        DungeonRoom current = state.currentRoom();
+        if (current == null) return new MoveResult(state, null);
 
-        DungeonTile newTile = state.map().tileAt(newPos);
-        if (newTile == null) return new MoveResult(state, null, null);
+        String nextRoomId = current.doors().get(direction);
+        if (nextRoomId == null) return new MoveResult(state, null);
 
-        Map<DungeonPosition, DungeonTile> tiles = new LinkedHashMap<>(state.map().tiles());
-        int score = state.score();
+        DungeonRoom nextRoom = state.map().room(nextRoomId);
+        if (nextRoom == null) return new MoveResult(state, null);
+
+        Map<String, DungeonRoom> rooms = new LinkedHashMap<>(state.map().rooms());
+        boolean firstEntry = !nextRoom.visited();
+        nextRoom = nextRoom.withVisited(true);
+
         DungeonSessionState working = state;
 
-        if (newTile.type() == DungeonTileType.SECRET_WALL) {
-            newTile = newTile.withType(DungeonTileType.FLOOR, null).reveal().explore();
-            tiles.put(newPos, newTile);
-            score += SECRET_WALL_SCORE;
-        } else if (!newTile.walkable()) {
-            return new MoveResult(state, null, null);
+        // First-entry effect for HEAL
+        if (firstEntry && nextRoom.type() == RoomType.HEAL) {
+            int healed = working.healthCap() - working.health();
+            if (healed > 0) {
+                working = DungeonDamage.heal(working, healed);
+            }
+            if (working.shields() < working.shieldCap()) {
+                working = withShields(working, working.shields() + 1);
+            }
+            nextRoom = nextRoom.withCleared(true);
         }
 
-        revealAround(tiles, newPos);
-
-        DungeonTile destinationTile = tiles.get(newPos);
-        if (destinationTile != null) {
-            destinationTile = destinationTile.explore();
-            tiles.put(newPos, destinationTile);
-        }
-
-        DungeonTile activeTile = destinationTile != null ? destinationTile : newTile;
-        String encounterIdHit = null;
-
-        switch (activeTile.type()) {
-            case ENCOUNTER, BOSS, ELITE -> encounterIdHit = activeTile.encounterId();
-            case HEAL -> {
-                working = DungeonDamage.heal(working, HEAL_AMOUNT);
-                tiles.put(newPos, activeTile.withType(DungeonTileType.FLOOR, null));
-            }
-            case TREASURE -> {
-                score += TREASURE_SCORE;
-                tiles.put(newPos, activeTile.withType(DungeonTileType.FLOOR, null));
-            }
-            case TRAP -> {
-                working = DungeonDamage.takeDamage(working, 1);
-                tiles.put(newPos, activeTile.withType(DungeonTileType.FLOOR, null));
-            }
-            default -> { /* no tile effect */ }
-        }
-
+        rooms.put(nextRoomId, nextRoom);
         DungeonMap nextMap = new DungeonMap(
-            state.map().width(), state.map().height(),
-            state.map().entrance(), state.map().boss(), Map.copyOf(tiles),
-            state.map().gauntletGroups());
+            rooms, state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
 
-        DungeonSessionState moved = new DungeonSessionState(
-            working.config(), nextMap, newPos,
-            working.encounters(), working.bossEncounterIds(), working.bossIndex(),
-            working.activeEncounterId(),
-            working.health(), score,
-            working.answeredCount(), working.correctCount(),
-            visibleFrom(tiles),
-            working.won(), working.defeated(),
-            working.streak(), working.shields(), working.gauntletQueue(),
-            working.longestStreak(), working.elitesCleared(), working.shieldsUsed());
+        DungeonSessionState moved = withMapAndPosition(working, nextMap, nextRoomId);
 
-        return new MoveResult(moved, activeTile.type(), encounterIdHit);
-    }
-
-    public Set<DungeonPosition> revealAroundEntrance(Map<DungeonPosition, DungeonTile> tiles, DungeonPosition entrance) {
-        revealAround(tiles, entrance);
-        DungeonTile entranceTile = tiles.get(entrance);
-        if (entranceTile != null) {
-            tiles.put(entrance, entranceTile.explore());
+        String encounterRoomToActivate = null;
+        if (nextRoom.type() == RoomType.COMBAT
+            || nextRoom.type() == RoomType.ELITE
+            || nextRoom.type() == RoomType.BOSS) {
+            if (!nextRoom.cleared()) {
+                encounterRoomToActivate = nextRoomId;
+            }
         }
-        return visibleFrom(tiles);
+
+        return new MoveResult(moved, encounterRoomToActivate);
     }
 
-    private void revealAround(Map<DungeonPosition, DungeonTile> tiles, DungeonPosition center) {
-        reveal(tiles, center);
-        for (DungeonDirection direction : DungeonDirection.values()) {
-            reveal(tiles, center.move(direction));
-        }
+    private DungeonSessionState withMapAndPosition(DungeonSessionState s, DungeonMap map, String roomId) {
+        return new DungeonSessionState(
+            s.config(), map, roomId,
+            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
+            s.activeEncounterId(),
+            s.health(), s.healthCap(), s.shields(), s.shieldCap(),
+            s.score(), s.answeredCount(), s.correctCount(),
+            s.won(), s.defeated(),
+            s.streak(), s.gauntletQueue(),
+            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
+            s.luckyCoinsConsumed(), s.ownedRelics(), s.pendingRelicPick());
     }
 
-    private void reveal(Map<DungeonPosition, DungeonTile> tiles, DungeonPosition position) {
-        DungeonTile tile = tiles.get(position);
-        if (tile != null) {
-            tiles.put(position, tile.reveal());
-        }
-    }
-
-    private Set<DungeonPosition> visibleFrom(Map<DungeonPosition, DungeonTile> tiles) {
-        return tiles.values().stream()
-            .filter(DungeonTile::revealed)
-            .map(DungeonTile::position)
-            .collect(Collectors.toSet());
+    private DungeonSessionState withShields(DungeonSessionState s, int shields) {
+        return new DungeonSessionState(
+            s.config(), s.map(), s.currentRoomId(),
+            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
+            s.activeEncounterId(),
+            s.health(), s.healthCap(), shields, s.shieldCap(),
+            s.score(), s.answeredCount(), s.correctCount(),
+            s.won(), s.defeated(),
+            s.streak(), s.gauntletQueue(),
+            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
+            s.luckyCoinsConsumed(), s.ownedRelics(), s.pendingRelicPick());
     }
 }

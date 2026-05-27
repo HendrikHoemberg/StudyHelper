@@ -1,17 +1,10 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
-import com.HendrikHoemberg.StudyHelper.dto.DungeonMap;
-import com.HendrikHoemberg.StudyHelper.dto.DungeonPosition;
-import com.HendrikHoemberg.StudyHelper.dto.DungeonSize;
-import com.HendrikHoemberg.StudyHelper.dto.DungeonTile;
-import com.HendrikHoemberg.StudyHelper.dto.DungeonTileType;
+import com.HendrikHoemberg.StudyHelper.dto.*;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayDeque;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,117 +13,161 @@ class DungeonMapGeneratorTests {
     private final DungeonMapGenerator generator = new DungeonMapGenerator();
 
     @Test
-    void generate_placesEntranceBossAndNormalEncountersForEachSize() {
-        assertCounts(DungeonSize.SMALL);
-        assertCounts(DungeonSize.MEDIUM);
-        assertCounts(DungeonSize.LARGE);
+    void generate_smallDungeonHasExpectedRoomTypeCounts() {
+        DungeonMap map = generator.generate(
+            DungeonSize.SMALL, normalIds(6), eliteGroups(1, 2), new Random(1));
+        Map<RoomType, Long> counts = countByType(map);
+        assertThat(counts.get(RoomType.ENTRANCE)).isEqualTo(1);
+        assertThat(counts.get(RoomType.BOSS)).isEqualTo(1);
+        assertThat(counts.get(RoomType.SHOP)).isEqualTo(1);
+        assertThat(counts.get(RoomType.HEAL)).isEqualTo(1);
+        assertThat(counts.get(RoomType.TREASURE)).isEqualTo(1);
+        assertThat(counts.get(RoomType.ELITE)).isEqualTo(1);
+        assertThat(counts.get(RoomType.COMBAT)).isEqualTo(6);
+        assertThat(counts.getOrDefault(RoomType.SECRET, 0L)).isEqualTo(1);
     }
 
     @Test
-    void generate_makesBossAndAllEncountersReachable() {
-        DungeonMap map = generator.generate(DungeonSize.LARGE, encounterIds(DungeonSize.LARGE.normalEncounterCount()));
-
-        Set<DungeonPosition> reachable = reachablePositions(map);
-
-        assertThat(reachable).contains(map.boss());
-        List<DungeonPosition> encounterPositions = map.tiles().values().stream()
-            .filter(tile -> tile.type() == DungeonTileType.ENCOUNTER)
-            .map(DungeonTile::position)
-            .toList();
-        assertThat(reachable).containsAll(encounterPositions);
+    void generate_mediumDungeonHasExpectedRoomTypeCounts() {
+        DungeonMap map = generator.generate(
+            DungeonSize.MEDIUM, normalIds(9), eliteGroups(2, 2), new Random(1));
+        Map<RoomType, Long> counts = countByType(map);
+        assertThat(counts.get(RoomType.COMBAT)).isEqualTo(9);
+        assertThat(counts.get(RoomType.ELITE)).isEqualTo(2);
+        assertThat(counts.get(RoomType.TREASURE)).isEqualTo(1);
     }
 
     @Test
-    void generate_containsAtLeastOneRoomSizedOpenArea() {
-        DungeonMap map = generator.generate(DungeonSize.MEDIUM, encounterIds(DungeonSize.MEDIUM.normalEncounterCount()));
-
-        boolean hasRoom = map.tiles().values().stream()
-            .filter(DungeonTile::walkable)
-            .map(DungeonTile::position)
-            .anyMatch(position ->
-                walkable(map, position)
-                    && walkable(map, new DungeonPosition(position.x() + 1, position.y()))
-                    && walkable(map, new DungeonPosition(position.x(), position.y() + 1))
-                    && walkable(map, new DungeonPosition(position.x() + 1, position.y() + 1))
-            );
-
-        assertThat(hasRoom).isTrue();
+    void generate_largeDungeonHasExpectedRoomTypeCounts() {
+        DungeonMap map = generator.generate(
+            DungeonSize.LARGE, normalIds(15), eliteGroups(3, 3), new Random(1));
+        Map<RoomType, Long> counts = countByType(map);
+        assertThat(counts.get(RoomType.COMBAT)).isEqualTo(15);
+        assertThat(counts.get(RoomType.ELITE)).isEqualTo(3);
+        assertThat(counts.get(RoomType.TREASURE)).isEqualTo(2);
     }
 
     @Test
-    void generate_revealsEntranceAndAdjacentTilesOnly() {
-        DungeonMap map = generator.generate(DungeonSize.SMALL, encounterIds(DungeonSize.SMALL.normalEncounterCount()));
-
-        assertThat(map.tileAt(map.entrance()).revealed()).isTrue();
-        long revealed = map.tiles().values().stream().filter(DungeonTile::revealed).count();
-
-        assertThat(revealed).isGreaterThanOrEqualTo(3);
-        assertThat(revealed).isLessThan(12);
+    void generate_bossIsReachableFromEntrance() {
+        DungeonMap map = generator.generate(
+            DungeonSize.MEDIUM, normalIds(9), eliteGroups(2, 2), new Random(2));
+        Set<String> reachable = reach(map);
+        assertThat(reachable).contains(map.bossRoomId());
     }
 
     @Test
-    void generate_isDeterministicGivenSameSeed() {
-        DungeonMap a = generator.generate(DungeonSize.MEDIUM,
-            encounterIds(DungeonSize.MEDIUM.normalEncounterCount()),
-            List.of(), new Random(42L));
-        DungeonMap b = generator.generate(DungeonSize.MEDIUM,
-            encounterIds(DungeonSize.MEDIUM.normalEncounterCount()),
-            List.of(), new Random(42L));
-        assertThat(a.tiles().keySet()).isEqualTo(b.tiles().keySet());
-        for (DungeonPosition p : a.tiles().keySet()) {
-            assertThat(a.tiles().get(p).type()).isEqualTo(b.tiles().get(p).type());
+    void generate_allNonSecretRoomsReachable() {
+        DungeonMap map = generator.generate(
+            DungeonSize.MEDIUM, normalIds(9), eliteGroups(2, 2), new Random(3));
+        Set<String> reachable = reach(map);
+        Set<String> nonSecret = map.rooms().values().stream()
+            .filter(r -> r.type() != RoomType.SECRET)
+            .map(DungeonRoom::id)
+            .collect(Collectors.toSet());
+        assertThat(reachable).containsAll(nonSecret);
+    }
+
+    @Test
+    void generate_secretRoomHasNoDoors() {
+        DungeonMap map = generator.generate(
+            DungeonSize.SMALL, normalIds(6), eliteGroups(1, 2), new Random(4));
+        DungeonRoom secret = map.rooms().values().stream()
+            .filter(r -> r.type() == RoomType.SECRET)
+            .findFirst().orElseThrow();
+        assertThat(secret.doors()).isEmpty();
+    }
+
+    @Test
+    void generate_seedIsDeterministic() {
+        DungeonMap a = generator.generate(
+            DungeonSize.MEDIUM, normalIds(9), eliteGroups(2, 2), new Random(99));
+        DungeonMap b = generator.generate(
+            DungeonSize.MEDIUM, normalIds(9), eliteGroups(2, 2), new Random(99));
+        assertThat(a.rooms().keySet()).isEqualTo(b.rooms().keySet());
+        assertThat(a.bossRoomId()).isEqualTo(b.bossRoomId());
+        for (String id : a.rooms().keySet()) {
+            assertThat(a.rooms().get(id).type())
+                .as("type of %s", id)
+                .isEqualTo(b.rooms().get(id).type());
         }
-        assertThat(a.entrance()).isEqualTo(b.entrance());
-        assertThat(a.boss()).isEqualTo(b.boss());
     }
 
     @Test
-    void generate_placesElitesWhenProvided() {
-        List<List<String>> gauntlets = List.of(List.of("e1a", "e1b"));
-        DungeonMap map = generator.generate(DungeonSize.MEDIUM,
-            encounterIds(DungeonSize.MEDIUM.normalEncounterCount()),
-            gauntlets, new Random(7L));
-        long eliteTiles = map.tiles().values().stream()
-            .filter(t -> t.type() == DungeonTileType.ELITE).count();
-        assertThat(eliteTiles).isEqualTo(1);
-        assertThat(map.gauntletGroups()).hasSize(1);
-        assertThat(map.gauntletGroups().values().iterator().next()).containsExactly("e1a", "e1b");
-    }
-
-    private void assertCounts(DungeonSize size) {
-        DungeonMap map = generator.generate(size, encounterIds(size.normalEncounterCount()));
-
-        assertThat(map.tileAt(map.entrance()).type()).isEqualTo(DungeonTileType.ENTRANCE);
-        assertThat(map.tileAt(map.boss()).type()).isEqualTo(DungeonTileType.BOSS);
-        assertThat(map.tiles().values().stream().filter(tile -> tile.type() == DungeonTileType.ENCOUNTER)).hasSize(size.normalEncounterCount());
-        assertThat(map.tiles().values().stream().filter(tile -> tile.type() == DungeonTileType.HEAL).count()).isGreaterThanOrEqualTo(1);
-        assertThat(map.tiles().values().stream().filter(tile -> tile.type() == DungeonTileType.TREASURE).count()).isGreaterThanOrEqualTo(1);
-    }
-
-    private List<String> encounterIds(int count) {
-        return java.util.stream.IntStream.range(0, count)
-            .mapToObj(i -> "e" + i)
+    void generate_eliteRoomsCarryGauntletGroupOfCorrectSize() {
+        DungeonMap map = generator.generate(
+            DungeonSize.LARGE, normalIds(15), eliteGroups(3, 3), new Random(5));
+        List<DungeonRoom> elites = map.rooms().values().stream()
+            .filter(r -> r.type() == RoomType.ELITE)
             .toList();
+        assertThat(elites).hasSize(3);
+        for (DungeonRoom e : elites) {
+            assertThat(e.gauntletGroup()).hasSize(3);
+            assertThat(e.encounterId()).isEqualTo(e.gauntletGroup().get(0));
+            assertThat(e.eliteOffer()).isNotNull();
+            assertThat(e.eliteOffer().relics()).hasSize(2);
+        }
     }
 
-    private boolean walkable(DungeonMap map, DungeonPosition position) {
-        DungeonTile tile = map.tileAt(position);
-        return tile != null && tile.walkable();
+    @Test
+    void generate_shopRoomHasOfferWithTwoEntriesAndConsumable() {
+        DungeonMap map = generator.generate(
+            DungeonSize.SMALL, normalIds(6), eliteGroups(1, 2), new Random(6));
+        DungeonRoom shop = map.rooms().values().stream()
+            .filter(r -> r.type() == RoomType.SHOP).findFirst().orElseThrow();
+        assertThat(shop.shopOffer()).isNotNull();
+        assertThat(shop.shopOffer().entries()).hasSize(2);
+        assertThat(shop.shopOffer().consumable()).isNotNull();
     }
 
-    private Set<DungeonPosition> reachablePositions(DungeonMap map) {
-        Set<DungeonPosition> seen = new HashSet<>();
-        ArrayDeque<DungeonPosition> queue = new ArrayDeque<>();
-        queue.add(map.entrance());
-        seen.add(map.entrance());
+    @Test
+    void generate_treasureRoomHasThreeRelics() {
+        DungeonMap map = generator.generate(
+            DungeonSize.SMALL, normalIds(6), eliteGroups(1, 2), new Random(7));
+        DungeonRoom t = map.rooms().values().stream()
+            .filter(r -> r.type() == RoomType.TREASURE).findFirst().orElseThrow();
+        assertThat(t.treasureOffer()).isNotNull();
+        assertThat(t.treasureOffer().relics()).hasSize(3);
+    }
+
+    @Test
+    void generate_entranceIsVisitedAndCleared() {
+        DungeonMap map = generator.generate(
+            DungeonSize.SMALL, normalIds(6), eliteGroups(1, 2), new Random(8));
+        DungeonRoom entrance = map.rooms().get(map.entranceRoomId());
+        assertThat(entrance.visited()).isTrue();
+        assertThat(entrance.cleared()).isTrue();
+    }
+
+    private List<String> normalIds(int n) {
+        List<String> ids = new ArrayList<>();
+        for (int i = 0; i < n; i++) ids.add("enc_" + i);
+        return ids;
+    }
+
+    private List<List<String>> eliteGroups(int groups, int cardsEach) {
+        List<List<String>> result = new ArrayList<>();
+        for (int g = 0; g < groups; g++) {
+            List<String> group = new ArrayList<>();
+            for (int c = 0; c < cardsEach; c++) group.add("elite_" + g + "_" + c);
+            result.add(group);
+        }
+        return result;
+    }
+
+    private Map<RoomType, Long> countByType(DungeonMap map) {
+        return map.rooms().values().stream()
+            .collect(Collectors.groupingBy(DungeonRoom::type, Collectors.counting()));
+    }
+
+    private Set<String> reach(DungeonMap map) {
+        Set<String> seen = new LinkedHashSet<>();
+        Deque<String> queue = new ArrayDeque<>();
+        seen.add(map.entranceRoomId());
+        queue.add(map.entranceRoomId());
         while (!queue.isEmpty()) {
-            DungeonPosition cur = queue.removeFirst();
-            for (var direction : com.HendrikHoemberg.StudyHelper.dto.DungeonDirection.values()) {
-                DungeonPosition next = cur.move(direction);
-                DungeonTile tile = map.tileAt(next);
-                if (tile != null && tile.walkable() && seen.add(next)) {
-                    queue.add(next);
-                }
+            String node = queue.poll();
+            for (String neighbor : map.rooms().get(node).doors().values()) {
+                if (seen.add(neighbor)) queue.add(neighbor);
             }
         }
         return seen;

@@ -264,13 +264,11 @@ public class SavedSessionService {
             }
         }
 
-        Map<DungeonPosition, DungeonTile> updatedTiles = new LinkedHashMap<>();
-        for (Map.Entry<DungeonPosition, DungeonTile> entry : state.map().tiles().entrySet()) {
-            DungeonTile tile = entry.getValue();
-            if (tile.encounterId() != null && removedEncounterIds.contains(tile.encounterId())) {
-                updatedTiles.put(entry.getKey(), tile.withType(DungeonTileType.FLOOR, null));
-            } else {
-                updatedTiles.put(entry.getKey(), tile);
+        Map<String, DungeonRoom> updatedRooms = new LinkedHashMap<>(state.map().rooms());
+        for (Map.Entry<String, DungeonRoom> entry : updatedRooms.entrySet()) {
+            DungeonRoom room = entry.getValue();
+            if (room.encounterId() != null && removedEncounterIds.contains(room.encounterId())) {
+                updatedRooms.put(entry.getKey(), room.withCleared(true).withVisited(true));
             }
         }
 
@@ -291,23 +289,25 @@ public class SavedSessionService {
 
         boolean canContinue = allBossAlive && (state.bossIndex() > 0 || hasUnresolvedNormal || allNormalsCleared);
 
+        DungeonMap nextMap = new DungeonMap(
+            Map.copyOf(updatedRooms), state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
         DungeonSessionState newState = new DungeonSessionState(
             state.config(),
-            new DungeonMap(state.map().width(), state.map().height(), state.map().entrance(), state.map().boss(), updatedTiles, state.map().gauntletGroups()),
-            state.playerPosition(),
+            nextMap,
+            state.currentRoomId(),
             remainingEncounters,
             remainingBossIds,
             state.bossIndex(),
             removedEncounterIds.contains(state.activeEncounterId()) ? null : state.activeEncounterId(),
-            state.health(),
+            state.health(), state.healthCap(), state.shields(), state.shieldCap(),
             state.score(),
             state.answeredCount(),
             state.correctCount(),
-            state.visibleTiles(),
             state.won(),
             state.defeated(),
-            state.streak(), state.shields(), state.gauntletQueue(),
-            state.longestStreak(), state.elitesCleared(), state.shieldsUsed()
+            state.streak(), state.gauntletQueue(),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
+            state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick()
         );
 
         return new ReconcileDungeonResult(newState, removedEncounterIds.size(), canContinue);

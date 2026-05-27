@@ -213,7 +213,7 @@ class StudyLogServiceTests {
 
     @Test
     void recordDungeon_savesWonDungeonLog() {
-        DungeonRunStats stats = new DungeonRunStats(DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 8, 6, 2, true, 0, 0, 0);
+        DungeonRunStats stats = new DungeonRunStats(DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 8, 6, 2, true, 0, 0, 0, 0);
         studyLogService.recordDungeon(user, stats, List.of(deck.getId()));
 
         var logs = studyLogRepository.findByUserOrderByCompletedAtDesc(user,
@@ -229,7 +229,7 @@ class StudyLogServiceTests {
 
     @Test
     void recordDungeon_savesDefeatDungeonLog() {
-        DungeonRunStats stats = new DungeonRunStats(DungeonMode.AI_QUIZ, DungeonSize.MEDIUM, 12, 7, 4, 0, false, 0, 0, 0);
+        DungeonRunStats stats = new DungeonRunStats(DungeonMode.AI_QUIZ, DungeonSize.MEDIUM, 12, 7, 4, 0, false, 0, 0, 0, 0);
         studyLogService.recordDungeon(user, stats, List.of());
 
         var logs = studyLogRepository.findByUserOrderByCompletedAtDesc(user,
@@ -242,7 +242,7 @@ class StudyLogServiceTests {
 
     @Test
     void recordDungeonAbandoned_savesAbandonedDungeonLog() {
-        DungeonRunStats stats = new DungeonRunStats(DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 3, 2, 4, false, 0, 0, 0);
+        DungeonRunStats stats = new DungeonRunStats(DungeonMode.FLASHCARDS, DungeonSize.SMALL, 8, 3, 2, 4, false, 0, 0, 0, 0);
         studyLogService.recordDungeonAbandoned(user, stats, List.of(deck.getId()));
 
         var logs = studyLogRepository.findByUserOrderByCompletedAtDesc(user,

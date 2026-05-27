@@ -5,74 +5,66 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class DungeonDamageTests {
 
-    private DungeonSessionState stateWithHealth(int health) {
-        DungeonConfig config = new DungeonConfig(
-            DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
-            QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, "");
-        DungeonPosition entrance = new DungeonPosition(0, 0);
-        DungeonMap map = new DungeonMap(1, 1, entrance, entrance, Map.of());
-        return new DungeonSessionState(
-            config, map, entrance, Map.of(), List.of(), 0, null,
-            health, 0, 0, 0, Set.of(), false, false,
-            0, 0, List.of(), 0, 0, 0);
+    @Test
+    void takeDamage_consumesShieldFirst() {
+        DungeonSessionState s = state(5, 5, 1, 2);
+        DungeonSessionState after = DungeonDamage.takeDamage(s, 1);
+        assertThat(after.health()).isEqualTo(5);
+        assertThat(after.shields()).isEqualTo(0);
+        assertThat(after.shieldsUsed()).isEqualTo(1);
     }
 
     @Test
-    void takeDamage_reducesHealthByAmount() {
-        DungeonSessionState before = stateWithHealth(5);
-        DungeonSessionState after = DungeonDamage.takeDamage(before, 1);
+    void takeDamage_reducesHealthWhenNoShield() {
+        DungeonSessionState s = state(5, 5, 0, 2);
+        DungeonSessionState after = DungeonDamage.takeDamage(s, 1);
         assertThat(after.health()).isEqualTo(4);
         assertThat(after.defeated()).isFalse();
     }
 
     @Test
-    void takeDamage_marksDefeatedWhenHealthHitsZero() {
-        DungeonSessionState before = stateWithHealth(1);
-        DungeonSessionState after = DungeonDamage.takeDamage(before, 1);
-        assertThat(after.health()).isZero();
+    void takeDamage_setsDefeatedAtZeroHealth() {
+        DungeonSessionState s = state(1, 5, 0, 2);
+        DungeonSessionState after = DungeonDamage.takeDamage(s, 1);
+        assertThat(after.health()).isEqualTo(0);
         assertThat(after.defeated()).isTrue();
     }
 
     @Test
-    void takeDamage_clampsHealthAtZeroIfOverkill() {
-        DungeonSessionState before = stateWithHealth(1);
-        DungeonSessionState after = DungeonDamage.takeDamage(before, 5);
-        assertThat(after.health()).isZero();
-        assertThat(after.defeated()).isTrue();
-    }
-
-    @Test
-    void heal_addsAmountCappedAtFive() {
-        DungeonSessionState before = stateWithHealth(3);
-        DungeonSessionState after = DungeonDamage.heal(before, 10);
+    void heal_capsAtHealthCap() {
+        DungeonSessionState s = state(4, 5, 0, 2);
+        DungeonSessionState after = DungeonDamage.heal(s, 99);
         assertThat(after.health()).isEqualTo(5);
     }
 
     @Test
-    void heal_doesNotChangeAtFullHealth() {
-        DungeonSessionState before = stateWithHealth(5);
-        DungeonSessionState after = DungeonDamage.heal(before, 2);
-        assertThat(after.health()).isEqualTo(5);
+    void heal_respectsHigherHealthCapFromIronPlate() {
+        DungeonSessionState s = state(5, 7, 0, 2);
+        DungeonSessionState after = DungeonDamage.heal(s, 99);
+        assertThat(after.health()).isEqualTo(7);
     }
 
-    @Test
-    void takeDamage_consumesShieldBeforeHealth() {
-        DungeonSessionState before = new DungeonSessionState(
-            new DungeonConfig(DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
-                QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, ""),
-            new DungeonMap(1, 1, new DungeonPosition(0,0), new DungeonPosition(0,0), Map.of()),
-            new DungeonPosition(0,0), Map.of(), List.of(), 0, null,
-            5, 0, 0, 0, Set.of(), false, false,
-            0, 1, List.of(), 0, 0, 0);
-        DungeonSessionState after = DungeonDamage.takeDamage(before, 1);
-        assertThat(after.health()).isEqualTo(5);
-        assertThat(after.shields()).isZero();
-        assertThat(after.shieldsUsed()).isEqualTo(1);
+    private DungeonSessionState state(int hp, int hpCap, int shields, int shieldCap) {
+        DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
+            Map.of(), new GridPos(0, 0),
+            true, true, null, List.of(), null, null, null, null);
+        DungeonMap map = new DungeonMap(Map.of("r0", r0), "r0", "r0", 3);
+        DungeonConfig config = new DungeonConfig(
+            DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
+            QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, "");
+        return new DungeonSessionState(
+            config, map, "r0",
+            Map.of(), List.of(), 0, null,
+            hp, hpCap, shields, shieldCap,
+            0, 0, 0,
+            false, false,
+            0, List.of(),
+            0, 0, 0, 0,
+            List.of(), null);
     }
 }

@@ -276,11 +276,10 @@ public class DungeonController {
         int gauntletPos = 0;
         int gauntletTotal = 0;
         if (state.activeEncounterId() != null) {
-            for (var entry : state.map().gauntletGroups().entrySet()) {
-                List<String> group = entry.getValue();
-                if (group.contains(state.activeEncounterId())) {
-                    gauntletTotal = group.size();
-                    gauntletPos = group.indexOf(state.activeEncounterId()) + 1;
+            for (DungeonRoom room : state.map().rooms().values()) {
+                if (room.gauntletGroup().contains(state.activeEncounterId())) {
+                    gauntletTotal = room.gauntletGroup().size();
+                    gauntletPos = room.gauntletGroup().indexOf(state.activeEncounterId()) + 1;
                     break;
                 }
             }
@@ -301,15 +300,19 @@ public class DungeonController {
     }
 
     private List<Map<String, Object>> mapTiles(DungeonSessionState state) {
-        return state.map().tiles().values().stream()
-            .map(tile -> {
+        return state.map().rooms().values().stream()
+            .map(room -> {
                 Map<String, Object> m = new LinkedHashMap<>();
-                m.put("x", tile.position().x());
-                m.put("y", tile.position().y());
-                m.put("type", tile.type());
-                m.put("revealed", tile.revealed());
-                m.put("explored", tile.explored());
-                m.put("encounterId", tile.encounterId());
+                m.put("id", room.id());
+                m.put("x", room.gridPos().x());
+                m.put("y", room.gridPos().y());
+                m.put("type", room.type());
+                m.put("visited", room.visited());
+                m.put("cleared", room.cleared());
+                List<String> doorDirections = room.doors().keySet().stream()
+                    .map(Enum::name)
+                    .toList();
+                m.put("doors", doorDirections);
                 return m;
             })
             .toList();
