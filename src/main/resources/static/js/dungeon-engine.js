@@ -56,7 +56,7 @@
             var zone = corners[i];
             var px = zone.minX + ((rng + i * 17) % (zone.maxX - zone.minX));
             var py = zone.minY + ((rng + i * 31) % (zone.maxY - zone.minY));
-            pots.push({ x: px, y: py, broken: false, shatterTime: 0 });
+            pots.push({ x: px, y: py, broken: false, shatterTime: 0, index: i });
         }
         return pots;
     }
@@ -195,6 +195,7 @@
                 DungeonAudio.playSlash(); // Shatter sound
                 
                 var rand = Math.random();
+                var roomId = currentRoomItems.roomId;
                 if (rand < 0.60) {
                     currentRoomItems.coins.push({
                         x: potCenterX,
@@ -203,7 +204,8 @@
                         vy: (Math.random() * 2 - 1) * 2,
                         collected: false,
                         claimable: true,
-                        type: 'COIN'
+                        type: 'COIN',
+                        itemId: roomId + '_coin_' + pot.index
                     });
                 } else if (rand < 0.65) {
                     currentRoomItems.coins.push({
@@ -213,7 +215,8 @@
                         vy: (Math.random() * 2 - 1) * 2,
                         collected: false,
                         claimable: true,
-                        type: 'SHIELD'
+                        type: 'SHIELD',
+                        itemId: roomId + '_shield_' + pot.index
                     });
                 }
             }
@@ -260,8 +263,8 @@
                         var scoreVal = parseInt(scoreEl.textContent, 10);
                         scoreEl.textContent = scoreVal + 1;
                     }
-                    if (item.claimable) {
-                        fetch('/dungeon/collect/coin', { method: 'POST' });
+                    if (item.claimable && item.itemId) {
+                        fetch('/dungeon/collect/coin?itemId=' + encodeURIComponent(item.itemId), { method: 'POST' });
                     }
                 } else if (item.type === 'SHIELD') {
                     DungeonAudio.playShieldGain();
@@ -273,8 +276,8 @@
                         newIcon.setAttribute('icon', 'lucide:shield');
                         shieldsContainer.appendChild(newIcon);
                     }
-                    if (item.claimable) {
-                        fetch('/dungeon/collect/shield', { method: 'POST' });
+                    if (item.claimable && item.itemId) {
+                        fetch('/dungeon/collect/shield?itemId=' + encodeURIComponent(item.itemId), { method: 'POST' });
                     }
                 }
             }

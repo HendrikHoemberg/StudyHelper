@@ -4,6 +4,9 @@ import com.HendrikHoemberg.StudyHelper.dto.*;
 import com.HendrikHoemberg.StudyHelper.entity.Deck;
 import com.HendrikHoemberg.StudyHelper.entity.Flashcard;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.exception.AiQuizGenerationException;
+import com.HendrikHoemberg.StudyHelper.exception.DeckNotFoundException;
+import com.HendrikHoemberg.StudyHelper.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +46,7 @@ public class DungeonSessionService {
     @Transactional(readOnly = true)
     public DungeonSessionState createFlashcardDungeon(List<Long> selectedDeckIds, DungeonSize size, User user) {
         List<Long> normalizedIds = StudySourceSupport.normalizeIds(selectedDeckIds);
-        List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(normalizedIds, user);
+        List<Deck> decks = loadDecks(normalizedIds, user);
         List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
         validateSize(size, flashcards.size(), "flashcards");
 
@@ -69,15 +72,13 @@ public class DungeonSessionService {
                                                     HttpServletRequest request,
                                                     User user) throws Exception {
         List<Long> normalizedIds = StudySourceSupport.normalizeIds(selectedDeckIds);
-        List<Deck> decks = deckService.getValidatedDecksInRequestedOrder(normalizedIds, user);
+        List<Deck> decks = loadDecks(normalizedIds, user);
         List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
         validateSize(size, flashcards.size(), "flashcards");
 
         int questionCount = size.totalPrompts();
-        QuizSessionState quizState = quizSessionService.createSession(
-            normalizedIds, List.of(), request, questionCount,
-            questionMode, difficulty, additionalInstructions, user);
-        List<QuizQuestion> questions = quizState.questions();
+        List<QuizQuestion> questions = generateQuizQuestions(
+            normalizedIds, request, questionCount, questionMode, difficulty, additionalInstructions, user);
 
         Map<String, DungeonEncounter> encounters = new LinkedHashMap<>();
         List<String> normalEncounterIds = new ArrayList<>();
@@ -92,9 +93,42 @@ public class DungeonSessionService {
             map, encounters, bossEncounterIds);
     }
 
-    public DungeonSessionState move(DungeonSessionState state, DungeonDirection direction) {
-        ActionResult result = navigationService.move(state, direction);
-        DungeonSessionState moved = result.state();
+    private List<Deck> loadDecks(List<Long> normalizedIds, User user) {
+        try {
+            return deckService.getValidatedDecksInRequestedOrder(normalizedIds, user);
+        } catch (ResourceNotFoundException e) {
+            throw new DeckNotFoundException(e.getMessage());
+        }
+    }
+
+    private List<QuizQuestion> generateQuizQuestions(List<Long> normalizedIds,
+                                                      HttpServletRequest request,
+                                                      int questionCount,
+                                                      QuizQuestionMode questionMode,
+                                                      Difficulty difficulty,
+                                                      String additionalInstructions,
+                                                      User user) throws Exception {
+        try {
+            QuizSessionState quizState = quizSessionService.createSession(
+                normalizedIds, List.of(), request, questionCount,
+                questionMode, difficulty, additionalInstructions, user);
+            return quizState.questions();
+        } catch (DeckNotFoundException | AiGenerationException | AiQuotaExceededException
+                 | IllegalArgumentException e) {
+            throw e;
+        } catch (ResourceNotFoundException e) {
+            throw new DeckNotFoundException(e.getMessage());
+        } catch (Exception e) {
+            throw new AiQuizGenerationException("AI quiz generation failed", e);
+        }
+    }
+
+    public ActionResult move(DungeonSessionState state, DungeonDirection direction) {
+        ActionResult navResult = navigationService.move(state, direction);
+        if (navResult instanceof ActionResult.Failure failure) {
+            return failure;
+        }
+        DungeonSessionState moved = navResult.state();
 
         DungeonRoom destination = moved.currentRoom();
 
@@ -111,12 +145,12 @@ public class DungeonSessionService {
                 || destRoom.type() == RoomType.ELITE
                 || destRoom.type() == RoomType.BOSS)) {
             ActionResult encResult = encounterService.activateAt(moved, destRoom.id());
-            if (encResult instanceof ActionResult.Failure) {
-                return moved;
+            if (encResult instanceof ActionResult.Failure encFail) {
+                return ActionResult.failure(moved, encFail.message());
             }
             moved = encResult.state();
         }
-        return moved;
+        return ActionResult.success(moved);
     }
 
     public DungeonSessionState answerFlashcard(DungeonSessionState state, boolean gotIt) {

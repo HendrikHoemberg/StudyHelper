@@ -2,6 +2,8 @@ package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.exception.AiQuizGenerationException;
+import com.HendrikHoemberg.StudyHelper.exception.DeckNotFoundException;
 import com.HendrikHoemberg.StudyHelper.exception.MapGenerationException;
 import com.HendrikHoemberg.StudyHelper.service.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -76,10 +78,16 @@ public class DungeonController {
             session.setAttribute(DUNGEON_SESSION_KEY, state);
             savedSessionService.saveDungeon(user, state);
             return renderGame(model, state, hxRequest);
-        } catch (IllegalArgumentException ex) {
+        } catch (DeckNotFoundException ex) {
+            return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
+                quizQuestionMode, difficulty, additionalInstructions, ex, response, hxRequest);
+        } catch (AiQuizGenerationException ex) {
             return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
                 quizQuestionMode, difficulty, additionalInstructions, ex, response, hxRequest);
         } catch (MapGenerationException ex) {
+            return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
+                quizQuestionMode, difficulty, additionalInstructions, ex, response, hxRequest);
+        } catch (IllegalArgumentException ex) {
             return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
                 quizQuestionMode, difficulty, additionalInstructions, ex, response, hxRequest);
         } catch (AiGenerationException | AiQuotaExceededException ex) {
@@ -127,12 +135,19 @@ public class DungeonController {
                        Model model,
                        Principal principal,
                        HttpSession session,
+                       HttpServletResponse response,
                        @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = getState(session, user);
         if (state == null) return redirectToStart();
-        state = dungeonSessionService.move(state, direction);
-        return stashAndRender(model, user, session, state, hxRequest);
+        ActionResult result = dungeonSessionService.move(state, direction);
+        if (result instanceof ActionResult.Failure failure) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setHeader("HX-Trigger", "dungeon-action-error");
+            model.addAttribute("actionError", failure.message());
+            return renderGame(model, failure.state(), hxRequest);
+        }
+        return stashAndRender(model, user, session, result.state(), hxRequest);
     }
 
     @PostMapping("/dungeon/answer/flashcard")
@@ -249,36 +264,70 @@ public class DungeonController {
 
     @PostMapping("/dungeon/collect/coin")
     @ResponseBody
-    public String collectCoin(HttpSession session, Principal principal) {
+    public String collectCoin(@RequestParam(required = false) String itemId,
+                              HttpSession session, Principal principal,
+                              HttpServletResponse response) {
         User user = userService.getByUsername(principal.getName());
-        DungeonSessionState nextState = tryCollectCoin(getState(session, user));
-        if (nextState == null) return "";
-        session.setAttribute(DUNGEON_SESSION_KEY, nextState);
-        savedSessionService.saveDungeon(user, nextState);
-        return "success";
+        DungeonSessionState state = getState(session, user);
+        CollectResult result = tryCollectCoin(state, itemId);
+        return handleCollectResult(result, user, session, response);
     }
 
     @PostMapping("/dungeon/collect/shield")
     @ResponseBody
-    public String collectShield(HttpSession session, Principal principal) {
+    public String collectShield(@RequestParam(required = false) String itemId,
+                                HttpSession session, Principal principal,
+                                HttpServletResponse response) {
         User user = userService.getByUsername(principal.getName());
-        DungeonSessionState nextState = tryCollectShield(getState(session, user));
-        if (nextState == null) return "";
-        session.setAttribute(DUNGEON_SESSION_KEY, nextState);
-        savedSessionService.saveDungeon(user, nextState);
-        return "success";
+        DungeonSessionState state = getState(session, user);
+        CollectResult result = tryCollectShield(state, itemId);
+        return handleCollectResult(result, user, session, response);
     }
 
-    static DungeonSessionState tryCollectCoin(DungeonSessionState state) {
-        if (!canCollectInteractiveItem(state)) return null;
-        return state.withResources(state.resources().addScore(1));
+    enum CollectStatus { OK, REJECTED, DUPLICATE }
+
+    record CollectResult(CollectStatus status, DungeonSessionState state) {}
+
+    private String handleCollectResult(CollectResult result, User user,
+                                        HttpSession session, HttpServletResponse response) {
+        switch (result.status()) {
+            case OK -> {
+                session.setAttribute(DUNGEON_SESSION_KEY, result.state());
+                savedSessionService.saveDungeon(user, result.state());
+                return "success";
+            }
+            case DUPLICATE -> {
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
+                return "";
+            }
+            default -> {
+                return "";
+            }
+        }
     }
 
-    static DungeonSessionState tryCollectShield(DungeonSessionState state) {
-        if (!canCollectInteractiveItem(state)) return null;
-        DungeonResources next = state.resources().addShield();
-        if (next == state.resources()) return null;
-        return state.withResources(next);
+    static CollectResult tryCollectCoin(DungeonSessionState state, String itemId) {
+        if (!canCollectInteractiveItem(state)) return new CollectResult(CollectStatus.REJECTED, state);
+        if (!isValidItemId(state, itemId, "coin")) return new CollectResult(CollectStatus.REJECTED, state);
+        if (state.collectedItems().contains(itemId)) return new CollectResult(CollectStatus.DUPLICATE, state);
+        Set<String> collected = new HashSet<>(state.collectedItems());
+        collected.add(itemId);
+        DungeonSessionState next = state
+            .withResources(state.resources().addScore(1))
+            .withCollectedItems(collected);
+        return new CollectResult(CollectStatus.OK, next);
+    }
+
+    static CollectResult tryCollectShield(DungeonSessionState state, String itemId) {
+        if (!canCollectInteractiveItem(state)) return new CollectResult(CollectStatus.REJECTED, state);
+        if (!isValidItemId(state, itemId, "shield")) return new CollectResult(CollectStatus.REJECTED, state);
+        if (state.collectedItems().contains(itemId)) return new CollectResult(CollectStatus.DUPLICATE, state);
+        DungeonResources nextResources = state.resources().addShield();
+        if (nextResources == state.resources()) return new CollectResult(CollectStatus.REJECTED, state);
+        Set<String> collected = new HashSet<>(state.collectedItems());
+        collected.add(itemId);
+        return new CollectResult(CollectStatus.OK,
+            state.withResources(nextResources).withCollectedItems(collected));
     }
 
     private static boolean canCollectInteractiveItem(DungeonSessionState state) {
@@ -286,6 +335,18 @@ public class DungeonController {
         if (state.defeated() || state.won()) return false;
         if (state.combat().activeEncounterId() != null) return false;
         if (state.loadout().pendingRelicPick() != null) return false;
+        return true;
+    }
+
+    private static boolean isValidItemId(DungeonSessionState state, String itemId, String expectedType) {
+        if (itemId == null || itemId.isBlank()) return false;
+        String prefix = state.currentRoomId() + "_" + expectedType + "_";
+        if (!itemId.startsWith(prefix)) return false;
+        String suffix = itemId.substring(prefix.length());
+        if (suffix.isEmpty()) return false;
+        for (int i = 0; i < suffix.length(); i++) {
+            if (!Character.isDigit(suffix.charAt(i))) return false;
+        }
         return true;
     }
 

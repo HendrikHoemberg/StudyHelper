@@ -29,10 +29,30 @@ class DungeonSessionServiceTests {
 
         DungeonSessionService svc = new DungeonSessionService(
             null, null, null, null, nav, enc, relic, new DungeonShrineService());
-        DungeonSessionState result = svc.move(before, DungeonDirection.RIGHT);
+        ActionResult result = svc.move(before, DungeonDirection.RIGHT);
 
-        assertThat(result).isSameAs(afterActivate);
+        assertThat(result).isInstanceOf(ActionResult.Success.class);
+        assertThat(result.state()).isSameAs(afterActivate);
         verify(enc).activateAt(afterMove, "r1");
+    }
+
+    @Test
+    void move_propagatesNavigationFailure() {
+        DungeonNavigationService nav = mock(DungeonNavigationService.class);
+        DungeonEncounterService enc = mock(DungeonEncounterService.class);
+        DungeonRelicService relic = mock(DungeonRelicService.class);
+        DungeonSessionState before = stateOnRoom("r0", RoomType.ENTRANCE);
+        when(nav.move(before, DungeonDirection.UP))
+            .thenReturn(ActionResult.failure(before, "dungeon.error.wall"));
+
+        DungeonSessionService svc = new DungeonSessionService(
+            null, null, null, null, nav, enc, relic, new DungeonShrineService());
+        ActionResult result = svc.move(before, DungeonDirection.UP);
+
+        assertThat(result).isInstanceOf(ActionResult.Failure.class);
+        assertThat(result.errorMessage()).contains("dungeon.error.wall");
+        assertThat(result.state()).isSameAs(before);
+        verifyNoInteractions(enc);
     }
 
     @Test
@@ -56,11 +76,12 @@ class DungeonSessionServiceTests {
 
         DungeonSessionService svc = new DungeonSessionService(
             null, null, null, null, nav, enc, relic, new DungeonShrineService());
-        DungeonSessionState result = svc.move(before, DungeonDirection.RIGHT);
+        ActionResult result = svc.move(before, DungeonDirection.RIGHT);
 
-        assertThat(result.loadout().pendingRelicPick()).isNotNull();
-        assertThat(result.loadout().pendingRelicPick().type()).isEqualTo(PendingPickType.TREASURE);
-        assertThat(result.loadout().pendingRelicPick().offer()).hasSize(3);
+        assertThat(result).isInstanceOf(ActionResult.Success.class);
+        assertThat(result.state().loadout().pendingRelicPick()).isNotNull();
+        assertThat(result.state().loadout().pendingRelicPick().type()).isEqualTo(PendingPickType.TREASURE);
+        assertThat(result.state().loadout().pendingRelicPick().offer()).hasSize(3);
         verifyNoInteractions(enc);
     }
 
