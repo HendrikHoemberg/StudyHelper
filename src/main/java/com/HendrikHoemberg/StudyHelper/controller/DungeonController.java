@@ -24,6 +24,7 @@ public class DungeonController {
     private static final Logger log = LoggerFactory.getLogger(DungeonController.class);
     private static final String DUNGEON_SESSION_KEY = "dungeonSessionState";
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Random shrineRng = new Random();
 
     private final DungeonSessionService dungeonSessionService;
     private final SavedSessionService savedSessionService;
@@ -236,29 +237,33 @@ public class DungeonController {
         DungeonSessionState state = getState(session, user);
         if (state == null) return "redirect:/study/start?mode=DUNGEON";
 
-        int roll = new Random().nextInt(6) + 1;
-        RelicId grantedRelic = null;
-        if (roll == 6) {
-            List<RelicId> unowned = new ArrayList<>();
-            for (RelicId r : RelicId.values()) {
-                if (!state.ownedRelics().contains(r)) unowned.add(r);
-            }
-            if (!unowned.isEmpty()) {
-                grantedRelic = unowned.get(new Random().nextInt(unowned.size()));
-            } else {
-                grantedRelic = RelicId.IRON_PLATE;
-            }
-        }
-
-        DungeonSessionState nextState = dungeonSessionService.shrineRoll(state, roll, grantedRelic);
+        ShrineRollOutcome outcome = computeShrineRollOutcome(state, shrineRng);
+        DungeonSessionState nextState =
+            dungeonSessionService.shrineRoll(state, outcome.roll(), outcome.grantedRelic());
         session.setAttribute(DUNGEON_SESSION_KEY, nextState);
         savedSessionService.saveDungeon(user, nextState);
 
         model.addAttribute("state", nextState);
-        model.addAttribute("rollResult", roll);
-        model.addAttribute("grantedRelic", grantedRelic);
+        model.addAttribute("rollResult", outcome.roll());
+        model.addAttribute("grantedRelic", outcome.grantedRelic());
 
         return "fragments/dungeon-shrine-modal :: shrineResult";
+    }
+
+    record ShrineRollOutcome(int roll, RelicId grantedRelic) {}
+
+    static ShrineRollOutcome computeShrineRollOutcome(DungeonSessionState state, Random random) {
+        int roll = random.nextInt(6) + 1;
+        if (roll != 6) return new ShrineRollOutcome(roll, null);
+
+        List<RelicId> unowned = new ArrayList<>();
+        for (RelicId r : RelicId.values()) {
+            if (!state.ownedRelics().contains(r)) unowned.add(r);
+        }
+        RelicId grantedRelic = unowned.isEmpty()
+            ? RelicId.IRON_PLATE
+            : unowned.get(random.nextInt(unowned.size()));
+        return new ShrineRollOutcome(roll, grantedRelic);
     }
 
     @PostMapping("/dungeon/shrine/drink")
@@ -287,20 +292,8 @@ public class DungeonController {
     @ResponseBody
     public String collectCoin(HttpSession session, Principal principal) {
         User user = userService.getByUsername(principal.getName());
-        DungeonSessionState state = getState(session, user);
-        if (state == null) return "";
-
-        DungeonSessionState nextState = new DungeonSessionState(
-            state.config(), state.map(), state.currentRoomId(),
-            state.encounters(), state.bossEncounterIds(), state.bossIndex(),
-            state.activeEncounterId(),
-            state.health(), state.healthCap(), state.shields(), state.shieldCap(),
-            state.score() + 1, state.answeredCount(), state.correctCount(),
-            state.won(), state.defeated(),
-            state.streak(), state.gauntletQueue(),
-            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
-            state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick());
-
+        DungeonSessionState nextState = tryCollectCoin(getState(session, user));
+        if (nextState == null) return "";
         session.setAttribute(DUNGEON_SESSION_KEY, nextState);
         savedSessionService.saveDungeon(user, nextState);
         return "success";
@@ -310,11 +303,38 @@ public class DungeonController {
     @ResponseBody
     public String collectShield(HttpSession session, Principal principal) {
         User user = userService.getByUsername(principal.getName());
-        DungeonSessionState state = getState(session, user);
-        if (state == null) return "";
+        DungeonSessionState nextState = tryCollectShield(getState(session, user));
+        if (nextState == null) return "";
+        session.setAttribute(DUNGEON_SESSION_KEY, nextState);
+        savedSessionService.saveDungeon(user, nextState);
+        return "success";
+    }
 
+    /**
+     * Coins/shields are spawned client-side from destructible pots, so the server cannot
+     * verify a real pickup happened. It can still enforce the invariants that no pickup
+     * is ever legitimate outside exploration: the run is over, an encounter is active,
+     * or a relic-pick modal is open.
+     */
+    static DungeonSessionState tryCollectCoin(DungeonSessionState state) {
+        if (!canCollectInteractiveItem(state)) return null;
+        return new DungeonSessionState(
+            state.config(), state.map(), state.currentRoomId(),
+            state.encounters(), state.bossEncounterIds(), state.bossIndex(),
+            state.activeEncounterId(),
+            state.health(), state.healthCap(), state.shields(), state.shieldCap(),
+            state.score() + 1, state.answeredCount(), state.correctCount(),
+            state.won(), state.defeated(),
+            state.streak(), state.gauntletQueue(),
+            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
+            state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick());
+    }
+
+    static DungeonSessionState tryCollectShield(DungeonSessionState state) {
+        if (!canCollectInteractiveItem(state)) return null;
         int nextShields = Math.min(state.shieldCap(), state.shields() + 1);
-        DungeonSessionState nextState = new DungeonSessionState(
+        if (nextShields == state.shields()) return null;
+        return new DungeonSessionState(
             state.config(), state.map(), state.currentRoomId(),
             state.encounters(), state.bossEncounterIds(), state.bossIndex(),
             state.activeEncounterId(),
@@ -324,10 +344,14 @@ public class DungeonController {
             state.streak(), state.gauntletQueue(),
             state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
             state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick());
+    }
 
-        session.setAttribute(DUNGEON_SESSION_KEY, nextState);
-        savedSessionService.saveDungeon(user, nextState);
-        return "success";
+    private static boolean canCollectInteractiveItem(DungeonSessionState state) {
+        if (state == null) return false;
+        if (state.defeated() || state.won()) return false;
+        if (state.activeEncounterId() != null) return false;
+        if (state.pendingRelicPick() != null) return false;
+        return true;
     }
 
     private String stashAndRender(Model model, User user, HttpSession session,
