@@ -201,7 +201,7 @@ public class SavedSessionService {
     }
 
     String dungeonProgress(DungeonSessionState state) {
-        return state.answeredCount() + " / " + state.config().size().totalPrompts() + " cleared";
+        return state.progress().answeredCount() + " / " + state.config().size().totalPrompts() + " cleared";
     }
 
     public record ReconcileResult(StudySessionState state, int removedCount) {}
@@ -287,28 +287,20 @@ public class SavedSessionService {
             .filter(e -> !e.boss())
             .allMatch(e -> e.status() == DungeonEncounterStatus.CLEARED);
 
-        boolean canContinue = allBossAlive && (state.bossIndex() > 0 || hasUnresolvedNormal || allNormalsCleared);
+        boolean canContinue = allBossAlive && (state.combat().bossIndex() > 0 || hasUnresolvedNormal || allNormalsCleared);
 
         DungeonMap nextMap = new DungeonMap(
             Map.copyOf(updatedRooms), state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
-        DungeonSessionState newState = new DungeonSessionState(
-            state.config(),
-            nextMap,
-            state.currentRoomId(),
-            remainingEncounters,
-            remainingBossIds,
-            state.bossIndex(),
-            removedEncounterIds.contains(state.activeEncounterId()) ? null : state.activeEncounterId(),
-            state.health(), state.healthCap(), state.shields(), state.shieldCap(),
-            state.score(),
-            state.answeredCount(),
-            state.correctCount(),
-            state.won(),
-            state.defeated(),
-            state.streak(), state.gauntletQueue(),
-            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
-            state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick()
-        );
+        DungeonSessionState newState = state.toBuilder()
+            .map(nextMap)
+            .encounters(remainingEncounters)
+            .bossEncounterIds(remainingBossIds)
+            .combat(new DungeonCombat(
+                removedEncounterIds.contains(state.combat().activeEncounterId()) ? null : state.combat().activeEncounterId(),
+                state.combat().gauntletQueue(),
+                state.combat().bossIndex()
+            ))
+            .build();
 
         return new ReconcileDungeonResult(newState, removedEncounterIds.size(), canContinue);
     }

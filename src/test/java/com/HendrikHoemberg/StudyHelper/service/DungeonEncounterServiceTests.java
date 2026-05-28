@@ -173,7 +173,7 @@ class DungeonEncounterServiceTests {
         encs.put("elite_0_0", first);
         encs.put("elite_0_1", second);
         return withEncountersAndActive(base, encs, "elite_0_1")
-            .withCombat(base.combat().withGauntletQueue(List.of()));
+            .withCombat(withEncountersAndActive(base, encs, "elite_0_1").combat().withGauntletQueue(List.of()));
     }
 
     private DungeonSessionState activeEliteMidStepState() {
@@ -182,7 +182,7 @@ class DungeonEncounterServiceTests {
         Map<String, DungeonEncounter> encs = new LinkedHashMap<>(base.encounters());
         encs.put("elite_0_0", first);
         return withEncountersAndActive(base, encs, "elite_0_0")
-            .withCombat(base.combat().withGauntletQueue(List.of("elite_0_1")));
+            .withCombat(withEncountersAndActive(base, encs, "elite_0_0").combat().withGauntletQueue(List.of("elite_0_1")));
     }
 
     private DungeonSessionState activeBossStateAtIndexZero() {
@@ -226,5 +226,51 @@ class DungeonEncounterServiceTests {
                                                            String activeId) {
         return s.withEncounters(encs)
             .withCombat(s.combat().withActiveEncounterId(activeId));
+    }
+
+    @Test
+    void wrongAnswer_luckyCoinAbsorbsHitWithoutShieldOrHpLoss() {
+        DungeonSessionState state = activeFlashcardState();
+        state = withRelics(state, List.of(RelicId.LUCKY_COIN));
+        DungeonSessionState result = svc.answerFlashcard(state, false);
+        assertThat(result.resources().health()).isEqualTo(5);
+        assertThat(result.resources().shields()).isEqualTo(0);
+        assertThat(result.progress().luckyCoinsConsumed()).isEqualTo(1);
+        assertThat(result.progress().shieldsUsed()).isEqualTo(0);
+        assertThat(result.defeated()).isFalse();
+    }
+
+    @Test
+    void wrongAnswer_secondLuckyCoinAbsorbsSecondHitWhenStacked() {
+        DungeonSessionState state = activeFlashcardState();
+        state = withRelics(state, List.of(RelicId.LUCKY_COIN, RelicId.LUCKY_COIN));
+        DungeonSessionState first = svc.answerFlashcard(state, false);
+        assertThat(first.progress().luckyCoinsConsumed()).isEqualTo(1);
+        assertThat(first.resources().health()).isEqualTo(5);
+        DungeonEncounter enc = first.encounters().get("enc_0");
+        Map<String, DungeonEncounter> resetEncs = new LinkedHashMap<>(first.encounters());
+        resetEncs.put("enc_0", new DungeonEncounter(
+            enc.id(), enc.type(), DungeonEncounterStatus.PENDING, enc.boss(),
+            enc.flashcardId(), enc.frontText(), enc.backText(),
+            enc.frontImageUrl(), enc.backImageUrl(), enc.quizQuestion(),
+            List.of(), null));
+        DungeonSessionState reactivated = first
+            .withEncounters(Map.copyOf(resetEncs))
+            .withCombat(new DungeonCombat("enc_0", List.of(), 0));
+        DungeonSessionState second = svc.answerFlashcard(reactivated, false);
+        assertThat(second.progress().luckyCoinsConsumed()).isEqualTo(2);
+        assertThat(second.resources().health()).isEqualTo(5);
+        assertThat(second.defeated()).isFalse();
+    }
+
+    @Test
+    void wrongAnswer_phoenixFeatherRevivesAtOneHpOnLethalHit() {
+        DungeonSessionState state = activeFlashcardState();
+        state = state.withResources(new DungeonResources(1, 5, 0, 2, 0));
+        state = withRelics(state, List.of(RelicId.PHOENIX_FEATHER));
+        DungeonSessionState result = svc.answerFlashcard(state, false);
+        assertThat(result.resources().health()).isEqualTo(1);
+        assertThat(result.defeated()).isFalse();
+        assertThat(result.loadout().ownedRelics()).doesNotContain(RelicId.PHOENIX_FEATHER);
     }
 }
