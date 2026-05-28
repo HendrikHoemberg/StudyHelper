@@ -93,7 +93,7 @@ public class DungeonSessionService {
     }
 
     public DungeonSessionState move(DungeonSessionState state, DungeonDirection direction) {
-        DungeonNavigationService.MoveResult result = navigationService.move(state, direction);
+        ActionResult result = navigationService.move(state, direction);
         DungeonSessionState moved = result.state();
 
         DungeonRoom destination = moved.currentRoom();
@@ -105,8 +105,16 @@ public class DungeonSessionService {
             }
         }
 
-        if (result.activatedEncounterRoomId() != null) {
-            moved = encounterService.activateAt(moved, result.activatedEncounterRoomId());
+        DungeonRoom destRoom = moved.currentRoom();
+        if (destRoom != null && !destRoom.cleared()
+            && (destRoom.type() == RoomType.COMBAT
+                || destRoom.type() == RoomType.ELITE
+                || destRoom.type() == RoomType.BOSS)) {
+            ActionResult encResult = encounterService.activateAt(moved, destRoom.id());
+            if (encResult instanceof ActionResult.Failure) {
+                return moved;
+            }
+            moved = encResult.state();
         }
         return moved;
     }

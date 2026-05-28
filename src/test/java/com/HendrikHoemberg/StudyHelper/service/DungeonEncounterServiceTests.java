@@ -14,16 +14,16 @@ class DungeonEncounterServiceTests {
     @Test
     void activateAt_combatRoomMarksEncounterActive() {
         DungeonSessionState state = singleCombatRoomState();
-        DungeonSessionState result = svc.activateAt(state, "r1");
-        assertThat(result.combat().activeEncounterId()).isEqualTo("enc_0");
+        ActionResult result = svc.activateAt(state, "r1");
+        assertThat(result.state().combat().activeEncounterId()).isEqualTo("enc_0");
     }
 
     @Test
     void activateAt_eliteRoomSetsGauntletQueueAndActivatesFirstEncounter() {
         DungeonSessionState state = eliteRoomState();
-        DungeonSessionState result = svc.activateAt(state, "r1");
-        assertThat(result.combat().activeEncounterId()).isEqualTo("elite_0_0");
-        assertThat(result.combat().gauntletQueue()).containsExactly("elite_0_1");
+        ActionResult result = svc.activateAt(state, "r1");
+        assertThat(result.state().combat().activeEncounterId()).isEqualTo("elite_0_0");
+        assertThat(result.state().combat().gauntletQueue()).containsExactly("elite_0_1");
     }
 
     @Test

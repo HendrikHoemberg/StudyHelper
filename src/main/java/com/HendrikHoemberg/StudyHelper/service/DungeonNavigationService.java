@@ -9,24 +9,21 @@ import java.util.Map;
 @Service
 public class DungeonNavigationService {
 
-    public record MoveResult(DungeonSessionState state, String activatedEncounterRoomId) {}
-
-    public MoveResult move(DungeonSessionState state, DungeonDirection direction) {
-        if (state.isComplete()) return new MoveResult(state, null);
-        if (state.combat().activeEncounterId() != null) return new MoveResult(state, null);
+    public ActionResult move(DungeonSessionState state, DungeonDirection direction) {
+        if (state.isComplete()) return ActionResult.success(state);
+        if (state.combat().activeEncounterId() != null) return ActionResult.success(state);
 
         DungeonRoom current = state.currentRoom();
-        if (current == null) return new MoveResult(state, null);
+        if (current == null) return ActionResult.failure(state, "dungeon.error.noRoom");
 
         String nextRoomId = current.doors().get(direction);
-        if (nextRoomId == null) return new MoveResult(state, null);
+        if (nextRoomId == null) return ActionResult.failure(state, "dungeon.error.wall");
 
         DungeonRoom nextRoom = state.map().room(nextRoomId);
-        if (nextRoom == null) return new MoveResult(state, null);
+        if (nextRoom == null) return ActionResult.failure(state, "dungeon.error.noRoom");
 
         Map<String, DungeonRoom> rooms = new LinkedHashMap<>(state.map().rooms());
 
-        // If leaving an uncleared HEAL room, mark it cleared now so it's empty next time
         if (current.type() == RoomType.HEAL && !current.cleared()) {
             current = current.withCleared(true);
             rooms.put(current.id(), current);
@@ -47,19 +44,6 @@ public class DungeonNavigationService {
         DungeonMap nextMap = new DungeonMap(
             rooms, state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
 
-        DungeonSessionState moved = working.withMap(nextMap).withCurrentRoomId(nextRoomId);
-
-        String encounterRoomToActivate = null;
-        if (nextRoom.type() == RoomType.COMBAT
-            || nextRoom.type() == RoomType.ELITE
-            || nextRoom.type() == RoomType.BOSS) {
-            if (!nextRoom.cleared()) {
-                encounterRoomToActivate = nextRoomId;
-            }
-        }
-
-        return new MoveResult(moved, encounterRoomToActivate);
+        return ActionResult.success(working.withMap(nextMap).withCurrentRoomId(nextRoomId));
     }
-
-
 }

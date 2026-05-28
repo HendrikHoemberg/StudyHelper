@@ -15,15 +15,14 @@ class DungeonNavigationServiceTests {
     @Test
     void move_intoRoomWithoutDoorReturnsUnchangedState() {
         DungeonSessionState state = twoRoomState();
-        DungeonNavigationService.MoveResult result = nav.move(state, DungeonDirection.UP);
+        ActionResult result = nav.move(state, DungeonDirection.UP);
         assertThat(result.state().currentRoomId()).isEqualTo("r0");
-        assertThat(result.activatedEncounterRoomId()).isNull();
     }
 
     @Test
     void move_throughDoorUpdatesCurrentRoomAndMarksVisited() {
         DungeonSessionState state = twoRoomState();
-        DungeonNavigationService.MoveResult result = nav.move(state, DungeonDirection.RIGHT);
+        ActionResult result = nav.move(state, DungeonDirection.RIGHT);
         assertThat(result.state().currentRoomId()).isEqualTo("r1");
         assertThat(result.state().map().room("r1").visited()).isTrue();
     }
@@ -31,20 +30,20 @@ class DungeonNavigationServiceTests {
     @Test
     void move_intoCombatRoomSignalsEncounterActivation() {
         DungeonSessionState state = combatNeighborState();
-        DungeonNavigationService.MoveResult result = nav.move(state, DungeonDirection.RIGHT);
-        assertThat(result.activatedEncounterRoomId()).isEqualTo("r1");
+        ActionResult result = nav.move(state, DungeonDirection.RIGHT);
+        assertThat(result.state().currentRoomId()).isEqualTo("r1");
     }
 
     @Test
     void move_intoHealRoomAppliesFullHealAndShieldGrantAndClearsOnExit() {
         DungeonSessionState state = healNeighborStateWithLowHpAndNoShields();
-        DungeonNavigationService.MoveResult result = nav.move(state, DungeonDirection.RIGHT);
+        ActionResult result = nav.move(state, DungeonDirection.RIGHT);
         assertThat(result.state().resources().health()).isEqualTo(result.state().resources().healthCap());
         assertThat(result.state().resources().shields()).isEqualTo(1);
         assertThat(result.state().map().room("r1").cleared()).isFalse(); // Uncleared initially so centerpiece is visible
 
         // Move out of HEAL room back to Entrance
-        DungeonNavigationService.MoveResult exitResult = nav.move(result.state(), DungeonDirection.LEFT);
+        ActionResult exitResult = nav.move(result.state(), DungeonDirection.LEFT);
         assertThat(exitResult.state().map().room("r1").cleared()).isTrue(); // Marked cleared on exit
     }
 
@@ -53,7 +52,7 @@ class DungeonNavigationServiceTests {
         DungeonSessionState state = clearedHealNeighborState();
         int hpBefore = state.resources().health();
         int shieldsBefore = state.resources().shields();
-        DungeonNavigationService.MoveResult result = nav.move(state, DungeonDirection.RIGHT);
+        ActionResult result = nav.move(state, DungeonDirection.RIGHT);
         assertThat(result.state().resources().health()).isEqualTo(hpBefore);
         assertThat(result.state().resources().shields()).isEqualTo(shieldsBefore);
     }
@@ -61,14 +60,14 @@ class DungeonNavigationServiceTests {
     @Test
     void move_blockedWhileEncounterActive() {
         DungeonSessionState state = encounterActiveState();
-        DungeonNavigationService.MoveResult result = nav.move(state, DungeonDirection.RIGHT);
+        ActionResult result = nav.move(state, DungeonDirection.RIGHT);
         assertThat(result.state()).isSameAs(state);
     }
 
     @Test
     void move_blockedWhenRunIsComplete() {
         DungeonSessionState state = wonState();
-        DungeonNavigationService.MoveResult result = nav.move(state, DungeonDirection.RIGHT);
+        ActionResult result = nav.move(state, DungeonDirection.RIGHT);
         assertThat(result.state()).isSameAs(state);
     }
 

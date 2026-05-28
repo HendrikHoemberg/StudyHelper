@@ -24,8 +24,8 @@ class DungeonSessionServiceTests {
         DungeonSessionState afterMove = stateOnRoom("r1", RoomType.COMBAT);
         DungeonSessionState afterActivate = afterMove;
         when(nav.move(before, DungeonDirection.RIGHT))
-            .thenReturn(new DungeonNavigationService.MoveResult(afterMove, "r1"));
-        when(enc.activateAt(afterMove, "r1")).thenReturn(afterActivate);
+            .thenReturn(ActionResult.success(afterMove));
+        when(enc.activateAt(afterMove, "r1")).thenReturn(ActionResult.success(afterActivate));
 
         DungeonSessionService svc = new DungeonSessionService(
             null, null, null, null, nav, enc, relic, new DungeonShrineService());
@@ -52,7 +52,7 @@ class DungeonSessionServiceTests {
         DungeonSessionState before = stateOnRoomMap(map, "r0");
         DungeonSessionState afterMove = stateOnRoomMap(map, "r1");
         when(nav.move(any(), any()))
-            .thenReturn(new DungeonNavigationService.MoveResult(afterMove, null));
+            .thenReturn(ActionResult.success(afterMove));
 
         DungeonSessionService svc = new DungeonSessionService(
             null, null, null, null, nav, enc, relic, new DungeonShrineService());

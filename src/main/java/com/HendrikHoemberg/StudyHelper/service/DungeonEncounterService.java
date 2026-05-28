@@ -14,17 +14,17 @@ public class DungeonEncounterService {
     static final int ELITE_CLEAR_SCORE = 50;
     static final int BOSS_PROMPT_SCORE = 20;
 
-    public DungeonSessionState activateAt(DungeonSessionState state, String roomId) {
-        if (state.combat().activeEncounterId() != null) return state;
+    public ActionResult activateAt(DungeonSessionState state, String roomId) {
+        if (state.combat().activeEncounterId() != null) return ActionResult.success(state);
         DungeonRoom room = state.map().room(roomId);
-        if (room == null) return state;
-        if (room.cleared()) return state;
+        if (room == null) return ActionResult.failure(state, "dungeon.error.noRoom");
+        if (room.cleared()) return ActionResult.success(state);
 
         return switch (room.type()) {
-            case COMBAT -> activateNormal(state, room.encounterId());
-            case ELITE -> activateElite(state, room);
-            case BOSS -> activateBoss(state);
-            default -> state;
+            case COMBAT -> ActionResult.success(activateNormal(state, room.encounterId()));
+            case ELITE -> ActionResult.success(activateElite(state, room));
+            case BOSS -> ActionResult.success(activateBoss(state));
+            default -> ActionResult.success(state);
         };
     }
 
