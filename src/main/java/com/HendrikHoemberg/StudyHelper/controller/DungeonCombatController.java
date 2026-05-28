@@ -42,7 +42,7 @@ public class DungeonCombatController {
                        @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return redirectToStart();
+        if (state == null) return DungeonControllerAccess.redirectToStart();
         ActionResult result = dungeonSessionService.move(state, direction);
         if (result instanceof ActionResult.Failure failure) {
             response.setStatus(HttpServletResponse.SC_OK);
@@ -62,7 +62,7 @@ public class DungeonCombatController {
                                   @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return redirectToStart();
+        if (state == null) return DungeonControllerAccess.redirectToStart();
         state = dungeonSessionService.answerFlashcard(state, gotIt);
         return DungeonControllerAccess.stashAndRender(model, user, session, state, hxRequest,
             savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
@@ -76,13 +76,9 @@ public class DungeonCombatController {
                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return redirectToStart();
+        if (state == null) return DungeonControllerAccess.redirectToStart();
         state = dungeonSessionService.answerQuiz(state, selectedOptions);
         return DungeonControllerAccess.stashAndRender(model, user, session, state, hxRequest,
             savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
-    }
-
-    private String redirectToStart() {
-        return "redirect:/study/start?mode=DUNGEON";
     }
 }

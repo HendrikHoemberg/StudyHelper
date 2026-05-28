@@ -51,6 +51,10 @@ class DungeonControllerAccess {
         return "study-page";
     }
 
+    static String redirectToStart() {
+        return "redirect:/study/start?mode=DUNGEON";
+    }
+
     static String handleCollectResult(CollectResult result, User user, HttpSession session,
                                        SavedSessionService savedSessionService,
                                        HttpServletResponse response) {

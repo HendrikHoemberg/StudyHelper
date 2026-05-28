@@ -41,7 +41,7 @@ public class DungeonRoomController {
                             @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return redirectToStart();
+        if (state == null) return DungeonControllerAccess.redirectToStart();
         state = dungeonSessionService.pickRelic(state, relicId);
         return DungeonControllerAccess.stashAndRender(model, user, session, state, hxRequest,
             savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
@@ -53,7 +53,7 @@ public class DungeonRoomController {
                            @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return redirectToStart();
+        if (state == null) return DungeonControllerAccess.redirectToStart();
         state = dungeonSessionService.buyRelic(state, relicId);
         return DungeonControllerAccess.stashAndRender(model, user, session, state, hxRequest,
             savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
@@ -64,7 +64,7 @@ public class DungeonRoomController {
                            @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return redirectToStart();
+        if (state == null) return DungeonControllerAccess.redirectToStart();
         state = dungeonSessionService.skipShop(state);
         return DungeonControllerAccess.stashAndRender(model, user, session, state, hxRequest,
             savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
@@ -74,7 +74,7 @@ public class DungeonRoomController {
     public String shrineConfirm(Model model, Principal principal, HttpSession session) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return redirectToStart();
+        if (state == null) return DungeonControllerAccess.redirectToStart();
         model.addAttribute("state", state);
         return "fragments/dungeon-shrine-modal :: shrineConfirm";
     }
@@ -83,7 +83,7 @@ public class DungeonRoomController {
     public String shrineReset(Model model, Principal principal, HttpSession session) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return redirectToStart();
+        if (state == null) return DungeonControllerAccess.redirectToStart();
         model.addAttribute("state", state);
         return "fragments/dungeon-shrine-modal :: shrineMain";
     }
@@ -93,7 +93,7 @@ public class DungeonRoomController {
                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return redirectToStart();
+        if (state == null) return DungeonControllerAccess.redirectToStart();
 
         DungeonShrineService.ShrineRollOutcome outcome = shrineService.computeOutcome(state);
         DungeonSessionState nextState = shrineService.applyRoll(state, outcome);
@@ -109,7 +109,7 @@ public class DungeonRoomController {
                               @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return redirectToStart();
+        if (state == null) return DungeonControllerAccess.redirectToStart();
         state = shrineService.drink(state);
         return DungeonControllerAccess.stashAndRender(model, user, session, state, hxRequest,
             savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
@@ -120,7 +120,7 @@ public class DungeonRoomController {
                               @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return redirectToStart();
+        if (state == null) return DungeonControllerAccess.redirectToStart();
         state = shrineService.leave(state);
         return DungeonControllerAccess.stashAndRender(model, user, session, state, hxRequest,
             savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
@@ -148,7 +148,4 @@ public class DungeonRoomController {
         return DungeonControllerAccess.handleCollectResult(result, user, session, savedSessionService, response);
     }
 
-    private String redirectToStart() {
-        return "redirect:/study/start?mode=DUNGEON";
-    }
 }
