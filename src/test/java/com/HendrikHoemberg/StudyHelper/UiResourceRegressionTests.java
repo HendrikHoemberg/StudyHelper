@@ -1067,19 +1067,26 @@ class UiResourceRegressionTests {
         String layout = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/templates/fragments/layout.html"));
         String game = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/templates/fragments/dungeon-game.html"));
         String js = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon.js"));
+        String rendererJs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-renderer.js"));
+        String inputJs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-input.js"));
+        String minimapJs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-minimap.js"));
         String css = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/css/dungeon.css"));
 
         assertThat(studyPage).contains("fragments/dungeon-game :: dungeonGame");
         assertThat(studyPage).contains("fragments/dungeon-complete :: dungeonComplete");
         assertThat(layout).contains("/css/dungeon.css");
         assertThat(layout).contains("/js/dungeon.js");
+        assertThat(layout).contains("/js/dungeon-renderer.js");
+        assertThat(layout).contains("/js/dungeon-input.js");
+        assertThat(layout).contains("/js/dungeon-minimap.js");
         assertThat(game).contains("dungeon-room-canvas");
         assertThat(game).contains("dungeon-minimap-state");
         assertThat(game).contains("activeEncounter");
         assertThat(game).contains("/dungeon/move");
-        assertThat(js).contains("getContext('2d')");
-        assertThat(js).contains("JSON.parse");
+        assertThat(rendererJs).contains("getContext('2d')");
+        assertThat(minimapJs).contains("JSON.parse");
         assertThat(js).contains("BOSS");
+        assertThat(js).contains("/dungeon/move");
         assertThat(css).contains("image-rendering: pixelated");
     }
 
