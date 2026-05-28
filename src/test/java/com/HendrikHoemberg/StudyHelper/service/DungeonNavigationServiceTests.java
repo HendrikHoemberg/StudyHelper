@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
+import com.HendrikHoemberg.StudyHelper.support.TestStates;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -38,8 +39,8 @@ class DungeonNavigationServiceTests {
     void move_intoHealRoomAppliesFullHealAndShieldGrantAndClearsOnExit() {
         DungeonSessionState state = healNeighborStateWithLowHpAndNoShields();
         DungeonNavigationService.MoveResult result = nav.move(state, DungeonDirection.RIGHT);
-        assertThat(result.state().health()).isEqualTo(result.state().healthCap());
-        assertThat(result.state().shields()).isEqualTo(1);
+        assertThat(result.state().resources().health()).isEqualTo(result.state().resources().healthCap());
+        assertThat(result.state().resources().shields()).isEqualTo(1);
         assertThat(result.state().map().room("r1").cleared()).isFalse(); // Uncleared initially so centerpiece is visible
 
         // Move out of HEAL room back to Entrance
@@ -50,11 +51,11 @@ class DungeonNavigationServiceTests {
     @Test
     void move_intoAlreadyClearedHealRoomDoesNothingExtra() {
         DungeonSessionState state = clearedHealNeighborState();
-        int hpBefore = state.health();
-        int shieldsBefore = state.shields();
+        int hpBefore = state.resources().health();
+        int shieldsBefore = state.resources().shields();
         DungeonNavigationService.MoveResult result = nav.move(state, DungeonDirection.RIGHT);
-        assertThat(result.state().health()).isEqualTo(hpBefore);
-        assertThat(result.state().shields()).isEqualTo(shieldsBefore);
+        assertThat(result.state().resources().health()).isEqualTo(hpBefore);
+        assertThat(result.state().resources().shields()).isEqualTo(shieldsBefore);
     }
 
     @Test
@@ -117,30 +118,11 @@ class DungeonNavigationServiceTests {
 
     private DungeonSessionState encounterActiveState() {
         DungeonSessionState base = combatNeighborState();
-        return new DungeonSessionState(
-            base.config(), base.map(), base.currentRoomId(),
-            base.encounters(), base.bossEncounterIds(), base.bossIndex(),
-            "enc_0",
-            base.health(), base.healthCap(), base.shields(), base.shieldCap(),
-            base.score(), base.answeredCount(), base.correctCount(),
-            false, false,
-            base.streak(), base.gauntletQueue(),
-            base.longestStreak(), base.elitesCleared(), base.shieldsUsed(),
-            base.luckyCoinsConsumed(), base.ownedRelics(), base.pendingRelicPick());
+        return base.withCombat(base.combat().withActiveEncounterId("enc_0"));
     }
 
     private DungeonSessionState wonState() {
-        DungeonSessionState base = twoRoomState();
-        return new DungeonSessionState(
-            base.config(), base.map(), base.currentRoomId(),
-            base.encounters(), base.bossEncounterIds(), base.bossIndex(),
-            base.activeEncounterId(),
-            base.health(), base.healthCap(), base.shields(), base.shieldCap(),
-            base.score(), base.answeredCount(), base.correctCount(),
-            true, false,
-            base.streak(), base.gauntletQueue(),
-            base.longestStreak(), base.elitesCleared(), base.shieldsUsed(),
-            base.luckyCoinsConsumed(), base.ownedRelics(), base.pendingRelicPick());
+        return twoRoomState().withWon(true);
     }
 
     private DungeonSessionState baseState(DungeonMap map, String currentRoomId,
@@ -148,14 +130,10 @@ class DungeonNavigationServiceTests {
         DungeonConfig config = new DungeonConfig(
             DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
             QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, "");
-        return new DungeonSessionState(
-            config, map, currentRoomId,
-            Map.of(), List.of(), 0, null,
-            hp, 5, shields, 2,
-            0, 0, 0,
-            false, false,
-            0, List.of(),
-            0, 0, 0, 0,
-            List.of(), null);
+        return DungeonSessionState.builder()
+            .config(config).map(map).currentRoomId(currentRoomId)
+            .encounters(Map.of()).bossEncounterIds(List.of())
+            .resources(new DungeonResources(hp, 5, shields, 2, 0))
+            .build();
     }
 }

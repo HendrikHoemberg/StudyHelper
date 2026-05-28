@@ -13,7 +13,7 @@ public class DungeonNavigationService {
 
     public MoveResult move(DungeonSessionState state, DungeonDirection direction) {
         if (state.isComplete()) return new MoveResult(state, null);
-        if (state.activeEncounterId() != null) return new MoveResult(state, null);
+        if (state.combat().activeEncounterId() != null) return new MoveResult(state, null);
 
         DungeonRoom current = state.currentRoom();
         if (current == null) return new MoveResult(state, null);
@@ -37,23 +37,17 @@ public class DungeonNavigationService {
 
         DungeonSessionState working = state;
 
-        // First-entry effect for HEAL
         if (firstEntry && nextRoom.type() == RoomType.HEAL) {
-            int healed = working.healthCap() - working.health();
-            if (healed > 0) {
-                working = DungeonDamage.heal(working, healed);
-            }
-            if (working.shields() < working.shieldCap()) {
-                working = withShields(working, working.shields() + 1);
-            }
-            // Keep room cleared = false initially so the campfire/potion centerpiece is visible
+            DungeonResources healed = working.resources().heal(working.resources().healthCap() - working.resources().health());
+            DungeonResources withShield = healed.addShield();
+            working = working.withResources(withShield);
         }
 
         rooms.put(nextRoomId, nextRoom);
         DungeonMap nextMap = new DungeonMap(
             rooms, state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
 
-        DungeonSessionState moved = withMapAndPosition(working, nextMap, nextRoomId);
+        DungeonSessionState moved = working.withMap(nextMap).withCurrentRoomId(nextRoomId);
 
         String encounterRoomToActivate = null;
         if (nextRoom.type() == RoomType.COMBAT
@@ -67,29 +61,5 @@ public class DungeonNavigationService {
         return new MoveResult(moved, encounterRoomToActivate);
     }
 
-    private DungeonSessionState withMapAndPosition(DungeonSessionState s, DungeonMap map, String roomId) {
-        return new DungeonSessionState(
-            s.config(), map, roomId,
-            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
-            s.activeEncounterId(),
-            s.health(), s.healthCap(), s.shields(), s.shieldCap(),
-            s.score(), s.answeredCount(), s.correctCount(),
-            s.won(), s.defeated(),
-            s.streak(), s.gauntletQueue(),
-            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
-            s.luckyCoinsConsumed(), s.ownedRelics(), s.pendingRelicPick());
-    }
 
-    private DungeonSessionState withShields(DungeonSessionState s, int shields) {
-        return new DungeonSessionState(
-            s.config(), s.map(), s.currentRoomId(),
-            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
-            s.activeEncounterId(),
-            s.health(), s.healthCap(), shields, s.shieldCap(),
-            s.score(), s.answeredCount(), s.correctCount(),
-            s.won(), s.defeated(),
-            s.streak(), s.gauntletQueue(),
-            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
-            s.luckyCoinsConsumed(), s.ownedRelics(), s.pendingRelicPick());
-    }
 }
