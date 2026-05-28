@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,7 +28,7 @@ class DungeonSessionServiceTests {
         when(enc.activateAt(afterMove, "r1")).thenReturn(afterActivate);
 
         DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, nav, enc, relic);
+            null, null, null, null, nav, enc, relic, new DungeonShrineService());
         DungeonSessionState result = svc.move(before, DungeonDirection.RIGHT);
 
         assertThat(result).isSameAs(afterActivate);
@@ -54,7 +55,7 @@ class DungeonSessionServiceTests {
             .thenReturn(new DungeonNavigationService.MoveResult(afterMove, null));
 
         DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, nav, enc, relic);
+            null, null, null, null, nav, enc, relic, new DungeonShrineService());
         DungeonSessionState result = svc.move(before, DungeonDirection.RIGHT);
 
         assertThat(result.loadout().pendingRelicPick()).isNotNull();
@@ -66,7 +67,7 @@ class DungeonSessionServiceTests {
     @Test
     void buildStats_includesRelicsAcquired() {
         DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, new DungeonShrineService());
         DungeonSessionState s = stateWithRelics(List.of(RelicId.IRON_PLATE, RelicId.BUCKLER));
         DungeonRunStats stats = svc.buildStats(s);
         assertThat(stats.relicsAcquired()).isEqualTo(2);
@@ -99,7 +100,7 @@ class DungeonSessionServiceTests {
     @Test
     void shrineLeave_clearsPendingPickAndMarksRoomCleared() {
         DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, new DungeonShrineService());
         DungeonSessionState s = stateOnRoom("r0", RoomType.SHRINE);
         s = s.withLoadout(s.loadout().withPendingRelicPick(
             new PendingRelicPick(PendingPickType.SHRINE, "r0", List.of(), null)));
@@ -112,7 +113,7 @@ class DungeonSessionServiceTests {
     @Test
     void shrineDrink_healsAndClearsRoom() {
         DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, new DungeonShrineService());
         DungeonSessionState s = stateOnRoom("r0", RoomType.SHRINE);
         s = s.withResources(new DungeonResources(3, 5, s.resources().shields(), s.resources().shieldCap(), s.resources().score()));
 
@@ -124,7 +125,7 @@ class DungeonSessionServiceTests {
     @Test
     void shrineRoll_onSixGrantsRelic_onOthersDealsDamage() {
         DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, new DungeonShrineService());
         DungeonSessionState s = stateOnRoom("r0", RoomType.SHRINE);
 
         // Test roll 6

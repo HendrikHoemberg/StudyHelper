@@ -20,6 +20,7 @@ public class DungeonSessionService {
     private final DungeonNavigationService navigationService;
     private final DungeonEncounterService encounterService;
     private final DungeonRelicService relicService;
+    private final DungeonShrineService shrineService;
 
     public DungeonSessionService(DeckService deckService,
                                  FlashcardService flashcardService,
@@ -27,7 +28,8 @@ public class DungeonSessionService {
                                  DungeonMapGenerator dungeonMapGenerator,
                                  DungeonNavigationService navigationService,
                                  DungeonEncounterService encounterService,
-                                 DungeonRelicService relicService) {
+                                 DungeonRelicService relicService,
+                                 DungeonShrineService shrineService) {
         this.deckService = deckService;
         this.flashcardService = flashcardService;
         this.quizSessionService = quizSessionService;
@@ -35,6 +37,7 @@ public class DungeonSessionService {
         this.navigationService = navigationService;
         this.encounterService = encounterService;
         this.relicService = relicService;
+        this.shrineService = shrineService;
     }
 
     @Transactional(readOnly = true)
@@ -129,51 +132,15 @@ public class DungeonSessionService {
     }
 
     public DungeonSessionState shrineLeave(DungeonSessionState state) {
-        DungeonRoom room = state.map().room(state.currentRoomId());
-        if (room == null) return state;
-
-        Map<String, DungeonRoom> rooms = new LinkedHashMap<>(state.map().rooms());
-        rooms.put(room.id(), room.withCleared(true));
-        DungeonMap nextMap = new DungeonMap(
-            rooms, state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
-
-        return state
-            .withMap(nextMap)
-            .withLoadout(state.loadout().clearPendingPick());
+        return shrineService.leave(state);
     }
 
     public DungeonSessionState shrineDrink(DungeonSessionState state) {
-        DungeonResources nextResources = state.resources().heal(1);
-        return shrineLeave(state).withResources(nextResources);
+        return shrineService.drink(state);
     }
 
     public DungeonSessionState shrineRoll(DungeonSessionState state, int rollResult, RelicId grantedRelic) {
-        DungeonResources nextResources = state.resources();
-        DungeonLoadout nextLoadout = state.loadout();
-        boolean defeated = false;
-
-        if (rollResult == 6) {
-            if (grantedRelic != null) {
-                nextLoadout = nextLoadout.addRelic(grantedRelic);
-                if (grantedRelic == RelicId.IRON_PLATE) {
-                    nextResources = nextResources
-                        .withHealthCap(nextResources.healthCap() + 1)
-                        .heal(1);
-                } else if (grantedRelic == RelicId.BUCKLER) {
-                    nextResources = nextResources
-                        .withShieldCap(nextResources.shieldCap() + 1)
-                        .addShield();
-                }
-            }
-        } else {
-            nextResources = nextResources.takeHealthDamage(1);
-            if (nextResources.health() == 0) defeated = true;
-        }
-
-        return state
-            .withResources(nextResources)
-            .withLoadout(nextLoadout)
-            .withDefeated(defeated);
+        return shrineService.applyRoll(state, new DungeonShrineService.ShrineRollOutcome(rollResult, grantedRelic));
     }
 
     public DungeonRunStats buildStats(DungeonSessionState state) {

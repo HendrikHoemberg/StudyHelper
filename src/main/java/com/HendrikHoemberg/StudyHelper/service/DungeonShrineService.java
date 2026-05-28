@@ -16,7 +16,7 @@ public class DungeonShrineService {
         this(new Random());
     }
 
-    DungeonShrineService(Random rng) {
+    public DungeonShrineService(Random rng) {
         this.rng = rng;
     }
 
