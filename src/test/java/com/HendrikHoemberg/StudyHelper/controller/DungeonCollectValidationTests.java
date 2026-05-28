@@ -1,7 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
-import com.HendrikHoemberg.StudyHelper.controller.DungeonController.CollectStatus;
 import com.HendrikHoemberg.StudyHelper.dto.*;
+import com.HendrikHoemberg.StudyHelper.service.DungeonSessionService;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -12,141 +12,143 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DungeonCollectValidationTests {
 
+    private final DungeonSessionService service = new DungeonSessionService(null, null, null, null, null, null, null, null);
+
     @Test
-    void tryCollectCoin_rejectedWhenStateNull() {
-        assertThat(DungeonController.tryCollectCoin(null, "r0_coin_0").status())
+    void collectCoin_rejectedWhenStateNull() {
+        assertThat(service.collectCoin(null, "r0_coin_0").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
     @Test
-    void tryCollectCoin_incrementsScoreInExplorationState() {
+    void collectCoin_incrementsScoreInExplorationState() {
         DungeonSessionState state = baseState().build();
-        DungeonController.CollectResult result = DungeonController.tryCollectCoin(state, "r0_coin_0");
+        CollectResult result = service.collectCoin(state, "r0_coin_0");
         assertThat(result.status()).isEqualTo(CollectStatus.OK);
         assertThat(result.state().resources().score()).isEqualTo(state.resources().score() + 1);
         assertThat(result.state().collectedItems()).contains("r0_coin_0");
     }
 
     @Test
-    void tryCollectCoin_duplicateRejected() {
+    void collectCoin_duplicateRejected() {
         DungeonSessionState state = baseState().build()
             .withCollectedItems(Set.of("r0_coin_0"));
-        DungeonController.CollectResult result = DungeonController.tryCollectCoin(state, "r0_coin_0");
+        CollectResult result = service.collectCoin(state, "r0_coin_0");
         assertThat(result.status()).isEqualTo(CollectStatus.DUPLICATE);
         assertThat(result.state().resources().score()).isEqualTo(state.resources().score());
     }
 
     @Test
-    void tryCollectCoin_rejectsMissingItemId() {
+    void collectCoin_rejectsMissingItemId() {
         DungeonSessionState state = baseState().build();
-        assertThat(DungeonController.tryCollectCoin(state, null).status())
+        assertThat(service.collectCoin(state, null).status())
             .isEqualTo(CollectStatus.REJECTED);
-        assertThat(DungeonController.tryCollectCoin(state, "").status())
+        assertThat(service.collectCoin(state, "").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
     @Test
-    void tryCollectCoin_rejectsMalformedItemId() {
+    void collectCoin_rejectsMalformedItemId() {
         DungeonSessionState state = baseState().build();
-        assertThat(DungeonController.tryCollectCoin(state, "r1_coin_0").status())
+        assertThat(service.collectCoin(state, "r1_coin_0").status())
             .isEqualTo(CollectStatus.REJECTED);
-        assertThat(DungeonController.tryCollectCoin(state, "r0_shield_0").status())
+        assertThat(service.collectCoin(state, "r0_shield_0").status())
             .isEqualTo(CollectStatus.REJECTED);
-        assertThat(DungeonController.tryCollectCoin(state, "r0_coin_abc").status())
+        assertThat(service.collectCoin(state, "r0_coin_abc").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
     @Test
-    void tryCollectCoin_rejectsWhenDefeated() {
+    void collectCoin_rejectsWhenDefeated() {
         DungeonSessionState state = baseState().defeated(true).build();
-        assertThat(DungeonController.tryCollectCoin(state, "r0_coin_0").status())
+        assertThat(service.collectCoin(state, "r0_coin_0").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
     @Test
-    void tryCollectCoin_rejectsWhenWon() {
+    void collectCoin_rejectsWhenWon() {
         DungeonSessionState state = baseState().won(true).build();
-        assertThat(DungeonController.tryCollectCoin(state, "r0_coin_0").status())
+        assertThat(service.collectCoin(state, "r0_coin_0").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
     @Test
-    void tryCollectCoin_rejectsWhenEncounterActive() {
+    void collectCoin_rejectsWhenEncounterActive() {
         DungeonSessionState state = baseState().activeEncounterId("enc_1").build();
-        assertThat(DungeonController.tryCollectCoin(state, "r0_coin_0").status())
+        assertThat(service.collectCoin(state, "r0_coin_0").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
     @Test
-    void tryCollectCoin_rejectsWhenRelicPickPending() {
+    void collectCoin_rejectsWhenRelicPickPending() {
         DungeonSessionState state = baseState()
             .pendingRelicPick(new PendingRelicPick(
                 PendingPickType.TREASURE, "r0", List.of(RelicId.IRON_PLATE), null))
             .build();
-        assertThat(DungeonController.tryCollectCoin(state, "r0_coin_0").status())
+        assertThat(service.collectCoin(state, "r0_coin_0").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
     @Test
-    void tryCollectShield_rejectedWhenStateNull() {
-        assertThat(DungeonController.tryCollectShield(null, "r0_shield_0").status())
+    void collectShield_rejectedWhenStateNull() {
+        assertThat(service.collectShield(null, "r0_shield_0").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
     @Test
-    void tryCollectShield_incrementsShieldsBelowCap() {
+    void collectShield_incrementsShieldsBelowCap() {
         DungeonSessionState state = baseState().shields(0).shieldCap(2).build();
-        DungeonController.CollectResult result = DungeonController.tryCollectShield(state, "r0_shield_0");
+        CollectResult result = service.collectShield(state, "r0_shield_0");
         assertThat(result.status()).isEqualTo(CollectStatus.OK);
         assertThat(result.state().resources().shields()).isEqualTo(1);
         assertThat(result.state().collectedItems()).contains("r0_shield_0");
     }
 
     @Test
-    void tryCollectShield_duplicateRejected() {
+    void collectShield_duplicateRejected() {
         DungeonSessionState state = baseState().shields(0).shieldCap(2).build()
             .withCollectedItems(Set.of("r0_shield_0"));
-        DungeonController.CollectResult result = DungeonController.tryCollectShield(state, "r0_shield_0");
+        CollectResult result = service.collectShield(state, "r0_shield_0");
         assertThat(result.status()).isEqualTo(CollectStatus.DUPLICATE);
     }
 
     @Test
-    void tryCollectShield_rejectedWhenAtCap() {
+    void collectShield_rejectedWhenAtCap() {
         DungeonSessionState state = baseState().shields(2).shieldCap(2).build();
-        assertThat(DungeonController.tryCollectShield(state, "r0_shield_0").status())
+        assertThat(service.collectShield(state, "r0_shield_0").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
     @Test
-    void tryCollectShield_rejectsWhenDefeated() {
+    void collectShield_rejectsWhenDefeated() {
         DungeonSessionState state = baseState().shields(0).shieldCap(2).defeated(true).build();
-        assertThat(DungeonController.tryCollectShield(state, "r0_shield_0").status())
+        assertThat(service.collectShield(state, "r0_shield_0").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
     @Test
-    void tryCollectShield_rejectsWhenWon() {
+    void collectShield_rejectsWhenWon() {
         DungeonSessionState state = baseState().shields(0).shieldCap(2).won(true).build();
-        assertThat(DungeonController.tryCollectShield(state, "r0_shield_0").status())
+        assertThat(service.collectShield(state, "r0_shield_0").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
     @Test
-    void tryCollectShield_rejectsWhenEncounterActive() {
+    void collectShield_rejectsWhenEncounterActive() {
         DungeonSessionState state = baseState()
             .shields(0).shieldCap(2).activeEncounterId("enc_1").build();
-        assertThat(DungeonController.tryCollectShield(state, "r0_shield_0").status())
+        assertThat(service.collectShield(state, "r0_shield_0").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
     @Test
-    void tryCollectShield_rejectsWhenRelicPickPending() {
+    void collectShield_rejectsWhenRelicPickPending() {
         DungeonSessionState state = baseState()
             .shields(0).shieldCap(2)
             .pendingRelicPick(new PendingRelicPick(
                 PendingPickType.TREASURE, "r0", List.of(RelicId.IRON_PLATE), null))
             .build();
-        assertThat(DungeonController.tryCollectShield(state, "r0_shield_0").status())
+        assertThat(service.collectShield(state, "r0_shield_0").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 

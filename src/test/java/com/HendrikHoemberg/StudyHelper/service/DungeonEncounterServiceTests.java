@@ -94,7 +94,7 @@ class DungeonEncounterServiceTests {
         DungeonSessionState state = activeFlashcardState();
         state = withRelics(state, List.of(RelicId.LUCKY_CHARM));
         DungeonSessionState result = svc.answerFlashcard(state, true);
-        assertThat(result.resources().score()).isEqualTo(DungeonEncounterService.COMBAT_CLEAR_SCORE + 5);
+        assertThat(result.resources().score()).isEqualTo(DungeonBalance.COMBAT_CLEAR_SCORE + DungeonBalance.LUCKY_CHARM_BONUS);
     }
 
     @Test

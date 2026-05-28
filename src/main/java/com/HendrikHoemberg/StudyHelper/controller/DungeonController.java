@@ -1,6 +1,8 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
+import com.HendrikHoemberg.StudyHelper.dto.CollectResult;
+import com.HendrikHoemberg.StudyHelper.dto.CollectStatus;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.exception.AiQuizGenerationException;
 import com.HendrikHoemberg.StudyHelper.exception.DeckNotFoundException;
@@ -92,9 +94,6 @@ public class DungeonController {
                 quizQuestionMode, difficulty, additionalInstructions, ex, response, hxRequest);
         } catch (AiGenerationException | AiQuotaExceededException ex) {
             response.addHeader("HX-Trigger", "refresh-quota");
-            return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
-                quizQuestionMode, difficulty, additionalInstructions, ex, response, hxRequest);
-        } catch (Exception ex) {
             return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
                 quizQuestionMode, difficulty, additionalInstructions, ex, response, hxRequest);
         }
@@ -269,7 +268,7 @@ public class DungeonController {
                               HttpServletResponse response) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = getState(session, user);
-        CollectResult result = tryCollectCoin(state, itemId);
+        CollectResult result = dungeonSessionService.collectCoin(state, itemId);
         return handleCollectResult(result, user, session, response);
     }
 
@@ -280,13 +279,9 @@ public class DungeonController {
                                 HttpServletResponse response) {
         User user = userService.getByUsername(principal.getName());
         DungeonSessionState state = getState(session, user);
-        CollectResult result = tryCollectShield(state, itemId);
+        CollectResult result = dungeonSessionService.collectShield(state, itemId);
         return handleCollectResult(result, user, session, response);
     }
-
-    enum CollectStatus { OK, REJECTED, DUPLICATE }
-
-    record CollectResult(CollectStatus status, DungeonSessionState state) {}
 
     private String handleCollectResult(CollectResult result, User user,
                                         HttpSession session, HttpServletResponse response) {
@@ -306,55 +301,11 @@ public class DungeonController {
         }
     }
 
-    static CollectResult tryCollectCoin(DungeonSessionState state, String itemId) {
-        if (!canCollectInteractiveItem(state)) return new CollectResult(CollectStatus.REJECTED, state);
-        if (!isValidItemId(state, itemId, "coin")) return new CollectResult(CollectStatus.REJECTED, state);
-        if (state.collectedItems().contains(itemId)) return new CollectResult(CollectStatus.DUPLICATE, state);
-        Set<String> collected = new HashSet<>(state.collectedItems());
-        collected.add(itemId);
-        DungeonSessionState next = state
-            .withResources(state.resources().addScore(1))
-            .withCollectedItems(collected);
-        return new CollectResult(CollectStatus.OK, next);
-    }
-
-    static CollectResult tryCollectShield(DungeonSessionState state, String itemId) {
-        if (!canCollectInteractiveItem(state)) return new CollectResult(CollectStatus.REJECTED, state);
-        if (!isValidItemId(state, itemId, "shield")) return new CollectResult(CollectStatus.REJECTED, state);
-        if (state.collectedItems().contains(itemId)) return new CollectResult(CollectStatus.DUPLICATE, state);
-        DungeonResources nextResources = state.resources().addShield();
-        if (nextResources == state.resources()) return new CollectResult(CollectStatus.REJECTED, state);
-        Set<String> collected = new HashSet<>(state.collectedItems());
-        collected.add(itemId);
-        return new CollectResult(CollectStatus.OK,
-            state.withResources(nextResources).withCollectedItems(collected));
-    }
-
-    private static boolean canCollectInteractiveItem(DungeonSessionState state) {
-        if (state == null) return false;
-        if (state.defeated() || state.won()) return false;
-        if (state.combat().activeEncounterId() != null) return false;
-        if (state.loadout().pendingRelicPick() != null) return false;
-        return true;
-    }
-
-    private static boolean isValidItemId(DungeonSessionState state, String itemId, String expectedType) {
-        if (itemId == null || itemId.isBlank()) return false;
-        String prefix = state.currentRoomId() + "_" + expectedType + "_";
-        if (!itemId.startsWith(prefix)) return false;
-        String suffix = itemId.substring(prefix.length());
-        if (suffix.isEmpty()) return false;
-        for (int i = 0; i < suffix.length(); i++) {
-            if (!Character.isDigit(suffix.charAt(i))) return false;
-        }
-        return true;
-    }
-
     private DungeonSessionState createDungeon(DungeonMode dungeonMode, DungeonSize dungeonSize,
-                                               List<Long> selectedDeckIds, QuizQuestionMode quizQuestionMode,
-                                               Difficulty difficulty, String additionalInstructions,
-                                               HttpServletRequest request, User user,
-                                               HttpServletResponse response) throws Exception {
+                                                List<Long> selectedDeckIds, QuizQuestionMode quizQuestionMode,
+                                                Difficulty difficulty, String additionalInstructions,
+                                                HttpServletRequest request, User user,
+                                                HttpServletResponse response) {
         if (dungeonMode == DungeonMode.FLASHCARDS) {
             return dungeonSessionService.createFlashcardDungeon(selectedDeckIds, dungeonSize, user);
         } else {

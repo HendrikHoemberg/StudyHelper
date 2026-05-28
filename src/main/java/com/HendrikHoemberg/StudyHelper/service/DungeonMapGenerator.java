@@ -9,7 +9,6 @@ import java.util.*;
 @Component
 public class DungeonMapGenerator {
 
-    private static final int MAX_REGEN_ATTEMPTS = 10;
     private static final DungeonDirection[] DIRS = DungeonDirection.values();
 
     public DungeonMap generate(DungeonSize size,
@@ -29,14 +28,14 @@ public class DungeonMapGenerator {
             throw new IllegalArgumentException("Elite gauntlet group count must match dungeon size.");
         }
 
-        for (int attempt = 0; attempt < MAX_REGEN_ATTEMPTS; attempt++) {
+        for (int attempt = 0; attempt < DungeonBalance.MAX_MAP_REGEN_ATTEMPTS; attempt++) {
             try {
                 return tryGenerate(size, normalEncounterIds, eliteGauntletGroups, rng);
             } catch (LayoutFailure ignored) {
             }
         }
         throw new MapGenerationException(
-            "Could not generate a valid dungeon layout after " + MAX_REGEN_ATTEMPTS + " attempts.");
+            "Could not generate a valid dungeon layout after " + DungeonBalance.MAX_MAP_REGEN_ATTEMPTS + " attempts.");
     }
 
     private DungeonMap tryGenerate(DungeonSize size,
@@ -403,7 +402,7 @@ public class DungeonMapGenerator {
                     List.of(RelicPool.COMMON, RelicPool.SHOP_EXCLUSIVE), 2, rng);
                 List<ShopOfferEntry> entries = new ArrayList<>();
                 for (RelicId rid : picks) {
-                    int price = (rid == RelicId.MAP_SENSE) ? 150 : 75;
+                    int price = (rid == RelicId.MAP_SENSE) ? DungeonBalance.SHOP_PRICE_MAP_SENSE : DungeonBalance.SHOP_PRICE_DEFAULT;
                     entries.add(new ShopOfferEntry(rid, price));
                 }
                 ShopConsumable consumable = new ShopConsumable(

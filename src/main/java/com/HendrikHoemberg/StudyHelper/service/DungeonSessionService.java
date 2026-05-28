@@ -65,12 +65,12 @@ public class DungeonSessionService {
 
     @Transactional
     public DungeonSessionState createAiQuizDungeon(List<Long> selectedDeckIds,
-                                                    DungeonSize size,
-                                                    QuizQuestionMode questionMode,
-                                                    Difficulty difficulty,
-                                                    String additionalInstructions,
-                                                    HttpServletRequest request,
-                                                    User user) throws Exception {
+                                                     DungeonSize size,
+                                                     QuizQuestionMode questionMode,
+                                                     Difficulty difficulty,
+                                                     String additionalInstructions,
+                                                     HttpServletRequest request,
+                                                     User user) {
         List<Long> normalizedIds = StudySourceSupport.normalizeIds(selectedDeckIds);
         List<Deck> decks = loadDecks(normalizedIds, user);
         List<Flashcard> flashcards = flashcardService.getFlashcardsFlattened(decks);
@@ -102,12 +102,12 @@ public class DungeonSessionService {
     }
 
     private List<QuizQuestion> generateQuizQuestions(List<Long> normalizedIds,
-                                                      HttpServletRequest request,
-                                                      int questionCount,
-                                                      QuizQuestionMode questionMode,
-                                                      Difficulty difficulty,
-                                                      String additionalInstructions,
-                                                      User user) throws Exception {
+                                                       HttpServletRequest request,
+                                                       int questionCount,
+                                                       QuizQuestionMode questionMode,
+                                                       Difficulty difficulty,
+                                                       String additionalInstructions,
+                                                       User user) {
         try {
             QuizSessionState quizState = quizSessionService.createSession(
                 normalizedIds, List.of(), request, questionCount,
@@ -200,6 +200,50 @@ public class DungeonSessionService {
             state.loadout().ownedRelics().size());
     }
 
+    // ===== collect =====
+
+    public CollectResult collectCoin(DungeonSessionState state, String itemId) {
+        if (!canCollectInteractiveItem(state)) return new CollectResult(CollectStatus.REJECTED, state);
+        if (!isValidItemId(state, itemId, "coin")) return new CollectResult(CollectStatus.REJECTED, state);
+        if (state.collectedItems().contains(itemId)) return new CollectResult(CollectStatus.DUPLICATE, state);
+        Set<String> collected = new HashSet<>(state.collectedItems());
+        collected.add(itemId);
+        return new CollectResult(CollectStatus.OK,
+            state.withResources(state.resources().addScore(1)).withCollectedItems(collected));
+    }
+
+    public CollectResult collectShield(DungeonSessionState state, String itemId) {
+        if (!canCollectInteractiveItem(state)) return new CollectResult(CollectStatus.REJECTED, state);
+        if (!isValidItemId(state, itemId, "shield")) return new CollectResult(CollectStatus.REJECTED, state);
+        if (state.collectedItems().contains(itemId)) return new CollectResult(CollectStatus.DUPLICATE, state);
+        DungeonResources nextResources = state.resources().addShield();
+        if (nextResources == state.resources()) return new CollectResult(CollectStatus.REJECTED, state);
+        Set<String> collected = new HashSet<>(state.collectedItems());
+        collected.add(itemId);
+        return new CollectResult(CollectStatus.OK,
+            state.withResources(nextResources).withCollectedItems(collected));
+    }
+
+    private boolean canCollectInteractiveItem(DungeonSessionState state) {
+        if (state == null) return false;
+        if (state.defeated() || state.won()) return false;
+        if (state.combat().activeEncounterId() != null) return false;
+        if (state.loadout().pendingRelicPick() != null) return false;
+        return true;
+    }
+
+    private boolean isValidItemId(DungeonSessionState state, String itemId, String expectedType) {
+        if (itemId == null || itemId.isBlank()) return false;
+        String prefix = state.currentRoomId() + "_" + expectedType + "_";
+        if (!itemId.startsWith(prefix)) return false;
+        String suffix = itemId.substring(prefix.length());
+        if (suffix.isEmpty()) return false;
+        for (int i = 0; i < suffix.length(); i++) {
+            if (!Character.isDigit(suffix.charAt(i))) return false;
+        }
+        return true;
+    }
+
     // ===== helpers =====
 
     private List<List<String>> buildFlashcardEncounters(List<Flashcard> flashcards, DungeonSize size,
@@ -280,7 +324,12 @@ public class DungeonSessionService {
             .currentRoomId(map.entranceRoomId())
             .encounters(Map.copyOf(encounters))
             .bossEncounterIds(List.copyOf(bossEncounterIds))
-            .resources(new DungeonResources(5, 5, 0, 2, 0))
+            .resources(new DungeonResources(
+                DungeonBalance.INITIAL_HEALTH,
+                DungeonBalance.INITIAL_HEALTH_CAP,
+                0,
+                DungeonBalance.INITIAL_SHIELD_CAP,
+                0))
             .build();
     }
 

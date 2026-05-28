@@ -8,12 +8,6 @@ import java.util.*;
 @Service
 public class DungeonEncounterService {
 
-    static final int STREAK_FOR_SHIELD = 3;
-    static final int WRONG_ANSWER_DAMAGE = 1;
-    static final int COMBAT_CLEAR_SCORE = 10;
-    static final int ELITE_CLEAR_SCORE = 50;
-    static final int BOSS_PROMPT_SCORE = 20;
-
     public ActionResult activateAt(DungeonSessionState state, String roomId) {
         if (state.combat().activeEncounterId() != null) return ActionResult.success(state);
         DungeonRoom room = state.map().room(roomId);
@@ -88,7 +82,7 @@ public class DungeonEncounterService {
         encs.put(encounter.id(), encounter.clear(answer, correct));
 
         int effectiveStreakThreshold = state.loadout().ownedRelics().contains(RelicId.SHARP_FOCUS)
-            ? 2 : STREAK_FOR_SHIELD;
+            ? DungeonBalance.SHARP_FOCUS_STREAK : DungeonBalance.STREAK_FOR_SHIELD;
 
         DungeonProgress nextProgress = state.progress().recordAnswer(correct);
 
@@ -97,8 +91,8 @@ public class DungeonEncounterService {
             nextResources = nextResources.addShield();
         }
         if (correct) {
-            int base = encounter.boss() ? BOSS_PROMPT_SCORE : COMBAT_CLEAR_SCORE;
-            int bonus = state.loadout().ownedRelics().contains(RelicId.LUCKY_CHARM) ? 5 : 0;
+            int base = encounter.boss() ? DungeonBalance.BOSS_PROMPT_SCORE : DungeonBalance.COMBAT_CLEAR_SCORE;
+            int bonus = state.loadout().ownedRelics().contains(RelicId.LUCKY_CHARM) ? DungeonBalance.LUCKY_CHARM_BONUS : 0;
             nextResources = nextResources.addScore(base + bonus);
         }
 
@@ -133,7 +127,7 @@ public class DungeonEncounterService {
                 .withResources(s.resources().withShields(s.resources().shields() - 1))
                 .withProgress(s.progress().recordShieldUsed());
         }
-        DungeonResources damaged = s.resources().takeHealthDamage(WRONG_ANSWER_DAMAGE);
+        DungeonResources damaged = s.resources().takeHealthDamage(DungeonBalance.WRONG_ANSWER_DAMAGE);
         if (damaged.health() == 0 && s.loadout().ownedRelics().contains(RelicId.PHOENIX_FEATHER)) {
             return s
                 .withResources(damaged.withHealth(1))
@@ -189,7 +183,7 @@ public class DungeonEncounterService {
             .heal(state.resources().healthCap())
             .addShield();
         DungeonProgress withElite = state.progress().withElitesCleared(state.progress().elitesCleared() + 1);
-        DungeonResources scored = healed.addScore(ELITE_CLEAR_SCORE);
+        DungeonResources scored = healed.addScore(DungeonBalance.ELITE_CLEAR_SCORE);
 
         Map<String, DungeonRoom> rooms = new LinkedHashMap<>(state.map().rooms());
         DungeonRoom cleared = room.withCleared(true);
