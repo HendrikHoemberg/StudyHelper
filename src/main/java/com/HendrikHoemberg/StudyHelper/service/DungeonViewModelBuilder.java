@@ -18,16 +18,16 @@ public class DungeonViewModelBuilder {
 
     private final FolderService folderService;
     private final DashboardService dashboardService;
-    private final DungeonMapGenerator mapGenerator;
+    private final DungeonMinimapBuilder minimapBuilder;
     private final DungeonSessionService sessionService;
 
     public DungeonViewModelBuilder(FolderService folderService,
                                    DashboardService dashboardService,
-                                   DungeonMapGenerator mapGenerator,
+                                   DungeonMinimapBuilder minimapBuilder,
                                    DungeonSessionService sessionService) {
         this.folderService = folderService;
         this.dashboardService = dashboardService;
-        this.mapGenerator = mapGenerator;
+        this.minimapBuilder = minimapBuilder;
         this.sessionService = sessionService;
     }
 
@@ -64,7 +64,7 @@ public class DungeonViewModelBuilder {
         model.addAttribute("pendingPick", state.loadout().pendingRelicPick());
         model.addAttribute("hintMaskIndex", spectaclesHintMaskIndex(state, state.activeEncounter()));
 
-        List<MinimapRoom> minimap = mapGenerator.buildMinimap(state);
+        List<MinimapRoom> minimap = minimapBuilder.build(state);
         model.addAttribute("minimapRooms", minimap);
         try {
             model.addAttribute("minimapRoomsJson", objectMapper.writeValueAsString(minimap));

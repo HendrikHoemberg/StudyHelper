@@ -32,7 +32,8 @@ class DungeonMapGeneratorMinimapTests {
             .resources(new DungeonResources(5, 5, 0, 2, 0))
             .build();
 
-        List<MinimapRoom> rooms = gen.buildMinimap(state);
+        DungeonMinimapBuilder minimapBuilder = new DungeonMinimapBuilder();
+        List<MinimapRoom> rooms = minimapBuilder.build(state);
         assertThat(rooms).isNotEmpty();
         assertThat(rooms).anyMatch(r -> r.id().equals(map.entranceRoomId()));
         for (MinimapRoom r : rooms) {
@@ -62,7 +63,8 @@ class DungeonMapGeneratorMinimapTests {
             .resources(new DungeonResources(5, 5, 0, 2, 0))
             .build();
 
-        List<MinimapRoom> rooms = gen.buildMinimap(state);
+        DungeonMinimapBuilder minimapBuilder = new DungeonMinimapBuilder();
+        List<MinimapRoom> rooms = minimapBuilder.build(state);
         assertThat(rooms).anyMatch(r -> r.isCurrent() && r.id().equals(map.entranceRoomId()));
     }
 }
