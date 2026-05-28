@@ -61,38 +61,12 @@
     var playerX = 480;
     var playerY = 352;
     var playerSpeed = 4.5;
-    var activeKeys = {};
+    window.dungeonActiveKeys = {};
     var loopRunning = false;
     var combatLoopRunning = false;
     var animationFrameId = null;
     window.dungeonCenterpieceInteracted = false;
     window.dungeonLastRoomId = null;
-
-    // Global listeners to track key presses smoothly
-    document.addEventListener('keydown', function (e) {
-        var key = e.key.toLowerCase();
-        if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].indexOf(key) !== -1) {
-            activeKeys[e.key] = true;
-            activeKeys[key] = true;
-            var canvas = document.getElementById('dungeon-room-canvas');
-            if (canvas && !canvas.dataset.activeEncounterId && !window.dungeonSplashActive) {
-                e.preventDefault(); // Prevent browser scrolling
-            }
-        }
-    });
-
-    document.addEventListener('keyup', function (e) {
-        var key = e.key.toLowerCase();
-        activeKeys[e.key] = false;
-        activeKeys[key] = false;
-    });
-
-    document.addEventListener('click', function (e) {
-        var btn = e.target.closest('.sh-dungeon-dir');
-        if (btn) {
-            window.dungeonLastMoveDirection = btn.value || btn.getAttribute('value');
-        }
-    });
 
     function triggerRoomTransition(dir) {
         loopRunning = false;
@@ -131,10 +105,10 @@
         // 1. Calculate next position based on active keys
         var dx = 0;
         var dy = 0;
-        if (activeKeys['ArrowUp'] || activeKeys['w']) dy -= 1;
-        if (activeKeys['ArrowDown'] || activeKeys['s']) dy += 1;
-        if (activeKeys['ArrowLeft'] || activeKeys['a']) dx -= 1;
-        if (activeKeys['ArrowRight'] || activeKeys['d']) dx += 1;
+        if (window.dungeonActiveKeys['ArrowUp'] || window.dungeonActiveKeys['w']) dy -= 1;
+        if (window.dungeonActiveKeys['ArrowDown'] || window.dungeonActiveKeys['s']) dy += 1;
+        if (window.dungeonActiveKeys['ArrowLeft'] || window.dungeonActiveKeys['a']) dx -= 1;
+        if (window.dungeonActiveKeys['ArrowRight'] || window.dungeonActiveKeys['d']) dx += 1;
 
         if (dx !== 0 && dy !== 0) {
             // Normalize diagonal speed
@@ -521,7 +495,7 @@
         }
 
         // Safe resetting of local movement state
-        activeKeys = {};
+        window.dungeonActiveKeys = {};
         window.dungeonCenterpieceInteracted = false;
 
         // Hide overlay modal initially
@@ -534,97 +508,6 @@
         startExplorationLoop();
     }
 
-    // ============================================================
-    // Canvas Interactive Click and Hover Event Listeners Binding
-    // ============================================================
-    function bindCanvasInteractiveListeners(canvas) {
-        canvas.addEventListener('mousemove', function (e) {
-            var activeEncId = canvas.dataset.activeEncounterId;
-            if (!activeEncId || window.dungeonSplashActive) return;
-
-            var rect = canvas.getBoundingClientRect();
-            var mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
-            var mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
-
-            var hoveredIdx = -1;
-            var boxes = window.dungeonOptionBoxes || [];
-            for (var i = 0; i < boxes.length; i++) {
-                var box = boxes[i];
-                if (mouseX >= box.x && mouseX <= box.x + box.w &&
-                    mouseY >= box.y && mouseY <= box.y + box.h) {
-                    if (box.type === 'quiz_option') {
-                        hoveredIdx = box.index;
-                    } else if (box.type === 'reveal') {
-                        hoveredIdx = 0;
-                    } else if (box.type === 'answer') {
-                        hoveredIdx = box.value ? 1 : 0;
-                    } else if (box.type === 'submit') {
-                        hoveredIdx = boxes.length - 1;
-                    }
-                    break;
-                }
-            }
-
-            if (hoveredIdx !== window.dungeonHoveredOptionIndex) {
-                window.dungeonHoveredOptionIndex = hoveredIdx;
-                if (hoveredIdx !== -1) {
-                    DungeonAudio.playSelect();
-                }
-                triggerDraw();
-            }
-        });
-
-        canvas.addEventListener('click', function (e) {
-            var activeEncId = canvas.dataset.activeEncounterId;
-            if (!activeEncId || window.dungeonSplashActive) return;
-
-            var rect = canvas.getBoundingClientRect();
-            var mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
-            var mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
-
-            var boxes = window.dungeonOptionBoxes || [];
-            for (var i = 0; i < boxes.length; i++) {
-                var box = boxes[i];
-                if (mouseX >= box.x && mouseX <= box.x + box.w &&
-                    mouseY >= box.y && mouseY <= box.y + box.h) {
-                    
-                    if (box.type === 'quiz_option') {
-                        var form = document.querySelector('.sh-dungeon-quiz-form');
-                        if (form) {
-                            var inputs = form.querySelectorAll('input');
-                            if (inputs[box.index]) {
-                                inputs[box.index].checked = !inputs[box.index].checked;
-                                DungeonAudio.playSelect();
-                                triggerDraw();
-                            }
-                        }
-                    } else if (box.type === 'submit') {
-                        var form = document.querySelector('.sh-dungeon-quiz-form');
-                        if (form) {
-                            DungeonAudio.playSubmit();
-                            htmx.trigger(form, 'submit');
-                        }
-                    } else if (box.type === 'reveal') {
-                        var details = document.querySelector('.sh-dungeon-flashcard-details');
-                        if (details) {
-                            details.open = true;
-                            DungeonAudio.playReveal();
-                            triggerDraw();
-                        }
-                    } else if (box.type === 'answer') {
-                        var valStr = box.value ? 'true' : 'false';
-                        var button = document.querySelector('.sh-dungeon-answer-row button[value="' + valStr + '"]');
-                        if (button) {
-                            DungeonAudio.playSubmit();
-                            button.click();
-                        }
-                    }
-                    break;
-                }
-            }
-        });
-    }
-
     var drawQueued = false;
     function triggerDraw() {
         if (drawQueued) return;
@@ -634,6 +517,7 @@
             dungeonInit();
         });
     }
+    window.dungeonTriggerDraw = triggerDraw;
 
     // ============================================================
     // Entry Point
@@ -641,11 +525,7 @@
     function dungeonInit() {
         DungeonMinimap.draw();
         renderRoomCanvas();
-        var canvas = document.getElementById('dungeon-room-canvas');
-        if (canvas && !canvas.dungeonListenersBound) {
-            canvas.dungeonListenersBound = true;
-            bindCanvasInteractiveListeners(canvas);
-        }
+        DungeonInput.init();
     }
 
     if (typeof htmx !== 'undefined' && htmx) {
@@ -654,81 +534,4 @@
         document.addEventListener('DOMContentLoaded', dungeonInit);
     }
 
-    // Keyboard support
-    document.addEventListener('keydown', function (e) {
-        var canvas = document.getElementById('dungeon-room-canvas');
-        if (!canvas) return;
-
-        // Block movement key inputs during active battle encounters or transition splash
-        var activeEncId = canvas.dataset.activeEncounterId;
-        if (activeEncId && !window.dungeonSplashActive) {
-            var isFlashcard = !!document.querySelector('.sh-dungeon-flashcard');
-            var isQuiz = !!document.querySelector('.sh-dungeon-quiz-form');
-
-            if (isQuiz) {
-                if (['1', '2', '3', '4'].indexOf(e.key) !== -1) {
-                    e.preventDefault();
-                    var idx = parseInt(e.key, 10) - 1;
-                    var form = document.querySelector('.sh-dungeon-quiz-form');
-                    if (form) {
-                        var inputs = form.querySelectorAll('input');
-                        if (inputs[idx]) {
-                            inputs[idx].checked = !inputs[idx].checked;
-                            DungeonAudio.playSelect();
-                            triggerDraw();
-                        }
-                    }
-                    return;
-                }
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    var form = document.querySelector('.sh-dungeon-quiz-form');
-                    if (form) {
-                        DungeonAudio.playSubmit();
-                        htmx.trigger(form, 'submit');
-                    }
-                    return;
-                }
-            }
-
-            if (isFlashcard) {
-                var details = document.querySelector('.sh-dungeon-flashcard-details');
-                var isRevealed = details ? details.open : false;
-
-                if (e.key === ' ' || e.key === 'Spacebar') {
-                    e.preventDefault();
-                    if (details && !isRevealed) {
-                        details.open = true;
-                        DungeonAudio.playReveal();
-                        triggerDraw();
-                    }
-                    return;
-                }
-                if (isRevealed) {
-                    if (e.key === 'g' || e.key === 'G') {
-                        e.preventDefault();
-                        var button = document.querySelector('.sh-dungeon-answer-row button[value="true"]');
-                        if (button) {
-                            DungeonAudio.playSubmit();
-                            button.click();
-                        }
-                        return;
-                    }
-                    if (e.key === 'm' || e.key === 'M') {
-                        e.preventDefault();
-                        var button = document.querySelector('.sh-dungeon-answer-row button[value="false"]');
-                        if (button) {
-                            DungeonAudio.playSubmit();
-                            button.click();
-                        }
-                        return;
-                    }
-                }
-            }
-            return;
-        }
-
-        if (window.dungeonSplashActive) return;
-        // Direct step room traversal removed in favor of interactive 2D top-down movement.
-    });
 })();
