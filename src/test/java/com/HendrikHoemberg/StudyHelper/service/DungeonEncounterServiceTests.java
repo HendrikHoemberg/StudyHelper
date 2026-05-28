@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DungeonEncounterServiceTests {
 
-    private final DungeonEncounterService svc = new DungeonEncounterService();
+    private final DungeonEncounterService svc = new DungeonEncounterService(new DungeonCombatService());
 
     @Test
     void activateAt_combatRoomMarksEncounterActive() {

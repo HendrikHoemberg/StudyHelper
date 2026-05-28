@@ -8,6 +8,12 @@ import java.util.*;
 @Service
 public class DungeonEncounterService {
 
+    private final DungeonCombatService combatService;
+
+    public DungeonEncounterService(DungeonCombatService combatService) {
+        this.combatService = combatService;
+    }
+
     public ActionResult activateAt(DungeonSessionState state, String roomId) {
         if (state.combat().activeEncounterId() != null) return ActionResult.success(state);
         DungeonRoom room = state.map().room(roomId);
@@ -81,28 +87,14 @@ public class DungeonEncounterService {
         Map<String, DungeonEncounter> encs = new LinkedHashMap<>(state.encounters());
         encs.put(encounter.id(), encounter.clear(answer, correct));
 
-        int effectiveStreakThreshold = state.loadout().ownedRelics().contains(RelicId.SHARP_FOCUS)
-            ? DungeonBalance.SHARP_FOCUS_STREAK : DungeonBalance.STREAK_FOR_SHIELD;
+        DungeonSessionState working = state.withEncounters(Map.copyOf(encs));
 
-        DungeonProgress nextProgress = state.progress().recordAnswer(correct);
-
-        DungeonResources nextResources = state.resources();
-        if (correct && nextProgress.streak() % effectiveStreakThreshold == 0) {
-            nextResources = nextResources.addShield();
-        }
         if (correct) {
-            int base = encounter.boss() ? DungeonBalance.BOSS_PROMPT_SCORE : DungeonBalance.COMBAT_CLEAR_SCORE;
-            int bonus = state.loadout().ownedRelics().contains(RelicId.LUCKY_CHARM) ? DungeonBalance.LUCKY_CHARM_BONUS : 0;
-            nextResources = nextResources.addScore(base + bonus);
+            working = combatService.processCorrectAnswer(working, encounter);
         }
-
-        DungeonSessionState working = state
-            .withEncounters(Map.copyOf(encs))
-            .withResources(nextResources)
-            .withProgress(nextProgress);
 
         if (!correct) {
-            working = applyWrongAnswerDamage(working);
+            working = combatService.processWrongAnswer(working);
         }
 
         if (isInGauntletRoom(working) || !working.combat().gauntletQueue().isEmpty()) {
@@ -114,26 +106,6 @@ public class DungeonEncounterService {
         }
 
         return clearCombatRoom(working);
-    }
-
-    private DungeonSessionState applyWrongAnswerDamage(DungeonSessionState s) {
-        int luckyCoinsOwned = (int) s.loadout().ownedRelics().stream()
-            .filter(r -> r == RelicId.LUCKY_COIN).count();
-        if (s.progress().luckyCoinsConsumed() < luckyCoinsOwned) {
-            return s.withProgress(s.progress().consumeLuckyCoin());
-        }
-        if (s.resources().shields() > 0) {
-            return s
-                .withResources(s.resources().withShields(s.resources().shields() - 1))
-                .withProgress(s.progress().recordShieldUsed());
-        }
-        DungeonResources damaged = s.resources().takeHealthDamage(DungeonBalance.WRONG_ANSWER_DAMAGE);
-        if (damaged.health() == 0 && s.loadout().ownedRelics().contains(RelicId.PHOENIX_FEATHER)) {
-            return s
-                .withResources(damaged.withHealth(1))
-                .withLoadout(s.loadout().consumePhoenixFeather());
-        }
-        return s.withResources(damaged).withDefeated(damaged.health() == 0);
     }
 
     private boolean isInGauntletRoom(DungeonSessionState state) {
