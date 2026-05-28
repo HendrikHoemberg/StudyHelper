@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
+import com.HendrikHoemberg.StudyHelper.service.DungeonViewModelBuilder;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -16,7 +17,7 @@ class DungeonSpectaclesHintTests {
             QuestionType.SINGLE_CHOICE, "q?", List.of("A", "B", "C", "D"), List.of(1));
         DungeonEncounter enc = DungeonEncounter.quiz("q_42", false, q);
         DungeonSessionState state = stateWithRelics(List.of(RelicId.SPECTACLES));
-        Integer mask = DungeonController.spectaclesHintMaskIndex(state, enc);
+        Integer mask = DungeonViewModelBuilder.spectaclesHintMaskIndex(state, enc);
         assertThat(mask).isIn(0, 2, 3);
     }
 
@@ -25,7 +26,7 @@ class DungeonSpectaclesHintTests {
         QuizQuestion q = new QuizQuestion(QuestionType.SINGLE_CHOICE, "q?", List.of("A", "B"), List.of(0));
         DungeonEncounter enc = DungeonEncounter.quiz("q_1", false, q);
         DungeonSessionState state = stateWithRelics(List.of());
-        assertThat(DungeonController.spectaclesHintMaskIndex(state, enc)).isNull();
+        assertThat(DungeonViewModelBuilder.spectaclesHintMaskIndex(state, enc)).isNull();
     }
 
     private DungeonSessionState stateWithRelics(List<RelicId> relics) {

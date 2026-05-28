@@ -101,7 +101,7 @@ public class DungeonViewModelBuilder {
         model.addAttribute("grantedRelic", grantedRelic);
     }
 
-    static Integer spectaclesHintMaskIndex(DungeonSessionState state, DungeonEncounter encounter) {
+    public static Integer spectaclesHintMaskIndex(DungeonSessionState state, DungeonEncounter encounter) {
         if (!state.loadout().ownedRelics().contains(RelicId.SPECTACLES)) return null;
         if (encounter == null) return null;
         if (encounter.type() != DungeonEncounterType.QUIZ
