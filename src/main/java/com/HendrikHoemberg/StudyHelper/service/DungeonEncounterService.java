@@ -125,7 +125,7 @@ public class DungeonEncounterService {
                 if (e != null) {
                     reset.put(encId, new DungeonEncounter(
                         e.id(), e.type(), DungeonEncounterStatus.PENDING, e.boss(),
-                        e.flashcardId(), e.frontText(), e.backText(),
+                        e.monsterType(), e.flashcardId(), e.frontText(), e.backText(),
                         e.frontImageUrl(), e.backImageUrl(), e.quizQuestion(),
                         List.of(), null));
                 }

@@ -56,6 +56,8 @@
                         th:data-current-room-cleared="${currentRoom != null and currentRoom.cleared}"
                         th:data-active-encounter-id="${activeEncounter != null ? activeEncounter.id : ''}"
                         th:data-active-encounter-boss="${activeEncounter != null ? activeEncounter.boss : 'false'}"
+                        th:data-active-encounter-monster="${activeEncounter != null ? activeEncounter.monsterType : ''}"
+                        th:data-current-room-monster="${currentRoomMonster}"
                         th:data-gauntlet-position="${gauntletPosition}"
                         th:data-gauntlet-total="${gauntletTotal}">
                 </canvas>

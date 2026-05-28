@@ -1068,6 +1068,8 @@ class UiResourceRegressionTests {
         String game = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/templates/fragments/dungeon-game.html"));
         String js = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-engine.js"));
         String rendererJs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-renderer.js"));
+        String explorationJs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-exploration.js"));
+        String combatHudJs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-combat-hud.js"));
         String inputJs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-input.js"));
         String minimapJs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-minimap.js"));
         String css = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/css/dungeon.css"));
@@ -1077,16 +1079,24 @@ class UiResourceRegressionTests {
         assertThat(layout).contains("/css/dungeon.css");
         assertThat(layout).contains("/js/dungeon-engine.js");
         assertThat(layout).contains("/js/dungeon-renderer.js");
+        assertThat(layout).contains("/js/dungeon-exploration.js");
+        assertThat(layout).contains("/js/dungeon-combat-hud.js");
         assertThat(layout).contains("/js/dungeon-input.js");
         assertThat(layout).contains("/js/dungeon-minimap.js");
         assertThat(game).contains("dungeon-room-canvas");
         assertThat(game).contains("dungeon-minimap-state");
         assertThat(game).contains("activeEncounter");
         assertThat(game).contains("/dungeon/move");
+        // Monster type is supplied by the server (3d) instead of a JS hashCode heuristic.
+        assertThat(game).contains("data-active-encounter-monster");
         assertThat(rendererJs).contains("getContext('2d')");
         assertThat(minimapJs).contains("JSON.parse");
-        assertThat(js).contains("BOSS");
-        assertThat(js).contains("/dungeon/move");
+        // The engine is a slim orchestrator that delegates to the split modules.
+        assertThat(js).contains("DungeonExploration");
+        assertThat(js).contains("DungeonCombatHud");
+        assertThat(explorationJs).contains("/dungeon/move");
+        assertThat(explorationJs).contains("BOSS");
+        assertThat(combatHudJs).contains("renderCombat");
         assertThat(css).contains("image-rendering: pixelated");
     }
 

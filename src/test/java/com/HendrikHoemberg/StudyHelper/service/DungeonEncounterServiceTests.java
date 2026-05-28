@@ -122,7 +122,7 @@ class DungeonEncounterServiceTests {
 
     private DungeonSessionState singleCombatRoomState() {
         DungeonEncounter enc = DungeonEncounter.flashcard(
-            "enc_0", false, 1L, "Q", "A", null, null);
+            "enc_0", false, "SLIME", 1L, "Q", "A", null, null);
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
             true, true, null, List.of(), null, null, null, null);
@@ -134,8 +134,8 @@ class DungeonEncounterServiceTests {
     }
 
     private DungeonSessionState eliteRoomState() {
-        DungeonEncounter e0 = DungeonEncounter.flashcard("elite_0_0", false, 1L, "Q1", "A1", null, null);
-        DungeonEncounter e1 = DungeonEncounter.flashcard("elite_0_1", false, 2L, "Q2", "A2", null, null);
+        DungeonEncounter e0 = DungeonEncounter.flashcard("elite_0_0", false, "CHAMPION", 1L, "Q1", "A1", null, null);
+        DungeonEncounter e1 = DungeonEncounter.flashcard("elite_0_1", false, "CHAMPION", 2L, "Q2", "A2", null, null);
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
             true, true, null, List.of(), null, null, null, null);
@@ -186,8 +186,8 @@ class DungeonEncounterServiceTests {
     }
 
     private DungeonSessionState activeBossStateAtIndexZero() {
-        DungeonEncounter b0 = DungeonEncounter.flashcard("boss_0", true, 10L, "B0", "BA0", null, null).activate();
-        DungeonEncounter b1 = DungeonEncounter.flashcard("boss_1", true, 11L, "B1", "BA1", null, null);
+        DungeonEncounter b0 = DungeonEncounter.flashcard("boss_0", true, "DRAGON", 10L, "B0", "BA0", null, null).activate();
+        DungeonEncounter b1 = DungeonEncounter.flashcard("boss_1", true, "DRAGON", 11L, "B1", "BA1", null, null);
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
             true, true, null, List.of(), null, null, null, null);
@@ -251,7 +251,7 @@ class DungeonEncounterServiceTests {
         Map<String, DungeonEncounter> resetEncs = new LinkedHashMap<>(first.encounters());
         resetEncs.put("enc_0", new DungeonEncounter(
             enc.id(), enc.type(), DungeonEncounterStatus.PENDING, enc.boss(),
-            enc.flashcardId(), enc.frontText(), enc.backText(),
+            enc.monsterType(), enc.flashcardId(), enc.frontText(), enc.backText(),
             enc.frontImageUrl(), enc.backImageUrl(), enc.quizQuestion(),
             List.of(), null));
         DungeonSessionState reactivated = first

@@ -86,6 +86,19 @@ public class DungeonViewModelBuilder {
         }
         model.addAttribute("gauntletPosition", gauntletPos);
         model.addAttribute("gauntletTotal", gauntletTotal);
+        model.addAttribute("currentRoomMonster", currentRoomMonster(state));
+    }
+
+    private String currentRoomMonster(DungeonSessionState state) {
+        DungeonRoom room = state.currentRoom();
+        if (room == null) return "";
+        String encId = room.encounterId();
+        if ((encId == null || encId.isBlank()) && !room.gauntletGroup().isEmpty()) {
+            encId = room.gauntletGroup().get(0);
+        }
+        if (encId == null) return "";
+        DungeonEncounter enc = state.encounters().get(encId);
+        return (enc != null && enc.monsterType() != null) ? enc.monsterType() : "";
     }
 
     public void prepareComplete(Model model, DungeonSessionState state) {

@@ -51,7 +51,7 @@ class DungeonSessionStateTests {
     @Test
     void activeEncounter_resolvesViaCombatSlice() {
         DungeonSessionState s = minimal();
-        DungeonEncounter enc = DungeonEncounter.flashcard("fc_0", false, 1L,
+        DungeonEncounter enc = DungeonEncounter.flashcard("fc_0", false, "SLIME", 1L,
             "Front", "Back", null, null);
         DungeonSessionState live = s
             .withEncounters(Map.of("fc_0", enc))

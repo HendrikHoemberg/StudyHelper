@@ -1,4 +1,7 @@
-// dungeon-renderer.js — exploration and combat canvas renderer
+// dungeon-renderer.js — exploration and combat canvas renderer.
+// Pure render layer: every draw function receives an explicit state object and
+// performs NO DOM or window queries. renderCombat returns the interactive option
+// boxes so the caller (combat-hud) can publish them for the input layer.
 var DungeonRenderer = (function () {
     var canvas, ctx;
 
@@ -73,8 +76,8 @@ var DungeonRenderer = (function () {
         ctx.fillRect(px, py, size, size);
 
         ctx.fillStyle = shadow;
-        ctx.fillRect(px, py + size - 2, size, 2); 
-        ctx.fillRect(px + size - 2, py, 2, size); 
+        ctx.fillRect(px, py + size - 2, size, 2);
+        ctx.fillRect(px + size - 2, py, 2, size);
 
         ctx.fillRect(px, py + Math.floor(size / 2) - 1, size, 2);
 
@@ -122,7 +125,15 @@ var DungeonRenderer = (function () {
         ctx.fillRect(px, py, 1, size);
     }
 
-    function renderExploration(type, cleared, hasUp, hasDown, hasLeft, hasRight, roomItems, pX, pY) {
+    // state: { type, cleared, doors:{up,down,left,right}, roomItems, playerX, playerY }
+    function renderExploration(state) {
+        var type = state.type;
+        var cleared = state.cleared;
+        var hasUp = state.doors.up, hasDown = state.doors.down;
+        var hasLeft = state.doors.left, hasRight = state.doors.right;
+        var roomItems = state.roomItems;
+        var pX = state.playerX, pY = state.playerY;
+
         ctx.fillStyle = '#0b0f19';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -182,10 +193,10 @@ var DungeonRenderer = (function () {
             }
         }
 
-        for (var i = 0; i < roomItems.coins.length; i++) {
-            var item = roomItems.coins[i];
+        for (var ci = 0; ci < roomItems.coins.length; ci++) {
+            var item = roomItems.coins[ci];
             if (item.collected) continue;
-            
+
             if (item.type === 'COIN') {
                 drawPixelSprite('COIN', item.x - 12, item.y - 12, 24);
             } else if (item.type === 'SHIELD') {
@@ -222,7 +233,8 @@ var DungeonRenderer = (function () {
         drawPixelSprite('PLAYER', pX, pY, 64);
     }
 
-    function renderSplash() {
+    // state: { monster, boss, gauntletTotal }
+    function renderSplash(state) {
         ctx.fillStyle = '#020617';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -237,22 +249,20 @@ var DungeonRenderer = (function () {
         var sx = (canvas.width - spriteSize) / 2;
         var sy = (canvas.height - spriteSize) / 2 - 32 + bob;
 
-        drawPixelSprite(window.dungeonSplashMonster || 'SLIME', sx, sy, spriteSize);
+        drawPixelSprite(state.monster || 'SLIME', sx, sy, spriteSize);
 
-        var bracketOffset = Math.abs(Math.sin(Date.now() / 200)) * 6;
         ctx.fillStyle = '#ef4444';
         ctx.font = 'bold 20px "Courier New", Courier, monospace';
         ctx.textAlign = 'center';
-        
-        var gauntletTotal = parseInt(canvas.dataset.gauntletTotal || '0', 10);
-        var title = window.dungeonSplashBoss
+
+        var title = state.boss
             ? "!!! BOSS-KAMPF !!!"
-            : (gauntletTotal > 0 ? "ELITE CHALLENGE!" : "⚔️ GEGNER GEFUNDEN ⚔️");
+            : (state.gauntletTotal > 0 ? "ELITE CHALLENGE!" : "⚔️ GEGNER GEFUNDEN ⚔️");
         ctx.fillText(title, canvas.width / 2, canvas.height - 90);
 
         ctx.fillStyle = '#94a3b8';
         ctx.font = '13px "Courier New", Courier, monospace';
-        var monsterLabel = (window.dungeonSplashMonster || "MONSTER").toUpperCase();
+        var monsterLabel = (state.monster || "MONSTER").toUpperCase();
         ctx.fillText("EIN WILDER " + monsterLabel + " BEGEGNET DIR!", canvas.width / 2, canvas.height - 60);
 
         ctx.fillStyle = '#64748b';
@@ -307,7 +317,15 @@ var DungeonRenderer = (function () {
         return lines;
     }
 
-    function renderCombat() {
+    // state: {
+    //   health, healthCap, score, progress (string "x/y"),
+    //   boss, gauntletPos, gauntletTotal, monster, hoveredOptionIndex,
+    //   mode: 'flashcard'|'quiz'|null,
+    //   flashcard: { front, back, revealed },
+    //   quiz: { question, options: [{ text, checked, isCheckbox }] }
+    // }
+    // Returns the interactive option boxes for hit-testing.
+    function renderCombat(state) {
         var scale = canvas.width / 512.0;
 
         ctx.fillStyle = '#020617';
@@ -318,13 +336,15 @@ var DungeonRenderer = (function () {
             ctx.fillRect(0, y, canvas.width, Math.floor(2 * scale));
         }
 
-        var health = parseInt(document.querySelector('.sh-dungeon-hud-health')?.textContent || '5', 10);
-        var score = parseInt(document.querySelector('.sh-dungeon-hud-score')?.textContent || '0', 10);
-        var progress = document.querySelector('.sh-dungeon-hud-progress')?.textContent || '0/0';
-        var activeEncBoss = canvas.dataset.activeEncounterBoss === 'true';
-        var gauntletPos = parseInt(canvas.dataset.gauntletPosition || '0', 10);
-        var gauntletTotal = parseInt(canvas.dataset.gauntletTotal || '0', 10);
-        var enemyName = (window.dungeonSplashMonster || (activeEncBoss ? "DRAGON" : "SLIME")).toUpperCase();
+        var health = state.health;
+        var healthCap = state.healthCap || 5;
+        var score = state.score;
+        var progress = state.progress || '0/0';
+        var activeEncBoss = state.boss;
+        var gauntletPos = state.gauntletPos;
+        var gauntletTotal = state.gauntletTotal;
+        var enemyName = (state.monster || (activeEncBoss ? "DRAGON" : "SLIME")).toUpperCase();
+        var hoveredIndex = state.hoveredOptionIndex;
 
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2 * scale;
@@ -339,7 +359,7 @@ var DungeonRenderer = (function () {
 
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(30 * scale, 48 * scale, 120 * scale, 12 * scale);
-        var healthPercent = Math.max(0, Math.min(1, health / 5.0));
+        var healthPercent = Math.max(0, Math.min(1, health / healthCap));
         ctx.fillStyle = healthPercent > 0.5 ? '#10b981' : (healthPercent > 0.2 ? '#f59e0b' : '#ef4444');
         ctx.fillRect(30 * scale, 48 * scale, 120 * scale * healthPercent, 12 * scale);
         ctx.strokeStyle = '#ffffff';
@@ -348,7 +368,7 @@ var DungeonRenderer = (function () {
 
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold ' + Math.floor(12 * scale) + 'px "Courier New", Courier, monospace';
-        ctx.fillText("HP: " + health + "/5", 160 * scale, 58 * scale);
+        ctx.fillText("HP: " + health + "/" + healthCap, 160 * scale, 58 * scale);
 
         ctx.strokeStyle = activeEncBoss ? '#ef4444' : '#ffffff';
         ctx.lineWidth = 2 * scale;
@@ -362,7 +382,7 @@ var DungeonRenderer = (function () {
 
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(canvas.width - 230 * scale, 48 * scale, 120 * scale, 12 * scale);
-        
+
         var progParts = progress.split('/');
         var progressPercent = 0.5;
         if (progParts.length === 2) {
@@ -389,14 +409,7 @@ var DungeonRenderer = (function () {
         }
 
         var bob = Math.sin(Date.now() / 180) * 10;
-        var monsterSprite;
-        if (gauntletTotal > 0 && !activeEncBoss) {
-            monsterSprite = 'CHAMPION';
-        } else if (activeEncBoss) {
-            monsterSprite = 'DRAGON';
-        } else {
-            monsterSprite = window.dungeonSplashMonster || 'SLIME';
-        }
+        var monsterSprite = state.monster || (activeEncBoss ? 'DRAGON' : 'SLIME');
         var spriteSize = activeEncBoss ? 128 * scale : 96 * scale;
         var sx = (canvas.width - spriteSize) / 2;
         var sy = 100 * scale + bob * scale;
@@ -420,8 +433,8 @@ var DungeonRenderer = (function () {
         ctx.lineWidth = 1 * scale;
         ctx.strokeRect(boxX + 5 * scale, boxY + 5 * scale, boxW - 10 * scale, boxH - 10 * scale);
 
-        var isFlashcard = !!document.querySelector('.sh-dungeon-flashcard');
-        var isQuiz = !!document.querySelector('.sh-dungeon-quiz-form');
+        var isFlashcard = state.mode === 'flashcard';
+        var isQuiz = state.mode === 'quiz';
 
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'left';
@@ -430,9 +443,9 @@ var DungeonRenderer = (function () {
         var startY = boxY + boxH - 50 * scale;
 
         if (isFlashcard) {
-            var frontText = document.querySelector('.sh-dungeon-flashcard-front .sh-dungeon-flashcard-text')?.textContent || "";
-            var backText = document.querySelector('.sh-dungeon-flashcard-back .sh-dungeon-flashcard-text')?.textContent || "";
-            var isRevealed = document.querySelector('.sh-dungeon-flashcard-details')?.open === true;
+            var frontText = state.flashcard.front || "";
+            var backText = state.flashcard.back || "";
+            var isRevealed = state.flashcard.revealed === true;
 
             var fontSize = 15 * scale;
             var lineHeight = 20 * scale;
@@ -485,7 +498,7 @@ var DungeonRenderer = (function () {
                     h: btnH
                 });
 
-                var isHovered = window.dungeonHoveredOptionIndex === 0;
+                var isHovered = hoveredIndex === 0;
                 ctx.fillStyle = isHovered ? '#1e293b' : '#020617';
                 ctx.fillRect(btnX, startY, btnW, btnH);
                 ctx.strokeStyle = '#ffffff';
@@ -498,8 +511,8 @@ var DungeonRenderer = (function () {
                 ctx.fillText((isHovered ? "▶ " : "") + "ZEIGE ANTWORT [SPACE]", btnX + btnW / 2, startY + 20 * scale);
                 ctx.textAlign = 'left';
             } else {
-                var btnW = 110 * scale;
-                var btnH = 32 * scale;
+                var btnW2 = 110 * scale;
+                var btnH2 = 32 * scale;
 
                 var xMissed = boxX + 60 * scale;
                 optionBoxes.push({
@@ -507,21 +520,21 @@ var DungeonRenderer = (function () {
                     value: false,
                     x: xMissed,
                     y: startY,
-                    w: btnW,
-                    h: btnH
+                    w: btnW2,
+                    h: btnH2
                 });
 
-                var isHoveredMissed = window.dungeonHoveredOptionIndex === 0;
+                var isHoveredMissed = hoveredIndex === 0;
                 ctx.fillStyle = isHoveredMissed ? '#7f1d1d' : '#0f172a';
-                ctx.fillRect(xMissed, startY, btnW, btnH);
+                ctx.fillRect(xMissed, startY, btnW2, btnH2);
                 ctx.strokeStyle = '#ef4444';
                 ctx.lineWidth = 1 * scale;
-                ctx.strokeRect(xMissed, startY, btnW, btnH);
+                ctx.strokeRect(xMissed, startY, btnW2, btnH2);
 
                 ctx.fillStyle = '#ef4444';
                 ctx.font = 'bold ' + Math.floor(13 * scale) + 'px "Courier New", Courier, monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText((isHoveredMissed ? "▶ " : "") + "FALSCH [M]", xMissed + btnW / 2, startY + 20 * scale);
+                ctx.fillText((isHoveredMissed ? "▶ " : "") + "FALSCH [M]", xMissed + btnW2 / 2, startY + 20 * scale);
 
                 var xGot = boxX + boxW - 170 * scale;
                 optionBoxes.push({
@@ -529,51 +542,44 @@ var DungeonRenderer = (function () {
                     value: true,
                     x: xGot,
                     y: startY,
-                    w: btnW,
-                    h: btnH
+                    w: btnW2,
+                    h: btnH2
                 });
 
-                var isHoveredGot = window.dungeonHoveredOptionIndex === 1;
+                var isHoveredGot = hoveredIndex === 1;
                 ctx.fillStyle = isHoveredGot ? '#064e3b' : '#0f172a';
-                ctx.fillRect(xGot, startY, btnW, btnH);
+                ctx.fillRect(xGot, startY, btnW2, btnH2);
                 ctx.strokeStyle = '#10b981';
                 ctx.lineWidth = 1 * scale;
-                ctx.strokeRect(xGot, startY, btnW, btnH);
+                ctx.strokeRect(xGot, startY, btnW2, btnH2);
 
                 ctx.fillStyle = '#10b981';
                 ctx.font = 'bold ' + Math.floor(13 * scale) + 'px "Courier New", Courier, monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText((isHoveredGot ? "▶ " : "") + "RICHTIG [G]", xGot + btnW / 2, startY + 20 * scale);
+                ctx.fillText((isHoveredGot ? "▶ " : "") + "RICHTIG [G]", xGot + btnW2 / 2, startY + 20 * scale);
 
                 ctx.textAlign = 'left';
             }
 
         } else if (isQuiz) {
-            var quizQuestion = document.querySelector('.sh-dungeon-quiz-question')?.textContent || "";
-            var rawOptions = Array.from(document.querySelectorAll('.sh-dungeon-quiz-option')).map(function(opt) {
-                var input = opt.querySelector('input');
-                return {
-                    text: opt.querySelector('span')?.textContent || "",
-                    checked: input ? input.checked : false,
-                    isCheckbox: input ? input.type === 'checkbox' : false
-                };
-            });
+            var quizQuestion = state.quiz.question || "";
+            var rawOptions = state.quiz.options || [];
 
-            var fontSize = 15 * scale;
-            var lineHeight = 20 * scale;
-            var maxTextHeight = startY - (boxY + 60 * scale) - (rawOptions.length * 32 * scale);
+            var qFontSize = 15 * scale;
+            var qLineHeight = 20 * scale;
+            var maxTextHeight2 = startY - (boxY + 60 * scale) - (rawOptions.length * 32 * scale);
             var questionLines;
 
-            while (fontSize >= 9 * scale) {
-                ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
-                questionLines = wrapText(quizQuestion, boxX + 20 * scale, boxY + 52 * scale, boxW - 40 * scale, lineHeight, false);
-                var qH = questionLines.length * lineHeight;
-                
-                if (qH <= maxTextHeight || fontSize <= 9 * scale) {
+            while (qFontSize >= 9 * scale) {
+                ctx.font = 'bold ' + Math.floor(qFontSize) + 'px "Courier New", Courier, monospace';
+                questionLines = wrapText(quizQuestion, boxX + 20 * scale, boxY + 52 * scale, boxW - 40 * scale, qLineHeight, false);
+                var qH = questionLines.length * qLineHeight;
+
+                if (qH <= maxTextHeight2 || qFontSize <= 9 * scale) {
                     break;
                 }
-                fontSize -= 0.5 * scale;
-                lineHeight -= 0.8 * scale;
+                qFontSize -= 0.5 * scale;
+                qLineHeight -= 0.8 * scale;
             }
 
             ctx.fillStyle = '#2dd4bf';
@@ -581,9 +587,9 @@ var DungeonRenderer = (function () {
             ctx.fillText("⚔️ BATTLE MODE: QUIZ FRAGE ⚔️", boxX + 20 * scale, boxY + 28 * scale);
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
-            var lines = wrapText(quizQuestion, boxX + 20 * scale, boxY + 52 * scale, boxW - 40 * scale, lineHeight, true);
-            var questionHeight = lines.length * lineHeight;
+            ctx.font = 'bold ' + Math.floor(qFontSize) + 'px "Courier New", Courier, monospace';
+            var qlines = wrapText(quizQuestion, boxX + 20 * scale, boxY + 52 * scale, boxW - 40 * scale, qLineHeight, true);
+            var questionHeight = qlines.length * qLineHeight;
 
             var optionsStartY = Math.max(300 * scale, boxY + 52 * scale + questionHeight + 12 * scale);
             var optionHeight = 26 * scale;
@@ -591,7 +597,7 @@ var DungeonRenderer = (function () {
 
             rawOptions.forEach(function(opt, idx) {
                 var optY = optionsStartY + idx * (optionHeight + optionSpacing);
-                var isHovered = window.dungeonHoveredOptionIndex === idx;
+                var isHoveredOpt = hoveredIndex === idx;
 
                 optionBoxes.push({
                     type: 'quiz_option',
@@ -602,16 +608,16 @@ var DungeonRenderer = (function () {
                     h: optionHeight
                 });
 
-                if (isHovered) {
+                if (isHoveredOpt) {
                     ctx.fillStyle = 'rgba(51, 65, 85, 0.35)';
                     ctx.fillRect(boxX + 15 * scale, optY - 2 * scale, boxW - 30 * scale, optionHeight + 4 * scale);
                 }
 
-                ctx.fillStyle = isHovered ? '#2dd4bf' : '#ffffff';
-                ctx.font = 'bold ' + Math.floor(fontSize) + 'px "Courier New", Courier, monospace';
+                ctx.fillStyle = isHoveredOpt ? '#2dd4bf' : '#ffffff';
+                ctx.font = 'bold ' + Math.floor(qFontSize) + 'px "Courier New", Courier, monospace';
 
                 var bullet = opt.isCheckbox ? (opt.checked ? "[X]" : "[ ]") : (opt.checked ? "(•)" : "( )");
-                var cursor = isHovered ? "▶ " : "  ";
+                var cursor = isHoveredOpt ? "▶ " : "  ";
                 ctx.fillText(cursor + bullet + " " + opt.text, boxX + 20 * scale, optY + 18 * scale);
             });
 
@@ -627,7 +633,7 @@ var DungeonRenderer = (function () {
                 h: subH
             });
 
-            var isHoveredSubmit = window.dungeonHoveredOptionIndex === rawOptions.length;
+            var isHoveredSubmit = hoveredIndex === rawOptions.length;
             ctx.fillStyle = isHoveredSubmit ? '#134e4a' : '#020617';
             ctx.fillRect(subX, startY, subW, subH);
             ctx.strokeStyle = '#2dd4bf';
@@ -641,7 +647,7 @@ var DungeonRenderer = (function () {
             ctx.textAlign = 'left';
         }
 
-        window.dungeonOptionBoxes = optionBoxes;
+        return optionBoxes;
     }
 
     return {

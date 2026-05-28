@@ -15,7 +15,7 @@ class DungeonSpectaclesHintTests {
     void spectaclesHintMaskIndex_returnsAWrongOptionIndexWhenRelicOwned() {
         QuizQuestion q = new QuizQuestion(
             QuestionType.SINGLE_CHOICE, "q?", List.of("A", "B", "C", "D"), List.of(1));
-        DungeonEncounter enc = DungeonEncounter.quiz("q_42", false, q);
+        DungeonEncounter enc = DungeonEncounter.quiz("q_42", false, "SLIME", q);
         DungeonSessionState state = stateWithRelics(List.of(RelicId.SPECTACLES));
         Integer mask = DungeonViewModelBuilder.spectaclesHintMaskIndex(state, enc);
         assertThat(mask).isIn(0, 2, 3);
@@ -24,7 +24,7 @@ class DungeonSpectaclesHintTests {
     @Test
     void spectaclesHintMaskIndex_isNullWhenRelicNotOwned() {
         QuizQuestion q = new QuizQuestion(QuestionType.SINGLE_CHOICE, "q?", List.of("A", "B"), List.of(0));
-        DungeonEncounter enc = DungeonEncounter.quiz("q_1", false, q);
+        DungeonEncounter enc = DungeonEncounter.quiz("q_1", false, "SLIME", q);
         DungeonSessionState state = stateWithRelics(List.of());
         assertThat(DungeonViewModelBuilder.spectaclesHintMaskIndex(state, enc)).isNull();
     }

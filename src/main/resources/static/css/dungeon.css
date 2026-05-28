@@ -19,6 +19,10 @@
     width: 100%;
 }
 
+/* ============================================================
+   HUD
+   ============================================================ */
+
 .sh-dungeon-hud {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -63,6 +67,10 @@
     color: var(--accent);
 }
 
+/* ============================================================
+   Layout & Room View
+   ============================================================ */
+
 .sh-dungeon-layout {
     display: flex;
     flex-direction: row;
@@ -91,6 +99,10 @@
     border-radius: 4px;
 }
 
+/* ============================================================
+   Minimap
+   ============================================================ */
+
 .sh-dungeon-minimap {
     width: 100%;
     height: auto;
@@ -102,6 +114,10 @@
 .sh-dungeon-minimap-container {
     position: relative;
 }
+
+/* ============================================================
+   Controls & Navigation
+   ============================================================ */
 
 .sh-dungeon-controls {
     display: flex;
@@ -130,6 +146,10 @@
     border-radius: var(--radius-md) !important;
     border: 1px solid var(--border) !important;
 }
+
+/* ============================================================
+   Encounter Panel (Flashcard / Quiz)
+   ============================================================ */
 
 .sh-dungeon-encounter-panel {
     display: none !important;
@@ -256,6 +276,10 @@
     color: var(--danger);
 }
 
+/* ============================================================
+   Run Complete Screen
+   ============================================================ */
+
 .sh-dungeon-complete {
     text-align: center;
     padding: 3rem 1rem;
@@ -321,7 +345,9 @@
     }
 }
 
-/* Screen-shake and Flash Animations for dynamic feedbacks */
+/* ============================================================
+   Animations (screen-shake & flash feedback)
+   ============================================================ */
 .sh-dungeon-shake-active {
     animation: sh-dungeon-shake 0.35s cubic-bezier(.36,.07,.19,.97) both;
     transform: translate3d(0, 0, 0);
@@ -452,7 +478,7 @@
 }
 
 /* ============================================================
-   Relic Shelf & Modal Styles
+   Relic Shelf
    ============================================================ */
 .sh-dungeon-relic-shelf {
     display: flex;
@@ -491,6 +517,10 @@
     opacity: 0.5;
     pointer-events: none;
 }
+
+/* ============================================================
+   Modals (treasure, shop, shrine, elite, secret)
+   ============================================================ */
 
 .sh-dungeon-modal-overlay {
     position: fixed;
@@ -572,7 +602,9 @@
     width: 100%;
 }
 
-/* Shrine Modal & Die Styles */
+/* ============================================================
+   Shrine Modal & Die
+   ============================================================ */
 .sh-dungeon-shrine-modal {
     border-color: #5c3b1e; /* Terracotta trim */
     background: #1f140a; /* Dark terracotta background */

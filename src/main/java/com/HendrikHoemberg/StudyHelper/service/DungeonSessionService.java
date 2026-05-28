@@ -55,7 +55,7 @@ public class DungeonSessionService {
         List<String> bossEncounterIds = new ArrayList<>();
         List<List<String>> eliteGauntlets = buildEncounters(flashcards, size, encounters,
             normalEncounterIds, bossEncounterIds, "fc",
-            (id, card, boss) -> DungeonEncounter.flashcard(id, boss, card.getId(),
+            (id, card, boss, monster) -> DungeonEncounter.flashcard(id, boss, monster, card.getId(),
                 card.getFrontText(), card.getBackText(),
                 card.getFrontImageFilename(), card.getBackImageFilename()));
 
@@ -88,7 +88,7 @@ public class DungeonSessionService {
         List<String> bossEncounterIds = new ArrayList<>();
         List<List<String>> eliteGauntlets = buildEncounters(questions, size, encounters,
             normalEncounterIds, bossEncounterIds, "qz",
-            (id, q, boss) -> DungeonEncounter.quiz(id, boss, q));
+            (id, q, boss, monster) -> DungeonEncounter.quiz(id, boss, monster, q));
 
         DungeonMap map = dungeonMapGenerator.generate(size, normalEncounterIds, eliteGauntlets);
         return initialState(
@@ -252,7 +252,19 @@ public class DungeonSessionService {
 
     @FunctionalInterface
     private interface EncounterFactory<T> {
-        DungeonEncounter create(String id, T content, boolean boss);
+        DungeonEncounter create(String id, T content, boolean boss, String monsterType);
+    }
+
+    private static final List<String> NORMAL_MONSTERS = List.of("SLIME", "SKELETON", "GOBLIN", "GHOST");
+    private static final String BOSS_MONSTER = "DRAGON";
+    private static final String ELITE_MONSTER = "CHAMPION";
+
+    private static String normalMonsterFor(String id) {
+        int hash = 0;
+        for (int i = 0; i < id.length(); i++) {
+            hash = id.charAt(i) + ((hash << 5) - hash);
+        }
+        return NORMAL_MONSTERS.get(Math.floorMod(hash, NORMAL_MONSTERS.size()));
     }
 
     private <T> List<List<String>> buildEncounters(List<T> contentItems, DungeonSize size,
@@ -262,14 +274,14 @@ public class DungeonSessionService {
         for (int i = 0; i < size.normalEncounterCount(); i++) {
             T item = contentItems.get(i);
             String id = idPrefix + "_" + i;
-            encs.put(id, factory.create(id, item, false));
+            encs.put(id, factory.create(id, item, false, normalMonsterFor(id)));
             normalIds.add(id);
         }
         int bossStart = size.normalEncounterCount();
         for (int i = 0; i < size.bossPromptCount(); i++) {
             T item = contentItems.get(bossStart + i);
             String id = idPrefix + "_boss_" + i;
-            encs.put(id, factory.create(id, item, true));
+            encs.put(id, factory.create(id, item, true, BOSS_MONSTER));
             bossIds.add(id);
         }
         int eliteStart = bossStart + size.bossPromptCount();
@@ -281,7 +293,7 @@ public class DungeonSessionService {
                 int idx = eliteStart + (g * cardsPerGroup) + c;
                 T item = contentItems.get(idx);
                 String id = idPrefix + "_elite_" + g + "_" + c;
-                encs.put(id, factory.create(id, item, false));
+                encs.put(id, factory.create(id, item, false, ELITE_MONSTER));
                 group.add(id);
             }
             groups.add(group);

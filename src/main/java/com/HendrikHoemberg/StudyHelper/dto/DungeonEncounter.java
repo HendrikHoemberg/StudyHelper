@@ -8,6 +8,7 @@ public record DungeonEncounter(
     DungeonEncounterType type,
     DungeonEncounterStatus status,
     boolean boss,
+    String monsterType,
     Long flashcardId,
     String frontText,
     String backText,
@@ -17,12 +18,13 @@ public record DungeonEncounter(
     List<Integer> selectedOptions,
     Boolean correct
 ) implements Serializable {
-    public static DungeonEncounter flashcard(String id, boolean boss, Long flashcardId, String frontText, String backText, String frontImageUrl, String backImageUrl) {
+    public static DungeonEncounter flashcard(String id, boolean boss, String monsterType, Long flashcardId, String frontText, String backText, String frontImageUrl, String backImageUrl) {
         return new DungeonEncounter(
             id,
             boss ? DungeonEncounterType.BOSS_FLASHCARD : DungeonEncounterType.FLASHCARD,
             DungeonEncounterStatus.PENDING,
             boss,
+            monsterType,
             flashcardId,
             frontText,
             backText,
@@ -34,12 +36,13 @@ public record DungeonEncounter(
         );
     }
 
-    public static DungeonEncounter quiz(String id, boolean boss, QuizQuestion quizQuestion) {
+    public static DungeonEncounter quiz(String id, boolean boss, String monsterType, QuizQuestion quizQuestion) {
         return new DungeonEncounter(
             id,
             boss ? DungeonEncounterType.BOSS_QUIZ : DungeonEncounterType.QUIZ,
             DungeonEncounterStatus.PENDING,
             boss,
+            monsterType,
             null,
             null,
             null,
@@ -52,10 +55,10 @@ public record DungeonEncounter(
     }
 
     public DungeonEncounter activate() {
-        return new DungeonEncounter(id, type, DungeonEncounterStatus.ACTIVE, boss, flashcardId, frontText, backText, frontImageUrl, backImageUrl, quizQuestion, selectedOptions, correct);
+        return new DungeonEncounter(id, type, DungeonEncounterStatus.ACTIVE, boss, monsterType, flashcardId, frontText, backText, frontImageUrl, backImageUrl, quizQuestion, selectedOptions, correct);
     }
 
     public DungeonEncounter clear(List<Integer> answer, boolean wasCorrect) {
-        return new DungeonEncounter(id, type, DungeonEncounterStatus.CLEARED, boss, flashcardId, frontText, backText, frontImageUrl, backImageUrl, quizQuestion, List.copyOf(answer), wasCorrect);
+        return new DungeonEncounter(id, type, DungeonEncounterStatus.CLEARED, boss, monsterType, flashcardId, frontText, backText, frontImageUrl, backImageUrl, quizQuestion, List.copyOf(answer), wasCorrect);
     }
 }
