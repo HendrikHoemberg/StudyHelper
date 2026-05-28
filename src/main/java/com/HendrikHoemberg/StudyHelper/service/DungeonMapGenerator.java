@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
+import com.HendrikHoemberg.StudyHelper.exception.MapGenerationException;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -34,7 +35,7 @@ public class DungeonMapGenerator {
             } catch (LayoutFailure ignored) {
             }
         }
-        throw new IllegalStateException(
+        throw new MapGenerationException(
             "Could not generate a valid dungeon layout after " + MAX_REGEN_ATTEMPTS + " attempts.");
     }
 

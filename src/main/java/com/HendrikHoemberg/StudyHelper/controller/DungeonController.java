@@ -2,6 +2,7 @@ package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
 import com.HendrikHoemberg.StudyHelper.entity.User;
+import com.HendrikHoemberg.StudyHelper.exception.MapGenerationException;
 import com.HendrikHoemberg.StudyHelper.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -75,6 +76,16 @@ public class DungeonController {
             session.setAttribute(DUNGEON_SESSION_KEY, state);
             savedSessionService.saveDungeon(user, state);
             return renderGame(model, state, hxRequest);
+        } catch (IllegalArgumentException ex) {
+            return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
+                quizQuestionMode, difficulty, additionalInstructions, ex, response, hxRequest);
+        } catch (MapGenerationException ex) {
+            return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
+                quizQuestionMode, difficulty, additionalInstructions, ex, response, hxRequest);
+        } catch (AiGenerationException | AiQuotaExceededException ex) {
+            response.addHeader("HX-Trigger", "refresh-quota");
+            return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
+                quizQuestionMode, difficulty, additionalInstructions, ex, response, hxRequest);
         } catch (Exception ex) {
             return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
                 quizQuestionMode, difficulty, additionalInstructions, ex, response, hxRequest);
