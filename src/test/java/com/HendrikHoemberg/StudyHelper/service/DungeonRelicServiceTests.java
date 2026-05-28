@@ -17,8 +17,8 @@ class DungeonRelicServiceTests {
         DungeonSessionState state = stateWithPick(PendingPickType.TREASURE,
             List.of(RelicId.LUCKY_CHARM, RelicId.SHARP_FOCUS, RelicId.COMPASS));
         DungeonSessionState after = svc.pick(state, RelicId.LUCKY_CHARM);
-        assertThat(after.ownedRelics()).containsExactly(RelicId.LUCKY_CHARM);
-        assertThat(after.pendingRelicPick()).isNull();
+        assertThat(after.loadout().ownedRelics()).containsExactly(RelicId.LUCKY_CHARM);
+        assertThat(after.loadout().pendingRelicPick()).isNull();
     }
 
     @Test
@@ -34,8 +34,8 @@ class DungeonRelicServiceTests {
         DungeonSessionState state = stateWithPick(PendingPickType.TREASURE,
             List.of(RelicId.IRON_PLATE, RelicId.BUCKLER, RelicId.COMPASS));
         DungeonSessionState after = svc.pick(state, RelicId.IRON_PLATE);
-        assertThat(after.healthCap()).isEqualTo(state.healthCap() + 1);
-        assertThat(after.health()).isEqualTo(Math.min(state.health() + 1, after.healthCap()));
+        assertThat(after.resources().healthCap()).isEqualTo(state.resources().healthCap() + 1);
+        assertThat(after.resources().health()).isEqualTo(Math.min(state.resources().health() + 1, after.resources().healthCap()));
     }
 
     @Test
@@ -43,16 +43,16 @@ class DungeonRelicServiceTests {
         DungeonSessionState state = stateWithPick(PendingPickType.TREASURE,
             List.of(RelicId.IRON_PLATE, RelicId.BUCKLER, RelicId.COMPASS));
         DungeonSessionState after = svc.pick(state, RelicId.BUCKLER);
-        assertThat(after.shieldCap()).isEqualTo(state.shieldCap() + 1);
-        assertThat(after.shields()).isEqualTo(state.shields() + 1);
+        assertThat(after.resources().shieldCap()).isEqualTo(state.resources().shieldCap() + 1);
+        assertThat(after.resources().shields()).isEqualTo(state.resources().shields() + 1);
     }
 
     @Test
     void buy_deductsScoreAndAddsRelic() {
         DungeonSessionState state = shopStateWithScore(150);
         DungeonSessionState after = svc.buy(state, RelicId.LUCKY_CHARM);
-        assertThat(after.ownedRelics()).contains(RelicId.LUCKY_CHARM);
-        assertThat(after.score()).isEqualTo(150 - 75);
+        assertThat(after.loadout().ownedRelics()).contains(RelicId.LUCKY_CHARM);
+        assertThat(after.resources().score()).isEqualTo(150 - 75);
     }
 
     @Test
@@ -66,15 +66,15 @@ class DungeonRelicServiceTests {
     void buy_doesNotClearShopPick_canMakeMultiplePurchases() {
         DungeonSessionState state = shopStateWithScore(150);
         DungeonSessionState after = svc.buy(state, RelicId.LUCKY_CHARM);
-        assertThat(after.pendingRelicPick()).isNotNull();
-        assertThat(after.pendingRelicPick().type()).isEqualTo(PendingPickType.SHOP);
+        assertThat(after.loadout().pendingRelicPick()).isNotNull();
+        assertThat(after.loadout().pendingRelicPick().type()).isEqualTo(PendingPickType.SHOP);
     }
 
     @Test
     void skipShop_marksShopClearedAndClearsPick() {
         DungeonSessionState state = shopStateWithScore(150);
         DungeonSessionState after = svc.skipShop(state);
-        assertThat(after.pendingRelicPick()).isNull();
+        assertThat(after.loadout().pendingRelicPick()).isNull();
         assertThat(after.map().room("r1").cleared()).isTrue();
     }
 
@@ -90,15 +90,12 @@ class DungeonRelicServiceTests {
             DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
             QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, "");
         PendingRelicPick pick = new PendingRelicPick(type, "r1", offer, null);
-        return new DungeonSessionState(
-            config, map, "r1",
-            Map.of(), List.of(), 0, null,
-            4, 5, 0, 2,
-            0, 0, 0,
-            false, false,
-            0, List.of(),
-            0, 0, 0, 0,
-            List.of(), pick);
+        return DungeonSessionState.builder()
+            .config(config).map(map).currentRoomId("r1")
+            .encounters(Map.of()).bossEncounterIds(List.of())
+            .resources(new DungeonResources(4, 5, 0, 2, 0))
+            .loadout(new DungeonLoadout(List.of(), pick))
+            .build();
     }
 
     private DungeonSessionState shopStateWithScore(int score) {
@@ -117,14 +114,11 @@ class DungeonRelicServiceTests {
             DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
             QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, "");
         PendingRelicPick pick = new PendingRelicPick(PendingPickType.SHOP, "r1", List.of(), offer);
-        return new DungeonSessionState(
-            config, map, "r1",
-            Map.of(), List.of(), 0, null,
-            5, 5, 0, 2,
-            score, 0, 0,
-            false, false,
-            0, List.of(),
-            0, 0, 0, 0,
-            List.of(), pick);
+        return DungeonSessionState.builder()
+            .config(config).map(map).currentRoomId("r1")
+            .encounters(Map.of()).bossEncounterIds(List.of())
+            .resources(new DungeonResources(5, 5, 0, 2, score))
+            .loadout(new DungeonLoadout(List.of(), pick))
+            .build();
     }
 }

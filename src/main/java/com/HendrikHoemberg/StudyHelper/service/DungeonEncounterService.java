@@ -1,7 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
-import com.HendrikHoemberg.StudyHelper.dto.RelicId;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -16,13 +15,13 @@ public class DungeonEncounterService {
     static final int BOSS_PROMPT_SCORE = 20;
 
     public DungeonSessionState activateAt(DungeonSessionState state, String roomId) {
-        if (state.activeEncounterId() != null) return state;
+        if (state.combat().activeEncounterId() != null) return state;
         DungeonRoom room = state.map().room(roomId);
         if (room == null) return state;
         if (room.cleared()) return state;
 
         return switch (room.type()) {
-            case COMBAT -> activateNormal(state, room.encounterId(), false);
+            case COMBAT -> activateNormal(state, room.encounterId());
             case ELITE -> activateElite(state, room);
             case BOSS -> activateBoss(state);
             default -> state;
@@ -46,15 +45,17 @@ public class DungeonEncounterService {
         return processAnswer(state, enc, safe, correct);
     }
 
-    // ===== activation paths =====
+    // ===== activation =====
 
-    private DungeonSessionState activateNormal(DungeonSessionState state, String encounterId, boolean boss) {
+    private DungeonSessionState activateNormal(DungeonSessionState state, String encounterId) {
         if (encounterId == null) return state;
         DungeonEncounter enc = state.encounters().get(encounterId);
         if (enc == null || enc.status() != DungeonEncounterStatus.PENDING) return state;
         Map<String, DungeonEncounter> encs = new LinkedHashMap<>(state.encounters());
         encs.put(encounterId, enc.activate());
-        return withEncountersAndActive(state, encs, encounterId, state.gauntletQueue());
+        return state
+            .withEncounters(Map.copyOf(encs))
+            .withCombat(state.combat().withActiveEncounterId(encounterId));
     }
 
     private DungeonSessionState activateElite(DungeonSessionState state, DungeonRoom eliteRoom) {
@@ -66,13 +67,17 @@ public class DungeonEncounterService {
         Map<String, DungeonEncounter> encs = new LinkedHashMap<>(state.encounters());
         encs.put(firstId, first.activate());
         List<String> remaining = new ArrayList<>(group.subList(1, group.size()));
-        return withEncountersAndActive(state, encs, firstId, remaining);
+        return state
+            .withEncounters(Map.copyOf(encs))
+            .withCombat(state.combat()
+                .withActiveEncounterId(firstId)
+                .withGauntletQueue(remaining));
     }
 
     private DungeonSessionState activateBoss(DungeonSessionState state) {
         if (state.bossEncounterIds().isEmpty()) return state;
-        String bossId = state.bossEncounterIds().get(state.bossIndex());
-        return activateNormal(state, bossId, true);
+        String bossId = state.bossEncounterIds().get(state.combat().bossIndex());
+        return activateNormal(state, bossId);
     }
 
     // ===== answer pipeline =====
@@ -82,49 +87,59 @@ public class DungeonEncounterService {
         Map<String, DungeonEncounter> encs = new LinkedHashMap<>(state.encounters());
         encs.put(encounter.id(), encounter.clear(answer, correct));
 
-        int answeredCount = state.answeredCount() + 1;
-        int correctCount = state.correctCount() + (correct ? 1 : 0);
-        int effectiveStreakThreshold = state.ownedRelics().contains(RelicId.SHARP_FOCUS) ? 2 : STREAK_FOR_SHIELD;
-        int newStreak = correct ? state.streak() + 1 : 0;
-        int newShields = state.shields();
-        if (correct && newStreak % effectiveStreakThreshold == 0 && newShields < state.shieldCap()) {
-            newShields++;
+        int effectiveStreakThreshold = state.loadout().ownedRelics().contains(RelicId.SHARP_FOCUS)
+            ? 2 : STREAK_FOR_SHIELD;
+
+        DungeonProgress nextProgress = state.progress().recordAnswer(correct);
+
+        DungeonResources nextResources = state.resources();
+        if (correct && nextProgress.streak() % effectiveStreakThreshold == 0) {
+            nextResources = nextResources.addShield();
         }
-        int newLongest = Math.max(state.longestStreak(), newStreak);
-        int newScore = state.score();
         if (correct) {
             int base = encounter.boss() ? BOSS_PROMPT_SCORE : COMBAT_CLEAR_SCORE;
-            int bonus = state.ownedRelics().contains(RelicId.LUCKY_CHARM) ? 5 : 0;
-            newScore += base + bonus;
+            int bonus = state.loadout().ownedRelics().contains(RelicId.LUCKY_CHARM) ? 5 : 0;
+            nextResources = nextResources.addScore(base + bonus);
         }
 
-        DungeonSessionState working = new DungeonSessionState(
-            state.config(), state.map(), state.currentRoomId(),
-            Map.copyOf(encs), state.bossEncounterIds(), state.bossIndex(),
-            state.activeEncounterId(),
-            state.health(), state.healthCap(), newShields, state.shieldCap(),
-            newScore, answeredCount, correctCount,
-            state.won(), state.defeated(),
-            newStreak, state.gauntletQueue(),
-            newLongest, state.elitesCleared(), state.shieldsUsed(),
-            state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick());
+        DungeonSessionState working = state
+            .withEncounters(Map.copyOf(encs))
+            .withResources(nextResources)
+            .withProgress(nextProgress);
 
         if (!correct) {
-            working = DungeonDamage.takeDamage(working, WRONG_ANSWER_DAMAGE);
+            working = applyWrongAnswerDamage(working);
         }
 
-        // Elite-gauntlet branch
-        if (isInGauntletRoom(working) || !working.gauntletQueue().isEmpty()) {
+        if (isInGauntletRoom(working) || !working.combat().gauntletQueue().isEmpty()) {
             return resolveGauntlet(working, encounter, correct);
         }
 
-        // Boss branch
         if (encounter.boss() && !working.defeated()) {
             return resolveBoss(working);
         }
 
-        // Normal combat: clear the room
         return clearCombatRoom(working);
+    }
+
+    private DungeonSessionState applyWrongAnswerDamage(DungeonSessionState s) {
+        int luckyCoinsOwned = (int) s.loadout().ownedRelics().stream()
+            .filter(r -> r == RelicId.LUCKY_COIN).count();
+        if (s.progress().luckyCoinsConsumed() < luckyCoinsOwned) {
+            return s.withProgress(s.progress().consumeLuckyCoin());
+        }
+        if (s.resources().shields() > 0) {
+            return s
+                .withResources(s.resources().withShields(s.resources().shields() - 1))
+                .withProgress(s.progress().recordShieldUsed());
+        }
+        DungeonResources damaged = s.resources().takeHealthDamage(WRONG_ANSWER_DAMAGE);
+        if (damaged.health() == 0 && s.loadout().ownedRelics().contains(RelicId.PHOENIX_FEATHER)) {
+            return s
+                .withResources(damaged.withHealth(1))
+                .withLoadout(s.loadout().consumePhoenixFeather());
+        }
+        return s.withResources(damaged).withDefeated(damaged.health() == 0);
     }
 
     private boolean isInGauntletRoom(DungeonSessionState state) {
@@ -149,51 +164,54 @@ public class DungeonEncounterService {
                         List.of(), null));
                 }
             }
-            return withEncountersAndActive(state, reset, null, List.of());
+            return state
+                .withEncounters(Map.copyOf(reset))
+                .withCombat(state.combat().exitCombat());
         }
 
-        if (!state.gauntletQueue().isEmpty()) {
-            String nextId = state.gauntletQueue().get(0);
-            List<String> remaining = new ArrayList<>(state.gauntletQueue().subList(1, state.gauntletQueue().size()));
+        if (!state.combat().gauntletQueue().isEmpty()) {
+            String nextId = state.combat().gauntletQueue().get(0);
+            List<String> remaining = new ArrayList<>(
+                state.combat().gauntletQueue().subList(1, state.combat().gauntletQueue().size()));
             Map<String, DungeonEncounter> encs = new LinkedHashMap<>(state.encounters());
             DungeonEncounter next = encs.get(nextId);
             if (next != null && next.status() == DungeonEncounterStatus.PENDING) {
                 encs.put(nextId, next.activate());
             }
-            return withEncountersAndActive(state, encs, nextId, remaining);
+            return state
+                .withEncounters(Map.copyOf(encs))
+                .withCombat(state.combat()
+                    .withActiveEncounterId(nextId)
+                    .withGauntletQueue(remaining));
         }
 
-        // Gauntlet fully cleared: full heal + shield + queue ELITE relic pick + clear room
-        DungeonSessionState healed = DungeonDamage.heal(state, state.healthCap());
-        int grantedShields = Math.min(state.shieldCap(), healed.shields() + 1);
-        int newElites = healed.elitesCleared() + 1;
-        int eliteScore = healed.score() + ELITE_CLEAR_SCORE;
+        DungeonResources healed = state.resources()
+            .heal(state.resources().healthCap())
+            .addShield();
+        DungeonProgress withElite = state.progress().withElitesCleared(state.progress().elitesCleared() + 1);
+        DungeonResources scored = healed.addScore(ELITE_CLEAR_SCORE);
 
-        Map<String, DungeonRoom> rooms = new LinkedHashMap<>(healed.map().rooms());
+        Map<String, DungeonRoom> rooms = new LinkedHashMap<>(state.map().rooms());
         DungeonRoom cleared = room.withCleared(true);
         rooms.put(cleared.id(), cleared);
         DungeonMap nextMap = new DungeonMap(
-            rooms, healed.map().entranceRoomId(), healed.map().bossRoomId(), healed.map().lattice());
+            rooms, state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
 
         PendingRelicPick pick = new PendingRelicPick(
             PendingPickType.ELITE, cleared.id(),
             cleared.eliteOffer() == null ? List.of() : cleared.eliteOffer().relics(),
             null);
 
-        return new DungeonSessionState(
-            healed.config(), nextMap, healed.currentRoomId(),
-            healed.encounters(), healed.bossEncounterIds(), healed.bossIndex(),
-            null,
-            healed.health(), healed.healthCap(), grantedShields, healed.shieldCap(),
-            eliteScore, healed.answeredCount(), healed.correctCount(),
-            healed.won(), healed.defeated(),
-            healed.streak(), List.of(),
-            healed.longestStreak(), newElites, healed.shieldsUsed(),
-            healed.luckyCoinsConsumed(), healed.ownedRelics(), pick);
+        return state
+            .withMap(nextMap)
+            .withResources(scored)
+            .withProgress(withElite)
+            .withCombat(state.combat().exitCombat())
+            .withLoadout(state.loadout().withPendingRelicPick(pick));
     }
 
     private DungeonSessionState resolveBoss(DungeonSessionState state) {
-        int nextIndex = state.bossIndex() + 1;
+        int nextIndex = state.combat().bossIndex() + 1;
         if (nextIndex < state.bossEncounterIds().size()) {
             String nextBossId = state.bossEncounterIds().get(nextIndex);
             Map<String, DungeonEncounter> encs = new LinkedHashMap<>(state.encounters());
@@ -201,18 +219,12 @@ public class DungeonEncounterService {
             if (next != null && next.status() == DungeonEncounterStatus.PENDING) {
                 encs.put(nextBossId, next.activate());
             }
-            return new DungeonSessionState(
-                state.config(), state.map(), state.currentRoomId(),
-                Map.copyOf(encs), state.bossEncounterIds(), nextIndex,
-                nextBossId,
-                state.health(), state.healthCap(), state.shields(), state.shieldCap(),
-                state.score(), state.answeredCount(), state.correctCount(),
-                state.won(), state.defeated(),
-                state.streak(), state.gauntletQueue(),
-                state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
-                state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick());
+            return state
+                .withEncounters(Map.copyOf(encs))
+                .withCombat(state.combat()
+                    .withBossIndex(nextIndex)
+                    .withActiveEncounterId(nextBossId));
         }
-        // Final boss prompt cleared — mark won and clear boss room
         Map<String, DungeonRoom> rooms = new LinkedHashMap<>(state.map().rooms());
         DungeonRoom bossRoom = rooms.get(state.map().bossRoomId());
         if (bossRoom != null) {
@@ -220,16 +232,10 @@ public class DungeonEncounterService {
         }
         DungeonMap nextMap = new DungeonMap(
             rooms, state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
-        return new DungeonSessionState(
-            state.config(), nextMap, state.currentRoomId(),
-            state.encounters(), state.bossEncounterIds(), nextIndex,
-            null,
-            state.health(), state.healthCap(), state.shields(), state.shieldCap(),
-            state.score(), state.answeredCount(), state.correctCount(),
-            true, state.defeated(),
-            state.streak(), state.gauntletQueue(),
-            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
-            state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick());
+        return state
+            .withMap(nextMap)
+            .withCombat(state.combat().withBossIndex(nextIndex).withActiveEncounterId(null))
+            .withWon(true);
     }
 
     private DungeonSessionState clearCombatRoom(DungeonSessionState state) {
@@ -239,35 +245,13 @@ public class DungeonEncounterService {
         rooms.put(room.id(), room.withCleared(true));
         DungeonMap nextMap = new DungeonMap(
             rooms, state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
-        int shieldsAfter = state.shields();
-        if (state.ownedRelics().contains(RelicId.WAR_BANNER) && shieldsAfter < state.shieldCap()) {
-            shieldsAfter++;
-        }
-        return new DungeonSessionState(
-            state.config(), nextMap, state.currentRoomId(),
-            state.encounters(), state.bossEncounterIds(), state.bossIndex(),
-            null,
-            state.health(), state.healthCap(), shieldsAfter, state.shieldCap(),
-            state.score(), state.answeredCount(), state.correctCount(),
-            state.won(), state.defeated(),
-            state.streak(), state.gauntletQueue(),
-            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
-            state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick());
-    }
-
-    private DungeonSessionState withEncountersAndActive(DungeonSessionState s,
-                                                           Map<String, DungeonEncounter> encs,
-                                                           String activeId,
-                                                           List<String> gauntletQueue) {
-        return new DungeonSessionState(
-            s.config(), s.map(), s.currentRoomId(),
-            Map.copyOf(encs), s.bossEncounterIds(), s.bossIndex(),
-            activeId,
-            s.health(), s.healthCap(), s.shields(), s.shieldCap(),
-            s.score(), s.answeredCount(), s.correctCount(),
-            s.won(), s.defeated(),
-            s.streak(), gauntletQueue,
-            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
-            s.luckyCoinsConsumed(), s.ownedRelics(), s.pendingRelicPick());
+        DungeonResources withWarBanner =
+            state.loadout().ownedRelics().contains(RelicId.WAR_BANNER)
+                ? state.resources().addShield()
+                : state.resources();
+        return state
+            .withMap(nextMap)
+            .withResources(withWarBanner)
+            .withCombat(state.combat().withActiveEncounterId(null));
     }
 }

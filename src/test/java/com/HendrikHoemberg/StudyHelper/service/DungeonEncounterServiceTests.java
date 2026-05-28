@@ -15,24 +15,24 @@ class DungeonEncounterServiceTests {
     void activateAt_combatRoomMarksEncounterActive() {
         DungeonSessionState state = singleCombatRoomState();
         DungeonSessionState result = svc.activateAt(state, "r1");
-        assertThat(result.activeEncounterId()).isEqualTo("enc_0");
+        assertThat(result.combat().activeEncounterId()).isEqualTo("enc_0");
     }
 
     @Test
     void activateAt_eliteRoomSetsGauntletQueueAndActivatesFirstEncounter() {
         DungeonSessionState state = eliteRoomState();
         DungeonSessionState result = svc.activateAt(state, "r1");
-        assertThat(result.activeEncounterId()).isEqualTo("elite_0_0");
-        assertThat(result.gauntletQueue()).containsExactly("elite_0_1");
+        assertThat(result.combat().activeEncounterId()).isEqualTo("elite_0_0");
+        assertThat(result.combat().gauntletQueue()).containsExactly("elite_0_1");
     }
 
     @Test
     void answerFlashcard_correctIncrementsStreakAndCorrectCount() {
         DungeonSessionState state = activeFlashcardState();
         DungeonSessionState result = svc.answerFlashcard(state, true);
-        assertThat(result.streak()).isEqualTo(1);
-        assertThat(result.correctCount()).isEqualTo(1);
-        assertThat(result.activeEncounterId()).isNull();
+        assertThat(result.progress().streak()).isEqualTo(1);
+        assertThat(result.progress().correctCount()).isEqualTo(1);
+        assertThat(result.combat().activeEncounterId()).isNull();
         assertThat(result.map().room("r1").cleared()).isTrue();
     }
 
@@ -40,35 +40,35 @@ class DungeonEncounterServiceTests {
     void answerFlashcard_wrongTakesDamageAndResetsStreak() {
         DungeonSessionState state = activeFlashcardStateWithStreak(2);
         DungeonSessionState result = svc.answerFlashcard(state, false);
-        assertThat(result.streak()).isEqualTo(0);
-        assertThat(result.health()).isEqualTo(state.health() - 1);
+        assertThat(result.progress().streak()).isEqualTo(0);
+        assertThat(result.resources().health()).isEqualTo(state.resources().health() - 1);
     }
 
     @Test
     void answerFlashcard_thirdCorrectAnswerBanksAShield() {
         DungeonSessionState state = activeFlashcardStateWithStreak(2);
         DungeonSessionState result = svc.answerFlashcard(state, true);
-        assertThat(result.streak()).isEqualTo(3);
-        assertThat(result.shields()).isEqualTo(state.shields() + 1);
+        assertThat(result.progress().streak()).isEqualTo(3);
+        assertThat(result.resources().shields()).isEqualTo(state.resources().shields() + 1);
     }
 
     @Test
     void answerFlashcard_eliteGauntletClearSetsPendingRelicPick() {
         DungeonSessionState state = activeEliteFinalStepState();
         DungeonSessionState result = svc.answerFlashcard(state, true);
-        assertThat(result.pendingRelicPick()).isNotNull();
-        assertThat(result.pendingRelicPick().type()).isEqualTo(PendingPickType.ELITE);
-        assertThat(result.pendingRelicPick().roomId()).isEqualTo("r1");
-        assertThat(result.elitesCleared()).isEqualTo(1);
-        assertThat(result.health()).isEqualTo(result.healthCap());
+        assertThat(result.loadout().pendingRelicPick()).isNotNull();
+        assertThat(result.loadout().pendingRelicPick().type()).isEqualTo(PendingPickType.ELITE);
+        assertThat(result.loadout().pendingRelicPick().roomId()).isEqualTo("r1");
+        assertThat(result.progress().elitesCleared()).isEqualTo(1);
+        assertThat(result.resources().health()).isEqualTo(result.resources().healthCap());
     }
 
     @Test
     void answerFlashcard_eliteGauntletMidWrongAnswerAbortsAndKeepsRoomActive() {
         DungeonSessionState state = activeEliteMidStepState();
         DungeonSessionState result = svc.answerFlashcard(state, false);
-        assertThat(result.activeEncounterId()).isNull();
-        assertThat(result.gauntletQueue()).isEmpty();
+        assertThat(result.combat().activeEncounterId()).isNull();
+        assertThat(result.combat().gauntletQueue()).isEmpty();
         assertThat(result.map().room("r1").cleared()).isFalse();
     }
 
@@ -76,8 +76,8 @@ class DungeonEncounterServiceTests {
     void answerFlashcard_bossSequenceProgressesAcrossPrompts() {
         DungeonSessionState state = activeBossStateAtIndexZero();
         DungeonSessionState result = svc.answerFlashcard(state, true);
-        assertThat(result.bossIndex()).isEqualTo(1);
-        assertThat(result.activeEncounterId()).isEqualTo("boss_1");
+        assertThat(result.combat().bossIndex()).isEqualTo(1);
+        assertThat(result.combat().activeEncounterId()).isEqualTo("boss_1");
         assertThat(result.won()).isFalse();
     }
 
@@ -86,7 +86,7 @@ class DungeonEncounterServiceTests {
         DungeonSessionState state = activeBossStateAtFinalPrompt();
         DungeonSessionState result = svc.answerFlashcard(state, true);
         assertThat(result.won()).isTrue();
-        assertThat(result.activeEncounterId()).isNull();
+        assertThat(result.combat().activeEncounterId()).isNull();
     }
 
     @Test
@@ -94,7 +94,7 @@ class DungeonEncounterServiceTests {
         DungeonSessionState state = activeFlashcardState();
         state = withRelics(state, List.of(RelicId.LUCKY_CHARM));
         DungeonSessionState result = svc.answerFlashcard(state, true);
-        assertThat(result.score()).isEqualTo(DungeonEncounterService.COMBAT_CLEAR_SCORE + 5);
+        assertThat(result.resources().score()).isEqualTo(DungeonEncounterService.COMBAT_CLEAR_SCORE + 5);
     }
 
     @Test
@@ -102,8 +102,8 @@ class DungeonEncounterServiceTests {
         DungeonSessionState state = activeFlashcardStateWithStreak(1);
         state = withRelics(state, List.of(RelicId.SHARP_FOCUS));
         DungeonSessionState result = svc.answerFlashcard(state, true);
-        assertThat(result.streak()).isEqualTo(2);
-        assertThat(result.shields()).isEqualTo(state.shields() + 1);
+        assertThat(result.progress().streak()).isEqualTo(2);
+        assertThat(result.resources().shields()).isEqualTo(state.resources().shields() + 1);
     }
 
     @Test
@@ -111,20 +111,11 @@ class DungeonEncounterServiceTests {
         DungeonSessionState state = activeFlashcardState();
         state = withRelics(state, List.of(RelicId.WAR_BANNER));
         DungeonSessionState result = svc.answerFlashcard(state, true);
-        assertThat(result.shields()).isEqualTo(Math.min(state.shieldCap(), state.shields() + 1));
+        assertThat(result.resources().shields()).isEqualTo(Math.min(state.resources().shieldCap(), state.resources().shields() + 1));
     }
 
     private DungeonSessionState withRelics(DungeonSessionState s, List<RelicId> relics) {
-        return new DungeonSessionState(
-            s.config(), s.map(), s.currentRoomId(),
-            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
-            s.activeEncounterId(),
-            s.health(), s.healthCap(), s.shields(), s.shieldCap(),
-            s.score(), s.answeredCount(), s.correctCount(),
-            s.won(), s.defeated(),
-            s.streak(), s.gauntletQueue(),
-            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
-            s.luckyCoinsConsumed(), relics, s.pendingRelicPick());
+        return s.withLoadout(s.loadout().withOwnedRelics(relics));
     }
 
     // ===== fixtures =====
@@ -169,16 +160,9 @@ class DungeonEncounterServiceTests {
 
     private DungeonSessionState activeFlashcardStateWithStreak(int streak) {
         DungeonSessionState s = activeFlashcardState();
-        return new DungeonSessionState(
-            s.config(), s.map(), s.currentRoomId(),
-            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
-            s.activeEncounterId(),
-            s.health(), s.healthCap(), s.shields(), s.shieldCap(),
-            s.score(), s.answeredCount(), s.correctCount(),
-            s.won(), s.defeated(),
-            streak, s.gauntletQueue(),
-            Math.max(s.longestStreak(), streak), s.elitesCleared(), s.shieldsUsed(),
-            s.luckyCoinsConsumed(), s.ownedRelics(), s.pendingRelicPick());
+        return s.withProgress(new DungeonProgress(s.progress().answeredCount(),
+            s.progress().correctCount(), streak, Math.max(s.progress().longestStreak(), streak),
+            s.progress().elitesCleared(), s.progress().shieldsUsed(), s.progress().luckyCoinsConsumed()));
     }
 
     private DungeonSessionState activeEliteFinalStepState() {
@@ -188,17 +172,8 @@ class DungeonEncounterServiceTests {
         Map<String, DungeonEncounter> encs = new LinkedHashMap<>(base.encounters());
         encs.put("elite_0_0", first);
         encs.put("elite_0_1", second);
-        DungeonSessionState withAct = withEncountersAndActive(base, encs, "elite_0_1");
-        return new DungeonSessionState(
-            withAct.config(), withAct.map(), withAct.currentRoomId(),
-            withAct.encounters(), withAct.bossEncounterIds(), withAct.bossIndex(),
-            withAct.activeEncounterId(),
-            withAct.health(), withAct.healthCap(), withAct.shields(), withAct.shieldCap(),
-            withAct.score(), withAct.answeredCount(), withAct.correctCount(),
-            withAct.won(), withAct.defeated(),
-            withAct.streak(), List.of(),
-            withAct.longestStreak(), withAct.elitesCleared(), withAct.shieldsUsed(),
-            withAct.luckyCoinsConsumed(), withAct.ownedRelics(), withAct.pendingRelicPick());
+        return withEncountersAndActive(base, encs, "elite_0_1")
+            .withCombat(base.combat().withGauntletQueue(List.of()));
     }
 
     private DungeonSessionState activeEliteMidStepState() {
@@ -206,17 +181,8 @@ class DungeonEncounterServiceTests {
         DungeonEncounter first = base.encounters().get("elite_0_0").activate();
         Map<String, DungeonEncounter> encs = new LinkedHashMap<>(base.encounters());
         encs.put("elite_0_0", first);
-        DungeonSessionState withAct = withEncountersAndActive(base, encs, "elite_0_0");
-        return new DungeonSessionState(
-            withAct.config(), withAct.map(), withAct.currentRoomId(),
-            withAct.encounters(), withAct.bossEncounterIds(), withAct.bossIndex(),
-            withAct.activeEncounterId(),
-            withAct.health(), withAct.healthCap(), withAct.shields(), withAct.shieldCap(),
-            withAct.score(), withAct.answeredCount(), withAct.correctCount(),
-            withAct.won(), withAct.defeated(),
-            withAct.streak(), List.of("elite_0_1"),
-            withAct.longestStreak(), withAct.elitesCleared(), withAct.shieldsUsed(),
-            withAct.luckyCoinsConsumed(), withAct.ownedRelics(), withAct.pendingRelicPick());
+        return withEncountersAndActive(base, encs, "elite_0_0")
+            .withCombat(base.combat().withGauntletQueue(List.of("elite_0_1")));
     }
 
     private DungeonSessionState activeBossStateAtIndexZero() {
@@ -235,16 +201,9 @@ class DungeonEncounterServiceTests {
 
     private DungeonSessionState activeBossStateAtFinalPrompt() {
         DungeonSessionState base = activeBossStateAtIndexZero();
-        return new DungeonSessionState(
-            base.config(), base.map(), base.currentRoomId(),
-            base.encounters(), base.bossEncounterIds(), 1,
-            "boss_1",
-            base.health(), base.healthCap(), base.shields(), base.shieldCap(),
-            base.score(), base.answeredCount(), base.correctCount(),
-            base.won(), base.defeated(),
-            base.streak(), base.gauntletQueue(),
-            base.longestStreak(), base.elitesCleared(), base.shieldsUsed(),
-            base.luckyCoinsConsumed(), base.ownedRelics(), base.pendingRelicPick());
+        return base
+            .withEncounters(base.encounters())
+            .withCombat(new DungeonCombat("boss_1", List.of(), 1));
     }
 
     private DungeonSessionState baseState(DungeonMap map, String currentRoomId,
@@ -254,29 +213,18 @@ class DungeonEncounterServiceTests {
         DungeonConfig config = new DungeonConfig(
             DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
             QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, "");
-        return new DungeonSessionState(
-            config, map, currentRoomId,
-            encs, bossIds, bossIndex, activeEncounterId,
-            5, 5, 0, 2,
-            0, 0, 0,
-            false, false,
-            0, List.of(),
-            0, 0, 0, 0,
-            List.of(), null);
+        return DungeonSessionState.builder()
+            .config(config).map(map).currentRoomId(currentRoomId)
+            .encounters(encs).bossEncounterIds(bossIds)
+            .resources(new DungeonResources(5, 5, 0, 2, 0))
+            .combat(new DungeonCombat(activeEncounterId, List.of(), bossIndex))
+            .build();
     }
 
     private DungeonSessionState withEncountersAndActive(DungeonSessionState s,
                                                            Map<String, DungeonEncounter> encs,
                                                            String activeId) {
-        return new DungeonSessionState(
-            s.config(), s.map(), s.currentRoomId(),
-            encs, s.bossEncounterIds(), s.bossIndex(),
-            activeId,
-            s.health(), s.healthCap(), s.shields(), s.shieldCap(),
-            s.score(), s.answeredCount(), s.correctCount(),
-            s.won(), s.defeated(),
-            s.streak(), s.gauntletQueue(),
-            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
-            s.luckyCoinsConsumed(), s.ownedRelics(), s.pendingRelicPick());
+        return s.withEncounters(encs)
+            .withCombat(s.combat().withActiveEncounterId(activeId));
     }
 }
