@@ -53,8 +53,11 @@ public class DungeonSessionService {
         Map<String, DungeonEncounter> encounters = new LinkedHashMap<>();
         List<String> normalEncounterIds = new ArrayList<>();
         List<String> bossEncounterIds = new ArrayList<>();
-        List<List<String>> eliteGauntlets = buildFlashcardEncounters(
-            flashcards, size, encounters, normalEncounterIds, bossEncounterIds);
+        List<List<String>> eliteGauntlets = buildEncounters(flashcards, size, encounters,
+            normalEncounterIds, bossEncounterIds, "fc",
+            (id, card, boss) -> DungeonEncounter.flashcard(id, boss, card.getId(),
+                card.getFrontText(), card.getBackText(),
+                card.getFrontImageFilename(), card.getBackImageFilename()));
 
         DungeonMap map = dungeonMapGenerator.generate(size, normalEncounterIds, eliteGauntlets);
         return initialState(
@@ -83,8 +86,9 @@ public class DungeonSessionService {
         Map<String, DungeonEncounter> encounters = new LinkedHashMap<>();
         List<String> normalEncounterIds = new ArrayList<>();
         List<String> bossEncounterIds = new ArrayList<>();
-        List<List<String>> eliteGauntlets = buildQuizEncounters(
-            questions, size, encounters, normalEncounterIds, bossEncounterIds);
+        List<List<String>> eliteGauntlets = buildEncounters(questions, size, encounters,
+            normalEncounterIds, bossEncounterIds, "qz",
+            (id, q, boss) -> DungeonEncounter.quiz(id, boss, q));
 
         DungeonMap map = dungeonMapGenerator.generate(size, normalEncounterIds, eliteGauntlets);
         return initialState(
@@ -246,57 +250,26 @@ public class DungeonSessionService {
 
     // ===== helpers =====
 
-    private List<List<String>> buildFlashcardEncounters(List<Flashcard> flashcards, DungeonSize size,
-                                                           Map<String, DungeonEncounter> encs,
-                                                           List<String> normalIds, List<String> bossIds) {
-        for (int i = 0; i < size.normalEncounterCount(); i++) {
-            Flashcard card = flashcards.get(i);
-            String id = "fc_" + i;
-            encs.put(id, DungeonEncounter.flashcard(id, false, card.getId(),
-                card.getFrontText(), card.getBackText(),
-                card.getFrontImageFilename(), card.getBackImageFilename()));
-            normalIds.add(id);
-        }
-        int bossStart = size.normalEncounterCount();
-        for (int i = 0; i < size.bossPromptCount(); i++) {
-            Flashcard card = flashcards.get(bossStart + i);
-            String id = "fc_boss_" + i;
-            encs.put(id, DungeonEncounter.flashcard(id, true, card.getId(),
-                card.getFrontText(), card.getBackText(),
-                card.getFrontImageFilename(), card.getBackImageFilename()));
-            bossIds.add(id);
-        }
-        int eliteStart = bossStart + size.bossPromptCount();
-        List<List<String>> groups = new ArrayList<>();
-        int cardsPerGroup = size.cardsPerEliteGauntlet();
-        for (int g = 0; g < size.eliteGauntletCount(); g++) {
-            List<String> group = new ArrayList<>();
-            for (int c = 0; c < cardsPerGroup; c++) {
-                int cardIdx = eliteStart + (g * cardsPerGroup) + c;
-                Flashcard card = flashcards.get(cardIdx);
-                String id = "fc_elite_" + g + "_" + c;
-                encs.put(id, DungeonEncounter.flashcard(id, false, card.getId(),
-                    card.getFrontText(), card.getBackText(),
-                    card.getFrontImageFilename(), card.getBackImageFilename()));
-                group.add(id);
-            }
-            groups.add(group);
-        }
-        return groups;
+    @FunctionalInterface
+    private interface EncounterFactory<T> {
+        DungeonEncounter create(String id, T content, boolean boss);
     }
 
-    private List<List<String>> buildQuizEncounters(List<QuizQuestion> questions, DungeonSize size,
+    private <T> List<List<String>> buildEncounters(List<T> contentItems, DungeonSize size,
                                                       Map<String, DungeonEncounter> encs,
-                                                      List<String> normalIds, List<String> bossIds) {
+                                                      List<String> normalIds, List<String> bossIds,
+                                                      String idPrefix, EncounterFactory<T> factory) {
         for (int i = 0; i < size.normalEncounterCount(); i++) {
-            String id = "qz_" + i;
-            encs.put(id, DungeonEncounter.quiz(id, false, questions.get(i)));
+            T item = contentItems.get(i);
+            String id = idPrefix + "_" + i;
+            encs.put(id, factory.create(id, item, false));
             normalIds.add(id);
         }
         int bossStart = size.normalEncounterCount();
         for (int i = 0; i < size.bossPromptCount(); i++) {
-            String id = "qz_boss_" + i;
-            encs.put(id, DungeonEncounter.quiz(id, true, questions.get(bossStart + i)));
+            T item = contentItems.get(bossStart + i);
+            String id = idPrefix + "_boss_" + i;
+            encs.put(id, factory.create(id, item, true));
             bossIds.add(id);
         }
         int eliteStart = bossStart + size.bossPromptCount();
@@ -306,8 +279,9 @@ public class DungeonSessionService {
             List<String> group = new ArrayList<>();
             for (int c = 0; c < cardsPerGroup; c++) {
                 int idx = eliteStart + (g * cardsPerGroup) + c;
-                String id = "qz_elite_" + g + "_" + c;
-                encs.put(id, DungeonEncounter.quiz(id, false, questions.get(idx)));
+                T item = contentItems.get(idx);
+                String id = idPrefix + "_elite_" + g + "_" + c;
+                encs.put(id, factory.create(id, item, false));
                 group.add(id);
             }
             groups.add(group);
