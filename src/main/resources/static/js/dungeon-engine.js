@@ -1,3 +1,6 @@
+// dungeon-engine.js — game loop, state management, and module orchestration
+// Depends on: dungeon-sprites.js, dungeon-audio.js, dungeon-minimap.js, 
+//             dungeon-renderer.js, dungeon-input.js (all loaded as globals)
 (function () {
     // Auto unlock audio context on initial gestures
     document.addEventListener('click', function () { DungeonAudio.init(); });

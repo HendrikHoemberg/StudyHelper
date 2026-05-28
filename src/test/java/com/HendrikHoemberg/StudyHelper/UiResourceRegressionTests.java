@@ -1066,7 +1066,7 @@ class UiResourceRegressionTests {
         String studyPage = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/templates/study-page.html"));
         String layout = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/templates/fragments/layout.html"));
         String game = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/templates/fragments/dungeon-game.html"));
-        String js = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon.js"));
+        String js = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-engine.js"));
         String rendererJs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-renderer.js"));
         String inputJs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-input.js"));
         String minimapJs = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dungeon-minimap.js"));
@@ -1075,7 +1075,7 @@ class UiResourceRegressionTests {
         assertThat(studyPage).contains("fragments/dungeon-game :: dungeonGame");
         assertThat(studyPage).contains("fragments/dungeon-complete :: dungeonComplete");
         assertThat(layout).contains("/css/dungeon.css");
-        assertThat(layout).contains("/js/dungeon.js");
+        assertThat(layout).contains("/js/dungeon-engine.js");
         assertThat(layout).contains("/js/dungeon-renderer.js");
         assertThat(layout).contains("/js/dungeon-input.js");
         assertThat(layout).contains("/js/dungeon-minimap.js");
