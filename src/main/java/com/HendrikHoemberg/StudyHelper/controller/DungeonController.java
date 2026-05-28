@@ -1,8 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.controller;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
-import com.HendrikHoemberg.StudyHelper.dto.CollectResult;
-import com.HendrikHoemberg.StudyHelper.dto.CollectStatus;
 import com.HendrikHoemberg.StudyHelper.entity.User;
 import com.HendrikHoemberg.StudyHelper.exception.AiQuizGenerationException;
 import com.HendrikHoemberg.StudyHelper.exception.DeckNotFoundException;
