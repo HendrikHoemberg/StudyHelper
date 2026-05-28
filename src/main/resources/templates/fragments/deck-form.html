@@ -83,7 +83,7 @@
                             <button type="button" class="sh-btn sh-btn-secondary"
                                 onclick="this.closest('.sh-modal').remove()" th:text="#{deck.form.cancel}">Cancel</button>
                             <button type="submit" class="sh-btn sh-btn-primary"
-                                th:text="${deck?.id == null ? #{deck.form.create} : #{deck.form.save}}">Save</button>
+                                th:text="${deck?.id == null} ? #{deck.form.create} : #{deck.form.save}">Save</button>
                         </div>
                     </div>
                 </form>
