@@ -33,8 +33,8 @@
                 </div>
             </div>
 
-            <div class="sh-dungeon-complete-relics" th:if="${state != null and !state.ownedRelics.isEmpty()}">
-                <iconify-icon th:each="rid : ${state.ownedRelics}"
+            <div class="sh-dungeon-complete-relics" th:if="${state != null and !state.loadout.ownedRelics.isEmpty()}">
+                <iconify-icon th:each="rid : ${state.loadout.ownedRelics}"
                               th:icon="${T(com.HendrikHoemberg.StudyHelper.controller.RelicIcons).iconFor(rid)}"
                               th:title="#{__${'dungeon.relic.' + #strings.toLowerCase(rid.name().replace('_','-')) + '.name'}__}">
                 </iconify-icon>

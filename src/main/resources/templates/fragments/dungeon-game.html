@@ -11,35 +11,35 @@
             <div class="sh-dungeon-hud-item">
                 <span class="sh-dungeon-hud-label" th:text="#{dungeon.health}">Health</span>
                 <span class="sh-dungeon-hud-value sh-dungeon-hud-health"
-                      th:text="${state.health + '/' + state.healthCap}">5/5</span>
+                       th:text="${state.resources.health + '/' + state.resources.healthCap}">5/5</span>
             </div>
             <div class="sh-dungeon-hud-item">
                 <span class="sh-dungeon-hud-label" th:text="#{dungeon.score}">Score</span>
                 <span class="sh-dungeon-hud-value sh-dungeon-hud-score">
                     <iconify-icon icon="lucide:coins"></iconify-icon>
-                    <span th:text="${state.score}">0</span>
+                     <span th:text="${state.resources.score}">0</span>
                 </span>
             </div>
             <div class="sh-dungeon-hud-item sh-dungeon-hud-item-shields"
-                 th:classappend="${state.shields == 0} ? 'is-hidden'">
+                  th:classappend="${state.resources.shields == 0} ? 'is-hidden'">
                 <span class="sh-dungeon-hud-label" th:text="#{dungeon.shields}">Shields</span>
                 <span class="sh-dungeon-hud-value sh-dungeon-hud-shields">
                     <iconify-icon icon="lucide:shield"
-                                  th:each="i : ${#numbers.sequence(1, state.shields > 0 ? state.shields : 1)}"
-                                  th:if="${state.shields > 0}"></iconify-icon>
+                                   th:each="i : ${#numbers.sequence(1, state.resources.shields > 0 ? state.resources.shields : 1)}"
+                                   th:if="${state.resources.shields > 0}"></iconify-icon>
                 </span>
             </div>
             <div class="sh-dungeon-hud-item sh-dungeon-hud-item-streak"
-                 th:classappend="${state.streak == 0} ? 'is-hidden'">
+                  th:classappend="${state.progress.streak == 0} ? 'is-hidden'">
                 <span class="sh-dungeon-hud-label" th:text="#{dungeon.streak}">Streak</span>
                 <span class="sh-dungeon-hud-value sh-dungeon-hud-streak"
-                      th:classappend="${state.streak > 0 and state.streak % 3 == 0} ? 'is-pulsing'"
-                      th:text="'×' + ${state.streak}">×0</span>
+                       th:classappend="${state.progress.streak > 0 and state.progress.streak % 3 == 0} ? 'is-pulsing'"
+                       th:text="'×' + ${state.progress.streak}">×0</span>
             </div>
             <div class="sh-dungeon-hud-item">
                 <span class="sh-dungeon-hud-label" th:text="#{dungeon.progress}">Progress</span>
                 <span class="sh-dungeon-hud-value"
-                      th:text="${state.correctCount + '/' + state.answeredCount}">0/0</span>
+                       th:text="${state.progress.correctCount + '/' + state.progress.answeredCount}">0/0</span>
             </div>
         </div>
 

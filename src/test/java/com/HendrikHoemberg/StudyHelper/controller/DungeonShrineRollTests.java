@@ -85,14 +85,16 @@ class DungeonShrineRollTests {
         DungeonConfig config = new DungeonConfig(
             DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
             QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, "");
-        return new DungeonSessionState(
-            config, map, "r0",
-            Map.of(), List.of(), 0, null,
-            5, 5, 0, 2,
-            0, 0, 0,
-            false, false,
-            0, List.of(),
-            0, 0, 0, 0,
-            relics, null);
+        return DungeonSessionState.builder()
+            .config(config)
+            .map(map)
+            .currentRoomId("r0")
+            .encounters(Map.of())
+            .bossEncounterIds(List.of())
+            .combat(DungeonCombat.empty())
+            .resources(new DungeonResources(5, 5, 0, 2, 0))
+            .progress(new DungeonProgress(0, 0, 0, 0, 0, 0, 0))
+            .loadout(new DungeonLoadout(relics, null))
+            .build();
     }
 }

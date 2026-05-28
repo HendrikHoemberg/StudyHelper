@@ -6,12 +6,12 @@
         <h2 class="sh-dungeon-modal-title" th:text="#{dungeon.shop-title}">Shop</h2>
         <p class="sh-dungeon-modal-prompt">
             <iconify-icon icon="lucide:coins"></iconify-icon>
-            <span th:text="${state.score}">0</span>
+            <span th:text="${state.resources.score}">0</span>
         </p>
         <div class="sh-dungeon-relic-choices">
             <button th:each="entry : ${pendingPick.shopOffer.entries}"
                     class="sh-dungeon-relic-choice"
-                    th:disabled="${state.score < entry.price or ownedRelics.contains(entry.relic)}"
+                    th:disabled="${state.resources.score < entry.price or ownedRelics.contains(entry.relic)}"
                     hx-post="/dungeon/relic/buy"
                     hx-target="#dungeon-session-content"
                     hx-swap="outerHTML"

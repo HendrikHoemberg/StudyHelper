@@ -1,6 +1,7 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
+import com.HendrikHoemberg.StudyHelper.support.TestStates;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -56,9 +57,9 @@ class DungeonSessionServiceTests {
             null, null, null, null, nav, enc, relic);
         DungeonSessionState result = svc.move(before, DungeonDirection.RIGHT);
 
-        assertThat(result.pendingRelicPick()).isNotNull();
-        assertThat(result.pendingRelicPick().type()).isEqualTo(PendingPickType.TREASURE);
-        assertThat(result.pendingRelicPick().offer()).hasSize(3);
+        assertThat(result.loadout().pendingRelicPick()).isNotNull();
+        assertThat(result.loadout().pendingRelicPick().type()).isEqualTo(PendingPickType.TREASURE);
+        assertThat(result.loadout().pendingRelicPick().offer()).hasSize(3);
         verifyNoInteractions(enc);
     }
 
@@ -83,29 +84,16 @@ class DungeonSessionServiceTests {
         DungeonConfig config = new DungeonConfig(
             DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
             QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, "");
-        return new DungeonSessionState(
-            config, map, roomId,
-            Map.of(), List.of(), 0, null,
-            5, 5, 0, 2,
-            0, 0, 0,
-            false, false,
-            0, List.of(),
-            0, 0, 0, 0,
-            List.of(), null);
+        return DungeonSessionState.builder()
+            .config(config)
+            .map(map)
+            .currentRoomId(roomId)
+            .resources(new DungeonResources(5, 5, 0, 2, 0))
+            .build();
     }
 
     private DungeonSessionState stateWithRelics(List<RelicId> relics) {
-        DungeonSessionState base = stateOnRoom("r0", RoomType.ENTRANCE);
-        return new DungeonSessionState(
-            base.config(), base.map(), base.currentRoomId(),
-            base.encounters(), base.bossEncounterIds(), base.bossIndex(),
-            base.activeEncounterId(),
-            base.health(), base.healthCap(), base.shields(), base.shieldCap(),
-            base.score(), base.answeredCount(), base.correctCount(),
-            base.won(), base.defeated(),
-            base.streak(), base.gauntletQueue(),
-            base.longestStreak(), base.elitesCleared(), base.shieldsUsed(),
-            base.luckyCoinsConsumed(), relics, base.pendingRelicPick());
+        return TestStates.minimalWithRelics(relics);
     }
 
     @Test
@@ -113,21 +101,11 @@ class DungeonSessionServiceTests {
         DungeonSessionService svc = new DungeonSessionService(
             null, null, null, null, null, null, null);
         DungeonSessionState s = stateOnRoom("r0", RoomType.SHRINE);
-        // Set pending pick
-        s = new DungeonSessionState(
-            s.config(), s.map(), s.currentRoomId(),
-            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
-            s.activeEncounterId(),
-            s.health(), s.healthCap(), s.shields(), s.shieldCap(),
-            s.score(), s.answeredCount(), s.correctCount(),
-            s.won(), s.defeated(),
-            s.streak(), s.gauntletQueue(),
-            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
-            s.luckyCoinsConsumed(), s.ownedRelics(),
-            new PendingRelicPick(PendingPickType.SHRINE, "r0", List.of(), null));
+        s = s.withLoadout(s.loadout().withPendingRelicPick(
+            new PendingRelicPick(PendingPickType.SHRINE, "r0", List.of(), null)));
 
         DungeonSessionState after = svc.shrineLeave(s);
-        assertThat(after.pendingRelicPick()).isNull();
+        assertThat(after.loadout().pendingRelicPick()).isNull();
         assertThat(after.map().room("r0").cleared()).isTrue();
     }
 
@@ -136,20 +114,10 @@ class DungeonSessionServiceTests {
         DungeonSessionService svc = new DungeonSessionService(
             null, null, null, null, null, null, null);
         DungeonSessionState s = stateOnRoom("r0", RoomType.SHRINE);
-        // set health below cap
-        s = new DungeonSessionState(
-            s.config(), s.map(), s.currentRoomId(),
-            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
-            s.activeEncounterId(),
-            3, 5, s.shields(), s.shieldCap(),
-            s.score(), s.answeredCount(), s.correctCount(),
-            s.won(), s.defeated(),
-            s.streak(), s.gauntletQueue(),
-            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
-            s.luckyCoinsConsumed(), s.ownedRelics(), s.pendingRelicPick());
+        s = s.withResources(new DungeonResources(3, 5, s.resources().shields(), s.resources().shieldCap(), s.resources().score()));
 
         DungeonSessionState after = svc.shrineDrink(s);
-        assertThat(after.health()).isEqualTo(4);
+        assertThat(after.resources().health()).isEqualTo(4);
         assertThat(after.map().room("r0").cleared()).isTrue();
     }
 
@@ -161,13 +129,13 @@ class DungeonSessionServiceTests {
 
         // Test roll 6
         DungeonSessionState afterSix = svc.shrineRoll(s, 6, RelicId.IRON_PLATE);
-        assertThat(afterSix.ownedRelics()).contains(RelicId.IRON_PLATE);
-        assertThat(afterSix.healthCap()).isEqualTo(6); // iron plate increases cap by 1
+        assertThat(afterSix.loadout().ownedRelics()).contains(RelicId.IRON_PLATE);
+        assertThat(afterSix.resources().healthCap()).isEqualTo(6); // iron plate increases cap by 1
         assertThat(afterSix.defeated()).isFalse();
 
         // Test roll 1-5
         DungeonSessionState afterFail = svc.shrineRoll(s, 3, null);
-        assertThat(afterFail.health()).isEqualTo(4); // 5 - 1 = 4
+        assertThat(afterFail.resources().health()).isEqualTo(4); // 5 - 1 = 4
         assertThat(afterFail.defeated()).isFalse();
     }
 }

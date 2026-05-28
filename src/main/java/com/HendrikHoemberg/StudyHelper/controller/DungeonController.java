@@ -258,7 +258,7 @@ public class DungeonController {
 
         List<RelicId> unowned = new ArrayList<>();
         for (RelicId r : RelicId.values()) {
-            if (!state.ownedRelics().contains(r)) unowned.add(r);
+            if (!state.loadout().ownedRelics().contains(r)) unowned.add(r);
         }
         RelicId grantedRelic = unowned.isEmpty()
             ? RelicId.IRON_PLATE
@@ -318,39 +318,21 @@ public class DungeonController {
      */
     static DungeonSessionState tryCollectCoin(DungeonSessionState state) {
         if (!canCollectInteractiveItem(state)) return null;
-        return new DungeonSessionState(
-            state.config(), state.map(), state.currentRoomId(),
-            state.encounters(), state.bossEncounterIds(), state.bossIndex(),
-            state.activeEncounterId(),
-            state.health(), state.healthCap(), state.shields(), state.shieldCap(),
-            state.score() + 1, state.answeredCount(), state.correctCount(),
-            state.won(), state.defeated(),
-            state.streak(), state.gauntletQueue(),
-            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
-            state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick());
+        return state.withResources(state.resources().addScore(1));
     }
 
     static DungeonSessionState tryCollectShield(DungeonSessionState state) {
         if (!canCollectInteractiveItem(state)) return null;
-        int nextShields = Math.min(state.shieldCap(), state.shields() + 1);
-        if (nextShields == state.shields()) return null;
-        return new DungeonSessionState(
-            state.config(), state.map(), state.currentRoomId(),
-            state.encounters(), state.bossEncounterIds(), state.bossIndex(),
-            state.activeEncounterId(),
-            state.health(), state.healthCap(), nextShields, state.shieldCap(),
-            state.score(), state.answeredCount(), state.correctCount(),
-            state.won(), state.defeated(),
-            state.streak(), state.gauntletQueue(),
-            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
-            state.luckyCoinsConsumed(), state.ownedRelics(), state.pendingRelicPick());
+        DungeonResources next = state.resources().addShield();
+        if (next == state.resources()) return null;
+        return state.withResources(next);
     }
 
     private static boolean canCollectInteractiveItem(DungeonSessionState state) {
         if (state == null) return false;
         if (state.defeated() || state.won()) return false;
-        if (state.activeEncounterId() != null) return false;
-        if (state.pendingRelicPick() != null) return false;
+        if (state.combat().activeEncounterId() != null) return false;
+        if (state.loadout().pendingRelicPick() != null) return false;
         return true;
     }
 
@@ -448,8 +430,8 @@ public class DungeonController {
         model.addAttribute("activeEncounter", state.activeEncounter());
         model.addAttribute("currentRoom", state.currentRoom());
         model.addAttribute("stats", dungeonSessionService.buildStats(state));
-        model.addAttribute("ownedRelics", state.ownedRelics());
-        model.addAttribute("pendingPick", state.pendingRelicPick());
+        model.addAttribute("ownedRelics", state.loadout().ownedRelics());
+        model.addAttribute("pendingPick", state.loadout().pendingRelicPick());
         model.addAttribute("hintMaskIndex",
             spectaclesHintMaskIndex(state, state.activeEncounter()));
 
@@ -464,11 +446,11 @@ public class DungeonController {
 
         int gauntletPos = 0;
         int gauntletTotal = 0;
-        if (state.activeEncounterId() != null) {
+        if (state.combat().activeEncounterId() != null) {
             for (DungeonRoom r : state.map().rooms().values()) {
-                if (r.gauntletGroup().contains(state.activeEncounterId())) {
+                if (r.gauntletGroup().contains(state.combat().activeEncounterId())) {
                     gauntletTotal = r.gauntletGroup().size();
-                    gauntletPos = r.gauntletGroup().indexOf(state.activeEncounterId()) + 1;
+                    gauntletPos = r.gauntletGroup().indexOf(state.combat().activeEncounterId()) + 1;
                     break;
                 }
             }
@@ -493,8 +475,8 @@ public class DungeonController {
      *   - Everything else: visible = false (excluded from the response).
      */
     List<Map<String, Object>> minimapRooms(DungeonSessionState state) {
-        boolean hasCompass = state.ownedRelics().contains(RelicId.COMPASS);
-        boolean hasMapSense = state.ownedRelics().contains(RelicId.MAP_SENSE);
+        boolean hasCompass = state.loadout().ownedRelics().contains(RelicId.COMPASS);
+        boolean hasMapSense = state.loadout().ownedRelics().contains(RelicId.MAP_SENSE);
 
         Set<String> visitedIds = new HashSet<>();
         for (DungeonRoom r : state.map().rooms().values()) {
@@ -562,7 +544,7 @@ public class DungeonController {
     }
 
     static Integer spectaclesHintMaskIndex(DungeonSessionState state, DungeonEncounter encounter) {
-        if (!state.ownedRelics().contains(RelicId.SPECTACLES)) return null;
+        if (!state.loadout().ownedRelics().contains(RelicId.SPECTACLES)) return null;
         if (encounter == null) return null;
         if (encounter.type() != DungeonEncounterType.QUIZ
             && encounter.type() != DungeonEncounterType.BOSS_QUIZ) return null;

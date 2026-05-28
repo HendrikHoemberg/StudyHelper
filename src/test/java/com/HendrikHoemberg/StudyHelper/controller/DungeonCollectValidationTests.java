@@ -20,7 +20,7 @@ class DungeonCollectValidationTests {
         DungeonSessionState state = baseState().build();
         DungeonSessionState next = DungeonController.tryCollectCoin(state);
         assertThat(next).isNotNull();
-        assertThat(next.score()).isEqualTo(state.score() + 1);
+        assertThat(next.resources().score()).isEqualTo(state.resources().score() + 1);
     }
 
     @Test
@@ -60,7 +60,7 @@ class DungeonCollectValidationTests {
         DungeonSessionState state = baseState().shields(0).shieldCap(2).build();
         DungeonSessionState next = DungeonController.tryCollectShield(state);
         assertThat(next).isNotNull();
-        assertThat(next.shields()).isEqualTo(1);
+        assertThat(next.resources().shields()).isEqualTo(1);
     }
 
     @Test
@@ -129,15 +129,19 @@ class DungeonCollectValidationTests {
             DungeonConfig config = new DungeonConfig(
                 DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
                 QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, "");
-            return new DungeonSessionState(
-                config, map, "r0",
-                Map.of(), List.of(), 0, activeEncounterId,
-                health, healthCap, shields, shieldCap,
-                score, 0, 0,
-                won, defeated,
-                0, List.of(),
-                0, 0, 0, 0,
-                List.of(), pendingRelicPick);
+            return DungeonSessionState.builder()
+                .config(config)
+                .map(map)
+                .currentRoomId("r0")
+                .encounters(Map.of())
+                .bossEncounterIds(List.of())
+                .combat(new DungeonCombat(activeEncounterId, List.of(), 0))
+                .resources(new DungeonResources(health, healthCap, shields, shieldCap, score))
+                .progress(new DungeonProgress(0, 0, 0, 0, 0, 0, 0))
+                .won(won)
+                .defeated(defeated)
+                .loadout(new DungeonLoadout(List.of(), pendingRelicPick))
+                .build();
         }
     }
 }

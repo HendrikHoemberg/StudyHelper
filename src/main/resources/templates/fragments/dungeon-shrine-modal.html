@@ -30,7 +30,7 @@
                 hx-post="/dungeon/shrine/drink"
                 hx-target="#dungeon-session-content"
                 hx-swap="outerHTML"
-                th:disabled="${state.health >= state.healthCap}">
+                th:disabled="${state.resources.health >= state.resources.healthCap}">
             <div class="sh-shrine-choice-icon"><iconify-icon icon="mdi:water-holy"></iconify-icon></div>
             <div class="sh-shrine-choice-details">
                 <div class="sh-shrine-choice-name" th:text="#{dungeon.shrine.heal-name}">Drink Holy Water</div>

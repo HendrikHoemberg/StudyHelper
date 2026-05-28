@@ -95,11 +95,10 @@ public class DungeonSessionService {
 
         DungeonRoom destination = moved.currentRoom();
 
-        // Set pending picks for TREASURE / SHOP / SECRET on first entry
-        if (destination != null && !destination.cleared() && moved.pendingRelicPick() == null) {
+        if (destination != null && !destination.cleared() && moved.loadout().pendingRelicPick() == null) {
             PendingRelicPick newPick = pickForRoom(destination);
             if (newPick != null) {
-                moved = withPendingPick(moved, newPick);
+                moved = moved.withLoadout(moved.loadout().withPendingRelicPick(newPick));
             }
         }
 
@@ -132,77 +131,49 @@ public class DungeonSessionService {
     public DungeonSessionState shrineLeave(DungeonSessionState state) {
         DungeonRoom room = state.map().room(state.currentRoomId());
         if (room == null) return state;
-        
+
         Map<String, DungeonRoom> rooms = new LinkedHashMap<>(state.map().rooms());
         rooms.put(room.id(), room.withCleared(true));
         DungeonMap nextMap = new DungeonMap(
             rooms, state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
-            
-        return new DungeonSessionState(
-            state.config(), nextMap, state.currentRoomId(),
-            state.encounters(), state.bossEncounterIds(), state.bossIndex(),
-            state.activeEncounterId(),
-            state.health(), state.healthCap(), state.shields(), state.shieldCap(),
-            state.score(), state.answeredCount(), state.correctCount(),
-            state.won(), state.defeated(),
-            state.streak(), state.gauntletQueue(),
-            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
-            state.luckyCoinsConsumed(), state.ownedRelics(), null);
+
+        return state
+            .withMap(nextMap)
+            .withLoadout(state.loadout().clearPendingPick());
     }
 
     public DungeonSessionState shrineDrink(DungeonSessionState state) {
-        int nextHealth = Math.min(state.healthCap(), state.health() + 1);
-        DungeonSessionState clearedState = shrineLeave(state);
-        
-        return new DungeonSessionState(
-            clearedState.config(), clearedState.map(), clearedState.currentRoomId(),
-            clearedState.encounters(), clearedState.bossEncounterIds(), clearedState.bossIndex(),
-            clearedState.activeEncounterId(),
-            nextHealth, clearedState.healthCap(), clearedState.shields(), clearedState.shieldCap(),
-            clearedState.score(), clearedState.answeredCount(), clearedState.correctCount(),
-            clearedState.won(), clearedState.defeated(),
-            clearedState.streak(), clearedState.gauntletQueue(),
-            clearedState.longestStreak(), clearedState.elitesCleared(), clearedState.shieldsUsed(),
-            clearedState.luckyCoinsConsumed(), clearedState.ownedRelics(), null);
+        DungeonResources nextResources = state.resources().heal(1);
+        return shrineLeave(state).withResources(nextResources);
     }
 
     public DungeonSessionState shrineRoll(DungeonSessionState state, int rollResult, RelicId grantedRelic) {
-        int nextHealth = state.health();
+        DungeonResources nextResources = state.resources();
+        DungeonLoadout nextLoadout = state.loadout();
         boolean defeated = false;
-        List<RelicId> owned = new ArrayList<>(state.ownedRelics());
-        int healthCap = state.healthCap();
-        int shieldCap = state.shieldCap();
-        int shields = state.shields();
 
         if (rollResult == 6) {
             if (grantedRelic != null) {
-                owned.add(grantedRelic);
+                nextLoadout = nextLoadout.addRelic(grantedRelic);
                 if (grantedRelic == RelicId.IRON_PLATE) {
-                    healthCap += 1;
-                    nextHealth = Math.min(healthCap, nextHealth + 1);
+                    nextResources = nextResources
+                        .withHealthCap(nextResources.healthCap() + 1)
+                        .heal(1);
                 } else if (grantedRelic == RelicId.BUCKLER) {
-                    shieldCap += 1;
-                    shields = Math.min(shieldCap, shields + 1);
+                    nextResources = nextResources
+                        .withShieldCap(nextResources.shieldCap() + 1)
+                        .addShield();
                 }
             }
         } else {
-            nextHealth = nextHealth - 1;
-            if (nextHealth <= 0) {
-                nextHealth = 0;
-                defeated = true;
-            }
+            nextResources = nextResources.takeHealthDamage(1);
+            if (nextResources.health() == 0) defeated = true;
         }
 
-        return new DungeonSessionState(
-            state.config(), state.map(), state.currentRoomId(),
-            state.encounters(), state.bossEncounterIds(), state.bossIndex(),
-            state.activeEncounterId(),
-            nextHealth, healthCap, shields, shieldCap,
-            state.score(), state.answeredCount(), state.correctCount(),
-            state.won(), defeated,
-            state.streak(), state.gauntletQueue(),
-            state.longestStreak(), state.elitesCleared(), state.shieldsUsed(),
-            state.luckyCoinsConsumed(), owned, state.pendingRelicPick());
+        return state
+            .withResources(nextResources)
+            .withLoadout(nextLoadout)
+            .withDefeated(defeated);
     }
 
     public DungeonRunStats buildStats(DungeonSessionState state) {
@@ -210,14 +181,14 @@ public class DungeonSessionService {
             state.config().mode(),
             state.config().size(),
             state.config().size().totalPrompts(),
-            state.answeredCount(),
-            state.correctCount(),
-            state.health(),
+            state.progress().answeredCount(),
+            state.progress().correctCount(),
+            state.resources().health(),
             state.won(),
-            state.longestStreak(),
-            state.elitesCleared(),
-            state.shieldsUsed(),
-            state.ownedRelics().size());
+            state.progress().longestStreak(),
+            state.progress().elitesCleared(),
+            state.progress().shieldsUsed(),
+            state.loadout().ownedRelics().size());
     }
 
     // ===== helpers =====
@@ -294,16 +265,14 @@ public class DungeonSessionService {
     private DungeonSessionState initialState(DungeonConfig config, DungeonMap map,
                                               Map<String, DungeonEncounter> encounters,
                                               List<String> bossEncounterIds) {
-        return new DungeonSessionState(
-            config, map, map.entranceRoomId(),
-            Map.copyOf(encounters), List.copyOf(bossEncounterIds),
-            0, null,
-            DungeonDamage.STARTING_HEALTH, DungeonDamage.STARTING_HEALTH_CAP, 0, DungeonDamage.STARTING_SHIELD_CAP,
-            0, 0, 0,
-            false, false,
-            0, List.of(),
-            0, 0, 0, 0,
-            List.of(), null);
+        return DungeonSessionState.builder()
+            .config(config)
+            .map(map)
+            .currentRoomId(map.entranceRoomId())
+            .encounters(Map.copyOf(encounters))
+            .bossEncounterIds(List.copyOf(bossEncounterIds))
+            .resources(new DungeonResources(5, 5, 0, 2, 0))
+            .build();
     }
 
     private PendingRelicPick pickForRoom(DungeonRoom room) {
@@ -321,19 +290,6 @@ public class DungeonSessionService {
             }
             default -> null;
         };
-    }
-
-    private DungeonSessionState withPendingPick(DungeonSessionState s, PendingRelicPick pick) {
-        return new DungeonSessionState(
-            s.config(), s.map(), s.currentRoomId(),
-            s.encounters(), s.bossEncounterIds(), s.bossIndex(),
-            s.activeEncounterId(),
-            s.health(), s.healthCap(), s.shields(), s.shieldCap(),
-            s.score(), s.answeredCount(), s.correctCount(),
-            s.won(), s.defeated(),
-            s.streak(), s.gauntletQueue(),
-            s.longestStreak(), s.elitesCleared(), s.shieldsUsed(),
-            s.luckyCoinsConsumed(), s.ownedRelics(), pick);
     }
 
     private void validateSize(DungeonSize size, int usableItems, String unit) {
