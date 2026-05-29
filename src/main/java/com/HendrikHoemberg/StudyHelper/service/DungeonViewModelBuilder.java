@@ -87,6 +87,7 @@ public class DungeonViewModelBuilder {
         model.addAttribute("gauntletPosition", gauntletPos);
         model.addAttribute("gauntletTotal", gauntletTotal);
         model.addAttribute("currentRoomMonster", currentRoomMonster(state));
+        model.addAttribute("currentRoomPots", currentRoomPots(state));
     }
 
     private String currentRoomMonster(DungeonSessionState state) {
@@ -99,6 +100,14 @@ public class DungeonViewModelBuilder {
         if (encId == null) return "";
         DungeonEncounter enc = state.encounters().get(encId);
         return (enc != null && enc.monsterType() != null) ? enc.monsterType() : "";
+    }
+
+    private String currentRoomPots(DungeonSessionState state) {
+        DungeonRoom room = state.currentRoom();
+        if (room == null) return "";
+        return room.potLoot().stream()
+            .map(Enum::name)
+            .collect(java.util.stream.Collectors.joining(","));
     }
 
     public void prepareComplete(Model model, DungeonSessionState state) {
