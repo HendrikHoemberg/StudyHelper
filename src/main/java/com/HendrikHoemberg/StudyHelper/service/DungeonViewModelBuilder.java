@@ -2,7 +2,7 @@ package com.HendrikHoemberg.StudyHelper.service;
 
 import com.HendrikHoemberg.StudyHelper.dto.*;
 import com.HendrikHoemberg.StudyHelper.entity.User;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -14,7 +14,7 @@ import java.util.*;
 public class DungeonViewModelBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(DungeonViewModelBuilder.class);
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     private final FolderService folderService;
     private final DashboardService dashboardService;
@@ -24,11 +24,13 @@ public class DungeonViewModelBuilder {
     public DungeonViewModelBuilder(FolderService folderService,
                                    DashboardService dashboardService,
                                    DungeonMinimapBuilder minimapBuilder,
-                                   DungeonSessionService sessionService) {
+                                   DungeonSessionService sessionService,
+                                   ObjectMapper objectMapper) {
         this.folderService = folderService;
         this.dashboardService = dashboardService;
         this.minimapBuilder = minimapBuilder;
         this.sessionService = sessionService;
+        this.objectMapper = objectMapper;
     }
 
     public void prepareWizard(Model model, User user, List<Long> deckIds, String error) {
