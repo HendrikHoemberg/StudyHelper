@@ -142,22 +142,4 @@ class DungeonSessionServiceTests {
         assertThat(after.resources().health()).isEqualTo(4);
         assertThat(after.map().room("r0").cleared()).isTrue();
     }
-
-    @Test
-    void shrineRoll_onSixGrantsRelic_onOthersDealsDamage() {
-        DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, null, null, null, new DungeonShrineService());
-        DungeonSessionState s = stateOnRoom("r0", RoomType.SHRINE);
-
-        // Test roll 6
-        DungeonSessionState afterSix = svc.shrineRoll(s, 6, RelicId.IRON_PLATE);
-        assertThat(afterSix.loadout().ownedRelics()).contains(RelicId.IRON_PLATE);
-        assertThat(afterSix.resources().healthCap()).isEqualTo(6); // iron plate increases cap by 1
-        assertThat(afterSix.defeated()).isFalse();
-
-        // Test roll 1-5
-        DungeonSessionState afterFail = svc.shrineRoll(s, 3, null);
-        assertThat(afterFail.resources().health()).isEqualTo(4); // 5 - 1 = 4
-        assertThat(afterFail.defeated()).isFalse();
-    }
 }

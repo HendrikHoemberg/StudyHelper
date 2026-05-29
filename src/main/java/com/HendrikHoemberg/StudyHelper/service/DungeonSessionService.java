@@ -185,10 +185,6 @@ public class DungeonSessionService {
         return shrineService.drink(state);
     }
 
-    public DungeonSessionState shrineRoll(DungeonSessionState state, int rollResult, RelicId grantedRelic) {
-        return shrineService.applyRoll(state, new DungeonShrineService.ShrineRollOutcome(rollResult, grantedRelic));
-    }
-
     public DungeonRunStats buildStats(DungeonSessionState state) {
         return new DungeonRunStats(
             state.config().mode(),
