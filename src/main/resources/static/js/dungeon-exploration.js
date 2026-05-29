@@ -26,14 +26,15 @@ var DungeonExploration = (function () {
         });
     }
 
-    function spawnPotsForRoom(roomId) {
+    function spawnPotsForRoom(roomId, potLoot) {
         var pots = [];
         var hash = 0;
         for (var i = 0; i < roomId.length; i++) {
             hash = roomId.charCodeAt(i) + ((hash << 5) - hash);
         }
         var rng = Math.abs(hash);
-        var numPots = (rng % 2) + 2; // 2 or 3 pots
+        var loot = (potLoot && potLoot.length > 0) ? potLoot : ['EMPTY', 'EMPTY'];
+        var numPots = loot.length;
 
         var corners = [
             { minX: 160, maxX: 260, minY: 160, maxY: 240 },
@@ -49,11 +50,11 @@ var DungeonExploration = (function () {
             corners[j] = temp;
         }
 
-        for (var p = 0; p < numPots; p++) {
+        for (var p = 0; p < numPots && p < corners.length; p++) {
             var zone = corners[p];
             var px = zone.minX + ((rng + p * 17) % (zone.maxX - zone.minX));
             var py = zone.minY + ((rng + p * 31) % (zone.maxY - zone.minY));
-            pots.push({ x: px, y: py, broken: false, shatterTime: 0, index: p });
+            pots.push({ x: px, y: py, broken: false, shatterTime: 0, index: p, loot: loot[p] });
         }
         return pots;
     }
@@ -189,9 +190,8 @@ var DungeonExploration = (function () {
                 pot.shatterTime = Date.now();
                 DungeonAudio.playSlash(); // Shatter sound
 
-                var rand = Math.random();
                 var roomId = currentRoomItems.roomId;
-                if (rand < 0.60) {
+                if (pot.loot === 'COIN') {
                     currentRoomItems.coins.push({
                         x: potCenterX,
                         y: potCenterY,
@@ -202,7 +202,7 @@ var DungeonExploration = (function () {
                         type: 'COIN',
                         itemId: roomId + '_coin_' + pot.index
                     });
-                } else if (rand < 0.65) {
+                } else if (pot.loot === 'SHIELD') {
                     currentRoomItems.coins.push({
                         x: potCenterX,
                         y: potCenterY,
@@ -330,9 +330,10 @@ var DungeonExploration = (function () {
             var roomType = canvas.dataset.currentRoomType;
             var cleared = canvas.dataset.currentRoomCleared === 'true';
             var roomMonster = canvas.dataset.currentRoomMonster || '';
+            var potLoot = (canvas.dataset.currentRoomPots || '').split(',').filter(Boolean);
 
             if (!cleared && ['TREASURE', 'SHOP', 'SECRET', 'HEAL', 'ENTRANCE', 'SHRINE', 'BOSS'].indexOf(roomType) === -1) {
-                currentRoomItems.pots = spawnPotsForRoom(roomId);
+                currentRoomItems.pots = spawnPotsForRoom(roomId, potLoot);
             } else if (cleared && ['COMBAT', 'ELITE', 'BOSS'].indexOf(roomType) !== -1) {
                 // Monster type is supplied by the server (see DungeonEncounter.monsterType).
                 if (roomMonster) {
@@ -340,7 +341,7 @@ var DungeonExploration = (function () {
                 }
                 currentRoomItems.pots = [];
             } else {
-                currentRoomItems.pots = spawnPotsForRoom(roomId);
+                currentRoomItems.pots = spawnPotsForRoom(roomId, potLoot);
             }
 
             // Spawn player relative to entered door orientation
