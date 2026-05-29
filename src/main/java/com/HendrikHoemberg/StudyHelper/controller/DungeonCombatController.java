@@ -41,17 +41,18 @@ public class DungeonCombatController {
                        HttpServletResponse response,
                        @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
-        DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return DungeonControllerAccess.redirectToStart();
-        ActionResult result = dungeonSessionService.move(state, direction);
-        if (result instanceof ActionResult.Failure failure) {
-            response.setStatus(HttpServletResponse.SC_OK);
-            response.setHeader("HX-Trigger", "dungeon-action-error");
-            model.addAttribute("actionError", failure.message());
-            return DungeonControllerAccess.renderGame(model, failure.state(), hxRequest, viewModelBuilder);
-        }
-        return DungeonControllerAccess.stashAndRender(model, user, session, result.state(), hxRequest,
-            savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
+        return DungeonControllerAccess.withSession(session, user, savedSessionService, state -> {
+            if (state == null) return DungeonControllerAccess.redirectToStart();
+            ActionResult result = dungeonSessionService.move(state, direction);
+            if (result instanceof ActionResult.Failure failure) {
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.setHeader("HX-Trigger", "dungeon-action-error");
+                model.addAttribute("actionError", failure.message());
+                return DungeonControllerAccess.renderGame(model, failure.state(), hxRequest, viewModelBuilder);
+            }
+            return DungeonControllerAccess.stashAndRender(model, user, session, result.state(), hxRequest,
+                savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
+        });
     }
 
     @PostMapping("/dungeon/answer/flashcard")
@@ -61,11 +62,12 @@ public class DungeonCombatController {
                                   HttpSession session,
                                   @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
-        DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return DungeonControllerAccess.redirectToStart();
-        state = dungeonSessionService.answerFlashcard(state, gotIt);
-        return DungeonControllerAccess.stashAndRender(model, user, session, state, hxRequest,
-            savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
+        return DungeonControllerAccess.withSession(session, user, savedSessionService, state -> {
+            if (state == null) return DungeonControllerAccess.redirectToStart();
+            DungeonSessionState next = dungeonSessionService.answerFlashcard(state, gotIt);
+            return DungeonControllerAccess.stashAndRender(model, user, session, next, hxRequest,
+                savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
+        });
     }
 
     @PostMapping("/dungeon/answer/quiz")
@@ -75,10 +77,11 @@ public class DungeonCombatController {
                              HttpSession session,
                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
-        DungeonSessionState state = DungeonControllerAccess.getState(session, user, savedSessionService);
-        if (state == null) return DungeonControllerAccess.redirectToStart();
-        state = dungeonSessionService.answerQuiz(state, selectedOptions);
-        return DungeonControllerAccess.stashAndRender(model, user, session, state, hxRequest,
-            savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
+        return DungeonControllerAccess.withSession(session, user, savedSessionService, state -> {
+            if (state == null) return DungeonControllerAccess.redirectToStart();
+            DungeonSessionState next = dungeonSessionService.answerQuiz(state, selectedOptions);
+            return DungeonControllerAccess.stashAndRender(model, user, session, next, hxRequest,
+                savedSessionService, studyLogService, viewModelBuilder, dungeonSessionService);
+        });
     }
 }
