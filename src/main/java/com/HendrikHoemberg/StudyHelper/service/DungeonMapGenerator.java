@@ -377,9 +377,7 @@ public class DungeonMapGenerator {
                     int price = (rid == RelicId.MAP_SENSE) ? DungeonBalance.SHOP_PRICE_MAP_SENSE : DungeonBalance.SHOP_PRICE_DEFAULT;
                     entries.add(new ShopOfferEntry(rid, price));
                 }
-                ShopConsumable consumable = new ShopConsumable(
-                    "dungeon.shop.consumable.heal", 30, 2);
-                shopOffer = new ShopOffer(entries, consumable);
+                shopOffer = new ShopOffer(entries);
             }
             case ENTRANCE, HEAL, BOSS, SHRINE, SECRET -> { }
         }

@@ -101,8 +101,7 @@ class DungeonRelicServiceTests {
     private DungeonSessionState shopStateWithScore(int score) {
         ShopOffer offer = new ShopOffer(
             List.of(new ShopOfferEntry(RelicId.LUCKY_CHARM, 75),
-                    new ShopOfferEntry(RelicId.MAP_SENSE, 150)),
-            new ShopConsumable("dungeon.shop.consumable.heal", 30, 2));
+                    new ShopOfferEntry(RelicId.MAP_SENSE, 150)));
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
             true, true, null, List.of(), null, null, null);

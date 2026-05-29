@@ -98,14 +98,13 @@ class DungeonMapGeneratorTests {
     }
 
     @Test
-    void generate_shopRoomHasOfferWithTwoEntriesAndConsumable() {
+    void generate_shopRoomHasOfferWithTwoEntries() {
         DungeonMap map = generator.generate(
             DungeonSize.SMALL, normalIds(6), eliteGroups(1, 2), new Random(6));
         DungeonRoom shop = map.rooms().values().stream()
             .filter(r -> r.type() == RoomType.SHOP).findFirst().orElseThrow();
         assertThat(shop.shopOffer()).isNotNull();
         assertThat(shop.shopOffer().entries()).hasSize(2);
-        assertThat(shop.shopOffer().consumable()).isNotNull();
     }
 
     @Test
