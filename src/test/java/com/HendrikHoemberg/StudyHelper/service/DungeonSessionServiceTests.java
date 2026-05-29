@@ -64,10 +64,10 @@ class DungeonSessionServiceTests {
         TreasureOffer offer = new TreasureOffer(List.of(RelicId.IRON_PLATE, RelicId.BUCKLER, RelicId.LUCKY_CHARM));
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
-            true, true, null, List.of(), null, null, null, null);
+            true, true, null, List.of(), null, null, null);
         DungeonRoom r1 = new DungeonRoom("r1", RoomType.TREASURE,
             Map.of(DungeonDirection.LEFT, "r0"), new GridPos(1, 0),
-            true, false, null, List.of(), offer, null, null, null);
+            true, false, null, List.of(), offer, null, null);
         DungeonMap map = new DungeonMap(Map.of("r0", r0, "r1", r1), "r0", "r0", 3);
         DungeonSessionState before = stateOnRoomMap(map, "r0");
         DungeonSessionState afterMove = stateOnRoomMap(map, "r1");
@@ -97,7 +97,7 @@ class DungeonSessionServiceTests {
     private DungeonSessionState stateOnRoom(String roomId, RoomType type) {
         DungeonRoom room = new DungeonRoom(roomId, type,
             Map.of(), new GridPos(0, 0),
-            true, false, null, List.of(), null, null, null, null);
+            true, false, null, List.of(), null, null, null);
         DungeonMap map = new DungeonMap(Map.of(roomId, room), roomId, roomId, 3);
         return stateOnRoomMap(map, roomId);
     }

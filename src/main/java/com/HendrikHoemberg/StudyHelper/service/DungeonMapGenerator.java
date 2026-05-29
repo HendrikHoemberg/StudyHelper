@@ -387,7 +387,7 @@ public class DungeonMapGenerator {
         return new DungeonRoom(id, type, roomDoors, gridPos,
             false, false,
             encounterId, gauntletGroup,
-            treasureOffer, eliteOffer, shopOffer, null,
+            treasureOffer, eliteOffer, shopOffer,
             generatePotLoot(rng));
     }
 

@@ -338,12 +338,6 @@ public class DungeonSessionService {
             case SHOP -> room.shopOffer() == null ? null :
                 new PendingRelicPick(PendingPickType.SHOP, room.id(), List.of(), room.shopOffer());
             case SHRINE -> new PendingRelicPick(PendingPickType.SHRINE, room.id(), List.of(), null);
-            case SECRET -> {
-                if (room.secretReward() instanceof SecretReward.RelicReward r) {
-                    yield new PendingRelicPick(PendingPickType.SECRET, room.id(), List.of(r.relic()), null);
-                }
-                yield null;
-            }
             default -> null;
         };
     }

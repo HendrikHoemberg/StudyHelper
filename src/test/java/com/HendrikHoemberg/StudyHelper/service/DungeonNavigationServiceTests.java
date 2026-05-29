@@ -74,10 +74,10 @@ class DungeonNavigationServiceTests {
     private DungeonSessionState twoRoomState() {
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
-            true, true, null, List.of(), null, null, null, null);
+            true, true, null, List.of(), null, null, null);
         DungeonRoom r1 = new DungeonRoom("r1", RoomType.COMBAT,
             Map.of(DungeonDirection.LEFT, "r0"), new GridPos(1, 0),
-            false, false, null, List.of(), null, null, null, null);
+            false, false, null, List.of(), null, null, null);
         DungeonMap map = new DungeonMap(Map.of("r0", r0, "r1", r1), "r0", "r1", 3);
         return baseState(map, "r0", 5, 0);
     }
@@ -85,10 +85,10 @@ class DungeonNavigationServiceTests {
     private DungeonSessionState combatNeighborState() {
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
-            true, true, null, List.of(), null, null, null, null);
+            true, true, null, List.of(), null, null, null);
         DungeonRoom r1 = new DungeonRoom("r1", RoomType.COMBAT,
             Map.of(DungeonDirection.LEFT, "r0"), new GridPos(1, 0),
-            false, false, "enc_0", List.of(), null, null, null, null);
+            false, false, "enc_0", List.of(), null, null, null);
         DungeonMap map = new DungeonMap(Map.of("r0", r0, "r1", r1), "r0", "r1", 3);
         return baseState(map, "r0", 5, 0);
     }
@@ -96,10 +96,10 @@ class DungeonNavigationServiceTests {
     private DungeonSessionState healNeighborStateWithLowHpAndNoShields() {
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
-            true, true, null, List.of(), null, null, null, null);
+            true, true, null, List.of(), null, null, null);
         DungeonRoom r1 = new DungeonRoom("r1", RoomType.HEAL,
             Map.of(DungeonDirection.LEFT, "r0"), new GridPos(1, 0),
-            false, false, null, List.of(), null, null, null, null);
+            false, false, null, List.of(), null, null, null);
         DungeonMap map = new DungeonMap(Map.of("r0", r0, "r1", r1), "r0", "r1", 3);
         return baseState(map, "r0", 2, 0);
     }
@@ -107,10 +107,10 @@ class DungeonNavigationServiceTests {
     private DungeonSessionState clearedHealNeighborState() {
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
-            true, true, null, List.of(), null, null, null, null);
+            true, true, null, List.of(), null, null, null);
         DungeonRoom r1 = new DungeonRoom("r1", RoomType.HEAL,
             Map.of(DungeonDirection.LEFT, "r0"), new GridPos(1, 0),
-            true, true, null, List.of(), null, null, null, null);
+            true, true, null, List.of(), null, null, null);
         DungeonMap map = new DungeonMap(Map.of("r0", r0, "r1", r1), "r0", "r1", 3);
         return baseState(map, "r0", 3, 1);
     }

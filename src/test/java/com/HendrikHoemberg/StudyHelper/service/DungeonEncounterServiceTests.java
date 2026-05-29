@@ -125,10 +125,10 @@ class DungeonEncounterServiceTests {
             "enc_0", false, "SLIME", 1L, "Q", "A", null, null);
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
-            true, true, null, List.of(), null, null, null, null);
+            true, true, null, List.of(), null, null, null);
         DungeonRoom r1 = new DungeonRoom("r1", RoomType.COMBAT,
             Map.of(DungeonDirection.LEFT, "r0"), new GridPos(1, 0),
-            true, false, "enc_0", List.of(), null, null, null, null);
+            true, false, "enc_0", List.of(), null, null, null);
         DungeonMap map = new DungeonMap(Map.of("r0", r0, "r1", r1), "r0", "r1", 3);
         return baseState(map, "r1", Map.of("enc_0", enc), List.of(), 0, null);
     }
@@ -138,13 +138,13 @@ class DungeonEncounterServiceTests {
         DungeonEncounter e1 = DungeonEncounter.flashcard("elite_0_1", false, "CHAMPION", 2L, "Q2", "A2", null, null);
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
-            true, true, null, List.of(), null, null, null, null);
+            true, true, null, List.of(), null, null, null);
         DungeonRoom r1 = new DungeonRoom("r1", RoomType.ELITE,
             Map.of(DungeonDirection.LEFT, "r0"), new GridPos(1, 0),
             true, false, "elite_0_0",
             List.of("elite_0_0", "elite_0_1"),
             null, new TreasureOffer(List.of(RelicId.PHOENIX_FEATHER, RelicId.SPECTACLES)),
-            null, null);
+            null);
         DungeonMap map = new DungeonMap(Map.of("r0", r0, "r1", r1), "r0", "r1", 3);
         return baseState(map, "r1",
             Map.of("elite_0_0", e0, "elite_0_1", e1), List.of(), 0, null);
@@ -190,10 +190,10 @@ class DungeonEncounterServiceTests {
         DungeonEncounter b1 = DungeonEncounter.flashcard("boss_1", true, "DRAGON", 11L, "B1", "BA1", null, null);
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
-            true, true, null, List.of(), null, null, null, null);
+            true, true, null, List.of(), null, null, null);
         DungeonRoom r1 = new DungeonRoom("r1", RoomType.BOSS,
             Map.of(DungeonDirection.LEFT, "r0"), new GridPos(1, 0),
-            true, false, null, List.of(), null, null, null, null);
+            true, false, null, List.of(), null, null, null);
         DungeonMap map = new DungeonMap(Map.of("r0", r0, "r1", r1), "r0", "r1", 3);
         return baseState(map, "r1", Map.of("boss_0", b0, "boss_1", b1),
             List.of("boss_0", "boss_1"), 0, "boss_0");

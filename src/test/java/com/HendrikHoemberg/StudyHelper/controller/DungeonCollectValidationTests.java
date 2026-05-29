@@ -207,7 +207,7 @@ class DungeonCollectValidationTests {
         DungeonSessionState build() {
             DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
                 Map.of(), new GridPos(0, 0),
-                true, true, null, List.of(), null, null, null, null,
+                true, true, null, List.of(), null, null, null,
                 List.of(PotLoot.COIN, PotLoot.SHIELD));
             DungeonMap map = new DungeonMap(Map.of("r0", r0), "r0", "r0", 3);
             DungeonConfig config = new DungeonConfig(

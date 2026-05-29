@@ -10,7 +10,7 @@ class DungeonSessionStateTests {
     private DungeonSessionState minimal() {
         DungeonRoom entrance = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(), new GridPos(0, 0), true, true,
-            null, List.of(), null, null, null, null);
+            null, List.of(), null, null, null);
         DungeonMap map = new DungeonMap(Map.of("r0", entrance), "r0", "r0", 7);
         DungeonConfig config = new DungeonConfig(
             DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),

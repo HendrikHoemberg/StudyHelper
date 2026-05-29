@@ -16,7 +16,6 @@ public record DungeonRoom(
     TreasureOffer treasureOffer,
     TreasureOffer eliteOffer,
     ShopOffer shopOffer,
-    SecretReward secretReward,
     List<PotLoot> potLoot
 ) implements Serializable {
 
@@ -31,28 +30,28 @@ public record DungeonRoom(
                        GridPos gridPos, boolean visited, boolean cleared,
                        String encounterId, List<String> gauntletGroup,
                        TreasureOffer treasureOffer, TreasureOffer eliteOffer,
-                       ShopOffer shopOffer, SecretReward secretReward) {
+                       ShopOffer shopOffer) {
         this(id, type, doors, gridPos, visited, cleared, encounterId, gauntletGroup,
-            treasureOffer, eliteOffer, shopOffer, secretReward, List.of());
+            treasureOffer, eliteOffer, shopOffer, List.of());
     }
 
     public DungeonRoom withDoors(Map<DungeonDirection, String> newDoors) {
         return new DungeonRoom(id, type, newDoors, gridPos, visited, cleared,
-            encounterId, gauntletGroup, treasureOffer, eliteOffer, shopOffer, secretReward, potLoot);
+            encounterId, gauntletGroup, treasureOffer, eliteOffer, shopOffer, potLoot);
     }
 
     public DungeonRoom withVisited(boolean v) {
         return new DungeonRoom(id, type, doors, gridPos, v, cleared,
-            encounterId, gauntletGroup, treasureOffer, eliteOffer, shopOffer, secretReward, potLoot);
+            encounterId, gauntletGroup, treasureOffer, eliteOffer, shopOffer, potLoot);
     }
 
     public DungeonRoom withCleared(boolean c) {
         return new DungeonRoom(id, type, doors, gridPos, visited, c,
-            encounterId, gauntletGroup, treasureOffer, eliteOffer, shopOffer, secretReward, potLoot);
+            encounterId, gauntletGroup, treasureOffer, eliteOffer, shopOffer, potLoot);
     }
 
     public DungeonRoom withPotLoot(List<PotLoot> loot) {
         return new DungeonRoom(id, type, doors, gridPos, visited, cleared,
-            encounterId, gauntletGroup, treasureOffer, eliteOffer, shopOffer, secretReward, loot);
+            encounterId, gauntletGroup, treasureOffer, eliteOffer, shopOffer, loot);
     }
 }

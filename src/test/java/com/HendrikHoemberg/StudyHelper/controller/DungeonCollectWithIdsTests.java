@@ -36,7 +36,7 @@ class DungeonCollectWithIdsTests {
     private static DungeonSessionState baseState() {
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(), new GridPos(0, 0),
-            true, true, null, List.of(), null, null, null, null);
+            true, true, null, List.of(), null, null, null);
         DungeonMap map = new DungeonMap(Map.of("r0", r0), "r0", "r0", 3);
         DungeonConfig config = new DungeonConfig(
             DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),

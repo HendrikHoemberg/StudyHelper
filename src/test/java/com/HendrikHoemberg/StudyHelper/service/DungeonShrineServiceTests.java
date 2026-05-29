@@ -121,7 +121,7 @@ class DungeonShrineServiceTests {
     private static DungeonSessionState baseStateOwning(List<RelicId> relics) {
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.SHRINE,
             Map.of(), new GridPos(0, 0),
-            true, false, null, List.of(), null, null, null, null);
+            true, false, null, List.of(), null, null, null);
         DungeonMap map = new DungeonMap(Map.of("r0", r0), "r0", "r0", 3);
         DungeonConfig config = new DungeonConfig(
             DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
