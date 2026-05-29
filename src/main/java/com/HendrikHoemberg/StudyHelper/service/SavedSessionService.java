@@ -253,31 +253,50 @@ public class SavedSessionService {
 
         Set<Long> aliveIds = new HashSet<>(flashcardRepository.findExistingIdsByIdIn(flashcardIds));
 
+        // Encounters whose backing flashcard was deleted.
         Set<String> removedEncounterIds = new HashSet<>();
-        Map<String, DungeonEncounter> remainingEncounters = new LinkedHashMap<>();
         for (Map.Entry<String, DungeonEncounter> entry : state.encounters().entrySet()) {
             DungeonEncounter enc = entry.getValue();
             if (enc.flashcardId() != null && !aliveIds.contains(enc.flashcardId())) {
                 removedEncounterIds.add(entry.getKey());
-            } else {
-                remainingEncounters.put(entry.getKey(), enc);
+            }
+        }
+
+        // An elite gauntlet is all-or-nothing: if ANY member was removed, skip the whole
+        // elite room (mark it cleared, drop every member of its group from play).
+        Set<String> damagedEliteRoomIds = new HashSet<>();
+        Set<String> skippedEncounterIds = new HashSet<>(removedEncounterIds);
+        for (DungeonRoom room : state.map().rooms().values()) {
+            if (room.type() != RoomType.ELITE) continue;
+            boolean damaged = room.gauntletGroup().stream().anyMatch(removedEncounterIds::contains);
+            if (damaged) {
+                damagedEliteRoomIds.add(room.id());
+                skippedEncounterIds.addAll(room.gauntletGroup());
+            }
+        }
+
+        Map<String, DungeonEncounter> remainingEncounters = new LinkedHashMap<>();
+        for (Map.Entry<String, DungeonEncounter> entry : state.encounters().entrySet()) {
+            if (!skippedEncounterIds.contains(entry.getKey())) {
+                remainingEncounters.put(entry.getKey(), entry.getValue());
             }
         }
 
         Map<String, DungeonRoom> updatedRooms = new LinkedHashMap<>(state.map().rooms());
         for (Map.Entry<String, DungeonRoom> entry : updatedRooms.entrySet()) {
             DungeonRoom room = entry.getValue();
-            if (room.encounterId() != null && removedEncounterIds.contains(room.encounterId())) {
+            boolean removedNormal = room.encounterId() != null && removedEncounterIds.contains(room.encounterId());
+            if (removedNormal || damagedEliteRoomIds.contains(room.id())) {
                 updatedRooms.put(entry.getKey(), room.withCleared(true).withVisited(true));
             }
         }
 
         List<String> remainingBossIds = state.bossEncounterIds().stream()
-            .filter(id -> remainingEncounters.containsKey(id))
+            .filter(remainingEncounters::containsKey)
             .toList();
 
         boolean allBossAlive = state.bossEncounterIds().stream()
-            .allMatch(id -> remainingEncounters.containsKey(id));
+            .allMatch(remainingEncounters::containsKey);
 
         boolean hasUnresolvedNormal = remainingEncounters.values().stream()
             .anyMatch(e -> !e.boss() && e.status() != DungeonEncounterStatus.CLEARED);
@@ -289,17 +308,21 @@ public class SavedSessionService {
 
         boolean canContinue = allBossAlive && (state.combat().bossIndex() > 0 || hasUnresolvedNormal || allNormalsCleared);
 
+        // Repair combat: drop a skipped active encounter and its now-phantom gauntlet queue.
+        String activeId = state.combat().activeEncounterId();
+        boolean activeSkipped = activeId != null && skippedEncounterIds.contains(activeId);
+        DungeonCombat repairedCombat = new DungeonCombat(
+            activeSkipped ? null : activeId,
+            activeSkipped ? List.of() : state.combat().gauntletQueue(),
+            state.combat().bossIndex());
+
         DungeonMap nextMap = new DungeonMap(
             Map.copyOf(updatedRooms), state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
         DungeonSessionState newState = state.toBuilder()
             .map(nextMap)
             .encounters(remainingEncounters)
             .bossEncounterIds(remainingBossIds)
-            .combat(new DungeonCombat(
-                removedEncounterIds.contains(state.combat().activeEncounterId()) ? null : state.combat().activeEncounterId(),
-                state.combat().gauntletQueue(),
-                state.combat().bossIndex()
-            ))
+            .combat(repairedCombat)
             .build();
 
         return new ReconcileDungeonResult(newState, removedEncounterIds.size(), canContinue);
