@@ -308,12 +308,15 @@ public class SavedSessionService {
 
         boolean canContinue = allBossAlive && (state.combat().bossIndex() > 0 || hasUnresolvedNormal || allNormalsCleared);
 
-        // Repair combat: drop a skipped active encounter and its now-phantom gauntlet queue.
+        // Repair combat: drop skipped encounters from active slot and gauntlet queue.
         String activeId = state.combat().activeEncounterId();
         boolean activeSkipped = activeId != null && skippedEncounterIds.contains(activeId);
+        List<String> repairedQueue = state.combat().gauntletQueue().stream()
+            .filter(id -> !skippedEncounterIds.contains(id))
+            .toList();
         DungeonCombat repairedCombat = new DungeonCombat(
             activeSkipped ? null : activeId,
-            activeSkipped ? List.of() : state.combat().gauntletQueue(),
+            activeSkipped ? List.of() : repairedQueue,
             state.combat().bossIndex());
 
         DungeonMap nextMap = new DungeonMap(

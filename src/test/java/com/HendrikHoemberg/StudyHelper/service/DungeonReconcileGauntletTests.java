@@ -83,6 +83,31 @@ class DungeonReconcileGauntletTests {
 
         assertThat(next.map().room("r2").cleared()).isTrue();
         assertThat(next.encounters()).doesNotContainKeys("e0", "e1");
+        assertThat(next.encounters()).containsKeys("n0", "b0");
+        DungeonStateInvariants.assertValid(next);
+    }
+
+    @Test
+    void deletedGauntletMemberInQueue_clearsQueueEntry() {
+        // e1 (101L) deleted; active encounter e0 (100L) alive but in same gauntlet → whole room skipped.
+        // Combat has activeEncounterId="e0" and gauntletQueue=["e1"].
+        SavedSessionService svc = serviceWithAlive(300L, 100L, 200L);
+
+        DungeonSessionState base = stateWithEliteGauntlet();
+        DungeonSessionState state = base.toBuilder()
+            .combat(new DungeonCombat("e0", List.of("e1"), 0))
+            .build();
+
+        SavedSessionService.ReconcileDungeonResult result =
+            svc.reconcileDungeonFlashcards(state, new User());
+        DungeonSessionState next = result.state();
+
+        assertThat(next.map().room("r2").cleared()).isTrue();
+        assertThat(next.combat().activeEncounterId()).isNull();
+        assertThat(next.combat().gauntletQueue()).isEmpty();
+        assertThat(next.encounters()).doesNotContainKeys("e0", "e1");
+        assertThat(next.encounters()).containsKeys("n0", "b0");
+        assertThat(result.canContinue()).isTrue();
         DungeonStateInvariants.assertValid(next);
     }
 }
