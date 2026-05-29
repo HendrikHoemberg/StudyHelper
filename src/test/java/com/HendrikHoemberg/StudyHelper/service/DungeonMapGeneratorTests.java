@@ -130,6 +130,38 @@ class DungeonMapGeneratorTests {
     }
 
     @Test
+    void generate_everyRoomHasTwoOrThreePotLoot() {
+        DungeonMap map = generator.generate(
+            DungeonSize.MEDIUM, normalIds(9), eliteGroups(2, 2), new Random(7));
+        for (DungeonRoom r : map.rooms().values()) {
+            assertThat(r.potLoot().size()).isBetween(2, 3);
+        }
+    }
+
+    @Test
+    void generate_potLootDistributionRoughly65_10_25() {
+        int coin = 0, shield = 0, empty = 0;
+        for (int seed = 0; seed < 60; seed++) {
+            DungeonMap map = generator.generate(
+                DungeonSize.LARGE, normalIds(15), eliteGroups(3, 3), new Random(seed));
+            for (DungeonRoom r : map.rooms().values()) {
+                for (PotLoot loot : r.potLoot()) {
+                    switch (loot) {
+                        case COIN -> coin++;
+                        case SHIELD -> shield++;
+                        case EMPTY -> empty++;
+                    }
+                }
+            }
+        }
+        int total = coin + shield + empty;
+        assertThat(total).isGreaterThan(2000);
+        assertThat((double) coin / total).isBetween(0.60, 0.70);
+        assertThat((double) shield / total).isBetween(0.06, 0.14);
+        assertThat((double) empty / total).isBetween(0.20, 0.30);
+    }
+
+    @Test
     void generate_entranceIsVisitedAndCleared() {
         DungeonMap map = generator.generate(
             DungeonSize.SMALL, normalIds(6), eliteGroups(1, 2), new Random(8));

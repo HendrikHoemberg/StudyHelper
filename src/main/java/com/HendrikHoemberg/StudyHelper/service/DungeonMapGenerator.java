@@ -372,6 +372,22 @@ public class DungeonMapGenerator {
         return new SecretRoomPlacement("secret", chosen, hosts);
     }
 
+    private List<PotLoot> generatePotLoot(Random rng) {
+        int count = 2 + rng.nextInt(2);
+        List<PotLoot> loot = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            double r = rng.nextDouble();
+            if (r < 0.65) {
+                loot.add(PotLoot.COIN);
+            } else if (r < 0.75) {
+                loot.add(PotLoot.SHIELD);
+            } else {
+                loot.add(PotLoot.EMPTY);
+            }
+        }
+        return loot;
+    }
+
     private DungeonRoom buildRoom(String id, RoomType type,
                                     Map<DungeonDirection, String> roomDoors,
                                     GridPos gridPos,
@@ -424,7 +440,8 @@ public class DungeonMapGenerator {
         return new DungeonRoom(id, type, roomDoors, gridPos,
             false, false,
             encounterId, gauntletGroup,
-            treasureOffer, eliteOffer, shopOffer, secretReward);
+            treasureOffer, eliteOffer, shopOffer, secretReward,
+            generatePotLoot(rng));
     }
 
     private Map<String, Integer> bfsDistances(Map<String, Map<DungeonDirection, String>> doors, String from) {
