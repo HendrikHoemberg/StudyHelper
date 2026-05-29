@@ -71,6 +71,36 @@ class DungeonNavigationServiceTests {
         assertThat(result.state()).isSameAs(state);
     }
 
+    @Test
+    void move_withPendingRelicPick_isBlockedAndStateUnchanged() {
+        DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
+            Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
+            true, true, null, List.of(), null, null, null);
+        DungeonRoom r1 = new DungeonRoom("r1", RoomType.COMBAT,
+            Map.of(DungeonDirection.LEFT, "r0"), new GridPos(1, 0),
+            false, false, "enc_0", List.of(), null, null, null);
+        DungeonMap map = new DungeonMap(Map.of("r0", r0, "r1", r1), "r0", "r1", 3);
+
+        PendingRelicPick pick = new PendingRelicPick(
+            PendingPickType.TREASURE, "r0", List.of(RelicId.IRON_PLATE), null);
+
+        DungeonSessionState state = DungeonSessionState.builder()
+            .config(new DungeonConfig(DungeonMode.FLASHCARDS, DungeonSize.SMALL,
+                List.of(1L), QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, ""))
+            .map(map)
+            .currentRoomId("r0")
+            .encounters(Map.of())
+            .bossEncounterIds(List.of())
+            .resources(new DungeonResources(5, 5, 0, 2, 0))
+            .loadout(new DungeonLoadout(List.of(), pick))
+            .build();
+
+        ActionResult result = nav.move(state, DungeonDirection.RIGHT);
+
+        assertThat(result).isInstanceOf(ActionResult.Success.class);
+        assertThat(result.state().currentRoomId()).isEqualTo("r0");
+    }
+
     private DungeonSessionState twoRoomState() {
         DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
             Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),

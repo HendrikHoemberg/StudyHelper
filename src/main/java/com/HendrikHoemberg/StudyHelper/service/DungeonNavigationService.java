@@ -12,6 +12,7 @@ public class DungeonNavigationService {
     public ActionResult move(DungeonSessionState state, DungeonDirection direction) {
         if (state.isComplete()) return ActionResult.success(state);
         if (state.combat().activeEncounterId() != null) return ActionResult.success(state);
+        if (state.loadout().pendingRelicPick() != null) return ActionResult.success(state);
 
         DungeonRoom current = state.currentRoom();
         if (current == null) return ActionResult.failure(state, "dungeon.error.noRoom");
