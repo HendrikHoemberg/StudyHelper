@@ -245,7 +245,18 @@ public class DungeonSessionService {
         for (int i = 0; i < suffix.length(); i++) {
             if (!Character.isDigit(suffix.charAt(i))) return false;
         }
-        return true;
+        int index;
+        try {
+            index = Integer.parseInt(suffix);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        DungeonRoom room = state.currentRoom();
+        if (room == null) return false;
+        List<PotLoot> loot = room.potLoot();
+        if (index < 0 || index >= loot.size()) return false;
+        PotLoot expected = "shield".equals(expectedType) ? PotLoot.SHIELD : PotLoot.COIN;
+        return loot.get(index) == expected;
     }
 
     // ===== helpers =====

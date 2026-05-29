@@ -98,24 +98,24 @@ class DungeonCollectValidationTests {
     @Test
     void collectShield_incrementsShieldsBelowCap() {
         DungeonSessionState state = baseState().shields(0).shieldCap(2).build();
-        CollectResult result = service.collectShield(state, "r0_shield_0");
+        CollectResult result = service.collectShield(state, "r0_shield_1");
         assertThat(result.status()).isEqualTo(CollectStatus.OK);
         assertThat(result.state().resources().shields()).isEqualTo(1);
-        assertThat(result.state().collectedItems()).contains("r0_shield_0");
+        assertThat(result.state().collectedItems()).contains("r0_shield_1");
     }
 
     @Test
     void collectShield_duplicateRejected() {
         DungeonSessionState state = baseState().shields(0).shieldCap(2).build()
-            .withCollectedItems(Set.of("r0_shield_0"));
-        CollectResult result = service.collectShield(state, "r0_shield_0");
+            .withCollectedItems(Set.of("r0_shield_1"));
+        CollectResult result = service.collectShield(state, "r0_shield_1");
         assertThat(result.status()).isEqualTo(CollectStatus.DUPLICATE);
     }
 
     @Test
     void collectShield_rejectedWhenAtCap() {
         DungeonSessionState state = baseState().shields(2).shieldCap(2).build();
-        assertThat(service.collectShield(state, "r0_shield_0").status())
+        assertThat(service.collectShield(state, "r0_shield_1").status())
             .isEqualTo(CollectStatus.REJECTED);
     }
 
@@ -152,6 +152,29 @@ class DungeonCollectValidationTests {
             .isEqualTo(CollectStatus.REJECTED);
     }
 
+    @Test
+    void collectCoin_rejectsOutOfRangeIndex() {
+        DungeonSessionState state = baseState().build();
+        assertThat(service.collectCoin(state, "r0_coin_5").status())
+            .isEqualTo(CollectStatus.REJECTED);
+    }
+
+    @Test
+    void collectCoin_rejectsIdPointingAtNonCoinPot() {
+        // pot index 1 is a SHIELD, not a COIN
+        DungeonSessionState state = baseState().build();
+        assertThat(service.collectCoin(state, "r0_coin_1").status())
+            .isEqualTo(CollectStatus.REJECTED);
+    }
+
+    @Test
+    void collectShield_rejectsIdPointingAtNonShieldPot() {
+        // pot index 0 is a COIN, not a SHIELD
+        DungeonSessionState state = baseState().shields(0).shieldCap(2).build();
+        assertThat(service.collectShield(state, "r0_shield_0").status())
+            .isEqualTo(CollectStatus.REJECTED);
+    }
+
     private static StateBuilder baseState() {
         return new StateBuilder();
     }
@@ -177,7 +200,8 @@ class DungeonCollectValidationTests {
         DungeonSessionState build() {
             DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
                 Map.of(), new GridPos(0, 0),
-                true, true, null, List.of(), null, null, null, null);
+                true, true, null, List.of(), null, null, null, null,
+                List.of(PotLoot.COIN, PotLoot.SHIELD));
             DungeonMap map = new DungeonMap(Map.of("r0", r0), "r0", "r0", 3);
             DungeonConfig config = new DungeonConfig(
                 DungeonMode.FLASHCARDS, DungeonSize.SMALL, List.of(1L),
