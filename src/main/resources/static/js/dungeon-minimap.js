@@ -53,7 +53,7 @@ var DungeonMinimap = (function () {
             var glyphMap = {
                 ENTRANCE: '\u2B21', COMBAT: '\u2694', ELITE: '\u2726',
                 TREASURE: '\u25C6', HEAL: '\u2665', SHOP: '$',
-                BOSS: '\u2620', SECRET: '?'
+                BOSS: '\u2620'
             };
             var glyph = glyphMap[room.type] || '';
             ctx.fillText(glyph, x + cellSize / 2 - 4, y + cellSize / 2 + 4);
@@ -71,7 +71,6 @@ var DungeonMinimap = (function () {
             case 'HEAL':     return '#2da366';
             case 'SHOP':     return '#2d8aa3';
             case 'BOSS':     return '#d63a3a';
-            case 'SECRET':   return '#888';
             default:         return '#3a3a48';
         }
     }

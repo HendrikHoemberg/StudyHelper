@@ -137,7 +137,7 @@ var DungeonRenderer = (function () {
         ctx.fillStyle = '#0b0f19';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        var isDark = ['BOSS', 'SECRET', 'TREASURE'].indexOf(type) !== -1;
+        var isDark = ['BOSS', 'TREASURE'].indexOf(type) !== -1;
 
         for (var fy = 96; fy <= 608; fy += 64) {
             for (var fx = 96; fx <= 864; fx += 64) {
@@ -223,8 +223,6 @@ var DungeonRenderer = (function () {
         } else if (type === 'HEAL' && !cleared) {
             drawPixelSprite('POTION', 480, 352, 64);
         } else if (type === 'SHOP') {
-            drawPixelSprite('CHEST', 480, 352, 64);
-        } else if (type === 'SECRET' && !cleared) {
             drawPixelSprite('CHEST', 480, 352, 64);
         } else if (type === 'SHRINE' && !cleared) {
             drawPixelSprite('SHRINE', 480, 352, 64);

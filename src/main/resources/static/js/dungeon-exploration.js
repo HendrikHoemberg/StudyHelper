@@ -282,7 +282,7 @@ var DungeonExploration = (function () {
         var roomType = canvas.dataset.currentRoomType;
         var cleared = canvas.dataset.currentRoomCleared === 'true';
 
-        var checkCenterpiece = ['TREASURE', 'SHOP', 'SECRET', 'SHRINE'].indexOf(roomType) !== -1 && !cleared;
+        var checkCenterpiece = ['TREASURE', 'SHOP', 'SHRINE'].indexOf(roomType) !== -1 && !cleared;
         if (checkCenterpiece && !window.dungeonCenterpieceInteracted) {
             var centerX = 480;
             var centerY = 352;
@@ -332,7 +332,7 @@ var DungeonExploration = (function () {
             var roomMonster = canvas.dataset.currentRoomMonster || '';
             var potLoot = (canvas.dataset.currentRoomPots || '').split(',').filter(Boolean);
 
-            if (!cleared && ['TREASURE', 'SHOP', 'SECRET', 'HEAL', 'ENTRANCE', 'SHRINE', 'BOSS'].indexOf(roomType) === -1) {
+            if (!cleared && ['TREASURE', 'SHOP', 'HEAL', 'ENTRANCE', 'SHRINE', 'BOSS'].indexOf(roomType) === -1) {
                 currentRoomItems.pots = spawnPotsForRoom(roomId, potLoot);
             } else if (cleared && ['COMBAT', 'ELITE', 'BOSS'].indexOf(roomType) !== -1) {
                 // Monster type is supplied by the server (see DungeonEncounter.monsterType).

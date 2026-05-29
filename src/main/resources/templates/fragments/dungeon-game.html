@@ -156,9 +156,6 @@
             <th:block th:if="${pendingPick.type.name() == 'SHOP'}">
                 <div th:replace="~{fragments/dungeon-shop-modal :: modal}"></div>
             </th:block>
-            <th:block th:if="${pendingPick.type.name() == 'SECRET'}">
-                <div th:replace="~{fragments/dungeon-secret-modal :: modal}"></div>
-            </th:block>
             <th:block th:if="${pendingPick.type.name() == 'SHRINE'}">
                 <div th:replace="~{fragments/dungeon-shrine-modal :: modal}"></div>
             </th:block>
