@@ -79,6 +79,24 @@ public record DungeonSessionState(
         return won || defeated;
     }
 
+    @JsonIgnore
+    public boolean isCoherent() {
+        if (currentRoomId == null || map == null || map.room(currentRoomId) == null) return false;
+        String active = combat.activeEncounterId();
+        if (active != null && !encounters.containsKey(active)) return false;
+        for (String queuedId : combat.gauntletQueue()) {
+            if (!encounters.containsKey(queuedId)) return false;
+        }
+        PendingRelicPick pick = loadout.pendingRelicPick();
+        if (pick != null && map.room(pick.roomId()) == null) return false;
+        if (won && defeated) return false;
+        if (combat.bossIndex() < 0 || combat.bossIndex() > bossEncounterIds.size()) return false;
+        for (String bossId : bossEncounterIds) {
+            if (!encounters.containsKey(bossId)) return false;
+        }
+        return true;
+    }
+
     public DungeonEncounter activeEncounter() {
         String id = combat.activeEncounterId();
         return id == null ? null : encounters.get(id);
