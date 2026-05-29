@@ -16,6 +16,8 @@ import java.util.*;
 @Service
 public class DungeonSessionService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(DungeonSessionService.class);
+
     private final DeckService deckService;
     private final FlashcardService flashcardService;
     private final QuizSessionService quizSessionService;
@@ -204,7 +206,11 @@ public class DungeonSessionService {
 
     public CollectResult collectCoin(DungeonSessionState state, String itemId) {
         if (!canCollectInteractiveItem(state)) return new CollectResult(CollectStatus.REJECTED, state);
-        if (!isValidItemId(state, itemId, "coin")) return new CollectResult(CollectStatus.REJECTED, state);
+        if (!isValidItemId(state, itemId, "coin")) {
+            log.warn("Rejected invalid coin collect: itemId={} room={}",
+                itemId, state == null ? null : state.currentRoomId());
+            return new CollectResult(CollectStatus.REJECTED, state);
+        }
         if (state.collectedItems().contains(itemId)) return new CollectResult(CollectStatus.DUPLICATE, state);
         Set<String> collected = new HashSet<>(state.collectedItems());
         collected.add(itemId);
@@ -214,7 +220,11 @@ public class DungeonSessionService {
 
     public CollectResult collectShield(DungeonSessionState state, String itemId) {
         if (!canCollectInteractiveItem(state)) return new CollectResult(CollectStatus.REJECTED, state);
-        if (!isValidItemId(state, itemId, "shield")) return new CollectResult(CollectStatus.REJECTED, state);
+        if (!isValidItemId(state, itemId, "shield")) {
+            log.warn("Rejected invalid shield collect: itemId={} room={}",
+                itemId, state == null ? null : state.currentRoomId());
+            return new CollectResult(CollectStatus.REJECTED, state);
+        }
         if (state.collectedItems().contains(itemId)) return new CollectResult(CollectStatus.DUPLICATE, state);
         DungeonResources nextResources = state.resources().addShield();
         if (nextResources == state.resources()) return new CollectResult(CollectStatus.REJECTED, state);
