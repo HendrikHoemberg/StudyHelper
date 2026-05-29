@@ -6,6 +6,10 @@ import com.HendrikHoemberg.StudyHelper.service.*;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.ui.Model;
+import org.springframework.web.util.WebUtils;
+
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 class DungeonControllerAccess {
 
@@ -17,6 +21,20 @@ class DungeonControllerAccess {
             state = savedSessionService.loadDungeon(user).orElse(null);
         }
         return state;
+    }
+
+    static <T> T withSession(HttpSession session, User user, SavedSessionService savedSessionService,
+                             Function<DungeonSessionState, T> body) {
+        synchronized (WebUtils.getSessionMutex(session)) {
+            DungeonSessionState state = getState(session, user, savedSessionService);
+            return body.apply(state);
+        }
+    }
+
+    static <T> T withSessionLock(HttpSession session, Supplier<T> body) {
+        synchronized (WebUtils.getSessionMutex(session)) {
+            return body.get();
+        }
     }
 
     static String stashAndRender(Model model, User user, HttpSession session,
