@@ -41,4 +41,15 @@ class DungeonSizeTests {
         assertThat(DungeonSize.LARGE.isAvailableFor(28)).isFalse();
         assertThat(DungeonSize.LARGE.isAvailableFor(29)).isTrue();
     }
+
+    @Test
+    void totalPrompts_equalsNormalPlusBossPlusEliteCards_forEverySize() {
+        for (DungeonSize size : DungeonSize.values()) {
+            int eliteCards = size.eliteGauntletCount() * size.cardsPerEliteGauntlet();
+            int sum = size.normalEncounterCount() + size.bossPromptCount() + eliteCards;
+            assertThat(sum)
+                .as("size %s prompt accounting", size)
+                .isEqualTo(size.totalPrompts());
+        }
+    }
 }
