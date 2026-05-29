@@ -69,10 +69,12 @@ public class DungeonController {
         try {
             DungeonSessionState state = createDungeon(dungeonMode, dungeonSize, selectedDeckIds,
                 quizQuestionMode, difficulty, additionalInstructions, request, user, response);
-            savedSessionService.discard(user);
-            session.setAttribute(DungeonControllerAccess.DUNGEON_SESSION_KEY, state);
-            savedSessionService.saveDungeon(user, state);
-            return renderGame(model, state, hxRequest);
+            return DungeonControllerAccess.withSessionLock(session, () -> {
+                savedSessionService.discard(user);
+                session.setAttribute(DungeonControllerAccess.DUNGEON_SESSION_KEY, state);
+                savedSessionService.saveDungeon(user, state);
+                return renderGame(model, state, hxRequest);
+            });
         } catch (DeckNotFoundException ex) {
             return handleStartError(model, user, dungeonMode, dungeonSize, selectedDeckIds,
                 quizQuestionMode, difficulty, additionalInstructions, ex, response, hxRequest);
@@ -98,28 +100,30 @@ public class DungeonController {
                          HttpSession session,
                          @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
         User user = userService.getByUsername(principal.getName());
-        Optional<DungeonSessionState> loaded = savedSessionService.loadDungeon(user);
-        if (loaded.isEmpty()) {
-            savedSessionService.consumeIncompatibleDiscardFlag(user);
-            return "redirect:/study/start?mode=DUNGEON";
-        }
-
-        DungeonSessionState state = loaded.get();
-        if (state.config().mode() == DungeonMode.FLASHCARDS) {
-            SavedSessionService.ReconcileDungeonResult result =
-                savedSessionService.reconcileDungeonFlashcards(state, user);
-            if (!result.canContinue()) {
-                DungeonRunStats stats = dungeonSessionService.buildStats(result.state());
-                studyLogService.recordDungeonAbandoned(user, stats, state.config().selectedDeckIds());
-                savedSessionService.discard(user, false);
+        return DungeonControllerAccess.withSessionLock(session, () -> {
+            Optional<DungeonSessionState> loaded = savedSessionService.loadDungeon(user);
+            if (loaded.isEmpty()) {
+                savedSessionService.consumeIncompatibleDiscardFlag(user);
                 return "redirect:/study/start?mode=DUNGEON";
             }
-            state = result.state();
-        }
 
-        session.setAttribute(DungeonControllerAccess.DUNGEON_SESSION_KEY, state);
-        savedSessionService.saveDungeon(user, state);
-        return renderGame(model, state, hxRequest);
+            DungeonSessionState state = loaded.get();
+            if (state.config().mode() == DungeonMode.FLASHCARDS) {
+                SavedSessionService.ReconcileDungeonResult result =
+                    savedSessionService.reconcileDungeonFlashcards(state, user);
+                if (!result.canContinue()) {
+                    DungeonRunStats stats = dungeonSessionService.buildStats(result.state());
+                    studyLogService.recordDungeonAbandoned(user, stats, state.config().selectedDeckIds());
+                    savedSessionService.discard(user, false);
+                    return "redirect:/study/start?mode=DUNGEON";
+                }
+                state = result.state();
+            }
+
+            session.setAttribute(DungeonControllerAccess.DUNGEON_SESSION_KEY, state);
+            savedSessionService.saveDungeon(user, state);
+            return renderGame(model, state, hxRequest);
+        });
     }
 
     private DungeonSessionState createDungeon(DungeonMode dungeonMode, DungeonSize dungeonSize,
