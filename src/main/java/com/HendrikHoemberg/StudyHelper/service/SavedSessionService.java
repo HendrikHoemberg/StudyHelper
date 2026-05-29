@@ -229,6 +229,11 @@ public class SavedSessionService {
         return incompatibleDiscardUserIds.remove(user.getId());
     }
 
+    public void markIncompatibleAndDiscard(User user) {
+        incompatibleDiscardUserIds.add(user.getId());
+        discard(user, false);
+    }
+
     public void saveDungeon(User user, DungeonSessionState state) {
         upsert(user, SavedSessionType.DUNGEON, state,
             dungeonTitle(state), dungeonProgress(state));

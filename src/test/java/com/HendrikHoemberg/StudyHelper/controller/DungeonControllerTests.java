@@ -3,7 +3,17 @@ package com.HendrikHoemberg.StudyHelper.controller;
 import com.HendrikHoemberg.StudyHelper.config.SecurityConfig;
 import com.HendrikHoemberg.StudyHelper.dto.CollectResult;
 import com.HendrikHoemberg.StudyHelper.dto.CollectStatus;
+import com.HendrikHoemberg.StudyHelper.dto.Difficulty;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonConfig;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonMap;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonMode;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonResources;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonRoom;
 import com.HendrikHoemberg.StudyHelper.dto.DungeonSessionState;
+import com.HendrikHoemberg.StudyHelper.dto.DungeonSize;
+import com.HendrikHoemberg.StudyHelper.dto.GridPos;
+import com.HendrikHoemberg.StudyHelper.dto.QuizQuestionMode;
+import com.HendrikHoemberg.StudyHelper.dto.RoomType;
 import com.HendrikHoemberg.StudyHelper.dto.SavedSessionSummary;
 import com.HendrikHoemberg.StudyHelper.entity.SavedSessionType;
 import com.HendrikHoemberg.StudyHelper.entity.User;
@@ -202,5 +212,27 @@ class DungeonControllerTests {
             .andExpect(view().name("fragments/saved-session :: conflict"));
 
         verify(dungeonSessionService, never()).createFlashcardDungeon(any(), any(), any());
+    }
+
+    @Test
+    void resume_withIncoherentSavedState_discardsAndRedirects() throws Exception {
+        DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
+            java.util.Map.of(), new GridPos(0, 0), true, true,
+            null, java.util.List.of(), null, null, null);
+        DungeonMap map = new DungeonMap(java.util.Map.of("r0", r0), "r0", "r0", 3);
+        DungeonSessionState incoherent = DungeonSessionState.builder()
+            .config(new DungeonConfig(DungeonMode.AI_QUIZ, DungeonSize.SMALL, java.util.List.of(1L),
+                QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, ""))
+            .map(map).currentRoomId("ghost")  // not in map -> incoherent
+            .encounters(java.util.Map.of()).bossEncounterIds(java.util.List.of())
+            .resources(new DungeonResources(5, 5, 0, 2, 0))
+            .build();
+        when(savedSessionService.loadDungeon(user)).thenReturn(Optional.of(incoherent));
+
+        mockMvc.perform(get("/dungeon/resume").with(user("alice")))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/study/start?mode=DUNGEON"));
+
+        verify(savedSessionService).markIncompatibleAndDiscard(user);
     }
 }

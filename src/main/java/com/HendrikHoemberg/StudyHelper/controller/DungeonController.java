@@ -120,6 +120,11 @@ public class DungeonController {
                 state = result.state();
             }
 
+            if (!state.isCoherent()) {
+                savedSessionService.markIncompatibleAndDiscard(user);
+                return "redirect:/study/start?mode=DUNGEON";
+            }
+
             session.setAttribute(DungeonControllerAccess.DUNGEON_SESSION_KEY, state);
             savedSessionService.saveDungeon(user, state);
             return renderGame(model, state, hxRequest);
