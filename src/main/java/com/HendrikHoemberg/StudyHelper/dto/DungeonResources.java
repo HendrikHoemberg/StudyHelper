@@ -10,6 +10,14 @@ public record DungeonResources(
     int score
 ) implements Serializable {
 
+    public DungeonResources {
+        healthCap = Math.max(0, healthCap);
+        shieldCap = Math.max(0, shieldCap);
+        health = Math.max(0, Math.min(health, healthCap));
+        shields = Math.max(0, Math.min(shields, shieldCap));
+        score = Math.max(0, score);
+    }
+
     public DungeonResources withHealth(int v)     { return new DungeonResources(v, healthCap, shields, shieldCap, score); }
     public DungeonResources withShields(int v)    { return new DungeonResources(health, healthCap, v, shieldCap, score); }
     public DungeonResources withScore(int v)      { return new DungeonResources(health, healthCap, shields, shieldCap, v); }

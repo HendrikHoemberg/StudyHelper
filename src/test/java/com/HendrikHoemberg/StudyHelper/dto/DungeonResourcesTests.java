@@ -73,4 +73,23 @@ class DungeonResourcesTests {
         assertThat(r.shields()).isEqualTo(2);
         assertThat(r.health()).isEqualTo(4);
     }
+
+    @Test
+    void constructor_clampsHealthBetweenZeroAndCap() {
+        assertThat(of(99, 5, 0, 2, 0).health()).isEqualTo(5);
+        assertThat(of(-3, 5, 0, 2, 0).health()).isEqualTo(0);
+    }
+
+    @Test
+    void constructor_clampsShieldsBetweenZeroAndCap() {
+        assertThat(of(5, 5, 9, 2, 0).shields()).isEqualTo(2);
+        assertThat(of(5, 5, -1, 2, 0).shields()).isEqualTo(0);
+    }
+
+    @Test
+    void constructor_clampsNegativeScoreAndCapsToZero() {
+        assertThat(of(5, 5, 0, 2, -50).score()).isEqualTo(0);
+        assertThat(of(5, -1, 0, -1, 0).healthCap()).isEqualTo(0);
+        assertThat(of(5, -1, 0, -1, 0).shieldCap()).isEqualTo(0);
+    }
 }

@@ -12,6 +12,16 @@ public record DungeonProgress(
     int luckyCoinsConsumed
 ) implements Serializable {
 
+    public DungeonProgress {
+        answeredCount = Math.max(0, answeredCount);
+        correctCount = Math.max(0, correctCount);
+        streak = Math.max(0, streak);
+        longestStreak = Math.max(0, longestStreak);
+        elitesCleared = Math.max(0, elitesCleared);
+        shieldsUsed = Math.max(0, shieldsUsed);
+        luckyCoinsConsumed = Math.max(0, luckyCoinsConsumed);
+    }
+
     public DungeonProgress withAnsweredCount(int v) {
         return new DungeonProgress(v, correctCount, streak, longestStreak, elitesCleared, shieldsUsed, luckyCoinsConsumed);
     }

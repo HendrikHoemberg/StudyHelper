@@ -63,4 +63,16 @@ class DungeonProgressTests {
     void consumeLuckyCoin_increments() {
         assertThat(zero().consumeLuckyCoin().luckyCoinsConsumed()).isEqualTo(1);
     }
+
+    @Test
+    void constructor_clampsNegativeFieldsToZero() {
+        DungeonProgress p = new DungeonProgress(-1, -1, -1, -1, -1, -1, -1);
+        assertThat(p.answeredCount()).isEqualTo(0);
+        assertThat(p.correctCount()).isEqualTo(0);
+        assertThat(p.streak()).isEqualTo(0);
+        assertThat(p.longestStreak()).isEqualTo(0);
+        assertThat(p.elitesCleared()).isEqualTo(0);
+        assertThat(p.shieldsUsed()).isEqualTo(0);
+        assertThat(p.luckyCoinsConsumed()).isEqualTo(0);
+    }
 }
