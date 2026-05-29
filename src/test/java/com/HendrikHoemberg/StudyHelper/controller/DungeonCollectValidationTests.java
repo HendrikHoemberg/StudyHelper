@@ -175,6 +175,13 @@ class DungeonCollectValidationTests {
             .isEqualTo(CollectStatus.REJECTED);
     }
 
+    @Test
+    void collectCoin_rejectsLeadingZeroVariant() {
+        DungeonSessionState state = baseState().build();
+        assertThat(service.collectCoin(state, "r0_coin_00").status())
+            .isEqualTo(CollectStatus.REJECTED);
+    }
+
     private static StateBuilder baseState() {
         return new StateBuilder();
     }

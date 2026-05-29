@@ -251,6 +251,7 @@ public class DungeonSessionService {
         } catch (NumberFormatException e) {
             return false;
         }
+        if (!itemId.equals(prefix + index)) return false;
         DungeonRoom room = state.currentRoom();
         if (room == null) return false;
         List<PotLoot> loot = room.potLoot();
