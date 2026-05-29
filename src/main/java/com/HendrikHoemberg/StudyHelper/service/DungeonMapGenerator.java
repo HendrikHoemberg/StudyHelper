@@ -84,7 +84,7 @@ public class DungeonMapGenerator {
         Map<String, RoomType> types = assignRoomTypes(
             entranceId, roomToLattice, doors, size, rng);
 
-        // Step 5: build rooms with offers + gauntlet groups
+        // Step 4: build rooms with offers + gauntlet groups
         Map<String, DungeonRoom> rooms = new LinkedHashMap<>();
         Iterator<String> normalIter = new ArrayDeque<>(normalEncounterIds).iterator();
         Iterator<List<String>> eliteIter = new ArrayDeque<>(eliteGauntletGroups).iterator();
