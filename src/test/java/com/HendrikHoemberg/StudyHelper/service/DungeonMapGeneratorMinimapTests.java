@@ -67,4 +67,52 @@ class DungeonMapGeneratorMinimapTests {
         List<MinimapRoom> rooms = minimapBuilder.build(state);
         assertThat(rooms).anyMatch(r -> r.isCurrent() && r.id().equals(map.entranceRoomId()));
     }
+
+    @Test
+    void buildMinimap_withMapSense_revealsEveryRoomTyped() {
+        DungeonMapGenerator gen = new DungeonMapGenerator();
+        List<String> normalIds = IntStream.range(0, DungeonSize.SMALL.normalEncounterCount())
+            .mapToObj(i -> "enc_" + i)
+            .toList();
+        DungeonMap map = gen.generate(DungeonSize.SMALL, normalIds, List.of(List.of("e1_0", "e1_1")));
+
+        DungeonSessionState state = DungeonSessionState.builder()
+            .config(new DungeonConfig(DungeonMode.FLASHCARDS, DungeonSize.SMALL,
+                List.of(1L), QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, ""))
+            .map(map)
+            .currentRoomId(map.entranceRoomId())
+            .encounters(Map.of())
+            .bossEncounterIds(List.of("boss_0"))
+            .resources(new DungeonResources(5, 5, 0, 2, 0))
+            .loadout(new DungeonLoadout(List.of(RelicId.MAP_SENSE), null))
+            .build();
+
+        List<MinimapRoom> rooms = new DungeonMinimapBuilder().build(state);
+
+        assertThat(rooms).hasSize(map.rooms().size());
+        assertThat(rooms).noneMatch(r -> r.type().equals("UNKNOWN"));
+    }
+
+    @Test
+    void buildMinimap_withoutMapSense_hidesUnvisitedNonAdjacentRooms() {
+        DungeonMapGenerator gen = new DungeonMapGenerator();
+        List<String> normalIds = IntStream.range(0, DungeonSize.SMALL.normalEncounterCount())
+            .mapToObj(i -> "enc_" + i)
+            .toList();
+        DungeonMap map = gen.generate(DungeonSize.SMALL, normalIds, List.of(List.of("e1_0", "e1_1")));
+
+        DungeonSessionState state = DungeonSessionState.builder()
+            .config(new DungeonConfig(DungeonMode.FLASHCARDS, DungeonSize.SMALL,
+                List.of(1L), QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, ""))
+            .map(map)
+            .currentRoomId(map.entranceRoomId())
+            .encounters(Map.of())
+            .bossEncounterIds(List.of("boss_0"))
+            .resources(new DungeonResources(5, 5, 0, 2, 0))
+            .build();
+
+        List<MinimapRoom> rooms = new DungeonMinimapBuilder().build(state);
+
+        assertThat(rooms.size()).isLessThan(map.rooms().size());
+    }
 }

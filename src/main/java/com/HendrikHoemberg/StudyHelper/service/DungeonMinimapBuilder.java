@@ -24,38 +24,14 @@ public class DungeonMinimapBuilder {
             }
         }
 
-        Set<String> secretRevealed = new HashSet<>();
-        for (DungeonRoom r : state.map().rooms().values()) {
-            if (r.type() != RoomType.SECRET) continue;
-            if (hasMapSense) {
-                secretRevealed.add(r.id());
-                continue;
-            }
-            int hostsVisited = 0;
-            int hostsTotal = 0;
-            for (DungeonRoom maybeHost : state.map().rooms().values()) {
-                if (maybeHost.id().equals(r.id())) continue;
-                GridPos a = r.gridPos();
-                GridPos b = maybeHost.gridPos();
-                if (Math.abs(a.x() - b.x()) + Math.abs(a.y() - b.y()) == 1) {
-                    hostsTotal++;
-                    if (visitedIds.contains(maybeHost.id())) hostsVisited++;
-                }
-            }
-            if (hostsTotal > 0 && hostsVisited == hostsTotal) secretRevealed.add(r.id());
-        }
-
         List<MinimapRoom> result = new ArrayList<>();
         for (DungeonRoom r : state.map().rooms().values()) {
             boolean isVisited = visitedIds.contains(r.id());
             boolean isAdjacent = adjacentToVisited.contains(r.id());
-            boolean isSecret = r.type() == RoomType.SECRET;
-            boolean visible = isVisited || isAdjacent || (isSecret && secretRevealed.contains(r.id()));
+            boolean visible = isVisited || isAdjacent || hasMapSense;
             if (!visible) continue;
 
-            boolean revealedType = isVisited
-                || (isAdjacent && hasCompass)
-                || (isSecret && secretRevealed.contains(r.id()));
+            boolean revealedType = isVisited || (isAdjacent && hasCompass) || hasMapSense;
 
             Map<String, String> doors = new LinkedHashMap<>();
             for (Map.Entry<DungeonDirection, String> e : r.doors().entrySet()) {
