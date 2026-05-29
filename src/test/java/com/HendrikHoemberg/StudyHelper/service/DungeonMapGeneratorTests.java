@@ -24,7 +24,7 @@ class DungeonMapGeneratorTests {
         assertThat(counts.get(RoomType.TREASURE)).isEqualTo(1);
         assertThat(counts.get(RoomType.ELITE)).isEqualTo(1);
         assertThat(counts.get(RoomType.COMBAT)).isEqualTo(6);
-        assertThat(counts.getOrDefault(RoomType.SECRET, 0L)).isEqualTo(1);
+        assertThat(counts.getOrDefault(RoomType.SECRET, 0L)).isEqualTo(0);
     }
 
     @Test
@@ -56,25 +56,14 @@ class DungeonMapGeneratorTests {
     }
 
     @Test
-    void generate_allNonSecretRoomsReachable() {
+    void generate_allRoomsReachable() {
         DungeonMap map = generator.generate(
             DungeonSize.MEDIUM, normalIds(9), eliteGroups(2, 2), new Random(3));
         Set<String> reachable = reach(map);
-        Set<String> nonSecret = map.rooms().values().stream()
-            .filter(r -> r.type() != RoomType.SECRET)
+        Set<String> allIds = map.rooms().values().stream()
             .map(DungeonRoom::id)
             .collect(Collectors.toSet());
-        assertThat(reachable).containsAll(nonSecret);
-    }
-
-    @Test
-    void generate_secretRoomHasNoDoors() {
-        DungeonMap map = generator.generate(
-            DungeonSize.SMALL, normalIds(6), eliteGroups(1, 2), new Random(4));
-        DungeonRoom secret = map.rooms().values().stream()
-            .filter(r -> r.type() == RoomType.SECRET)
-            .findFirst().orElseThrow();
-        assertThat(secret.doors()).isEmpty();
+        assertThat(reachable).containsAll(allIds);
     }
 
     @Test

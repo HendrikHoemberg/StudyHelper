@@ -84,17 +84,6 @@ public class DungeonMapGenerator {
         Map<String, RoomType> types = assignRoomTypes(
             entranceId, roomToLattice, doors, size, rng);
 
-        // Step 4: embed secret room (no doors; revealed via hosts)
-        SecretRoomPlacement secret = embedSecretRoom(latticeToRoomId, roomToLattice, lattice, rng);
-        String secretRoomId = null;
-        if (secret != null) {
-            secretRoomId = secret.id;
-            latticeToRoomId.put(secret.pos, secret.id);
-            roomToLattice.put(secret.id, secret.pos);
-            doors.put(secret.id, new EnumMap<>(DungeonDirection.class));
-            types.put(secret.id, RoomType.SECRET);
-        }
-
         // Step 5: build rooms with offers + gauntlet groups
         Map<String, DungeonRoom> rooms = new LinkedHashMap<>();
         Iterator<String> normalIter = new ArrayDeque<>(normalEncounterIds).iterator();
@@ -107,7 +96,7 @@ public class DungeonMapGenerator {
             String id = e.getKey();
             RoomType type = e.getValue();
             DungeonRoom room = buildRoom(id, type, doors.get(id), roomToLattice.get(id),
-                normalIter, eliteIter, secretRoomId, secret, rng);
+                normalIter, eliteIter, rng);
             rooms.put(id, room);
         }
 
@@ -126,8 +115,6 @@ public class DungeonMapGenerator {
     // ===== helpers =====
 
     private static class LayoutFailure extends RuntimeException {}
-
-    private record SecretRoomPlacement(String id, GridPos pos, List<String> hostRoomIds) {}
 
     private int latticeSize(DungeonSize size) {
         return switch (size) { case SMALL -> 7; case MEDIUM -> 9; case LARGE -> 11; };
@@ -344,34 +331,6 @@ public class DungeonMapGenerator {
         return best;
     }
 
-    private SecretRoomPlacement embedSecretRoom(Map<GridPos, String> latticeToRoomId,
-                                                  Map<String, GridPos> roomToLattice,
-                                                  int lattice,
-                                                  Random rng) {
-        List<GridPos> candidates = new ArrayList<>();
-        for (int x = 0; x < lattice; x++) {
-            for (int y = 0; y < lattice; y++) {
-                GridPos pos = new GridPos(x, y);
-                if (latticeToRoomId.containsKey(pos)) continue;
-                List<String> hosts = new ArrayList<>();
-                for (DungeonDirection d : DIRS) {
-                    String neighborId = latticeToRoomId.get(move(pos, d));
-                    if (neighborId != null) hosts.add(neighborId);
-                }
-                if (hosts.size() >= 2) candidates.add(pos);
-            }
-        }
-        if (candidates.isEmpty()) return null;
-        Collections.shuffle(candidates, rng);
-        GridPos chosen = candidates.get(0);
-        List<String> hosts = new ArrayList<>();
-        for (DungeonDirection d : DIRS) {
-            String neighborId = latticeToRoomId.get(move(chosen, d));
-            if (neighborId != null) hosts.add(neighborId);
-        }
-        return new SecretRoomPlacement("secret", chosen, hosts);
-    }
-
     private List<PotLoot> generatePotLoot(Random rng) {
         int count = 2 + rng.nextInt(2);
         List<PotLoot> loot = new ArrayList<>(count);
@@ -393,15 +352,12 @@ public class DungeonMapGenerator {
                                     GridPos gridPos,
                                     Iterator<String> normalIter,
                                     Iterator<List<String>> eliteIter,
-                                    String secretRoomId,
-                                    SecretRoomPlacement secret,
                                     Random rng) {
         String encounterId = null;
         List<String> gauntletGroup = List.of();
         TreasureOffer treasureOffer = null;
         TreasureOffer eliteOffer = null;
         ShopOffer shopOffer = null;
-        SecretReward secretReward = null;
 
         switch (type) {
             case COMBAT -> encounterId = normalIter.next();
@@ -425,22 +381,13 @@ public class DungeonMapGenerator {
                     "dungeon.shop.consumable.heal", 30, 2);
                 shopOffer = new ShopOffer(entries, consumable);
             }
-            case SECRET -> {
-                if (rng.nextBoolean()) {
-                    List<RelicId> picks = RelicCatalog.sampleFromUnion(
-                        List.of(RelicPool.COMMON, RelicPool.ELITE), 1, rng);
-                    secretReward = new SecretReward.RelicReward(picks.get(0));
-                } else {
-                    secretReward = new SecretReward.Bundle(5, 1, 50);
-                }
-            }
-            case ENTRANCE, HEAL, BOSS, SHRINE -> { }
+            case ENTRANCE, HEAL, BOSS, SHRINE, SECRET -> { }
         }
 
         return new DungeonRoom(id, type, roomDoors, gridPos,
             false, false,
             encounterId, gauntletGroup,
-            treasureOffer, eliteOffer, shopOffer, secretReward,
+            treasureOffer, eliteOffer, shopOffer, null,
             generatePotLoot(rng));
     }
 
