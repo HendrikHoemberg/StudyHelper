@@ -33,6 +33,7 @@ var DungeonCombatHud = (function () {
             gauntletPos: parseInt(canvas.dataset.gauntletPosition || '0', 10),
             gauntletTotal: parseInt(canvas.dataset.gauntletTotal || '0', 10),
             monster: canvas.dataset.activeEncounterMonster || '',
+            isRevenant: canvas.dataset.activeRevenant === 'true',
             hoveredOptionIndex: window.dungeonHoveredOptionIndex,
             mode: null,
             flashcard: { front: '', back: '', revealed: false },
@@ -82,7 +83,8 @@ var DungeonCombatHud = (function () {
         DungeonRenderer.renderSplash({
             monster: window.dungeonSplashMonster,
             boss: canvas.dataset.activeEncounterBoss === 'true',
-            gauntletTotal: parseInt(canvas.dataset.gauntletTotal || '0', 10)
+            gauntletTotal: parseInt(canvas.dataset.gauntletTotal || '0', 10),
+            isRevenant: canvas.dataset.activeRevenant === 'true'
         });
         requestAnimationFrame(runSplashLoop);
     }
