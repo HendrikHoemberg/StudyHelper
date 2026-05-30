@@ -60,7 +60,9 @@
                         th:data-current-room-monster="${currentRoomMonster}"
                         th:data-current-room-pots="${currentRoomPots}"
                         th:data-gauntlet-position="${gauntletPosition}"
-                        th:data-gauntlet-total="${gauntletTotal}">
+                        th:data-gauntlet-total="${gauntletTotal}"
+                        th:data-active-revenant="${activeRevenant}"
+                        th:data-revenant-doors="${revenantDoors}">
                 </canvas>
 
                 <div class="sh-dungeon-controls" th:classappend="${activeEncounter != null} ? 'is-disabled'">
@@ -121,10 +123,14 @@
                     <canvas id="dungeon-minimap-canvas"
                             class="sh-dungeon-minimap"
                             width="320" height="320"
-                            th:data-lattice="${state.map.lattice}">
+                            th:data-lattice="${state.map.lattice}"
+                            th:data-boss-sealed="${bossSealed}">
                     </canvas>
                     <script id="dungeon-minimap-state" type="application/json">
                         [(${minimapRoomsJson})]
+                    </script>
+                    <script id="dungeon-i18n" type="application/json">
+                        [(${dungeonI18nJson})]
                     </script>
                 </div>
 
