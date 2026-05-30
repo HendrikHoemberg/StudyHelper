@@ -19,58 +19,71 @@ public record DungeonSessionState(
     DungeonProgress progress,
     DungeonCombat combat,
     DungeonLoadout loadout,
-    Set<String> collectedItems
+    Set<String> collectedItems,
+    List<Revenant> revenants,
+    List<Revenant> revenantGraveyard
 ) implements Serializable {
 
     public DungeonSessionState {
         encounters = Map.copyOf(encounters);
         bossEncounterIds = List.copyOf(bossEncounterIds);
         collectedItems = collectedItems == null ? Set.of() : Set.copyOf(collectedItems);
+        revenants = revenants == null ? List.of() : List.copyOf(revenants);
+        revenantGraveyard = revenantGraveyard == null ? List.of() : List.copyOf(revenantGraveyard);
     }
 
     // === slice updaters ===
     public DungeonSessionState withResources(DungeonResources r) {
         return new DungeonSessionState(config, map, currentRoomId, encounters, bossEncounterIds,
-            won, defeated, r, progress, combat, loadout, collectedItems);
+            won, defeated, r, progress, combat, loadout, collectedItems, revenants, revenantGraveyard);
     }
     public DungeonSessionState withProgress(DungeonProgress p) {
         return new DungeonSessionState(config, map, currentRoomId, encounters, bossEncounterIds,
-            won, defeated, resources, p, combat, loadout, collectedItems);
+            won, defeated, resources, p, combat, loadout, collectedItems, revenants, revenantGraveyard);
     }
     public DungeonSessionState withCombat(DungeonCombat c) {
         return new DungeonSessionState(config, map, currentRoomId, encounters, bossEncounterIds,
-            won, defeated, resources, progress, c, loadout, collectedItems);
+            won, defeated, resources, progress, c, loadout, collectedItems, revenants, revenantGraveyard);
     }
     public DungeonSessionState withLoadout(DungeonLoadout l) {
         return new DungeonSessionState(config, map, currentRoomId, encounters, bossEncounterIds,
-            won, defeated, resources, progress, combat, l, collectedItems);
+            won, defeated, resources, progress, combat, l, collectedItems, revenants, revenantGraveyard);
     }
 
     public DungeonSessionState withCollectedItems(Set<String> items) {
         return new DungeonSessionState(config, map, currentRoomId, encounters, bossEncounterIds,
-            won, defeated, resources, progress, combat, loadout, items);
+            won, defeated, resources, progress, combat, loadout, items, revenants, revenantGraveyard);
+    }
+
+    public DungeonSessionState withRevenants(List<Revenant> r) {
+        return new DungeonSessionState(config, map, currentRoomId, encounters, bossEncounterIds,
+            won, defeated, resources, progress, combat, loadout, collectedItems, r, revenantGraveyard);
+    }
+    public DungeonSessionState withRevenantGraveyard(List<Revenant> g) {
+        return new DungeonSessionState(config, map, currentRoomId, encounters, bossEncounterIds,
+            won, defeated, resources, progress, combat, loadout, collectedItems, revenants, g);
     }
 
     // === single-field top-level updaters ===
     public DungeonSessionState withMap(DungeonMap m) {
         return new DungeonSessionState(config, m, currentRoomId, encounters, bossEncounterIds,
-            won, defeated, resources, progress, combat, loadout, collectedItems);
+            won, defeated, resources, progress, combat, loadout, collectedItems, revenants, revenantGraveyard);
     }
     public DungeonSessionState withCurrentRoomId(String id) {
         return new DungeonSessionState(config, map, id, encounters, bossEncounterIds,
-            won, defeated, resources, progress, combat, loadout, collectedItems);
+            won, defeated, resources, progress, combat, loadout, collectedItems, revenants, revenantGraveyard);
     }
     public DungeonSessionState withEncounters(Map<String, DungeonEncounter> e) {
         return new DungeonSessionState(config, map, currentRoomId, e, bossEncounterIds,
-            won, defeated, resources, progress, combat, loadout, collectedItems);
+            won, defeated, resources, progress, combat, loadout, collectedItems, revenants, revenantGraveyard);
     }
     public DungeonSessionState withWon(boolean w) {
         return new DungeonSessionState(config, map, currentRoomId, encounters, bossEncounterIds,
-            w, defeated, resources, progress, combat, loadout, collectedItems);
+            w, defeated, resources, progress, combat, loadout, collectedItems, revenants, revenantGraveyard);
     }
     public DungeonSessionState withDefeated(boolean d) {
         return new DungeonSessionState(config, map, currentRoomId, encounters, bossEncounterIds,
-            won, d, resources, progress, combat, loadout, collectedItems);
+            won, d, resources, progress, combat, loadout, collectedItems, revenants, revenantGraveyard);
     }
 
     // === views ===
@@ -128,6 +141,8 @@ public record DungeonSessionState(
         private DungeonCombat combat = DungeonCombat.empty();
         private DungeonLoadout loadout = DungeonLoadout.empty();
         private Set<String> collectedItems = Set.of();
+        private List<Revenant> revenants = List.of();
+        private List<Revenant> revenantGraveyard = List.of();
 
         private Builder() {}
 
@@ -144,6 +159,8 @@ public record DungeonSessionState(
             this.combat = s.combat;
             this.loadout = s.loadout;
             this.collectedItems = s.collectedItems;
+            this.revenants = s.revenants;
+            this.revenantGraveyard = s.revenantGraveyard;
         }
 
         public Builder config(DungeonConfig v) { this.config = v; return this; }
@@ -158,11 +175,14 @@ public record DungeonSessionState(
         public Builder combat(DungeonCombat v) { this.combat = v; return this; }
         public Builder loadout(DungeonLoadout v) { this.loadout = v; return this; }
         public Builder collectedItems(Set<String> v) { this.collectedItems = v; return this; }
+        public Builder revenants(List<Revenant> v) { this.revenants = v; return this; }
+        public Builder revenantGraveyard(List<Revenant> v) { this.revenantGraveyard = v; return this; }
 
         public DungeonSessionState build() {
             return new DungeonSessionState(
                 config, map, currentRoomId, encounters, bossEncounterIds,
-                won, defeated, resources, progress, combat, loadout, collectedItems);
+                won, defeated, resources, progress, combat, loadout, collectedItems,
+                revenants, revenantGraveyard);
         }
     }
 }

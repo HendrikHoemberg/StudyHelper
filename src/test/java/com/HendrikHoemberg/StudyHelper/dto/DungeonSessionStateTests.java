@@ -60,11 +60,26 @@ class DungeonSessionStateTests {
     }
 
     @Test
+    void newStateHasEmptyRevenantLists() {
+        DungeonSessionState s = DungeonSessionState.builder().build();
+        assertThat(s.revenants()).isEmpty();
+        assertThat(s.revenantGraveyard()).isEmpty();
+    }
+
+    @Test
+    void withRevenantsReplacesList() {
+        DungeonSessionState s = DungeonSessionState.builder().build()
+            .withRevenants(java.util.List.of(new Revenant("fc_1", "r2", "r2")));
+        assertThat(s.revenants()).hasSize(1);
+        assertThat(s.revenantGraveyard()).isEmpty();
+    }
+
+    @Test
     void toBuilder_roundTripsAllFields() {
         DungeonSessionState s = minimal()
             .withResources(new DungeonResources(3, 7, 1, 3, 50))
-            .withProgress(new DungeonProgress(4, 3, 2, 5, 1, 0, 0))
-            .withCombat(new DungeonCombat("fc_1", List.of("fc_2"), 1))
+            .withProgress(new DungeonProgress(4, 3, 2, 5, 1, 0, 0, 0))
+            .withCombat(new DungeonCombat("fc_1", List.of("fc_2"), 1, null))
             .withLoadout(new DungeonLoadout(List.of(RelicId.COMPASS), null));
         assertThat(s.toBuilder().build()).isEqualTo(s);
     }
