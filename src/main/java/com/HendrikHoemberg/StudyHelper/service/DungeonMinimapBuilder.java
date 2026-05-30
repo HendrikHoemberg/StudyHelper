@@ -9,7 +9,6 @@ import java.util.*;
 public class DungeonMinimapBuilder {
 
     public List<MinimapRoom> build(DungeonSessionState state) {
-        boolean hasCompass = state.loadout().ownedRelics().contains(RelicId.COMPASS);
         boolean hasMapSense = state.loadout().ownedRelics().contains(RelicId.MAP_SENSE);
 
         Set<String> visitedIds = new HashSet<>();
@@ -27,6 +26,8 @@ public class DungeonMinimapBuilder {
         Set<String> revenantRooms = new HashSet<>();
         for (Revenant rev : state.revenants()) revenantRooms.add(rev.currentRoomId());
 
+        Set<String> revealed = revealedRoomIds(state);
+
         List<MinimapRoom> result = new ArrayList<>();
         for (DungeonRoom r : state.map().rooms().values()) {
             boolean isVisited = visitedIds.contains(r.id());
@@ -34,7 +35,7 @@ public class DungeonMinimapBuilder {
             boolean visible = isVisited || isAdjacent || hasMapSense;
             if (!visible) continue;
 
-            boolean revealedType = isVisited || (isAdjacent && hasCompass) || hasMapSense;
+            boolean revealedType = revealed.contains(r.id());
 
             Map<String, String> doors = new LinkedHashMap<>();
             for (Map.Entry<DungeonDirection, String> e : r.doors().entrySet()) {
@@ -53,5 +54,29 @@ public class DungeonMinimapBuilder {
                 revealedType && revenantRooms.contains(r.id())));
         }
         return result;
+    }
+
+    public static Set<String> revealedRoomIds(DungeonSessionState state) {
+        boolean hasCompass = state.loadout().ownedRelics().contains(RelicId.COMPASS);
+        boolean hasMapSense = state.loadout().ownedRelics().contains(RelicId.MAP_SENSE);
+
+        Set<String> visited = new HashSet<>();
+        for (DungeonRoom r : state.map().rooms().values()) {
+            if (r.visited()) visited.add(r.id());
+        }
+        Set<String> adjacent = new HashSet<>();
+        for (String id : visited) {
+            DungeonRoom r = state.map().room(id);
+            for (String neighbor : r.doors().values()) {
+                if (!visited.contains(neighbor)) adjacent.add(neighbor);
+            }
+        }
+        Set<String> revealed = new HashSet<>();
+        for (DungeonRoom r : state.map().rooms().values()) {
+            boolean isVisited = visited.contains(r.id());
+            boolean isAdjacent = adjacent.contains(r.id());
+            if (isVisited || (isAdjacent && hasCompass) || hasMapSense) revealed.add(r.id());
+        }
+        return revealed;
     }
 }
