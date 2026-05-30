@@ -33,4 +33,13 @@ class RelicEffectsTests {
         assertThat(RelicEffects.isClassified(RelicId.MAP_SENSE)).isTrue();
         assertThat(RelicEffects.isClassified(RelicId.COMPASS)).isTrue();
     }
+
+    @Test
+    void everyRelicIsClassified() {
+        for (RelicId id : RelicId.values()) {
+            assertThat(RelicEffects.isClassified(id))
+                .as("relic %s must be wired into RelicEffects (effect, damage participant, or view-only)", id)
+                .isTrue();
+        }
+    }
 }
