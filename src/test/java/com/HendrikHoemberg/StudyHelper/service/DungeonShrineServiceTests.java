@@ -134,7 +134,7 @@ class DungeonShrineServiceTests {
             .bossEncounterIds(List.of())
             .combat(DungeonCombat.empty())
             .resources(new DungeonResources(5, 5, 0, 2, 0))
-            .progress(new DungeonProgress(0, 0, 0, 0, 0, 0, 0))
+            .progress(new DungeonProgress(0, 0, 0, 0, 0, 0, 0, 0))
             .loadout(new DungeonLoadout(relics, null))
             .build();
     }

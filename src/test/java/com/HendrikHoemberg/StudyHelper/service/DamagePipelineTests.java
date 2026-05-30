@@ -15,7 +15,7 @@ class DamagePipelineTests {
         DungeonSessionState s = TestStates.minimal()
             .withLoadout(new DungeonLoadout(List.of(RelicId.LUCKY_COIN), null))
             .withResources(new DungeonResources(3, 5, 2, 2, 0))
-            .withProgress(new DungeonProgress(0, 0, 0, 0, 0, 0, 0));
+            .withProgress(new DungeonProgress(0, 0, 0, 0, 0, 0, 0, 0));
         DungeonSessionState r = RelicEffects.applyWrongAnswerDamage(s, DungeonBalance.WRONG_ANSWER_DAMAGE);
         assertThat(r.progress().luckyCoinsConsumed()).isEqualTo(1);
         assertThat(r.resources().shields()).isEqualTo(2); // shield not spent

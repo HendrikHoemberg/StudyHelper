@@ -95,7 +95,7 @@ class DungeonReconcileGauntletTests {
 
         DungeonSessionState base = stateWithEliteGauntlet();
         DungeonSessionState state = base.toBuilder()
-            .combat(new DungeonCombat("e0", List.of("e1"), 0))
+            .combat(new DungeonCombat("e0", List.of("e1"), 0, null))
             .build();
 
         SavedSessionService.ReconcileDungeonResult result =

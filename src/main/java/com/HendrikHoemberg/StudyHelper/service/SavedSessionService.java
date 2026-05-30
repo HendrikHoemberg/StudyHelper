@@ -322,7 +322,7 @@ public class SavedSessionService {
         DungeonCombat repairedCombat = new DungeonCombat(
             activeSkipped ? null : activeId,
             activeSkipped ? List.of() : repairedQueue,
-            state.combat().bossIndex());
+            state.combat().bossIndex(), null);
 
         DungeonMap nextMap = new DungeonMap(
             Map.copyOf(updatedRooms), state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
