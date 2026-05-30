@@ -1,5 +1,6 @@
 package com.HendrikHoemberg.StudyHelper.service;
 
+import com.HendrikHoemberg.StudyHelper.dto.DungeonResources;
 import com.HendrikHoemberg.StudyHelper.dto.DungeonRoom;
 import com.HendrikHoemberg.StudyHelper.dto.DungeonSessionState;
 import com.HendrikHoemberg.StudyHelper.dto.RelicId;
@@ -25,11 +26,13 @@ public final class RelicEffects {
         EFFECTS = Collections.unmodifiableMap(effects);
 
         List<DamageMitigator> mitigators = new ArrayList<>();
+        mitigators.add(new LuckyCoinMitigator());
+        mitigators.add(new ShieldMitigator());
         mitigators.sort(Comparator.comparingInt(DamageMitigator::priority));
         MITIGATORS = List.copyOf(mitigators);
 
-        DEATH_SAVES = List.of();
-        DAMAGE_RELICS = EnumSet.noneOf(RelicId.class);
+        DEATH_SAVES = List.of(new PhoenixFeatherDeathSave());
+        DAMAGE_RELICS = EnumSet.of(RelicId.LUCKY_COIN, RelicId.PHOENIX_FEATHER);
     }
 
     private RelicEffects() {}
@@ -63,6 +66,23 @@ public final class RelicEffects {
             if (e != null) bonus += e.bonusScoreOnCorrect();
         }
         return bonus;
+    }
+
+    public static DungeonSessionState applyWrongAnswerDamage(DungeonSessionState s, int damage) {
+        for (DamageMitigator m : MITIGATORS) {
+            Optional<DungeonSessionState> absorbed = m.tryAbsorb(s, damage);
+            if (absorbed.isPresent()) return absorbed.get();
+        }
+        DungeonResources damaged = s.resources().takeHealthDamage(damage);
+        DungeonSessionState afterDamage = s.withResources(damaged);
+        if (damaged.health() == 0) {
+            for (DeathSave ds : DEATH_SAVES) {
+                Optional<DungeonSessionState> saved = ds.trySave(afterDamage);
+                if (saved.isPresent()) return saved.get();
+            }
+            return afterDamage.withDefeated(true);
+        }
+        return afterDamage;
     }
 
     public static boolean isClassified(RelicId id) {

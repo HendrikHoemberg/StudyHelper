@@ -25,26 +25,6 @@ public class DungeonCombatService {
 
     public DungeonSessionState processWrongAnswer(DungeonSessionState state) {
         DungeonSessionState withProgress = state.withProgress(state.progress().recordAnswer(false));
-        return applyWrongAnswerDamage(withProgress);
-    }
-
-    private DungeonSessionState applyWrongAnswerDamage(DungeonSessionState s) {
-        int luckyCoinsOwned = (int) s.loadout().ownedRelics().stream()
-            .filter(r -> r == RelicId.LUCKY_COIN).count();
-        if (s.progress().luckyCoinsConsumed() < luckyCoinsOwned) {
-            return s.withProgress(s.progress().consumeLuckyCoin());
-        }
-        if (s.resources().shields() > 0) {
-            return s
-                .withResources(s.resources().withShields(s.resources().shields() - 1))
-                .withProgress(s.progress().recordShieldUsed());
-        }
-        DungeonResources damaged = s.resources().takeHealthDamage(DungeonBalance.WRONG_ANSWER_DAMAGE);
-        if (damaged.health() == 0 && s.loadout().ownedRelics().contains(RelicId.PHOENIX_FEATHER)) {
-            return s
-                .withResources(damaged.withHealth(1))
-                .withLoadout(s.loadout().consumePhoenixFeather());
-        }
-        return s.withResources(damaged).withDefeated(damaged.health() == 0);
+        return RelicEffects.applyWrongAnswerDamage(withProgress, DungeonBalance.WRONG_ANSWER_DAMAGE);
     }
 }
