@@ -67,6 +67,15 @@ var DungeonRenderer = (function () {
         }
     }
 
+    function drawGhostSprite(spriteName, px, py, size) {
+        ctx.save();
+        ctx.shadowColor = 'rgba(130, 200, 255, 0.9)';
+        ctx.shadowBlur = size * 0.25;
+        ctx.globalAlpha = 0.6;
+        drawPixelSprite(spriteName, px, py, size);
+        ctx.restore();
+    }
+
     function drawWallTile(px, py, size, isDark) {
         var base = isDark ? '#0f172a' : '#94a3b8';
         var shadow = isDark ? '#020617' : '#475569';
@@ -228,6 +237,12 @@ var DungeonRenderer = (function () {
             drawPixelSprite('SHRINE', 480, 352, 64);
         }
 
+        var revDoors = state.revenantDoors || {};
+        var peekSize = 56;
+        if (revDoors.up)    drawGhostSprite('GHOST', 512 - peekSize / 2, 44, peekSize);
+        if (revDoors.down)  drawGhostSprite('GHOST', 512 - peekSize / 2, 668, peekSize);
+        if (revDoors.left)  drawGhostSprite('GHOST', 44, 384 - peekSize / 2, peekSize);
+        if (revDoors.right) drawGhostSprite('GHOST', 924, 384 - peekSize / 2, peekSize);
         drawPixelSprite('PLAYER', pX, pY, 64);
     }
 
@@ -247,25 +262,37 @@ var DungeonRenderer = (function () {
         var sx = (canvas.width - spriteSize) / 2;
         var sy = (canvas.height - spriteSize) / 2 - 32 + bob;
 
-        drawPixelSprite(state.monster || 'SLIME', sx, sy, spriteSize);
+        var isRevenant = state.isRevenant === true;
+        if (isRevenant) {
+            drawGhostSprite(state.monster || 'GHOST', sx, sy, spriteSize);
+        } else {
+            drawPixelSprite(state.monster || 'SLIME', sx, sy, spriteSize);
+        }
 
-        ctx.fillStyle = '#ef4444';
+        ctx.fillStyle = isRevenant ? '#c084fc' : '#ef4444';
         ctx.font = 'bold 20px "Courier New", Courier, monospace';
         ctx.textAlign = 'center';
 
-        var title = state.boss
-            ? "!!! BOSS-KAMPF !!!"
-            : (state.gauntletTotal > 0 ? "ELITE CHALLENGE!" : "⚔️ GEGNER GEFUNDEN ⚔️");
+        var title;
+        if (isRevenant) {
+            title = (window.dungeonI18n && window.dungeonI18n.revenantSplashTitle) || "A MISTAKE RETURNS!";
+        } else {
+            title = state.boss
+                ? "!!! BOSS-KAMPF !!!"
+                : (state.gauntletTotal > 0 ? "ELITE CHALLENGE!" : "⚔️ GEGNER GEFUNDEN ⚔️");
+        }
         ctx.fillText(title, canvas.width / 2, canvas.height - 90);
 
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '13px "Courier New", Courier, monospace';
-        var monsterLabel = (state.monster || "MONSTER").toUpperCase();
-        ctx.fillText("EIN WILDER " + monsterLabel + " BEGEGNET DIR!", canvas.width / 2, canvas.height - 60);
+        if (!isRevenant) {
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '13px "Courier New", Courier, monospace';
+            var monsterLabel = (state.monster || "MONSTER").toUpperCase();
+            ctx.fillText("EIN WILDER " + monsterLabel + " BEGEGNET DIR!", canvas.width / 2, canvas.height - 60);
 
-        ctx.fillStyle = '#64748b';
-        ctx.font = 'italic 11px "Courier New", Courier, monospace';
-        ctx.fillText("Bereite dich auf den Kampf vor...", canvas.width / 2, canvas.height - 40);
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'italic 11px "Courier New", Courier, monospace';
+            ctx.fillText("Bereite dich auf den Kampf vor...", canvas.width / 2, canvas.height - 40);
+        }
     }
 
     function wrapText(text, x, y, maxWidth, lineHeight, draw) {
@@ -341,7 +368,9 @@ var DungeonRenderer = (function () {
         var activeEncBoss = state.boss;
         var gauntletPos = state.gauntletPos;
         var gauntletTotal = state.gauntletTotal;
-        var enemyName = (state.monster || (activeEncBoss ? "DRAGON" : "SLIME")).toUpperCase();
+        var enemyName = state.isRevenant
+            ? ((window.dungeonI18n && window.dungeonI18n.revenantEnemyLabel) || "REVENANT").toUpperCase()
+            : (state.monster || (activeEncBoss ? "DRAGON" : "SLIME")).toUpperCase();
         var hoveredIndex = state.hoveredOptionIndex;
 
         ctx.strokeStyle = '#ffffff';
@@ -411,7 +440,11 @@ var DungeonRenderer = (function () {
         var spriteSize = activeEncBoss ? 128 * scale : 96 * scale;
         var sx = (canvas.width - spriteSize) / 2;
         var sy = 100 * scale + bob * scale;
-        drawPixelSprite(monsterSprite, sx, sy, spriteSize);
+        if (state.isRevenant) {
+            drawGhostSprite(monsterSprite, sx, sy, spriteSize);
+        } else {
+            drawPixelSprite(monsterSprite, sx, sy, spriteSize);
+        }
 
         var boxX = 20 * scale;
         var boxY = 190 * scale;
