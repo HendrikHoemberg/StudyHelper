@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DungeonCollectValidationTests {
 
-    private final DungeonSessionService service = new DungeonSessionService(null, null, null, null, null, null, null, null);
+    private final DungeonSessionService service = new DungeonSessionService(null, null, null, null, null, null, null, null, null);
 
     @Test
     void collectCoin_rejectedWhenStateNull() {
@@ -219,9 +219,9 @@ class DungeonCollectValidationTests {
                 .currentRoomId("r0")
                 .encounters(Map.of())
                 .bossEncounterIds(List.of())
-                .combat(new DungeonCombat(activeEncounterId, List.of(), 0))
+                .combat(new DungeonCombat(activeEncounterId, List.of(), 0, null))
                 .resources(new DungeonResources(health, healthCap, shields, shieldCap, score))
-                .progress(new DungeonProgress(0, 0, 0, 0, 0, 0, 0))
+                .progress(new DungeonProgress(0, 0, 0, 0, 0, 0, 0, 0))
                 .won(won)
                 .defeated(defeated)
                 .loadout(new DungeonLoadout(List.of(), pendingRelicPick))

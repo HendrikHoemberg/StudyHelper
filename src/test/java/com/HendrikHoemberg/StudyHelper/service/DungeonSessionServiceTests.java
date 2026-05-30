@@ -28,7 +28,7 @@ class DungeonSessionServiceTests {
         when(enc.activateAt(afterMove, "r1")).thenReturn(ActionResult.success(afterActivate));
 
         DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, nav, enc, relic, new DungeonShrineService());
+            null, null, null, null, nav, enc, relic, new DungeonShrineService(), new DungeonRevenantService());
         ActionResult result = svc.move(before, DungeonDirection.RIGHT);
 
         assertThat(result).isInstanceOf(ActionResult.Success.class);
@@ -46,7 +46,7 @@ class DungeonSessionServiceTests {
             .thenReturn(ActionResult.failure(before, "dungeon.error.wall"));
 
         DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, nav, enc, relic, new DungeonShrineService());
+            null, null, null, null, nav, enc, relic, new DungeonShrineService(), null);
         ActionResult result = svc.move(before, DungeonDirection.UP);
 
         assertThat(result).isInstanceOf(ActionResult.Failure.class);
@@ -75,7 +75,7 @@ class DungeonSessionServiceTests {
             .thenReturn(ActionResult.success(afterMove));
 
         DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, nav, enc, relic, new DungeonShrineService());
+            null, null, null, null, nav, enc, relic, new DungeonShrineService(), null);
         ActionResult result = svc.move(before, DungeonDirection.RIGHT);
 
         assertThat(result).isInstanceOf(ActionResult.Success.class);
@@ -88,7 +88,7 @@ class DungeonSessionServiceTests {
     @Test
     void buildStats_includesRelicsAcquired() {
         DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, null, null, null, new DungeonShrineService());
+            null, null, null, null, null, null, null, new DungeonShrineService(), null);
         DungeonSessionState s = stateWithRelics(List.of(RelicId.IRON_PLATE, RelicId.BUCKLER));
         DungeonRunStats stats = svc.buildStats(s);
         assertThat(stats.relicsAcquired()).isEqualTo(2);
@@ -121,7 +121,7 @@ class DungeonSessionServiceTests {
     @Test
     void shrineLeave_clearsPendingPickAndMarksRoomCleared() {
         DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, null, null, null, new DungeonShrineService());
+            null, null, null, null, null, null, null, new DungeonShrineService(), null);
         DungeonSessionState s = stateOnRoom("r0", RoomType.SHRINE);
         s = s.withLoadout(s.loadout().withPendingRelicPick(
             new PendingRelicPick(PendingPickType.SHRINE, "r0", List.of(), null)));
@@ -134,7 +134,7 @@ class DungeonSessionServiceTests {
     @Test
     void shrineDrink_healsAndClearsRoom() {
         DungeonSessionService svc = new DungeonSessionService(
-            null, null, null, null, null, null, null, new DungeonShrineService());
+            null, null, null, null, null, null, null, new DungeonShrineService(), null);
         DungeonSessionState s = stateOnRoom("r0", RoomType.SHRINE);
         s = s.withResources(new DungeonResources(3, 5, s.resources().shields(), s.resources().shieldCap(), s.resources().score()));
 

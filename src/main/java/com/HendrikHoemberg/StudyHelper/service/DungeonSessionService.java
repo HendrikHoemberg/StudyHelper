@@ -26,6 +26,7 @@ public class DungeonSessionService {
     private final DungeonEncounterService encounterService;
     private final DungeonRelicService relicService;
     private final DungeonShrineService shrineService;
+    private final DungeonRevenantService revenantService;
 
     public DungeonSessionService(DeckService deckService,
                                  FlashcardService flashcardService,
@@ -34,7 +35,8 @@ public class DungeonSessionService {
                                  DungeonNavigationService navigationService,
                                  DungeonEncounterService encounterService,
                                  DungeonRelicService relicService,
-                                 DungeonShrineService shrineService) {
+                                 DungeonShrineService shrineService,
+                                 DungeonRevenantService revenantService) {
         this.deckService = deckService;
         this.flashcardService = flashcardService;
         this.quizSessionService = quizSessionService;
@@ -43,6 +45,7 @@ public class DungeonSessionService {
         this.encounterService = encounterService;
         this.relicService = relicService;
         this.shrineService = shrineService;
+        this.revenantService = revenantService;
     }
 
     @Transactional(readOnly = true)
@@ -135,6 +138,8 @@ public class DungeonSessionService {
             return failure;
         }
         DungeonSessionState moved = navResult.state();
+        String fromRoomId = state.currentRoomId();
+        boolean actuallyMoved = !moved.currentRoomId().equals(fromRoomId);
 
         DungeonRoom destination = moved.currentRoom();
 
@@ -142,6 +147,14 @@ public class DungeonSessionService {
             PendingRelicPick newPick = pickForRoom(destination);
             if (newPick != null) {
                 moved = moved.withLoadout(moved.loadout().withPendingRelicPick(newPick));
+            }
+        }
+
+        if (actuallyMoved && moved.loadout().pendingRelicPick() == null && !moved.isComplete()) {
+            DungeonRevenantService.AdvanceResult adv = revenantService.advance(moved);
+            moved = adv.state();
+            if (adv.contacted()) {
+                return ActionResult.success(moved);
             }
         }
 

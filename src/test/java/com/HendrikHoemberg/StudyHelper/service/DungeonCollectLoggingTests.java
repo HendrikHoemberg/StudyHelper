@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DungeonCollectLoggingTests {
 
     private DungeonSessionService newService() {
-        return new DungeonSessionService(null, null, null, null, null, null, null, new DungeonShrineService());
+        return new DungeonSessionService(null, null, null, null, null, null, null, new DungeonShrineService(), null);
     }
 
     private DungeonSessionState stateWithPots(List<PotLoot> loot) {

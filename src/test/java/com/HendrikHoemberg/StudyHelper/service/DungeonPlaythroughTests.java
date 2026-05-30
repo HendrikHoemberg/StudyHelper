@@ -19,13 +19,15 @@ class DungeonPlaythroughTests {
 
     private DungeonSessionService newService(long seed) {
         DungeonCombatService combat = new DungeonCombatService();
+        DungeonRevenantService revenants = new DungeonRevenantService();
         return new DungeonSessionService(
             null, null, null,
             new DungeonMapGenerator(),
             new DungeonNavigationService(),
-            new DungeonEncounterService(combat, new DungeonRevenantService()),
+            new DungeonEncounterService(combat, revenants),
             new DungeonRelicService(),
-            new DungeonShrineService(new Random(seed)));
+            new DungeonShrineService(new Random(seed)),
+            revenants);
     }
 
     /** Builds an initial state mirroring DungeonSessionService.buildEncounters + initialState. */
@@ -101,6 +103,31 @@ class DungeonPlaythroughTests {
                 assertThat(state.won()).isFalse();
             }
         }
+    }
+
+    @Test
+    void movingAdvancesRoamerTowardPlayer() {
+        DungeonSessionService svc = newService(7L);
+        DungeonSessionState s = initialState(DungeonSize.SMALL, 7L);
+        String entrance = s.map().entranceRoomId();
+        // pick a neighbor room that won't set a pending relic pick
+        String neighbor = null;
+        DungeonDirection dir = null;
+        for (Map.Entry<DungeonDirection, String> door : s.map().room(entrance).doors().entrySet()) {
+            RoomType type = s.map().room(door.getValue()).type();
+            if (type != RoomType.SHOP && type != RoomType.TREASURE && type != RoomType.SHRINE) {
+                neighbor = door.getValue();
+                dir = door.getKey();
+                break;
+            }
+        }
+        assertThat(neighbor).isNotNull();
+        s = s.withRevenants(List.of(new Revenant("fc_0", neighbor, neighbor)));
+        DungeonSessionState moved = svc.move(s, dir).state();
+        DungeonStateInvariants.assertValid(moved);
+        boolean acted = moved.combat().activeRevenantId() != null
+            || !moved.revenants().get(0).currentRoomId().equals(neighbor);
+        assertThat(acted).isTrue();
     }
 
     /** Runs the agent loop until terminal or the step budget is exhausted. */
