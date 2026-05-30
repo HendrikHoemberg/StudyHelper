@@ -104,7 +104,7 @@ public class DungeonViewModelBuilder {
         model.addAttribute("revenantDoors",
             String.join(",", revenantDoors(state, revealed)));
 
-        java.util.Locale locale = LocaleContextHolder.getLocale();
+        Locale locale = LocaleContextHolder.getLocale();
         Map<String, String> i18n = new LinkedHashMap<>();
         i18n.put("revenantSplashTitle",
             messageSource.getMessage("dungeon.revenant.splashTitle", null, locale));
