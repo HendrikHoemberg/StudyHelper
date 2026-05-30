@@ -23,7 +23,7 @@ class DungeonPlaythroughTests {
             null, null, null,
             new DungeonMapGenerator(),
             new DungeonNavigationService(),
-            new DungeonEncounterService(combat),
+            new DungeonEncounterService(combat, new DungeonRevenantService()),
             new DungeonRelicService(),
             new DungeonShrineService(new Random(seed)));
     }

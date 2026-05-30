@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DungeonEncounterServiceTests {
 
-    private final DungeonEncounterService svc = new DungeonEncounterService(new DungeonCombatService());
+    private final DungeonEncounterService svc = new DungeonEncounterService(new DungeonCombatService(), new DungeonRevenantService());
 
     @Test
     void activateAt_combatRoomMarksEncounterActive() {
@@ -162,7 +162,8 @@ class DungeonEncounterServiceTests {
         DungeonSessionState s = activeFlashcardState();
         return s.withProgress(new DungeonProgress(s.progress().answeredCount(),
             s.progress().correctCount(), streak, Math.max(s.progress().longestStreak(), streak),
-            s.progress().elitesCleared(), s.progress().shieldsUsed(), s.progress().luckyCoinsConsumed()));
+            s.progress().elitesCleared(), s.progress().shieldsUsed(), s.progress().luckyCoinsConsumed(),
+            s.progress().revenantsMastered()));
     }
 
     private DungeonSessionState activeEliteFinalStepState() {
@@ -203,7 +204,20 @@ class DungeonEncounterServiceTests {
         DungeonSessionState base = activeBossStateAtIndexZero();
         return base
             .withEncounters(base.encounters())
-            .withCombat(new DungeonCombat("boss_1", List.of(), 1));
+            .withCombat(new DungeonCombat("boss_1", List.of(), 1, null));
+    }
+
+    private DungeonSessionState stateAtBossRoom() {
+        DungeonEncounter b0 = DungeonEncounter.flashcard("boss_0", true, "DRAGON", 10L, "B0", "BA0", null, null);
+        DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
+            Map.of(DungeonDirection.RIGHT, "r1"), new GridPos(0, 0),
+            true, true, null, List.of(), null, null, null);
+        DungeonRoom r1 = new DungeonRoom("r1", RoomType.BOSS,
+            Map.of(DungeonDirection.LEFT, "r0"), new GridPos(1, 0),
+            true, false, null, List.of(), null, null, null);
+        DungeonMap map = new DungeonMap(Map.of("r0", r0, "r1", r1), "r0", "r1", 3);
+        return baseState(map, "r1", Map.of("boss_0", b0),
+            List.of("boss_0"), 0, null);
     }
 
     private DungeonSessionState baseState(DungeonMap map, String currentRoomId,
@@ -217,7 +231,7 @@ class DungeonEncounterServiceTests {
             .config(config).map(map).currentRoomId(currentRoomId)
             .encounters(encs).bossEncounterIds(bossIds)
             .resources(new DungeonResources(5, 5, 0, 2, 0))
-            .combat(new DungeonCombat(activeEncounterId, List.of(), bossIndex))
+            .combat(new DungeonCombat(activeEncounterId, List.of(), bossIndex, null))
             .build();
     }
 
@@ -256,7 +270,7 @@ class DungeonEncounterServiceTests {
             List.of(), null));
         DungeonSessionState reactivated = first
             .withEncounters(Map.copyOf(resetEncs))
-            .withCombat(new DungeonCombat("enc_0", List.of(), 0));
+            .withCombat(new DungeonCombat("enc_0", List.of(), 0, null));
         DungeonSessionState second = svc.answerFlashcard(reactivated, false);
         assertThat(second.progress().luckyCoinsConsumed()).isEqualTo(2);
         assertThat(second.resources().health()).isEqualTo(5);
@@ -272,5 +286,41 @@ class DungeonEncounterServiceTests {
         assertThat(result.resources().health()).isEqualTo(1);
         assertThat(result.defeated()).isFalse();
         assertThat(result.loadout().ownedRelics()).doesNotContain(RelicId.PHOENIX_FEATHER);
+    }
+
+    @Test
+    void wrongNormalAnswerSpawnsRevenantForThatCard() {
+        DungeonSessionState s = activeFlashcardState();
+        DungeonSessionState after = svc.answerFlashcard(s, false);
+        assertThat(after.revenants()).anyMatch(r -> r.encounterId().equals("enc_0"));
+        assertThat(after.revenants().get(0).originRoomId()).isEqualTo(after.currentRoomId());
+    }
+
+    @Test
+    void correctNormalAnswerSpawnsNoRevenant() {
+        DungeonSessionState s = activeFlashcardState();
+        DungeonSessionState after = svc.answerFlashcard(s, true);
+        assertThat(after.revenants()).isEmpty();
+    }
+
+    @Test
+    void answeringActiveRevenantRoutesToResolveNotRoomClear() {
+        DungeonSessionState s = activeFlashcardState();
+        s = s.withCombat(s.combat().withActiveEncounterId("enc_0").withActiveRevenantId("enc_0"))
+             .withRevenants(java.util.List.of(new Revenant("enc_0", s.currentRoomId(), s.currentRoomId())));
+        DungeonSessionState after = svc.answerFlashcard(s, true);
+        assertThat(after.combat().activeRevenantId()).isNull();
+        assertThat(after.progress().revenantsMastered()).isEqualTo(1);
+    }
+
+    @Test
+    void bossActivationBlockedWhileRevenantsRoam() {
+        DungeonSessionState s = stateAtBossRoom();
+        s = s.withRevenants(java.util.List.of(new Revenant("enc_0", "r1", "r1")));
+        ActionResult r = svc.activateAt(s, s.currentRoomId());
+        assertThat(r).isInstanceOf(ActionResult.Failure.class);
+        assertThat(r.errorMessage()).hasValueSatisfying(msg ->
+            assertThat(msg).contains("dungeon.error.bossSealed"));
+        assertThat(r.state().combat().activeEncounterId()).isNull();
     }
 }

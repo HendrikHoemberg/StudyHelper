@@ -9,9 +9,12 @@ import java.util.*;
 public class DungeonEncounterService {
 
     private final DungeonCombatService combatService;
+    private final DungeonRevenantService revenantService;
 
-    public DungeonEncounterService(DungeonCombatService combatService) {
+    public DungeonEncounterService(DungeonCombatService combatService,
+                                   DungeonRevenantService revenantService) {
         this.combatService = combatService;
+        this.revenantService = revenantService;
     }
 
     public ActionResult activateAt(DungeonSessionState state, String roomId) {
@@ -20,15 +23,24 @@ public class DungeonEncounterService {
         if (room == null) return ActionResult.failure(state, "dungeon.error.noRoom");
         if (room.cleared()) return ActionResult.success(state);
 
-        return switch (room.type()) {
+        ActionResult result = switch (room.type()) {
             case COMBAT -> ActionResult.success(activateNormal(state, room.encounterId()));
             case ELITE -> ActionResult.success(activateElite(state, room));
-            case BOSS -> ActionResult.success(activateBoss(state));
+            case BOSS -> {
+                if (revenantService.bossSealed(state)) {
+                    yield ActionResult.failure(state, "dungeon.error.bossSealed");
+                }
+                yield ActionResult.success(activateBoss(state));
+            }
             default -> ActionResult.success(state);
         };
+        return result;
     }
 
     public DungeonSessionState answerFlashcard(DungeonSessionState state, boolean gotIt) {
+        if (state.combat().activeRevenantId() != null) {
+            return reactivateRoomAfterRevenant(revenantService.resolveReTest(state, gotIt));
+        }
         DungeonEncounter enc = state.activeEncounter();
         if (enc == null) return state;
         if (enc.type() == DungeonEncounterType.QUIZ || enc.type() == DungeonEncounterType.BOSS_QUIZ) return state;
@@ -36,6 +48,13 @@ public class DungeonEncounterService {
     }
 
     public DungeonSessionState answerQuiz(DungeonSessionState state, List<Integer> selectedOptions) {
+        if (state.combat().activeRevenantId() != null) {
+            List<Integer> safe = selectedOptions == null ? List.of() : selectedOptions;
+            DungeonEncounter enc = state.activeEncounter();
+            boolean correct = enc != null && enc.quizQuestion() != null
+                && new HashSet<>(safe).equals(new HashSet<>(enc.quizQuestion().correctOptionIndices()));
+            return reactivateRoomAfterRevenant(revenantService.resolveReTest(state, correct));
+        }
         DungeonEncounter enc = state.activeEncounter();
         if (enc == null) return state;
         if (enc.type() == DungeonEncounterType.FLASHCARD || enc.type() == DungeonEncounterType.BOSS_FLASHCARD) return state;
@@ -105,6 +124,9 @@ public class DungeonEncounterService {
             return resolveBoss(working);
         }
 
+        if (!correct && !working.defeated()) {
+            working = revenantService.spawnFrom(working, encounter.id(), working.currentRoomId());
+        }
         return clearCombatRoom(working);
     }
 
@@ -202,6 +224,37 @@ public class DungeonEncounterService {
             .withMap(nextMap)
             .withCombat(state.combat().withBossIndex(nextIndex).withActiveEncounterId(null))
             .withWon(true);
+    }
+
+    private DungeonSessionState reactivateRoomAfterRevenant(DungeonSessionState state) {
+        if (state.combat().activeRevenantId() != null) return state;
+        if (state.isComplete()) return state;
+        if (state.combat().activeEncounterId() != null) return state;
+
+        for (Revenant rev : state.revenants()) {
+            if (rev.currentRoomId().equals(state.currentRoomId())) {
+                return state.withCombat(state.combat()
+                    .withActiveEncounterId(rev.encounterId())
+                    .withActiveRevenantId(rev.encounterId()));
+            }
+        }
+
+        DungeonRoom room = state.currentRoom();
+        if (room == null || room.cleared()) return state;
+        if (room.type() == RoomType.COMBAT) return activateAt(state, room.id()).state();
+        if (room.type() == RoomType.ELITE) return activateAt(state, room.id()).state();
+        if (room.type() == RoomType.BOSS) {
+            if (state.bossEncounterIds().isEmpty()) return state;
+            String bossId = state.bossEncounterIds().get(state.combat().bossIndex());
+            if (bossId == null) return state;
+            DungeonEncounter bossEnc = state.encounters().get(bossId);
+            if (bossEnc == null) return state;
+            if (bossEnc.status() == DungeonEncounterStatus.PENDING) {
+                return activateBoss(state);
+            }
+            return state.withCombat(state.combat().withActiveEncounterId(bossId));
+        }
+        return state;
     }
 
     private DungeonSessionState clearCombatRoom(DungeonSessionState state) {
