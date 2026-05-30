@@ -35,32 +35,15 @@ public class DungeonShrineService {
     }
 
     public DungeonSessionState applyRoll(DungeonSessionState state, ShrineRollOutcome outcome) {
-        DungeonResources nextResources = state.resources();
-        DungeonLoadout nextLoadout = state.loadout();
-        boolean defeated = false;
-
         if (outcome.roll() == 6) {
-            if (outcome.grantedRelic() != null) {
-                nextLoadout = nextLoadout.addRelic(outcome.grantedRelic());
-                if (outcome.grantedRelic() == RelicId.IRON_PLATE) {
-                    nextResources = nextResources
-                        .withHealthCap(nextResources.healthCap() + 1)
-                        .heal(1);
-                } else if (outcome.grantedRelic() == RelicId.BUCKLER) {
-                    nextResources = nextResources
-                        .withShieldCap(nextResources.shieldCap() + 1)
-                        .addShield();
-                }
+            if (outcome.grantedRelic() == null) {
+                return state.withDefeated(false);
             }
-        } else {
-            nextResources = nextResources.takeHealthDamage(1);
-            if (nextResources.health() == 0) defeated = true;
+            DungeonSessionState granted = state.withLoadout(state.loadout().addRelic(outcome.grantedRelic()));
+            return RelicEffects.onAcquire(granted, outcome.grantedRelic()).withDefeated(false);
         }
-
-        return state
-            .withResources(nextResources)
-            .withLoadout(nextLoadout)
-            .withDefeated(defeated);
+        DungeonResources damaged = state.resources().takeHealthDamage(1);
+        return state.withResources(damaged).withDefeated(damaged.health() == 0);
     }
 
     public DungeonSessionState drink(DungeonSessionState state) {

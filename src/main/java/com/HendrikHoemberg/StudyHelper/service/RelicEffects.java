@@ -17,6 +17,8 @@ public final class RelicEffects {
 
     static {
         Map<RelicId, RelicEffect> effects = new EnumMap<>(RelicId.class);
+        effects.put(RelicId.IRON_PLATE, new IronPlateEffect());
+        effects.put(RelicId.BUCKLER, new BucklerEffect());
         EFFECTS = Collections.unmodifiableMap(effects);
 
         List<DamageMitigator> mitigators = new ArrayList<>();

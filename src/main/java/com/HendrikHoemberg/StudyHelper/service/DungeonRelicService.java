@@ -37,31 +37,20 @@ public class DungeonRelicService {
 
     private DungeonSessionState applyAcquired(DungeonSessionState state, RelicId relicId,
                                                 boolean clearPick, int deductScore) {
-        DungeonLoadout nextLoadout = state.loadout().addRelic(relicId);
         DungeonResources nextResources = state.resources();
-
-        switch (relicId) {
-            case IRON_PLATE -> nextResources = nextResources
-                .withHealthCap(nextResources.healthCap() + 1)
-                .heal(1);
-            case BUCKLER -> nextResources = nextResources
-                .withShieldCap(nextResources.shieldCap() + 1)
-                .addShield();
-            default -> { }
-        }
-
         if (deductScore != 0) {
             nextResources = nextResources.withScore(nextResources.score() - deductScore);
         }
 
+        DungeonSessionState acquired = RelicEffects.onAcquire(
+            state.withResources(nextResources).withLoadout(state.loadout().addRelic(relicId)),
+            relicId);
+
         if (clearPick) {
             String roomId = state.loadout().pendingRelicPick().roomId();
-            DungeonSessionState withRelic = state
-                .withResources(nextResources)
-                .withLoadout(nextLoadout.clearPendingPick());
-            return markRoomCleared(withRelic, roomId);
+            return markRoomCleared(acquired.withLoadout(acquired.loadout().clearPendingPick()), roomId);
         }
-        return state.withResources(nextResources).withLoadout(nextLoadout);
+        return acquired;
     }
 
     private DungeonSessionState clearPickAndMarkRoomCleared(DungeonSessionState s, String roomId) {
