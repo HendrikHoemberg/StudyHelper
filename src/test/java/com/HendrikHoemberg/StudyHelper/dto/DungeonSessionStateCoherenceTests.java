@@ -4,6 +4,7 @@ import com.HendrikHoemberg.StudyHelper.support.TestStates;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,4 +61,23 @@ class DungeonSessionStateCoherenceTests {
             .build();
         assertThat(s.isCoherent()).isFalse();
     }
+
+    @Test
+    void revenantWithUnknownEncounterIsIncoherent() {
+        DungeonSessionState base = TestStates.minimal();
+        DungeonSessionState bad = base.withRevenants(
+            List.of(new Revenant("does_not_exist", base.currentRoomId(), base.currentRoomId())));
+        assertThat(bad.isCoherent()).isFalse();
+    }
+
+    @Test
+    void revenantInUnknownRoomIsIncoherent() {
+        DungeonSessionState base = TestStates.minimal()
+            .withEncounters(Map.of("e0", DungeonEncounter.flashcard("e0", false, "goblin", 1L, "front", "back", null, null)));
+        String anyEncounter = base.encounters().keySet().iterator().next();
+        DungeonSessionState bad = base.withRevenants(
+            List.of(new Revenant(anyEncounter, "r_nope", "r_nope")));
+        assertThat(bad.isCoherent()).isFalse();
+    }
+
 }

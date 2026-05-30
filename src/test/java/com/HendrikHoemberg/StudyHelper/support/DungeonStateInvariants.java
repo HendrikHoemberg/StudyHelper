@@ -2,6 +2,7 @@ package com.HendrikHoemberg.StudyHelper.support;
 
 import com.HendrikHoemberg.StudyHelper.dto.DungeonSessionState;
 import com.HendrikHoemberg.StudyHelper.dto.PendingRelicPick;
+import com.HendrikHoemberg.StudyHelper.dto.Revenant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,6 +41,23 @@ public final class DungeonStateInvariants {
             .isBetween(0, s.bossEncounterIds().size());
         for (String bossId : s.bossEncounterIds()) {
             assertThat(s.encounters()).as("boss encounter %s exists", bossId).containsKey(bossId);
+        }
+        for (Revenant rev : s.revenants()) {
+            assertThat(s.map().room(rev.currentRoomId()))
+                .as("revenant current room %s exists", rev.currentRoomId()).isNotNull();
+            assertThat(s.encounters())
+                .as("revenant encounter %s exists", rev.encounterId()).containsKey(rev.encounterId());
+        }
+        for (Revenant rev : s.revenantGraveyard()) {
+            assertThat(s.map().room(rev.originRoomId()))
+                .as("graveyard revenant origin %s exists", rev.originRoomId()).isNotNull();
+            assertThat(s.encounters())
+                .as("graveyard revenant encounter %s exists", rev.encounterId()).containsKey(rev.encounterId());
+        }
+        String activeRevenant = s.combat().activeRevenantId();
+        if (activeRevenant != null) {
+            assertThat(s.encounters())
+                .as("active revenant encounter %s exists", activeRevenant).containsKey(activeRevenant);
         }
     }
 }

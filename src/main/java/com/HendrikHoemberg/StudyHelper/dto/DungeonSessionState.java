@@ -107,6 +107,17 @@ public record DungeonSessionState(
         for (String bossId : bossEncounterIds) {
             if (!encounters.containsKey(bossId)) return false;
         }
+        for (Revenant rev : revenants) {
+            if (map.room(rev.currentRoomId()) == null) return false;
+            if (map.room(rev.originRoomId()) == null) return false;
+            if (!encounters.containsKey(rev.encounterId())) return false;
+        }
+        for (Revenant rev : revenantGraveyard) {
+            if (map.room(rev.originRoomId()) == null) return false;
+            if (!encounters.containsKey(rev.encounterId())) return false;
+        }
+        String activeRevenant = combat.activeRevenantId();
+        if (activeRevenant != null && !encounters.containsKey(activeRevenant)) return false;
         return true;
     }
 
