@@ -11,5 +11,6 @@ public record DungeonRunStats(
     int longestStreak,
     int elitesCleared,
     int shieldsUsed,
-    int relicsAcquired
+    int relicsAcquired,
+    int cardsMastered
 ) {}

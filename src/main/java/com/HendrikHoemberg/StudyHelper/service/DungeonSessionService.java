@@ -212,7 +212,8 @@ public class DungeonSessionService {
             state.progress().longestStreak(),
             state.progress().elitesCleared(),
             state.progress().shieldsUsed(),
-            state.loadout().ownedRelics().size());
+            state.loadout().ownedRelics().size(),
+            state.progress().revenantsMastered());
     }
 
     // ===== collect =====

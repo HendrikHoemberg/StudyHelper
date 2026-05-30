@@ -254,6 +254,15 @@ class DungeonPlaythroughTests {
         return it.hasNext() ? it.next() : null;
     }
 
+    @Test
+    void buildStatsExposesCardsMastered() {
+        DungeonSessionService svc = newService(1L);
+        DungeonSessionState s = initialState(DungeonSize.SMALL, 1L)
+            .withProgress(new DungeonProgress(0, 0, 0, 0, 0, 0, 0, 4));
+        DungeonRunStats stats = svc.buildStats(s);
+        assertThat(stats.cardsMastered()).isEqualTo(4);
+    }
+
     private void assertReachable(DungeonSessionState s) {
         String start = s.map().entranceRoomId();
         Set<String> seen = new HashSet<>();
