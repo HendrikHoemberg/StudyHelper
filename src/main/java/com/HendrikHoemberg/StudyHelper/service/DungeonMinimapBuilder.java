@@ -24,6 +24,9 @@ public class DungeonMinimapBuilder {
             }
         }
 
+        Set<String> revenantRooms = new HashSet<>();
+        for (Revenant rev : state.revenants()) revenantRooms.add(rev.currentRoomId());
+
         List<MinimapRoom> result = new ArrayList<>();
         for (DungeonRoom r : state.map().rooms().values()) {
             boolean isVisited = visitedIds.contains(r.id());
@@ -46,8 +49,8 @@ public class DungeonMinimapBuilder {
                 isVisited,
                 r.cleared(),
                 r.id().equals(state.currentRoomId()),
-                doors
-            ));
+                doors,
+                revealedType && revenantRooms.contains(r.id())));
         }
         return result;
     }

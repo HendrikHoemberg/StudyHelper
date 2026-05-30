@@ -10,5 +10,6 @@ public record MinimapRoom(
     boolean visited,
     boolean cleared,
     boolean isCurrent,
-    Map<String, String> doors
+    Map<String, String> doors,
+    boolean hasRevenant
 ) {}

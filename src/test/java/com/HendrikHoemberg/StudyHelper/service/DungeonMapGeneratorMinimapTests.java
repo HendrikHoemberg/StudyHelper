@@ -10,6 +10,39 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DungeonMapGeneratorMinimapTests {
 
+    private static DungeonSessionState visibleTwoRoomState() {
+        DungeonRoom r0 = new DungeonRoom("r0", RoomType.ENTRANCE,
+            Map.of(DungeonDirection.RIGHT, "r1"),
+            new GridPos(0, 0), true, false, null, List.of(),
+            null, null, null);
+        DungeonRoom r1 = new DungeonRoom("r1", RoomType.COMBAT,
+            Map.of(DungeonDirection.LEFT, "r0"),
+            new GridPos(1, 0), true, false, "fc_0", List.of(),
+            null, null, null);
+        DungeonMap map = new DungeonMap(Map.of("r0", r0, "r1", r1), "r0", "r1", 2);
+        DungeonEncounter enc = DungeonEncounter.flashcard("fc_0", false, "rev_monster", 1L, "front", "back", null, null);
+        return DungeonSessionState.builder()
+            .config(new DungeonConfig(DungeonMode.FLASHCARDS, DungeonSize.SMALL,
+                List.of(1L), QuizQuestionMode.MCQ_ONLY, Difficulty.MEDIUM, ""))
+            .map(map)
+            .currentRoomId("r0")
+            .encounters(Map.of("fc_0", enc))
+            .bossEncounterIds(List.of())
+            .resources(new DungeonResources(5, 5, 0, 2, 0))
+            .build();
+    }
+
+    @Test
+    void minimapMarksRevenantOnlyInRevealedRooms() {
+        DungeonSessionState s = visibleTwoRoomState()
+            .withRevenants(List.of(new Revenant("fc_0", "r1", "r1")));
+        List<MinimapRoom> rooms = new DungeonMinimapBuilder().build(s);
+        MinimapRoom r1 = rooms.stream().filter(m -> m.id().equals("r1")).findFirst().orElseThrow();
+        assertThat(r1.hasRevenant()).isTrue();
+        MinimapRoom r0 = rooms.stream().filter(m -> m.id().equals("r0")).findFirst().orElseThrow();
+        assertThat(r0.hasRevenant()).isFalse();
+    }
+
     @Test
     void buildMinimap_returnsAllReachableRooms() {
         DungeonMapGenerator gen = new DungeonMapGenerator();

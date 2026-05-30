@@ -90,6 +90,10 @@ public class DungeonViewModelBuilder {
         model.addAttribute("gauntletTotal", gauntletTotal);
         model.addAttribute("currentRoomMonster", currentRoomMonster(state));
         model.addAttribute("currentRoomPots", currentRoomPots(state));
+
+        model.addAttribute("bossSealed",
+            !state.revenants().isEmpty() || !state.revenantGraveyard().isEmpty());
+        model.addAttribute("activeRevenant", state.combat().activeRevenantId() != null);
     }
 
     private String currentRoomMonster(DungeonSessionState state) {
