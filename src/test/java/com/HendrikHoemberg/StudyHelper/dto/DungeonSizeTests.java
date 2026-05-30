@@ -43,6 +43,13 @@ class DungeonSizeTests {
     }
 
     @Test
+    void revenantCapScalesWithSize() {
+        assertThat(DungeonSize.SMALL.revenantCap()).isEqualTo(2);
+        assertThat(DungeonSize.MEDIUM.revenantCap()).isEqualTo(3);
+        assertThat(DungeonSize.LARGE.revenantCap()).isEqualTo(3);
+    }
+
+    @Test
     void totalPrompts_equalsNormalPlusBossPlusEliteCards_forEverySize() {
         for (DungeonSize size : DungeonSize.values()) {
             int eliteCards = size.eliteGauntletCount() * size.cardsPerEliteGauntlet();

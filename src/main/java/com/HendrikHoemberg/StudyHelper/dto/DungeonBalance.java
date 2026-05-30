@@ -14,5 +14,6 @@ public final class DungeonBalance {
     public static final int SHOP_PRICE_DEFAULT = 75;
     public static final int SHOP_PRICE_MAP_SENSE = 150;
     public static final int MAX_MAP_REGEN_ATTEMPTS = 10;
+    public static final int REVENANT_MASTERY_SCORE = 5;
     private DungeonBalance() {}
 }

@@ -30,6 +30,10 @@ public enum DungeonSize {
         return bossPromptCount;
     }
 
+    public int revenantCap() {
+        return switch (this) { case SMALL -> 2; case MEDIUM -> 3; case LARGE -> 3; };
+    }
+
     public int eliteGauntletCount() {
         return switch (this) { case SMALL -> 1; case MEDIUM -> 2; case LARGE -> 3; };
     }
