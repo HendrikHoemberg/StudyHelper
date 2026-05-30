@@ -5,6 +5,8 @@ import com.HendrikHoemberg.StudyHelper.entity.User;
 import tools.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 
@@ -20,17 +22,20 @@ public class DungeonViewModelBuilder {
     private final DashboardService dashboardService;
     private final DungeonMinimapBuilder minimapBuilder;
     private final DungeonSessionService sessionService;
+    private final MessageSource messageSource;
 
     public DungeonViewModelBuilder(FolderService folderService,
                                    DashboardService dashboardService,
                                    DungeonMinimapBuilder minimapBuilder,
                                    DungeonSessionService sessionService,
-                                   ObjectMapper objectMapper) {
+                                   ObjectMapper objectMapper,
+                                   MessageSource messageSource) {
         this.folderService = folderService;
         this.dashboardService = dashboardService;
         this.minimapBuilder = minimapBuilder;
         this.sessionService = sessionService;
         this.objectMapper = objectMapper;
+        this.messageSource = messageSource;
     }
 
     public void prepareWizard(Model model, User user, List<Long> deckIds, String error) {
@@ -94,6 +99,23 @@ public class DungeonViewModelBuilder {
         model.addAttribute("bossSealed",
             !state.revenants().isEmpty() || !state.revenantGraveyard().isEmpty());
         model.addAttribute("activeRevenant", state.combat().activeRevenantId() != null);
+
+        Set<String> revealed = DungeonMinimapBuilder.revealedRoomIds(state);
+        model.addAttribute("revenantDoors",
+            String.join(",", revenantDoors(state, revealed)));
+
+        java.util.Locale locale = LocaleContextHolder.getLocale();
+        Map<String, String> i18n = new LinkedHashMap<>();
+        i18n.put("revenantSplashTitle",
+            messageSource.getMessage("dungeon.revenant.splashTitle", null, locale));
+        i18n.put("revenantEnemyLabel",
+            messageSource.getMessage("dungeon.revenant.enemyLabel", null, locale));
+        try {
+            model.addAttribute("dungeonI18nJson", objectMapper.writeValueAsString(i18n));
+        } catch (Exception e) {
+            log.error("Failed to serialize dungeon i18n", e);
+            model.addAttribute("dungeonI18nJson", "{}");
+        }
     }
 
     private String currentRoomMonster(DungeonSessionState state) {
