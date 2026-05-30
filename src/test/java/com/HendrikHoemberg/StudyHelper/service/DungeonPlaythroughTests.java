@@ -277,4 +277,100 @@ class DungeonPlaythroughTests {
         assertThat(seen).as("current room %s reachable from entrance", s.currentRoomId())
             .contains(s.currentRoomId());
     }
+
+    // ============================================================
+    // Sloppy agent: misses the very first normal-combat answer, then
+    // plays correctly to prove the boss gate is a real win condition.
+    // ============================================================
+
+    @Test
+    void sloppyAgentMustMasterRevenantsBeforeWinning() {
+        for (DungeonSize size : DungeonSize.values()) {
+            for (long seed : new long[]{1L, 2L, 7L, 42L}) {
+                DungeonSessionService svc = newService(seed);
+                DungeonSessionState state = playSloppy(svc, initialState(size, seed), seed);
+                assertThat(state.won())
+                    .as("sloppy agent eventually wins size=%s seed=%d", size, seed).isTrue();
+                assertThat(state.revenants())
+                    .as("no revenants remain at win size=%s seed=%d", size, seed).isEmpty();
+                assertThat(state.revenantGraveyard()).isEmpty();
+                assertThat(state.progress().revenantsMastered())
+                    .as("mastered at least one revenant size=%s seed=%d", size, seed)
+                    .isGreaterThan(0);
+            }
+        }
+    }
+
+    /**
+     * Sloppy agent: answers wrong on the first normal-combat encounter (spawning a
+     * revenant), then answers everything correctly. Prioritises: resolve any active
+     * encounter (including revenant re-tests) correctly; take any pending pick; if
+     * revenants roam, hunt the nearest one; otherwise head for the boss. Winning
+     * proves the boss gate (sealed while any revenant exists) is a real constraint.
+     */
+    private DungeonSessionState playSloppy(DungeonSessionService svc, DungeonSessionState start, long seed) {
+        DungeonSessionState s = start;
+        boolean missedOnce = false;
+        int budget = s.map().rooms().size() * 200;
+        for (int step = 0; step < budget && !s.isComplete(); step++) {
+            if (s.combat().activeEncounterId() != null) {
+                boolean answerWrong = !missedOnce && s.combat().activeRevenantId() == null;
+                if (answerWrong) missedOnce = true;
+                s = svc.answerFlashcard(s, !answerWrong);
+                DungeonStateInvariants.assertValid(s);
+                continue;
+            }
+            PendingRelicPick pick = s.loadout().pendingRelicPick();
+            if (pick != null) {
+                s = takePick(svc, s, pick);
+                DungeonStateInvariants.assertValid(s);
+                continue;
+            }
+            DungeonDirection dir;
+            if (!s.revenants().isEmpty()) {
+                dir = stepToward(s, nearestRevenantRoom(s));
+            } else {
+                dir = stepToward(s, s.map().bossRoomId());
+            }
+            if (dir == null) dir = anyOpenDoor(s);
+            if (dir == null) return s;
+            s = svc.move(s, dir).state();
+            DungeonStateInvariants.assertValid(s);
+        }
+        return s;
+    }
+
+    private DungeonSessionState takePick(DungeonSessionService svc, DungeonSessionState s, PendingRelicPick pick) {
+        return switch (pick.type()) {
+            case TREASURE, ELITE -> svc.pickRelic(s, pick.offer().get(0));
+            case SHOP -> {
+                ShopOfferEntry first = pick.shopOffer().entries().get(0);
+                yield s.resources().score() >= first.price()
+                    ? svc.buyRelic(s, first.relic()) : svc.skipShop(s);
+            }
+            case SHRINE -> svc.shrineLeave(s);
+        };
+    }
+
+    /** BFS to the nearest room currently occupied by a roaming revenant. */
+    private String nearestRevenantRoom(DungeonSessionState s) {
+        Set<String> targets = new HashSet<>();
+        for (Revenant r : s.revenants()) targets.add(r.currentRoomId());
+        String start = s.currentRoomId();
+        if (targets.contains(start)) return start;
+        Map<String, String> parent = new HashMap<>();
+        Deque<String> queue = new ArrayDeque<>();
+        parent.put(start, start);
+        queue.add(start);
+        while (!queue.isEmpty()) {
+            String node = queue.poll();
+            for (String next : s.map().room(node).doors().values()) {
+                if (parent.containsKey(next)) continue;
+                parent.put(next, node);
+                if (targets.contains(next)) return next;
+                queue.add(next);
+            }
+        }
+        return s.map().bossRoomId();
+    }
 }
