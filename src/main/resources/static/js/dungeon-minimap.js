@@ -8,6 +8,7 @@ var DungeonMinimap = (function () {
         var stateNode = document.getElementById('dungeon-minimap-state');
         if (!stateNode) return;
         var rooms = JSON.parse(stateNode.textContent || '[]');
+        var bossSealed = canvas.dataset.bossSealed === 'true';
 
         ctx.fillStyle = '#0a0a14';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -29,11 +30,11 @@ var DungeonMinimap = (function () {
         }
 
         for (var rIdx2 = 0; rIdx2 < rooms.length; rIdx2++) {
-            drawRoomCell(ctx, rooms[rIdx2], cellSize);
+            drawRoomCell(ctx, rooms[rIdx2], cellSize, bossSealed);
         }
     }
 
-    function drawRoomCell(ctx, room, cellSize) {
+    function drawRoomCell(ctx, room, cellSize, bossSealed) {
         var x = room.gridX * cellSize;
         var y = room.gridY * cellSize;
         var pad = 2;
@@ -57,6 +58,20 @@ var DungeonMinimap = (function () {
             };
             var glyph = glyphMap[room.type] || '';
             ctx.fillText(glyph, x + cellSize / 2 - 4, y + cellSize / 2 + 4);
+        }
+        if (room.hasRevenant) {
+            var rcx = x + cellSize / 2;
+            var rcy = y + cellSize / 2;
+            ctx.fillStyle = '#e040fb';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(rcx, rcy, Math.max(3, cellSize * 0.18), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+        }
+        if (bossSealed && room.type === 'BOSS') {
+            drawLock(ctx, x + cellSize / 2, y + cellSize / 2, cellSize * 0.5);
         }
     }
 
@@ -86,6 +101,18 @@ var DungeonMinimap = (function () {
         ctx.moveTo(ax, ay);
         ctx.lineTo(bx, by);
         ctx.stroke();
+    }
+
+    function drawLock(ctx, cx, cy, s) {
+        ctx.strokeStyle = '#ffd54a';
+        ctx.lineWidth = Math.max(1.5, s * 0.14);
+        ctx.beginPath();
+        ctx.arc(cx, cy - s * 0.12, s * 0.26, Math.PI, 0);
+        ctx.stroke();
+        ctx.fillStyle = '#ffd54a';
+        ctx.fillRect(cx - s * 0.38, cy - s * 0.05, s * 0.76, s * 0.55);
+        ctx.fillStyle = '#5a3d00';
+        ctx.fillRect(cx - s * 0.06, cy + s * 0.1, s * 0.12, s * 0.22);
     }
 
     return {
