@@ -145,4 +145,19 @@ public class DungeonViewModelBuilder {
         int seed = Math.abs(Objects.hash(encounter.id()));
         return wrongIndices.get(seed % wrongIndices.size());
     }
+
+    public static List<String> revenantDoors(DungeonSessionState state, Set<String> revealedRoomIds) {
+        DungeonRoom current = state.currentRoom();
+        if (current == null) return List.of();
+        Set<String> revenantRooms = new HashSet<>();
+        for (Revenant rev : state.revenants()) revenantRooms.add(rev.currentRoomId());
+        List<String> dirs = new ArrayList<>();
+        for (Map.Entry<DungeonDirection, String> e : current.doors().entrySet()) {
+            String neighborId = e.getValue();
+            if (revenantRooms.contains(neighborId) && revealedRoomIds.contains(neighborId)) {
+                dirs.add(e.getKey().name());
+            }
+        }
+        return dirs;
+    }
 }
