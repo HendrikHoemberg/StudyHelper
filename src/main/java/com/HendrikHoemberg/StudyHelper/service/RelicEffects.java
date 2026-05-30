@@ -20,6 +20,8 @@ public final class RelicEffects {
         effects.put(RelicId.IRON_PLATE, new IronPlateEffect());
         effects.put(RelicId.BUCKLER, new BucklerEffect());
         effects.put(RelicId.WAR_BANNER, new WarBannerEffect());
+        effects.put(RelicId.SHARP_FOCUS, new SharpFocusEffect());
+        effects.put(RelicId.LUCKY_CHARM, new LuckyCharmEffect());
         EFFECTS = Collections.unmodifiableMap(effects);
 
         List<DamageMitigator> mitigators = new ArrayList<>();

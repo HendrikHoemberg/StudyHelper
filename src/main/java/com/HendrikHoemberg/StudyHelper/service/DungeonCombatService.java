@@ -7,8 +7,7 @@ import org.springframework.stereotype.Service;
 public class DungeonCombatService {
 
     public DungeonSessionState processCorrectAnswer(DungeonSessionState state, DungeonEncounter encounter) {
-        int effectiveStreakThreshold = state.loadout().ownedRelics().contains(RelicId.SHARP_FOCUS)
-            ? DungeonBalance.SHARP_FOCUS_STREAK : DungeonBalance.STREAK_FOR_SHIELD;
+        int effectiveStreakThreshold = RelicEffects.streakThreshold(state, DungeonBalance.STREAK_FOR_SHIELD);
 
         DungeonProgress nextProgress = state.progress().recordAnswer(true);
         DungeonResources nextResources = state.resources();
@@ -18,7 +17,7 @@ public class DungeonCombatService {
         }
 
         int base = encounter.boss() ? DungeonBalance.BOSS_PROMPT_SCORE : DungeonBalance.COMBAT_CLEAR_SCORE;
-        int bonus = state.loadout().ownedRelics().contains(RelicId.LUCKY_CHARM) ? DungeonBalance.LUCKY_CHARM_BONUS : 0;
+        int bonus = RelicEffects.bonusScoreOnCorrect(state);
         nextResources = nextResources.addScore(base + bonus);
 
         return state.withResources(nextResources).withProgress(nextProgress);
