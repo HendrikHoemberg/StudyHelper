@@ -65,4 +65,25 @@ class DungeonFragmentRenderTests {
         String html = render("fragments/dungeon-complete", model);
         assertThat(html).isNotBlank();
     }
+
+    @Test
+    void gameFragmentRendersRevenantViewData() {
+        DungeonSessionState baseState = sampleState();
+        String entranceId = baseState.map().entranceRoomId();
+        java.util.Map.Entry<DungeonDirection, String> door =
+            baseState.map().room(entranceId).doors().entrySet().iterator().next();
+
+        DungeonSessionState state = baseState.withRevenants(
+            List.of(new Revenant("enc_0", door.getValue(), door.getValue())));
+
+        Model model = new ExtendedModelMap();
+        viewModelBuilder.prepareGame(model, state);
+        String html = render("fragments/dungeon-game", model);
+
+        assertThat(html).contains("data-revenant-doors=\"" + door.getKey().name() + "\"");
+        assertThat(html).contains("data-active-revenant");
+        assertThat(html).contains("data-boss-sealed=\"true\"");
+        assertThat(html).contains("id=\"dungeon-i18n\"");
+        assertThat(html).contains("revenantSplashTitle");
+    }
 }
