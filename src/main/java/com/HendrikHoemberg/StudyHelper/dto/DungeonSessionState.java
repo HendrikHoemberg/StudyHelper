@@ -124,7 +124,7 @@ public record DungeonSessionState(
         private boolean won;
         private boolean defeated;
         private DungeonResources resources;
-        private DungeonProgress progress = new DungeonProgress(0, 0, 0, 0, 0, 0, 0);
+        private DungeonProgress progress = new DungeonProgress(0, 0, 0, 0, 0, 0, 0, 0);
         private DungeonCombat combat = DungeonCombat.empty();
         private DungeonLoadout loadout = DungeonLoadout.empty();
         private Set<String> collectedItems = Set.of();
