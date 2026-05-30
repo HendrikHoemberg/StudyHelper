@@ -35,6 +35,12 @@ var DungeonEngine = (function () {
 
     function init() {
         DungeonRenderer.init();   // (re)bind the canvas/context, incl. after HTMX swaps
+        var i18nNode = document.getElementById('dungeon-i18n');
+        try {
+            window.dungeonI18n = i18nNode ? JSON.parse(i18nNode.textContent || '{}') : {};
+        } catch (e) {
+            window.dungeonI18n = {};
+        }
         DungeonMinimap.draw();
         render();
         DungeonInput.init();
