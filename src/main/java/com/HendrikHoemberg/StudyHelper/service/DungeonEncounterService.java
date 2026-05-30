@@ -211,13 +211,9 @@ public class DungeonEncounterService {
         rooms.put(room.id(), room.withCleared(true));
         DungeonMap nextMap = new DungeonMap(
             rooms, state.map().entranceRoomId(), state.map().bossRoomId(), state.map().lattice());
-        DungeonResources withWarBanner =
-            state.loadout().ownedRelics().contains(RelicId.WAR_BANNER)
-                ? state.resources().addShield()
-                : state.resources();
-        return state
+        DungeonSessionState cleared = state
             .withMap(nextMap)
-            .withResources(withWarBanner)
             .withCombat(state.combat().withActiveEncounterId(null));
+        return RelicEffects.onRoomClear(cleared, room);
     }
 }
