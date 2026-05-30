@@ -303,13 +303,20 @@ var DungeonExploration = (function () {
         }
 
         // 3. Redraw Scenery
+        var revDoors = (canvas.dataset.revenantDoors || '').split(',').filter(Boolean);
         DungeonRenderer.renderExploration({
             type: roomType,
             cleared: cleared,
             doors: { up: hasUpDoor, down: hasDownDoor, left: hasLeftDoor, right: hasRightDoor },
             roomItems: currentRoomItems,
             playerX: playerX,
-            playerY: playerY
+            playerY: playerY,
+            revenantDoors: {
+                up: revDoors.indexOf('UP') !== -1,
+                down: revDoors.indexOf('DOWN') !== -1,
+                left: revDoors.indexOf('LEFT') !== -1,
+                right: revDoors.indexOf('RIGHT') !== -1
+            }
         });
 
         animationFrameId = requestAnimationFrame(updateAndRender);
